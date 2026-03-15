@@ -107,7 +107,6 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
   const [isRunning, setIsRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [showCalendar, setShowCalendar] = useState(false);
-  // useState import for MonthCalendar
 
   const intervalRef = useRef(null);
   const cardRef = useRef(null);
