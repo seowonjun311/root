@@ -10,6 +10,8 @@ import ActionGoalCard from '../components/home/ActionGoalCard';
 import EmptyGoalState from '../components/home/EmptyGoalState';
 import PhotoConfirmModal from '../components/home/PhotoConfirmModal';
 import BossVictoryModal from '../components/home/BossVictoryModal';
+import CelebrationToast from '../components/home/CelebrationToast';
+import { computeStreak, getStreakTrigger, getBadgeForGoal } from '../components/badgeUtils';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -39,6 +41,9 @@ export default function Home() {
 
   // Photo modal state
   const [pendingLog, setPendingLog] = useState(null); // { actionGoal, minutes }
+
+  // Celebration toast state
+  const [celebration, setCelebration] = useState(null); // trigger string
 
   // Boss victory modal state
   const [victoryGoal, setVictoryGoal] = useState(null);
