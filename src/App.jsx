@@ -13,6 +13,7 @@ import CreateGoal from './pages/CreateGoal';
 import Records from './pages/Records';
 import Badges from './pages/Badges';
 import AppSettings from './pages/AppSettings';
+import NotificationSettings from './pages/NotificationSettings';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
