@@ -126,19 +126,30 @@ export default function GoalProgress({ goal }) {
             </div>
             <div>
               <label className="text-xs font-semibold text-amber-800 mb-1.5 block">기간</label>
-              <div className="flex gap-2">
-                {[30, 60, 90].map(d => (
-                  <button
-                    key={d}
-                    onClick={() => setEditDuration(d)}
+              <div className="flex gap-2 mb-2">
+                {[{ label: '4주', weeks: 4 }, { label: '8주', weeks: 8 }, { label: '12주', weeks: 12 }].map(({ label, weeks }) => (
+                  <button key={weeks} onClick={() => { setEditDuration(weeks * 7); setIsEditCustom(false); setEditCustomWeeks(''); }}
                     className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                      editDuration === d ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'
-                    }`}
-                  >
-                    {d}일
+                      !isEditCustom && editDuration === weeks * 7 ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                    {label}
                   </button>
                 ))}
+                <button onClick={() => setIsEditCustom(true)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                    isEditCustom ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                  직접
+                </button>
               </div>
+              {isEditCustom && (
+                <div className="flex items-center gap-2">
+                  <input type="number" min="1" max="52" value={editCustomWeeks}
+                    onChange={e => { setEditCustomWeeks(e.target.value); setEditDuration(Number(e.target.value) * 7); }}
+                    placeholder="주 수 입력"
+                    className="flex-1 h-10 rounded-xl border border-input bg-white/80 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                  />
+                  <span className="text-sm font-semibold text-muted-foreground">주</span>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter className="flex gap-2">
