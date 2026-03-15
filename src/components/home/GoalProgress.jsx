@@ -14,7 +14,9 @@ export default function GoalProgress({ goal }) {
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [editTitle, setEditTitle] = useState(goal?.title || '');
-  const [editDuration, setEditDuration] = useState(goal?.duration_days || 90);
+  const [editDuration, setEditDuration] = useState(goal?.duration_days || 56);
+  const [editCustomWeeks, setEditCustomWeeks] = useState('');
+  const [isEditCustom, setIsEditCustom] = useState(false);
   const [saving, setSaving] = useState(false);
 
   if (!goal) return null;
