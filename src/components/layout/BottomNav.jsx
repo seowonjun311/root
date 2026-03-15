@@ -8,7 +8,7 @@ const navItems = [
   { path: '/Home', label: '길', icon: RouteIcon },
   { path: '/Records', label: '기록', icon: BookOpen },
   { path: '/Badges', label: '칭호', icon: Trophy },
-  { path: '/AppSettings', label: '설정', icon: Settings },
+  { path: '/AppSettings', label: '홈', icon: () => <span className="text-lg leading-none">🏠</span> },
 ];
 
 export default function BottomNav() {
