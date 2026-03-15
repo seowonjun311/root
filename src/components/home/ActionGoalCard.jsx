@@ -6,22 +6,34 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 
-function getWeekDates() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const day = today.getDay(); // 0=일
-  const mondayOffset = day === 0 ? -6 : 1 - day;
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() + mondayOffset + i);
-    return d.toISOString().split('T')[0];
-  });
+function getMonthDates(year, month) {
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  // 월요일 시작 기준 앞 빈칸
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const days = [];
+  for (let i = 0; i < startOffset; i++) days.push(null);
+  for (let d = 1; d <= lastDay.getDate(); d++) days.push(d);
+  return days;
 }
 
-function WeekCalendar({ weeklyLogs, onClose }) {
-  const weekDates = getWeekDates();
-  const todayStr = new Date().toISOString().split('T')[0];
+function MonthCalendar({ weeklyLogs, onClose }) {
+  const today = new Date();
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+
+  const todayStr = today.toISOString().split('T')[0];
   const doneDates = new Set(weeklyLogs.map(l => l.date));
+  const days = getMonthDates(viewYear, viewMonth);
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11); }
+    else setViewMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0); }
+    else setViewMonth(m => m + 1);
+  };
 
   return (
     <motion.div
@@ -32,55 +44,59 @@ function WeekCalendar({ weeklyLogs, onClose }) {
       className="absolute top-full left-0 right-0 mt-2 z-50 bg-card border border-border/70 rounded-2xl shadow-xl p-4"
       onClick={e => e.stopPropagation()}
     >
+      {/* 헤더 */}
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-bold text-amber-800">이번 주 기록</p>
-        <button onClick={onClose} className="p-1 rounded-lg hover:bg-secondary transition-colors">
-          <X className="w-3.5 h-3.5 text-muted-foreground" />
-        </button>
+        <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground text-sm">‹</button>
+        <p className="text-xs font-bold text-amber-800">{viewYear}년 {viewMonth + 1}월</p>
+        <div className="flex items-center gap-1">
+          <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground text-sm">›</button>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-secondary transition-colors ml-1">
+            <X className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1.5">
-        {weekDates.map((date, i) => {
-          const isDone = doneDates.has(date);
-          const isToday = date === todayStr;
-          const isFuture = date > todayStr;
+      {/* 요일 헤더 */}
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {DAY_LABELS.map(d => (
+          <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground py-0.5">{d}</div>
+        ))}
+      </div>
+
+      {/* 날짜 그리드 */}
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((day, i) => {
+          if (!day) return <div key={`empty-${i}`} />;
+          const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const isDone = doneDates.has(dateStr);
+          const isToday = dateStr === todayStr;
+          const isFuture = dateStr > todayStr;
 
           return (
-            <div key={date} className="flex flex-col items-center gap-1">
-              <span className={`text-[10px] font-semibold ${isToday ? 'text-amber-700' : 'text-muted-foreground'}`}>
-                {DAY_LABELS[i]}
-              </span>
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${
-                isDone
-                  ? 'bg-amber-500 text-white shadow-sm'
-                  : isToday
-                  ? 'bg-amber-100 border-2 border-amber-400 text-amber-800'
-                  : isFuture
-                  ? 'bg-secondary/40 text-muted-foreground/40'
-                  : 'bg-secondary text-muted-foreground/60'
-              }`}>
-                {isDone ? '✓' : isFuture ? '' : '✕'}
-              </div>
-              <span className="text-[9px] text-muted-foreground/60">
-                {Number(date.split('-')[2])}
-              </span>
+            <div key={dateStr} className={`aspect-square rounded-lg flex items-center justify-center text-[11px] font-semibold transition-all ${
+              isDone
+                ? 'bg-amber-500 text-white shadow-sm'
+                : isToday
+                ? 'bg-amber-100 border-2 border-amber-400 text-amber-800'
+                : isFuture
+                ? 'text-muted-foreground/30'
+                : 'bg-secondary/60 text-muted-foreground/50'
+            }`}>
+              {isDone ? '✓' : day}
             </div>
           );
         })}
       </div>
 
+      {/* 범례 */}
       <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border/40">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-amber-500" />
           <span className="text-[10px] text-muted-foreground">완료</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded bg-secondary border border-border/60" />
+          <div className="w-3 h-3 rounded bg-secondary/60" />
           <span className="text-[10px] text-muted-foreground">미완료</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded bg-secondary/40" />
-          <span className="text-[10px] text-muted-foreground">예정</span>
         </div>
       </div>
     </motion.div>
