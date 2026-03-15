@@ -152,9 +152,9 @@ export default function Home() {
     }
   };
 
-  const handleCategoryChange = async (cat) => {
+  const handleCategoryChange = (cat) => {
     setActiveCategory(cat);
-    await base44.auth.updateMe({ active_category: cat });
+    base44.auth.updateMe({ active_category: cat }).catch(() => {});
   };
 
   const handleVictoryClose = () => {
