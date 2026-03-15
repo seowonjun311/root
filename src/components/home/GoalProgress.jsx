@@ -1,14 +1,109 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function GoalProgress({ goal }) {
+const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
+
+function getMonthDates(year, month) {
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const days = [];
+  for (let i = 0; i < startOffset; i++) days.push(null);
+  for (let d = 1; d <= lastDay.getDate(); d++) days.push(d);
+  return days;
+}
+
+function MonthCalendar({ logs, onClose }) {
+  const today = new Date();
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+
+  const todayStr = today.toISOString().split('T')[0];
+  const doneDates = new Set(logs.map(l => l.date));
+  const days = getMonthDates(viewYear, viewMonth);
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11); }
+    else setViewMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0); }
+    else setViewMonth(m => m + 1);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+      transition={{ duration: 0.18 }}
+      className="absolute top-full left-0 right-0 mt-2 z-50 bg-card border border-border/70 rounded-2xl shadow-xl p-4"
+      onClick={e => e.stopPropagation()}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground text-sm">‹</button>
+        <p className="text-xs font-bold text-amber-800">{viewYear}년 {viewMonth + 1}월</p>
+        <div className="flex items-center gap-1">
+          <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground text-sm">›</button>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-secondary transition-colors ml-1">
+            <X className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {DAY_LABELS.map(d => (
+          <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground py-0.5">{d}</div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((day, i) => {
+          if (!day) return <div key={`empty-${i}`} />;
+          const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const isDone = doneDates.has(dateStr);
+          const isToday = dateStr === todayStr;
+          const isFuture = dateStr > todayStr;
+
+          return (
+            <div key={dateStr} className={`aspect-square rounded-lg flex items-center justify-center text-[11px] font-semibold transition-all ${
+              isDone
+                ? 'bg-amber-500 text-white shadow-sm'
+                : isToday
+                ? 'bg-amber-100 border-2 border-amber-400 text-amber-800'
+                : isFuture
+                ? 'text-muted-foreground/30'
+                : 'bg-secondary/60 text-muted-foreground/50'
+            }`}>
+              {isDone ? '✓' : day}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border/40">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded bg-amber-500" />
+          <span className="text-[10px] text-muted-foreground">완료</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded bg-secondary/60" />
+          <span className="text-[10px] text-muted-foreground">미완료</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+export default function GoalProgress({ goal, logs = [] }) {
   const queryClient = useQueryClient();
   const [showMenu, setShowMenu] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
