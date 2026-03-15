@@ -1,12 +1,98 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Play, Square, Check } from 'lucide-react';
+import { Play, Square, Check, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
+
+function getWeekDates() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const day = today.getDay(); // 0=일
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() + mondayOffset + i);
+    return d.toISOString().split('T')[0];
+  });
+}
+
+function WeekCalendar({ weeklyLogs, onClose }) {
+  const weekDates = getWeekDates();
+  const todayStr = new Date().toISOString().split('T')[0];
+  const doneDates = new Set(weeklyLogs.map(l => l.date));
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+      transition={{ duration: 0.18 }}
+      className="absolute top-full left-0 right-0 mt-2 z-50 bg-card border border-border/70 rounded-2xl shadow-xl p-4"
+      onClick={e => e.stopPropagation()}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-bold text-amber-800">이번 주 기록</p>
+        <button onClick={onClose} className="p-1 rounded-lg hover:bg-secondary transition-colors">
+          <X className="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1.5">
+        {weekDates.map((date, i) => {
+          const isDone = doneDates.has(date);
+          const isToday = date === todayStr;
+          const isFuture = date > todayStr;
+
+          return (
+            <div key={date} className="flex flex-col items-center gap-1">
+              <span className={`text-[10px] font-semibold ${isToday ? 'text-amber-700' : 'text-muted-foreground'}`}>
+                {DAY_LABELS[i]}
+              </span>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${
+                isDone
+                  ? 'bg-amber-500 text-white shadow-sm'
+                  : isToday
+                  ? 'bg-amber-100 border-2 border-amber-400 text-amber-800'
+                  : isFuture
+                  ? 'bg-secondary/40 text-muted-foreground/40'
+                  : 'bg-secondary text-muted-foreground/60'
+              }`}>
+                {isDone ? '✓' : isFuture ? '' : '✕'}
+              </div>
+              <span className="text-[9px] text-muted-foreground/60">
+                {Number(date.split('-')[2])}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border/40">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded bg-amber-500" />
+          <span className="text-[10px] text-muted-foreground">완료</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded bg-secondary border border-border/60" />
+          <span className="text-[10px] text-muted-foreground">미완료</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded bg-secondary/40" />
+          <span className="text-[10px] text-muted-foreground">예정</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete }) {
   const [isRunning, setIsRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [showCalendar, setShowCalendar] = useState(false);
   const intervalRef = useRef(null);
+  const cardRef = useRef(null);
 
   const weeklyCount = weeklyLogs.length;
   const targetFreq = actionGoal.weekly_frequency || 7;
@@ -22,6 +108,18 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     }
     return () => clearInterval(intervalRef.current);
   }, [isRunning]);
+
+  // 바깥 클릭 시 캘린더 닫기
+  useEffect(() => {
+    if (!showCalendar) return;
+    const handler = (e) => {
+      if (cardRef.current && !cardRef.current.contains(e.target)) {
+        setShowCalendar(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showCalendar]);
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -52,56 +150,69 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     : '';
 
   return (
-    <div className="mx-4 p-4 rounded-2xl bg-card border border-border/60 shadow-sm">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="text-base">{typeEmoji}</span>
-          <span className="font-semibold text-sm text-foreground truncate">{actionGoal.title}</span>
-          {typeLabel && <span className="text-xs text-muted-foreground">{typeLabel}</span>}
+    <div ref={cardRef} className="mx-4 relative">
+      <div className="p-4 rounded-2xl bg-card border border-border/60 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <button
+            onClick={() => setShowCalendar(v => !v)}
+            className="flex items-center gap-2 flex-1 min-w-0 text-left"
+          >
+            <span className="text-base">{typeEmoji}</span>
+            <span className="font-semibold text-sm text-foreground truncate">{actionGoal.title}</span>
+            {typeLabel && <span className="text-xs text-muted-foreground">{typeLabel}</span>}
+            <span className="text-xs text-amber-600 font-semibold ml-1 shrink-0">
+              {weeklyCount}/{targetFreq}
+            </span>
+          </button>
+
+          <div className="flex items-center gap-2 ml-2">
+            {actionGoal.action_type === 'timer' ? (
+              <Button
+                size="sm"
+                variant={isRunning ? 'destructive' : 'default'}
+                className={`h-8 px-3 text-xs font-semibold rounded-xl ${
+                  isRunning
+                    ? 'bg-red-500/90 hover:bg-red-600'
+                    : 'bg-amber-700 hover:bg-amber-800 text-amber-50'
+                }`}
+                onClick={handleTimerToggle}
+              >
+                {isRunning ? (
+                  <>
+                    <Square className="w-3 h-3 mr-1" />
+                    {formatTime(elapsed)}
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-3 h-3 mr-1" />
+                    시작
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                className="h-8 px-3 text-xs font-semibold rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50"
+                onClick={handleConfirm}
+              >
+                <Check className="w-3 h-3 mr-1" />
+                {actionGoal.action_type === 'abstain' ? '성공' : '확인'}
+              </Button>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground">
-            {weeklyCount}/{targetFreq}
-          </span>
-
-          {actionGoal.action_type === 'timer' ? (
-            <Button
-              size="sm"
-              variant={isRunning ? 'destructive' : 'default'}
-              className={`h-8 px-3 text-xs font-semibold rounded-xl ${
-                isRunning
-                  ? 'bg-red-500/90 hover:bg-red-600'
-                  : 'bg-amber-700 hover:bg-amber-800 text-amber-50'
-              }`}
-              onClick={handleTimerToggle}
-            >
-              {isRunning ? (
-                <>
-                  <Square className="w-3 h-3 mr-1" />
-                  {formatTime(elapsed)}
-                </>
-              ) : (
-                <>
-                  <Play className="w-3 h-3 mr-1" />
-                  시작
-                </>
-              )}
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              className="h-8 px-3 text-xs font-semibold rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50"
-              onClick={handleConfirm}
-            >
-              <Check className="w-3 h-3 mr-1" />
-              {actionGoal.action_type === 'abstain' ? '성공' : '확인'}
-            </Button>
-          )}
-        </div>
+        <Progress value={progressPercent} className="h-2 bg-secondary" />
       </div>
 
-      <Progress value={progressPercent} className="h-2 bg-secondary" />
+      <AnimatePresence>
+        {showCalendar && (
+          <WeekCalendar
+            weeklyLogs={weeklyLogs}
+            onClose={() => setShowCalendar(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
