@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, Trophy, Settings } from 'lucide-react';
+import { BookOpen, Trophy, Settings } from 'lucide-react';
+
+const RouteIcon = () => <span className="text-lg leading-none">🛤️</span>;
 
 const navItems = [
-  { path: '/Home', label: '홈', icon: Home },
+  { path: '/Home', label: '길', icon: RouteIcon },
   { path: '/Records', label: '기록', icon: BookOpen },
   { path: '/Badges', label: '칭호', icon: Trophy },
   { path: '/AppSettings', label: '설정', icon: Settings },
