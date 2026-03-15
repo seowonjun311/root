@@ -15,7 +15,6 @@ import { computeStreak, getStreakTrigger, getBadgeForGoal } from '../components/
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// Check if a goal is completed (all days elapsed)
 function isGoalComplete(goal) {
   if (!goal || !goal.start_date || !goal.duration_days) return false;
   const start = new Date(goal.start_date);
@@ -24,18 +23,22 @@ function isGoalComplete(goal) {
   return new Date() >= end;
 }
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 6) return '늦은 밤, 오늘도 수고했어요.';
+  if (hour < 10) return '좋은 아침이에요. 오늘도 천천히 걸어볼까요?';
+  if (hour < 13) return '당신을 기다리고 있습니다.';
+  if (hour < 18) return '오후에도 한 걸음씩, 용사님.';
+  if (hour < 22) return '오늘 하루도 잘 걸어왔어요.';
+  return '오늘 하루도 수고했어요, 용사님.';
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeCategory, setActiveCategory] = useState('exercise');
-
-  // Photo modal state
-  const [pendingLog, setPendingLog] = useState(null); // { actionGoal, minutes }
-
-  // Celebration toast state
-  const [celebration, setCelebration] = useState(null); // trigger string
-
-  // Boss victory modal state
+  const [pendingLog, setPendingLog] = useState(null);
+  const [celebration, setCelebration] = useState(null);
   const [victoryGoal, setVictoryGoal] = useState(null);
   const [shownVictoryIds, setShownVictoryIds] = useState(() => {
     try { return JSON.parse(localStorage.getItem('shownVictory') || '[]'); } catch { return []; }
@@ -66,7 +69,6 @@ export default function Home() {
     queryFn: () => base44.entities.ActionLog.list('-created_date', 200),
   });
 
-  // Check for completed goals to show victory screen
   useEffect(() => {
     if (!goals.length) return;
     for (const goal of goals) {
@@ -79,16 +81,12 @@ export default function Home() {
 
   const createLogMutation = useMutation({
     mutationFn: (data) => base44.entities.ActionLog.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['actionLogs'] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['actionLogs'] }),
   });
 
   const completeGoalMutation = useMutation({
     mutationFn: (id) => base44.entities.Goal.update(id, { status: 'completed' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goals'] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['goals'] }),
   });
 
   const createBadgeMutation = useMutation({
@@ -110,22 +108,18 @@ export default function Home() {
   const getWeeklyLogs = (actionGoalId) =>
     allLogs.filter(l => l.action_goal_id === actionGoalId && l.date >= weekStartStr);
 
-  // Step 1: user taps confirm/stop → show photo modal
   const handleComplete = (actionGoal, minutes) => {
     setPendingLog({ actionGoal, minutes });
   };
 
-  // Step 2: user saves (with or without photo)
   const handlePhotoSave = async (photoUrl) => {
     const { actionGoal, minutes } = pendingLog;
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // optimistically add today to logs for streak calc
     const newLogs = [...allLogs, { action_goal_id: actionGoal.id, date: todayStr, completed: true }];
     const streak = computeStreak(actionGoal.id, newLogs);
     const streakTrigger = getStreakTrigger(streak);
 
-    // Check weekly 100% completion
     const thisWeekLogs = newLogs.filter(l => l.action_goal_id === actionGoal.id && l.date >= weekStartStr);
     const target = actionGoal.weekly_frequency || 7;
     const weeklyComplete = thisWeekLogs.length >= target && thisWeekLogs.length - 1 < target;
@@ -142,10 +136,8 @@ export default function Home() {
 
     setPendingLog(null);
 
-    // Show celebration — streak takes priority, then weekly
     if (streakTrigger) {
       setCelebration(streakTrigger);
-      // Auto-award streak badge
       const { title, description } = getBadgeForGoal({ title: actionGoal.title });
       createBadgeMutation.mutate({
         title: `${title} (${streak}일 연속)`,
@@ -165,7 +157,6 @@ export default function Home() {
     await base44.auth.updateMe({ active_category: cat });
   };
 
-  // Victory modal: mark goal complete + award badge
   const handleVictoryClose = () => {
     if (!victoryGoal) return;
     const newShown = [...shownVictoryIds, victoryGoal.id];
@@ -227,7 +218,6 @@ export default function Home() {
         />
       )}
 
-      {/* Photo modal */}
       {pendingLog && (
         <PhotoConfirmModal
           actionGoal={pendingLog.actionGoal}
@@ -236,12 +226,10 @@ export default function Home() {
         />
       )}
 
-      {/* Celebration toast */}
       {celebration && (
         <CelebrationToast trigger={celebration} onDone={() => setCelebration(null)} />
       )}
 
-      {/* Boss victory modal */}
       {victoryGoal && (
         <BossVictoryModal
           goal={victoryGoal}
@@ -252,14 +240,4 @@ export default function Home() {
       )}
     </div>
   );
-}
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 6) return '늦은 밤, 오늘도 수고했어요.';
-  if (hour < 10) return '좋은 아침이에요. 오늘도 천천히 걸어볼까요?';
-  if (hour < 13) return '당신을 기다리고 있습니다.';
-  if (hour < 18) return '오후에도 한 걸음씩, 용사님.';
-  if (hour < 22) return '오늘 하루도 잘 걸어왔어요.';
-  return '오늘 하루도 수고했어요, 용사님.';
 }
