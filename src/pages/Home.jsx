@@ -188,7 +188,7 @@ export default function Home() {
 
       {activeGoal ? (
         <div className="space-y-3">
-          <GoalProgress goal={activeGoal} />
+          <GoalProgress goal={activeGoal} logs={allLogs.filter(l => l.goal_id === activeGoal.id)} />
           <WeekDays logs={allLogs.filter(l => l.category === activeCategory)} />
 
           {categoryActionGoals.map(ag => (
