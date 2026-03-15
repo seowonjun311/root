@@ -51,12 +51,13 @@ export default function AppSettings() {
       </div>
 
       <div className="mx-4 space-y-2">
-        <SettingItem
-          icon={<Bell className="w-5 h-5 text-amber-600" />}
-          label="알림 설정"
-          desc="알림 시간과 요일을 설정합니다"
-          onClick={() => toast.info('알림 설정 기능은 곧 추가됩니다.')}
-        />
+        <Link to="/NotificationSettings" className="block">
+          <SettingItem
+            icon={<Bell className="w-5 h-5 text-amber-600" />}
+            label="알림 설정"
+            desc="알림 시간과 요일을 설정합니다"
+          />
+        </Link>
         <SettingItem
           icon={<User className="w-5 h-5 text-amber-600" />}
           label="닉네임 변경"
