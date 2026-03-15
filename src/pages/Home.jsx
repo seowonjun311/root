@@ -245,11 +245,16 @@ export default function Home() {
         />
       )}
 
+      {/* Celebration toast */}
+      {celebration && (
+        <CelebrationToast trigger={celebration} onDone={() => setCelebration(null)} />
+      )}
+
       {/* Boss victory modal */}
       {victoryGoal && (
         <BossVictoryModal
           goal={victoryGoal}
-          badge={getBadgeForGoal(victoryGoal)}
+          badge={getBadgeForGoal(victoryGoal)?.title}
           onClose={handleVictoryClose}
           onNewGoal={handleVictoryNewGoal}
         />
