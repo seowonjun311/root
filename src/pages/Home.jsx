@@ -24,16 +24,6 @@ function isGoalComplete(goal) {
   return new Date() >= end;
 }
 
-function getBadgeForGoal(goal) {
-  if (!goal) return null;
-  const t = goal.title?.toLowerCase() || '';
-  if (t.includes('kg') || t.includes('다이어트') || t.includes('체중')) return '몸의 개척자';
-  if (t.includes('토익') || t.includes('영어') || t.includes('공부')) return '언어의 탐구자';
-  if (t.includes('금연')) return '의지의 수호자';
-  if (t.includes('러닝') || t.includes('마라톤')) return '끈기의 발걸음';
-  return '여정의 완주자';
-}
-
 export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
