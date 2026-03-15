@@ -1,0 +1,143 @@
+import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { BarChart3, Clock, Target, Flame } from 'lucide-react';
+
+const CAT_LABELS = { exercise: '운동', study: '공부', mental: '정신', daily: '일상' };
+
+export default function Records() {
+  const [catFilter, setCatFilter] = useState('all');
+
+  const { data: logs = [] } = useQuery({
+    queryKey: ['allLogs'],
+    queryFn: () => base44.entities.ActionLog.list('-date', 500),
+  });
+
+  const { data: goals = [] } = useQuery({
+    queryKey: ['allGoals'],
+    queryFn: () => base44.entities.Goal.list('-created_date', 100),
+  });
+
+  const { data: badges = [] } = useQuery({
+    queryKey: ['badges'],
+    queryFn: () => base44.entities.Badge.list('-earned_date', 100),
+  });
+
+  const filteredLogs = catFilter === 'all' ? logs : logs.filter(l => l.category === catFilter);
+  
+  const totalMinutes = filteredLogs.reduce((sum, l) => sum + (l.duration_minutes || 0), 0);
+  const totalHours = Math.round(totalMinutes / 60);
+  const totalSessions = filteredLogs.length;
+  const completedGoals = goals.filter(g => g.status === 'completed').length;
+
+  // Category breakdown
+  const catBreakdown = Object.entries(
+    logs.reduce((acc, l) => {
+      const cat = l.category || 'exercise';
+      acc[cat] = (acc[cat] || 0) + (l.duration_minutes || 0);
+      return acc;
+    }, {})
+  ).sort((a, b) => b[1] - a[1]);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="p-6 pb-3">
+        <h1 className="text-xl font-bold text-amber-900 flex items-center gap-2">
+          📜 기록의 여정
+        </h1>
+      </div>
+
+      <Tabs defaultValue="stats" className="px-4">
+        <TabsList className="w-full bg-secondary/60 rounded-xl h-10">
+          <TabsTrigger value="stats" className="flex-1 rounded-lg text-sm">통계</TabsTrigger>
+          <TabsTrigger value="timeline" className="flex-1 rounded-lg text-sm">타임라인</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="stats" className="mt-4 space-y-4">
+          {/* Category filter */}
+          <div className="flex gap-1.5">
+            {['all', 'exercise', 'study', 'mental', 'daily'].map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCatFilter(cat)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  catFilter === cat
+                    ? 'bg-amber-700 text-amber-50'
+                    : 'bg-secondary text-muted-foreground'}`}
+              >
+                {cat === 'all' ? '전체' : CAT_LABELS[cat]}
+              </button>
+            ))}
+          </div>
+
+          {/* Stats cards */}
+          <div className="grid grid-cols-2 gap-3">
+            <StatCard icon={<Clock className="w-5 h-5 text-amber-600" />} label="총 수련 시간" value={`${totalHours}시간`} />
+            <StatCard icon={<Target className="w-5 h-5 text-amber-600" />} label="완료한 목표" value={`${completedGoals}개`} />
+            <StatCard icon={<Flame className="w-5 h-5 text-amber-600" />} label="총 수련 횟수" value={`${totalSessions}회`} />
+            <StatCard icon={<BarChart3 className="w-5 h-5 text-amber-600" />} label="획득한 칭호" value={`${badges.length}개`} />
+          </div>
+
+          {/* Category breakdown */}
+          {catFilter === 'all' && catBreakdown.length > 0 && (
+            <div className="p-4 rounded-2xl bg-card border border-border/60">
+              <h3 className="font-semibold text-sm mb-3">카테고리별 수련 내역</h3>
+              <div className="space-y-3">
+                {catBreakdown.map(([cat, min]) => {
+                  const percent = totalMinutes > 0 ? Math.round((min / totalMinutes) * 100) : 0;
+                  return (
+                    <div key={cat} className="flex items-center gap-3">
+                      <span className="text-sm w-12">{CAT_LABELS[cat] || cat}</span>
+                      <div className="flex-1 h-2.5 bg-secondary rounded-full overflow-hidden">
+                        <div className="h-full bg-amber-600 rounded-full" style={{ width: `${percent}%` }} />
+                      </div>
+                      <span className="text-xs text-muted-foreground w-16 text-right">
+                        {Math.round(min / 60)}시간 {percent}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="timeline" className="mt-4 space-y-3 pb-4">
+          {filteredLogs.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <p className="text-3xl mb-3">🦊</p>
+              <p>아직 기록이 없습니다.</p>
+              <p className="text-sm">첫 번째 수련을 시작해 보세요.</p>
+            </div>
+          ) : (
+            filteredLogs.map(log => (
+              <div key={log.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{log.date}</p>
+                  {log.duration_minutes > 0 && (
+                    <p className="text-xs text-muted-foreground">{log.duration_minutes}분 수련</p>
+                  )}
+                </div>
+                <span className="text-xs px-2 py-1 rounded-lg bg-amber-100/80 text-amber-700">
+                  {CAT_LABELS[log.category] || '기타'}
+                </span>
+              </div>
+            ))
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value }) {
+  return (
+    <div className="p-4 rounded-2xl bg-card border border-border/60">
+      <div className="mb-2">{icon}</div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-xl font-bold text-amber-900">{value}</p>
+    </div>
+  );
+}
