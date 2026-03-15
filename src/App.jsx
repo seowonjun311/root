@@ -5,7 +5,14 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-// Add page imports here
+import { Navigate } from 'react-router-dom';
+import AppLayout from './components/layout/AppLayout';
+import Home from './pages/Home';
+import Onboarding from './pages/Onboarding';
+import CreateGoal from './pages/CreateGoal';
+import Records from './pages/Records';
+import Badges from './pages/Badges';
+import AppSettings from './pages/AppSettings';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -33,7 +40,15 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      <Route path="/" element={<Navigate to="/Home" replace />} />
+      <Route path="/Onboarding" element={<Onboarding />} />
+      <Route path="/CreateGoal" element={<CreateGoal />} />
+      <Route element={<AppLayout />}>
+        <Route path="/Home" element={<Home />} />
+        <Route path="/Records" element={<Records />} />
+        <Route path="/Badges" element={<Badges />} />
+        <Route path="/AppSettings" element={<AppSettings />} />
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
