@@ -30,7 +30,9 @@ export default function CreateGoal() {
   const [examTitle, setExamTitle] = useState('');
 
   const [goalTitle, setGoalTitle] = useState('');
-  const [duration, setDuration] = useState(90);
+  const [duration, setDuration] = useState(56); // 8주
+  const [customWeeks, setCustomWeeks] = useState('');
+  const [isCustomDuration, setIsCustomDuration] = useState(false);
 
   const [actionTitle, setActionTitle] = useState('');
   const [actionType, setActionType] = useState('confirm');
