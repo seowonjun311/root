@@ -105,7 +105,18 @@ function MonthCalendar({ logs, onClose }) {
 
 export default function GoalProgress({ goal, logs = [] }) {
   const queryClient = useQueryClient();
+  const [showCalendar, setShowCalendar] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const cardRef = useRef(null);
+
+  useEffect(() => {
+    if (!showCalendar) return;
+    const handler = (e) => {
+      if (cardRef.current && !cardRef.current.contains(e.target)) setShowCalendar(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showCalendar]);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [editTitle, setEditTitle] = useState(goal?.title || '');
