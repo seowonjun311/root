@@ -129,6 +129,17 @@ export default function Home() {
   const handlePhotoSave = async (photoUrl) => {
     const { actionGoal, minutes } = pendingLog;
     const todayStr = new Date().toISOString().split('T')[0];
+
+    // optimistically add today to logs for streak calc
+    const newLogs = [...allLogs, { action_goal_id: actionGoal.id, date: todayStr, completed: true }];
+    const streak = computeStreak(actionGoal.id, newLogs);
+    const streakTrigger = getStreakTrigger(streak);
+
+    // Check weekly 100% completion
+    const thisWeekLogs = newLogs.filter(l => l.action_goal_id === actionGoal.id && l.date >= weekStartStr);
+    const target = actionGoal.weekly_frequency || 7;
+    const weeklyComplete = thisWeekLogs.length >= target && thisWeekLogs.length - 1 < target;
+
     createLogMutation.mutate({
       action_goal_id: actionGoal.id,
       goal_id: actionGoal.goal_id,
@@ -138,7 +149,25 @@ export default function Home() {
       completed: true,
       photo_url: photoUrl || null,
     });
+
     setPendingLog(null);
+
+    // Show celebration — streak takes priority, then weekly
+    if (streakTrigger) {
+      setCelebration(streakTrigger);
+      // Auto-award streak badge
+      const { title, description } = getBadgeForGoal({ title: actionGoal.title });
+      createBadgeMutation.mutate({
+        title: `${title} (${streak}일 연속)`,
+        description: `${actionGoal.title} ${streak}일 연속 성공`,
+        category: actionGoal.category,
+        badge_type: 'cumulative',
+        earned_date: todayStr,
+        streak,
+      });
+    } else if (weeklyComplete) {
+      setCelebration('weekly_complete');
+    }
   };
 
   const handleCategoryChange = async (cat) => {
