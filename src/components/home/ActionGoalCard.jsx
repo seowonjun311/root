@@ -224,7 +224,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
 
       <AnimatePresence>
         {showCalendar && (
-          <WeekCalendar
+          <MonthCalendar
             weeklyLogs={weeklyLogs}
             onClose={() => setShowCalendar(false)}
           />
