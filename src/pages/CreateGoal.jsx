@@ -174,15 +174,34 @@ export default function CreateGoal() {
           </div>
           <div>
             <label className="text-sm font-semibold text-amber-800 mb-2 block">기간</label>
-            <div className="flex gap-2">
-              {[30, 60, 90].map(d => (
-                <button key={d} onClick={() => setDuration(d)}
+            <div className="flex gap-2 mb-2">
+              {[{ label: '4주', weeks: 4 }, { label: '8주', weeks: 8 }, { label: '12주', weeks: 12 }].map(({ label, weeks }) => (
+                <button key={weeks} onClick={() => { setDuration(weeks * 7); setIsCustomDuration(false); setCustomWeeks(''); }}
                   className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
-                    duration === d ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
-                  {d}일
+                    !isCustomDuration && duration === weeks * 7 ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                  {label}
                 </button>
               ))}
+              <button onClick={() => setIsCustomDuration(true)}
+                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  isCustomDuration ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                직접입력
+              </button>
             </div>
+            {isCustomDuration && (
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="number"
+                  min="1"
+                  max="52"
+                  value={customWeeks}
+                  onChange={e => { setCustomWeeks(e.target.value); setDuration(Number(e.target.value) * 7); }}
+                  placeholder="주 수 입력"
+                  className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                />
+                <span className="text-sm font-semibold text-muted-foreground">주</span>
+              </div>
+            )}
           </div>
           <Button
             className="w-full h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
