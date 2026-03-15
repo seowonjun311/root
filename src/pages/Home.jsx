@@ -182,10 +182,10 @@ export default function Home() {
     setShownVictoryIds(newShown);
     localStorage.setItem('shownVictory', JSON.stringify(newShown));
     completeGoalMutation.mutate(victoryGoal.id);
-    const badgeName = getBadgeForGoal(victoryGoal);
+    const { title, description } = getBadgeForGoal(victoryGoal);
     createBadgeMutation.mutate({
-      title: badgeName,
-      description: `${victoryGoal.title} 완주`,
+      title,
+      description,
       category: victoryGoal.category,
       badge_type: 'result',
       earned_date: new Date().toISOString().split('T')[0],
