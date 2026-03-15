@@ -185,8 +185,9 @@ export default function Home() {
   };
 
   const handleVictoryNewGoal = () => {
+    const cat = victoryGoal?.category || activeCategory;
     handleVictoryClose();
-    navigate('/CreateGoal?category=' + (victoryGoal?.category || activeCategory));
+    navigate('/CreateGoal?category=' + cat);
   };
 
   return (
