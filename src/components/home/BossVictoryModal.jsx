@@ -30,6 +30,12 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
 
   const isTest = goal?.id === 'test-id';
 
+  const completeActionGoals = async () => {
+    const actionGoals = await base44.entities.ActionGoal.filter({ goal_id: goal.id, status: 'active' });
+    await Promise.all(actionGoals.map(ag => base44.entities.ActionGoal.update(ag.id, { status: 'completed' })));
+    queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
+  };
+
   const handleNotAchieved = async () => {
     setSaving(true);
     if (!isTest) {
@@ -38,6 +44,7 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
         achievement_confirmed: true,
         achievement_success: false,
       });
+      await completeActionGoals();
       queryClient.invalidateQueries({ queryKey: ['goals'] });
     }
     setSaving(false);
@@ -63,6 +70,7 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
         earned_date: new Date().toISOString().split('T')[0],
         goal_id: goal.id,
       });
+      await completeActionGoals();
       queryClient.invalidateQueries({ queryKey: ['goals'] });
     }
     setSaving(false);
