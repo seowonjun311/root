@@ -171,7 +171,17 @@ export default function Home() {
 
   return (
     <div className="bg-background min-h-screen">
-      <CharacterBanner nickname={user?.nickname} message={getGreeting()} level={user?.level || 1} />
+      <CharacterBanner 
+        nickname={user?.nickname} 
+        message={getGreeting()} 
+        category={activeCategory}
+        userLevels={{
+          exercise_level: user?.exercise_level || 1,
+          study_level: user?.study_level || 1,
+          mental_level: user?.mental_level || 1,
+          daily_level: user?.daily_level || 1,
+        }}
+      />
       <CategoryTabs active={activeCategory} onChange={handleCategoryChange} />
 
       {activeGoal ? (
