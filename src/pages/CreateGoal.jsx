@@ -241,18 +241,20 @@ export default function CreateGoal() {
               ))}
             </div>
           </div>
-          <div>
-            <label className="text-sm font-semibold text-amber-800 mb-2 block">주 횟수</label>
-            <div className="flex gap-2">
-              {[3, 5, 7].map(f => (
-                <button key={f} onClick={() => setFrequency(f)}
-                  className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
-                    frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
-                  주 {f}회
-                </button>
-              ))}
+          {actionType === 'timer' && (
+            <div>
+              <label className="text-sm font-semibold text-amber-800 mb-2 block">주 횟수</label>
+              <div className="flex gap-2">
+                {[3, 5, 7].map(f => (
+                  <button key={f} onClick={() => setFrequency(f)}
+                    className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
+                      frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                    주 {f}회
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           {actionType === 'timer' && (
             <div>
               <label className="text-sm font-semibold text-amber-800 mb-2 block">1회 시간</label>
