@@ -150,8 +150,9 @@ export default function Records() {
 
       <Tabs defaultValue="stats" className="px-4">
         <TabsList className="w-full bg-secondary/60 rounded-xl h-10">
-          <TabsTrigger value="stats" className="flex-1 rounded-lg text-sm">통계</TabsTrigger>
-          <TabsTrigger value="timeline" className="flex-1 rounded-lg text-sm">타임라인</TabsTrigger>
+          <TabsTrigger value="stats" className="flex-1 rounded-lg text-xs">통계</TabsTrigger>
+          <TabsTrigger value="timeline" className="flex-1 rounded-lg text-xs">타임라인</TabsTrigger>
+          <TabsTrigger value="album" className="flex-1 rounded-lg text-xs">여정 앨범</TabsTrigger>
         </TabsList>
 
         <TabsContent value="stats" className="mt-4 space-y-4">
