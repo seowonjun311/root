@@ -158,15 +158,6 @@ export default function Home() {
     setShownVictoryIds(newShown);
     localStorage.setItem('shownVictory', JSON.stringify(newShown));
     queryClient.invalidateQueries({ queryKey: ['goals'] });
-    const { title, description } = getBadgeForGoal(victoryGoal);
-    createBadgeMutation.mutate({
-      title,
-      description,
-      category: victoryGoal.category,
-      badge_type: 'result',
-      earned_date: new Date().toISOString().split('T')[0],
-      goal_id: victoryGoal.id,
-    });
     setVictoryGoal(null);
   };
 
