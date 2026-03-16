@@ -18,11 +18,14 @@ export default function CreateGoal() {
   const navigate = useNavigate();
   const params = new URLSearchParams(window.location.search);
   const category = params.get('category') || 'exercise';
+  const existingGoalId = params.get('goalId'); // 기존 결과 목표에 행동 목표 추가
   const isStudy = category === 'study';
+  const isAddingActionOnly = !!existingGoalId;
 
   // step 흐름:
   // 공부: 0(D-day 유무 선택) → 1a(D-day 날짜 입력) or 1b(일반 목표 입력) → 2(행동 목표)
   // 기타: 0(결과 목표 입력) → 1(행동 목표)
+  // 행동 목표만 추가: 0(행동 목표 입력)
   const [step, setStep] = useState(0);
   const [hasDDay, setHasDDay] = useState(null); // true/false/null
 
