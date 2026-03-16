@@ -87,6 +87,7 @@ export default function NotificationSettings() {
   const [showTimeDialog, setShowTimeDialog] = useState(false);
   const [pendingTime, setPendingTime] = useState(settings.time);
   const [pendingDays, setPendingDays] = useState(settings.days);
+  const [switchPending, setSwitchPending] = useState(false);
 
   useEffect(() => {
     if (isNotificationSupported()) setPermission(window.Notification.permission);
