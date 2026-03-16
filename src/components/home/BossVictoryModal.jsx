@@ -26,35 +26,41 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
 
   const handleAchieved = () => setPhase('result_input');
 
+  const isTest = goal?.id === 'test-id';
+
   const handleNotAchieved = async () => {
     setSaving(true);
-    await base44.entities.Goal.update(goal.id, {
-      status: 'failed',
-      achievement_confirmed: true,
-      achievement_success: false,
-    });
+    if (!isTest) {
+      await base44.entities.Goal.update(goal.id, {
+        status: 'failed',
+        achievement_confirmed: true,
+        achievement_success: false,
+      });
+    }
     setSaving(false);
     setPhase('consolation');
   };
 
   const handleResultSubmit = async () => {
     setSaving(true);
-    await base44.entities.Goal.update(goal.id, {
-      status: 'completed',
-      achievement_confirmed: true,
-      achievement_success: true,
-      result_note: resultNote || '',
-    });
-    // 칭호(Badge) 저장
-    const { title, description } = getBadgeForGoal(goal);
-    await base44.entities.Badge.create({
-      title,
-      description: resultNote ? `${description} - "${resultNote}"` : description,
-      category: goal.category,
-      badge_type: 'result',
-      earned_date: new Date().toISOString().split('T')[0],
-      goal_id: goal.id,
-    });
+    if (!isTest) {
+      await base44.entities.Goal.update(goal.id, {
+        status: 'completed',
+        achievement_confirmed: true,
+        achievement_success: true,
+        result_note: resultNote || '',
+      });
+      // 칭호(Badge) 저장
+      const { title, description } = getBadgeForGoal(goal);
+      await base44.entities.Badge.create({
+        title,
+        description: resultNote ? `${description} - "${resultNote}"` : description,
+        category: goal.category,
+        badge_type: 'result',
+        earned_date: new Date().toISOString().split('T')[0],
+        goal_id: goal.id,
+      });
+    }
     setSaving(false);
     fireConfetti();
     setPhase('victory');
