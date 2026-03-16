@@ -191,7 +191,7 @@ export default function Home() {
           <div className="px-4 pb-4">
             <Button
               variant="outline"
-              onClick={() => navigate('/CreateGoal?category=' + activeCategory)}
+              onClick={() => navigate(`/CreateGoal?category=${activeCategory}&goalId=${activeGoal.id}`)}
               className="w-full h-11 rounded-xl border-dashed border-amber-400/60 text-amber-700 hover:bg-amber-50/50 font-medium"
             >
               <Plus className="w-4 h-4 mr-2" />
