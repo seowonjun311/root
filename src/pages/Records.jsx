@@ -10,6 +10,7 @@ const CAT_LABELS = { exercise: '운동', study: '공부', mental: '정신', dail
 
 export default function Records() {
   const [catFilter, setCatFilter] = useState('all');
+  const [showCompletedGoals, setShowCompletedGoals] = useState(false);
   const navigate = useNavigate();
 
   const { data: logs = [] } = useQuery({
