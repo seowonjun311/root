@@ -41,7 +41,7 @@ export default function Onboarding() {
   const [customDuration, setCustomDuration] = useState('');
   const [actionTitle, setActionTitle] = useState('');
   const [actionType, setActionType] = useState('confirm');
-  const [frequency, setFrequency] = useState(5);
+  const [frequency, setFrequency] = useState(7);
   const [actionMinutes, setActionMinutes] = useState(60);
   const [nickname, setNickname] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
