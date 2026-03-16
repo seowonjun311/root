@@ -84,6 +84,9 @@ export default function NotificationSettings() {
     isNotificationSupported() ? window.Notification.permission : 'unsupported'
   );
   const [testLoading, setTestLoading] = useState(false);
+  const [showTimeDialog, setShowTimeDialog] = useState(false);
+  const [pendingTime, setPendingTime] = useState(settings.time);
+  const [pendingDays, setPendingDays] = useState(settings.days);
 
   useEffect(() => {
     if (isNotificationSupported()) setPermission(window.Notification.permission);
