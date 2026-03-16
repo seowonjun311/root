@@ -35,8 +35,12 @@ function saveSettings(settings) {
   localStorage.setItem('notificationSettings', JSON.stringify(settings));
 }
 
+const isNotificationSupported = () => typeof window !== 'undefined' && 'Notification' in window;
+
 // Schedule next notification using setTimeout
 function scheduleNotifications(settings) {
+  if (!isNotificationSupported()) return;
+
   // Clear existing timers
   const existingIds = JSON.parse(localStorage.getItem('notifTimerIds') || '[]');
   existingIds.forEach(id => clearTimeout(id));
@@ -50,9 +54,9 @@ function scheduleNotifications(settings) {
 
   const timerIds = [];
 
-  DAY_KEYS.forEach((key, idx) => {
+  DAY_KEYS.forEach((key) => {
     if (!settings.days[key]) return;
-    const targetDay = dayIndexMap[key]; // 0=Sun..6=Sat
+    const targetDay = dayIndexMap[key];
     const daysUntil = (targetDay - now.getDay() + 7) % 7;
     const target = new Date(now);
     target.setDate(now.getDate() + daysUntil);
@@ -61,8 +65,10 @@ function scheduleNotifications(settings) {
 
     const ms = target - now;
     const id = setTimeout(() => {
-      const msg = ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)];
-      new Notification('루트 (Route) 🦊', { body: msg, icon: '/favicon.ico' });
+      if (Notification.permission === 'granted') {
+        const msg = ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)];
+        new Notification('루트 (Route) 🦊', { body: msg, icon: '/favicon.ico' });
+      }
     }, ms);
     timerIds.push(id);
   });
