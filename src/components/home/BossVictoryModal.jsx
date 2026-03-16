@@ -13,6 +13,7 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
   const [phase, setPhase] = useState('battle');
   const [resultNote, setResultNote] = useState('');
   const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const t = setTimeout(() => setPhase('confirm'), 2200);
