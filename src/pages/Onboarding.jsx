@@ -288,17 +288,21 @@ export default function Onboarding() {
             </button>
           ))}
         </div>
-        <p className="text-xs font-semibold text-amber-800 mb-2">주 횟수</p>
-        <div className="grid grid-cols-7 gap-1.5 mb-4">
-          {[1, 2, 3, 4, 5, 6, 7].map(f => (
-            <button key={f} onClick={() => setFrequency(f)}
-              className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
-              {f}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-muted-foreground mb-4">주 {frequency}회</p>
+        {actionType === 'timer' && (
+          <>
+            <p className="text-xs font-semibold text-amber-800 mb-2">주 횟수</p>
+            <div className="grid grid-cols-7 gap-1.5 mb-4">
+              {[1, 2, 3, 4, 5, 6, 7].map(f => (
+                <button key={f} onClick={() => setFrequency(f)}
+                  className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                    frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                  {f}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">주 {frequency}회</p>
+          </>
+        )}
         {actionType === 'timer' && (
           <>
             <p className="text-xs font-semibold text-amber-800 mb-2">1회 시간</p>
