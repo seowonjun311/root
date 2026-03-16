@@ -79,11 +79,13 @@ function scheduleNotifications(settings) {
 export default function NotificationSettings() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(loadSettings);
-  const [permission, setPermission] = useState(Notification.permission);
+  const [permission, setPermission] = useState(
+    isNotificationSupported() ? window.Notification.permission : 'unsupported'
+  );
   const [testLoading, setTestLoading] = useState(false);
 
   useEffect(() => {
-    setPermission(Notification.permission);
+    if (isNotificationSupported()) setPermission(window.Notification.permission);
   }, []);
 
   const requestPermission = async () => {
