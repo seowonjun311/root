@@ -50,6 +50,55 @@ export default function Records() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* 획득한 칭호 다이얼로그 */}
+      <Dialog open={showBadges} onOpenChange={setShowBadges}>
+        <DialogContent className="max-w-sm rounded-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-center">🏅 획득한 칭호</DialogTitle>
+          </DialogHeader>
+          {badges.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-3xl mb-2">🦊</p>
+              <p className="text-sm">아직 획득한 칭호가 없어요.</p>
+            </div>
+          ) : (
+            <div className="space-y-4 mt-1">
+              {['exercise', 'study', 'mental', 'daily', 'special'].map(cat => {
+                const catBadges = badges.filter(b => b.category === cat);
+                if (catBadges.length === 0) return null;
+                const catInfo = {
+                  exercise: { label: '운동', emoji: '🏃' },
+                  study: { label: '공부', emoji: '📚' },
+                  mental: { label: '정신', emoji: '🧘' },
+                  daily: { label: '일상', emoji: '🏠' },
+                  special: { label: '특별', emoji: '⭐' },
+                }[cat];
+                return (
+                  <div key={cat}>
+                    <p className="text-xs font-bold text-amber-800 mb-2">
+                      {catInfo.emoji} {catInfo.label} ({catBadges.length}개)
+                    </p>
+                    <div className="space-y-2">
+                      {catBadges.map(b => (
+                        <div key={b.id} className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/60">
+                          <p className="text-sm font-semibold text-amber-900">{b.title}</p>
+                          {b.description && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{b.description}</p>
+                          )}
+                          {b.earned_date && (
+                            <p className="text-[10px] text-amber-600 mt-1">{b.earned_date}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* 완료한 목표 다이얼로그 */}
       <Dialog open={showCompletedGoals} onOpenChange={setShowCompletedGoals}>
         <DialogContent className="max-w-sm rounded-2xl max-h-[80vh] overflow-y-auto">
