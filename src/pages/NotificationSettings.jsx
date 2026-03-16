@@ -89,6 +89,10 @@ export default function NotificationSettings() {
   }, []);
 
   const requestPermission = async () => {
+    if (!isNotificationSupported()) {
+      toast.error('이 브라우저는 알림을 지원하지 않습니다.');
+      return;
+    }
     const result = await Notification.requestPermission();
     setPermission(result);
     if (result === 'granted') {
