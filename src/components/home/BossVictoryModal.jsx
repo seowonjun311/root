@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import confetti from 'canvas-confetti';
 import { base44 } from '@/api/base44Client';
 import { getBadgeForGoal } from '../badgeUtils';
+import { useQueryClient } from '@tanstack/react-query';
 
 // phase: 'battle' → 'confirm' → 'result_input' → 'victory' | 'consolation'
 
