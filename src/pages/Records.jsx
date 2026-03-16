@@ -33,7 +33,8 @@ export default function Records() {
   const totalMinutes = filteredLogs.reduce((sum, l) => sum + (l.duration_minutes || 0), 0);
   const totalHours = Math.round(totalMinutes / 60);
   const totalSessions = filteredLogs.length;
-  const completedGoals = goals.filter(g => g.status === 'completed').length;
+  const completedGoalsList = goals.filter(g => g.status === 'completed');
+  const completedGoals = completedGoalsList.length;
 
   // Category breakdown
   const catBreakdown = Object.entries(
