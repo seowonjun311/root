@@ -286,19 +286,40 @@ export default function NotificationSettings() {
           </motion.div>
         )}
 
-        {/* Main toggle card */}
+        {/* 비활성화 상태: 빈 안내 UI */}
+        {!settings.enabled && !switchPending && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-16 gap-6"
+          >
+            <div className="text-center">
+              <p className="text-4xl mb-3">🔕</p>
+              <p className="text-sm font-semibold text-foreground">설정된 알림이 없습니다.</p>
+              <p className="text-xs text-muted-foreground mt-1">알림을 추가하면 목표 달성을 도와드려요.</p>
+            </div>
+            <Button
+              onClick={() => handleToggle(true)}
+              className="h-12 px-8 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold text-base gap-2"
+            >
+              <Bell className="w-5 h-5" />
+              알림 추가
+            </Button>
+          </motion.div>
+        )}
+
+        {/* Main toggle card (활성화 상태에서만 표시) */}
+        {(settings.enabled || switchPending) && (
         <div className="p-5 rounded-2xl bg-card border border-border/60">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${settings.enabled ? 'bg-amber-100' : 'bg-secondary'}`}>
-                {settings.enabled
-                  ? <Bell className="w-5 h-5 text-amber-600" />
-                  : <BellOff className="w-5 h-5 text-muted-foreground" />}
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-100">
+                <Bell className="w-5 h-5 text-amber-600" />
               </div>
               <div>
                 <p className="font-semibold text-sm">알림 사용</p>
                 <p className="text-xs text-muted-foreground">
-                  {settings.enabled ? `${activeCount}일 활성 · ${settings.time}` : '비활성화됨'}
+                  {activeCount}일 활성 · {settings.time}
                 </p>
               </div>
             </div>
@@ -308,6 +329,7 @@ export default function NotificationSettings() {
             />
           </div>
         </div>
+        )}
 
         {/* Time & Day settings (활성화 후 수정) */}
         <AnimatePresence>
