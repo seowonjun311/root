@@ -160,7 +160,19 @@ export default function NotificationSettings() {
 
       <div className="px-4 space-y-4 pb-8">
         {/* Permission banner */}
-        {permission !== 'granted' && (
+        {permission === 'unsupported' && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-2xl bg-red-50 border border-red-200"
+          >
+            <p className="text-sm font-semibold text-red-700 mb-1">알림을 지원하지 않는 환경이에요</p>
+            <p className="text-xs text-red-500">Chrome, Edge 등의 브라우저에서 이용해주세요. iOS Safari는 홈 화면 추가 후 사용 가능합니다.</p>
+          </motion.div>
+        )}
+
+        {/* Permission banner */}
+        {permission !== 'granted' && permission !== 'unsupported' && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
