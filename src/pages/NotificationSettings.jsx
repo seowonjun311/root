@@ -107,16 +107,35 @@ export default function NotificationSettings() {
   };
 
   const handleToggle = async (enabled) => {
-    if (enabled && permission !== 'granted') {
-      await requestPermission();
-      if (Notification.permission !== 'granted') return;
-      setPermission('granted');
+    if (enabled) {
+      if (permission !== 'granted') {
+        await requestPermission();
+        if (Notification.permission !== 'granted') return;
+        setPermission('granted');
+      }
+      setPendingTime(settings.time);
+      setPendingDays(settings.days);
+      setShowTimeDialog(true);
+    } else {
+      const next = { ...settings, enabled: false };
+      setSettings(next);
+      saveSettings(next);
+      scheduleNotifications(next);
+      toast.success('알림이 비활성화되었습니다.');
     }
-    const next = { ...settings, enabled };
+  };
+
+  const handleDialogConfirm = () => {
+    const next = { ...settings, enabled: true, time: pendingTime, days: pendingDays };
     setSettings(next);
     saveSettings(next);
     scheduleNotifications(next);
-    toast.success(enabled ? '알림이 활성화되었습니다.' : '알림이 비활성화되었습니다.');
+    setShowTimeDialog(false);
+    toast.success('알림이 활성화되었습니다.');
+  };
+
+  const handleDialogCancel = () => {
+    setShowTimeDialog(false);
   };
 
   const handleTimeChange = (e) => {
