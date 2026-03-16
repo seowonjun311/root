@@ -113,6 +113,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
   const [showDelete, setShowDelete] = useState(false);
   const [editTitle, setEditTitle] = useState(actionGoal.title || '');
   const [editFrequency, setEditFrequency] = useState(actionGoal.weekly_frequency || 5);
+  const [editMinutes, setEditMinutes] = useState(actionGoal.duration_minutes || 30);
   const [saving, setSaving] = useState(false);
 
   const intervalRef = useRef(null);
