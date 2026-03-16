@@ -275,7 +275,7 @@ function PathScene({ colors }) {
   );
 }
 
-export default function CharacterBanner({ nickname, message }) {
+export default function CharacterBanner({ nickname, message, level = 1 }) {
   const season = getSeason();
   const colors = seasonConfig[season];
 
@@ -298,10 +298,15 @@ export default function CharacterBanner({ nickname, message }) {
           transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
         >
           <g transform="translate(60, 30) scale(0.9)">
-            <FoxCharacter />
+            <FoxCharacter level={level} />
           </g>
         </motion.g>
       </svg>
+
+      {/* 레벨 배지 */}
+      <div className="absolute top-4 right-4 flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full px-3 py-1.5 shadow-lg">
+        <span className="text-sm font-bold text-amber-900">Lv. {level}</span>
+      </div>
 
       {/* 텍스트 오버레이 */}
       <div className="absolute bottom-0 left-0 right-0 px-5 py-3 bg-gradient-to-t from-amber-900/60 to-transparent">
