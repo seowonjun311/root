@@ -84,11 +84,6 @@ export default function Home() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['actionLogs'] }),
   });
 
-  const completeGoalMutation = useMutation({
-    mutationFn: (id) => base44.entities.Goal.update(id, { status: 'completed' }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['goals'] }),
-  });
-
   const createBadgeMutation = useMutation({
     mutationFn: (data) => base44.entities.Badge.create(data),
   });
@@ -217,6 +212,16 @@ export default function Home() {
           onCreateGoal={() => navigate('/CreateGoal?category=' + activeCategory)}
         />
       )}
+
+      {/* 🧪 임시 테스트 버튼 */}
+      <div className="fixed bottom-24 right-4 z-40">
+        <button
+          onClick={() => setVictoryGoal({ id: 'test-id', title: '토익 900점', duration_days: 49, category: 'study' })}
+          className="bg-red-500 text-white text-xs px-3 py-2 rounded-xl shadow-lg font-bold"
+        >
+          🧪 달성 테스트
+        </button>
+      </div>
 
       {pendingLog && (
         <PhotoConfirmModal
