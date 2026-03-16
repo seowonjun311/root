@@ -63,6 +63,7 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
         earned_date: new Date().toISOString().split('T')[0],
         goal_id: goal.id,
       });
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
     }
     setSaving(false);
     fireConfetti();
