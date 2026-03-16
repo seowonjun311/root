@@ -57,7 +57,7 @@ export default function Records() {
           <DialogHeader>
             <DialogTitle className="text-center">🏅 획득한 칭호</DialogTitle>
           </DialogHeader>
-          {badges.length === 0 ? (
+          {filteredBadges.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p className="text-3xl mb-2">🦊</p>
               <p className="text-sm">아직 획득한 칭호가 없어요.</p>
@@ -65,7 +65,7 @@ export default function Records() {
           ) : (
             <div className="space-y-4 mt-1">
               {['exercise', 'study', 'mental', 'daily', 'special'].map(cat => {
-                const catBadges = badges.filter(b => b.category === cat);
+                const catBadges = filteredBadges.filter(b => b.category === cat);
                 if (catBadges.length === 0) return null;
                 const catInfo = {
                   exercise: { label: '운동', emoji: '🏃' },
