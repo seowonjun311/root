@@ -171,7 +171,7 @@ export default function Home() {
 
   return (
     <div className="bg-background min-h-screen">
-      <CharacterBanner nickname={user?.nickname} message={getGreeting()} />
+      <CharacterBanner nickname={user?.nickname} message={getGreeting()} level={user?.level || 1} />
       <CategoryTabs active={activeCategory} onChange={handleCategoryChange} />
 
       {activeGoal ? (
