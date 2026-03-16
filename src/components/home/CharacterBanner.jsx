@@ -195,14 +195,12 @@ export default function CharacterBanner({ nickname, message }) {
           <DemonCastle x={0} />
         </g>
 
-        {/* 여우 캐릭터 - 걷기 애니메이션 */}
+        {/* 여우 캐릭터 - 숨쉬기 idle 애니메이션 */}
         <motion.g
           animate={{
-            x: [0, 3, 0, -3, 0],
-            y: [0, -4, 0, -4, 0],
+            y: [0, -2.5, 0, -2.5, 0],
           }}
-          transition={{ duration: 0.7, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ originX: '30px', originY: '57px' }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
         >
           <g transform="translate(60, 30) scale(0.9)">
             <FoxCharacter />
