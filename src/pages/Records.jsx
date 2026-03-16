@@ -104,6 +104,32 @@ export default function Records() {
         </TabsContent>
 
         <TabsContent value="timeline" className="mt-4 space-y-3 pb-4">
+          {/* 완료 목표 (칭호 + 소감) */}
+          {(() => {
+            const completedGoals = goals.filter(g =>
+              g.status === 'completed' && g.achievement_success &&
+              (catFilter === 'all' || g.category === catFilter)
+            );
+            return completedGoals.map(g => {
+              const relatedBadge = badges.find(b => b.goal_id === g.id);
+              return (
+                <div key={`goal-${g.id}`} className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300/60">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-base">🏆</span>
+                    <p className="text-sm font-bold text-amber-900">{g.title}</p>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 ml-auto">{g.end_date || g.updated_date?.split('T')[0]}</span>
+                  </div>
+                  {relatedBadge && (
+                    <p className="text-xs text-amber-700 font-semibold mb-1">🏅 칭호: {relatedBadge.title}</p>
+                  )}
+                  {g.result_note && (
+                    <p className="text-xs text-amber-800 italic">"{g.result_note}"</p>
+                  )}
+                </div>
+              );
+            });
+          })()}
+
           {filteredLogs.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <p className="text-3xl mb-3">🦊</p>
@@ -118,6 +144,9 @@ export default function Records() {
                   <p className="text-sm font-medium truncate">{log.date}</p>
                   {log.duration_minutes > 0 && (
                     <p className="text-xs text-muted-foreground">{log.duration_minutes}분 수련</p>
+                  )}
+                  {log.memo && (
+                    <p className="text-xs text-muted-foreground italic">"{log.memo}"</p>
                   )}
                 </div>
                 <span className="text-xs px-2 py-1 rounded-lg bg-amber-100/80 text-amber-700">
