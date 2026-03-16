@@ -108,6 +108,71 @@ export default function CreateGoal() {
   };
 
   const renderStep = () => {
+    // ── 행동 목표만 추가 ──
+    if (isAddingActionOnly) {
+      return (
+        <div className="space-y-5">
+          <div>
+            <label className="text-sm font-semibold text-amber-800 mb-2 block">행동 목표 이름</label>
+            <Input
+              value={actionTitle}
+              onChange={e => setActionTitle(e.target.value)}
+              placeholder="예: 러닝, LC 공부, 명상..."
+              className="h-12 rounded-xl bg-white/80"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-amber-800 mb-2 block">행동 유형</label>
+            <div className="space-y-2">
+              {ACTION_TYPES.map(t => (
+                <button key={t.value} onClick={() => { setActionType(t.value); if (t.value !== 'timer') setFrequency(7); }}
+                  className={`w-full p-3 rounded-xl border text-left transition-all ${
+                    actionType === t.value ? 'border-amber-600 bg-amber-50/80' : 'border-border bg-card'}`}>
+                  <p className="text-sm font-semibold">{t.label}</p>
+                  <p className="text-xs text-muted-foreground">{t.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+          {actionType === 'timer' && (
+            <div>
+              <label className="text-sm font-semibold text-amber-800 mb-2 block">주 횟수</label>
+              <div className="flex gap-2">
+                {[3, 5, 7].map(f => (
+                  <button key={f} onClick={() => setFrequency(f)}
+                    className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
+                      frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                    주 {f}회
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {actionType === 'timer' && (
+            <div>
+              <label className="text-sm font-semibold text-amber-800 mb-2 block">1회 시간</label>
+              <div className="flex gap-2">
+                {[20, 30, 60].map(m => (
+                  <button key={m} onClick={() => setMinutes(m)}
+                    className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
+                      minutes === m ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                    {m}분
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <Button
+            className="w-full h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
+            disabled={!actionTitle.trim() || isSubmitting}
+            onClick={handleSubmit}
+          >
+            {isSubmitting ? '추가 중...' : '행동 목표 추가하기 🦊'}
+          </Button>
+        </div>
+      );
+    }
+
     // ── 공부: D-day 유무 선택 ──
     if (isStudy && step === 0) {
       return (
