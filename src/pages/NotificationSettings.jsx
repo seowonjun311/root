@@ -90,7 +90,11 @@ export default function NotificationSettings() {
   const [switchPending, setSwitchPending] = useState(false);
 
   useEffect(() => {
-    if (isNotificationSupported()) setPermission(window.Notification.permission);
+    if (!isNotificationSupported()) return;
+    const syncPermission = () => setPermission(window.Notification.permission);
+    syncPermission();
+    window.addEventListener('focus', syncPermission);
+    return () => window.removeEventListener('focus', syncPermission);
   }, []);
 
   const requestPermission = async () => {
