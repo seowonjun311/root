@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import confetti from 'canvas-confetti';
 import { base44 } from '@/api/base44Client';
+import { getBadgeForGoal } from '../badgeUtils';
 
 // phase: 'battle' → 'confirm' → 'result_input' → 'victory' | 'consolation'
 
@@ -43,6 +44,16 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
       achievement_confirmed: true,
       achievement_success: true,
       result_note: resultNote || '',
+    });
+    // 칭호(Badge) 저장
+    const { title, description } = getBadgeForGoal(goal);
+    await base44.entities.Badge.create({
+      title,
+      description: resultNote ? `${description} - "${resultNote}"` : description,
+      category: goal.category,
+      badge_type: 'result',
+      earned_date: new Date().toISOString().split('T')[0],
+      goal_id: goal.id,
     });
     setSaving(false);
     fireConfetti();
