@@ -172,6 +172,64 @@ export default function NotificationSettings() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* 시간 설정 다이얼로그 */}
+      <Dialog open={showTimeDialog} onOpenChange={(open) => { if (!open) handleDialogCancel(); }}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-center">🔔 알림 시간 설정</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5 py-2">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Clock className="w-4 h-4 text-amber-600" />
+                <p className="font-semibold text-sm">알림 시간</p>
+              </div>
+              <div className="flex justify-center">
+                <input
+                  type="time"
+                  value={pendingTime}
+                  onChange={e => setPendingTime(e.target.value)}
+                  className="text-3xl font-bold text-amber-900 bg-secondary/50 border border-border rounded-2xl px-6 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Calendar className="w-4 h-4 text-amber-600" />
+                <p className="font-semibold text-sm">알림 요일</p>
+              </div>
+              <div className="flex gap-1.5 justify-between">
+                {DAY_KEYS.map((key, i) => (
+                  <button
+                    key={key}
+                    onClick={() => setPendingDays(prev => ({ ...prev, [key]: !prev[key] }))}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                      pendingDays[key]
+                        ? 'bg-amber-700 text-amber-50 shadow-md shadow-amber-800/20'
+                        : 'bg-secondary/70 text-muted-foreground'
+                    }`}
+                  >
+                    {DAYS[i]}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                {pendingActiveCount === 0 ? '최소 하루는 선택해주세요' : `주 ${pendingActiveCount}회 알림`}
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={handleDialogCancel} className="flex-1 rounded-xl">취소</Button>
+            <Button
+              onClick={handleDialogConfirm}
+              disabled={pendingActiveCount === 0}
+              className="flex-1 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50"
+            >
+              확인
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Header */}
       <div className="flex items-center gap-3 p-5 pb-3">
         <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-secondary transition-colors">
