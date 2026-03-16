@@ -277,7 +277,7 @@ export default function Onboarding() {
         <p className="text-xs font-semibold text-amber-800 mb-2">행동 유형</p>
         <div className="space-y-2 mb-4">
           {ACTION_TYPE_OPTIONS.map(opt => (
-            <button key={opt.value} onClick={() => setActionType(opt.value)}
+            <button key={opt.value} onClick={() => { setActionType(opt.value); if (opt.value !== 'timer') setFrequency(7); }}
               className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
                 actionType === opt.value ? 'border-amber-600 bg-amber-50/80' : 'border-border bg-card hover:border-amber-300'}`}>
               <span className="text-xl">{opt.emoji}</span>
