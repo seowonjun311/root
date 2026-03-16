@@ -89,8 +89,10 @@ export default function Home() {
   });
 
   const categoryGoals = goals.filter(g => g.category === activeCategory);
-  const categoryActionGoals = actionGoals.filter(ag => ag.category === activeCategory);
   const activeGoal = categoryGoals[0];
+  const categoryActionGoals = activeGoal
+    ? actionGoals.filter(ag => ag.goal_id === activeGoal.id)
+    : [];
 
   const today = new Date();
   const dayOfWeek = today.getDay();
