@@ -374,7 +374,7 @@ export default function CreateGoal() {
         <button onClick={handleBack} className="p-1">
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <h1 className="font-bold text-lg">{categoryNames[category]} 목표 만들기</h1>
+        <h1 className="font-bold text-lg">{isAddingActionOnly ? `${categoryNames[category]} 행동 목표 추가` : `${categoryNames[category]} 목표 만들기`}</h1>
       </div>
       <div className="p-6">
         {renderStep()}
