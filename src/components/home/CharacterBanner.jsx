@@ -275,9 +275,11 @@ function PathScene({ colors }) {
   );
 }
 
-export default function CharacterBanner({ nickname, message, level = 1 }) {
+export default function CharacterBanner({ nickname, message, category = 'exercise', userLevels = {} }) {
   const season = getSeason();
   const colors = seasonConfig[season];
+  const levelKey = `${category}_level`;
+  const level = userLevels[levelKey] || 1;
 
   return (
     <div className="relative overflow-hidden rounded-b-3xl shadow-md" style={{ background: colors.skyTop }}>
