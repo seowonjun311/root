@@ -207,13 +207,21 @@ export default function Home() {
       )}
 
       {/* 🧪 임시 테스트 버튼 */}
-      <div className="fixed bottom-24 right-4 z-40">
-        <button
-          onClick={() => setVictoryGoal({ id: 'test-id', title: '토익 900점', duration_days: 49, category: 'study' })}
-          className="bg-red-500 text-white text-xs px-3 py-2 rounded-xl shadow-lg font-bold"
-        >
-          🧪 달성 테스트
-        </button>
+      <div className="fixed bottom-24 right-4 z-40 flex flex-col gap-1.5">
+        {[
+          { label: '🏃 운동', category: 'exercise', title: '10kg 감량', days: 56 },
+          { label: '📚 공부', category: 'study', title: '토익 900점', days: 49 },
+          { label: '🧘 정신', category: 'mental', title: '명상 습관', days: 42 },
+          { label: '🏠 일상', category: 'daily', title: '금연 성공', days: 30 },
+        ].map(({ label, category, title, days }) => (
+          <button
+            key={category}
+            onClick={() => setVictoryGoal({ id: 'test-id', title, duration_days: days, category })}
+            className="bg-red-500 text-white text-xs px-3 py-2 rounded-xl shadow-lg font-bold"
+          >
+            🧪 {label}
+          </button>
+        ))}
       </div>
 
       {pendingLog && (
