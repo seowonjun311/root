@@ -299,7 +299,7 @@ export default function NotificationSettings() {
               </div>
             </div>
             <Switch
-              checked={settings.enabled}
+              checked={settings.enabled || switchPending}
               onCheckedChange={handleToggle}
             />
           </div>
