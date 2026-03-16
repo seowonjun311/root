@@ -175,7 +175,9 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
 
   const handleSave = async () => {
     setSaving(true);
-    await base44.entities.ActionGoal.update(actionGoal.id, { title: editTitle, weekly_frequency: editFrequency });
+    const updateData = { title: editTitle, weekly_frequency: editFrequency };
+    if (actionGoal.action_type === 'timer') updateData.duration_minutes = editMinutes;
+    await base44.entities.ActionGoal.update(actionGoal.id, updateData);
     queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
     toast.success('행동 목표가 수정되었습니다.');
     setShowEdit(false);
