@@ -72,12 +72,15 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
       });
       await completeActionGoals();
 
-      // XP 부여 및 레벨업
+      // 카테고리별 XP 부여 및 레벨업
       const user = await base44.auth.me();
       const xpReward = Math.max(100, goal.duration_days * 10);
-      const nextXP = (user.xp || 0) + xpReward;
+      const category = goal.category;
+      const xpKey = `${category}_xp`;
+      const levelKey = `${category}_level`;
+      const nextXP = (user[xpKey] || 0) + xpReward;
       const nextLevel = Math.floor(Math.sqrt(nextXP / 500)) + 1;
-      await base44.auth.updateMe({ xp: nextXP, level: nextLevel });
+      await base44.auth.updateMe({ [xpKey]: nextXP, [levelKey]: nextLevel });
 
       queryClient.invalidateQueries({ queryKey: ['goals', 'me'] });
     }
