@@ -301,7 +301,7 @@ export default function NotificationSettings() {
           </div>
         </div>
 
-        {/* Time & Day settings */}
+        {/* Time & Day settings (활성화 후 수정) */}
         <AnimatePresence>
           {settings.enabled && (
             <motion.div
@@ -310,46 +310,28 @@ export default function NotificationSettings() {
               exit={{ opacity: 0, height: 0 }}
               className="space-y-4 overflow-hidden"
             >
-              {/* Time picker */}
+              {/* 현재 설정 요약 + 수정 버튼 */}
               <div className="p-5 rounded-2xl bg-card border border-border/60">
-                <div className="flex items-center gap-2 mb-4">
-                  <Clock className="w-4 h-4 text-amber-600" />
-                  <p className="font-semibold text-sm">알림 시간</p>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-amber-600" />
+                    <p className="font-semibold text-sm">현재 알림 설정</p>
+                  </div>
+                  <button
+                    onClick={() => { setPendingTime(settings.time); setPendingDays(settings.days); setShowTimeDialog(true); }}
+                    className="text-xs font-semibold text-amber-700 hover:underline"
+                  >
+                    수정
+                  </button>
                 </div>
-                <div className="flex justify-center">
-                  <input
-                    type="time"
-                    value={settings.time}
-                    onChange={handleTimeChange}
-                    className="text-3xl font-bold text-amber-900 bg-secondary/50 border border-border rounded-2xl px-6 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
-                  />
-                </div>
-              </div>
-
-              {/* Day picker */}
-              <div className="p-5 rounded-2xl bg-card border border-border/60">
-                <div className="flex items-center gap-2 mb-4">
-                  <Calendar className="w-4 h-4 text-amber-600" />
-                  <p className="font-semibold text-sm">알림 요일</p>
-                </div>
-                <div className="flex gap-2 justify-between">
+                <p className="text-2xl font-bold text-amber-900 mb-2">{settings.time}</p>
+                <div className="flex gap-1.5">
                   {DAY_KEYS.map((key, i) => (
-                    <button
-                      key={key}
-                      onClick={() => handleDayToggle(key)}
-                      className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                        settings.days[key]
-                          ? 'bg-amber-700 text-amber-50 shadow-md shadow-amber-800/20'
-                          : 'bg-secondary/70 text-muted-foreground'
-                      }`}
-                    >
-                      {DAYS[i]}
-                    </button>
+                    <span key={key} className={`flex-1 text-center py-1.5 rounded-lg text-xs font-bold ${
+                      settings.days[key] ? 'bg-amber-700 text-amber-50' : 'bg-secondary/70 text-muted-foreground'
+                    }`}>{DAYS[i]}</span>
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground text-center mt-3">
-                  {activeCount === 0 ? '최소 하루는 선택해주세요' : `주 ${activeCount}회 알림`}
-                </p>
               </div>
 
               {/* Preview card */}
@@ -357,13 +339,9 @@ export default function NotificationSettings() {
                 <p className="text-xs font-semibold text-amber-700 mb-2">📱 알림 미리보기</p>
                 <div className="bg-white rounded-xl p-3 shadow-sm">
                   <p className="text-xs font-bold text-gray-800">루트 (Route) 🦊</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {ENCOURAGEMENTS[0]}
-                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">{ENCOURAGEMENTS[0]}</p>
                 </div>
-                <p className="text-[10px] text-amber-600/70 mt-2">
-                  * 매일 달라지는 격려 문구가 전송됩니다
-                </p>
+                <p className="text-[10px] text-amber-600/70 mt-2">* 매일 달라지는 격려 문구가 전송됩니다</p>
               </div>
 
               {/* Test button */}
