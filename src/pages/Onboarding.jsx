@@ -244,18 +244,26 @@ export default function Onboarding() {
       <div className="px-6">
         <h2 className="text-xl font-bold text-center text-amber-900 mb-2">얼마 동안 도전하시겠습니까?</h2>
         <p className="text-sm text-muted-foreground text-center mb-6">기간을 선택해 주세요</p>
-        <div className="flex flex-wrap gap-3 justify-center">
-          {[{ value: 30, label: '30일' }, { value: 60, label: '60일' }, { value: 90, label: '90일' }, { value: 0, label: '직접 입력' }].map(opt => (
-            <button key={opt.value} onClick={() => setDuration(opt.value)}
-              className={`px-5 py-3 rounded-xl font-semibold text-sm transition-all ${
-                duration === opt.value ? 'bg-amber-700 text-amber-50 shadow-md' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}>
-              {opt.label}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {[4, 8, 12, 16, 20, 24].map(weeks => (
+            <button key={weeks} onClick={() => { setDuration(weeks * 7); setCustomDuration(''); }}
+              className={`py-3 rounded-xl font-semibold text-sm transition-all ${
+                duration === weeks * 7 && !customDuration ? 'bg-amber-700 text-amber-50 shadow-md' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}>
+              {weeks}주
             </button>
           ))}
         </div>
-        {duration === 0 && (
-          <Input type="number" value={customDuration} onChange={e => setCustomDuration(e.target.value)}
-            placeholder="일수를 입력하세요" className="mt-4 h-12 rounded-xl text-center bg-white/80" />
+        <div className="flex items-center gap-3 mt-2">
+          <input type="number" min="1" max="52" value={customDuration}
+            onChange={e => { setCustomDuration(e.target.value); setDuration(0); }}
+            placeholder="직접 입력"
+            className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-400/50" />
+          <span className="text-sm font-semibold text-muted-foreground">주</span>
+        </div>
+        {(customDuration || duration > 0) && (
+          <p className="text-xs text-amber-700 font-semibold mt-2 text-center">
+            총 {customDuration ? Number(customDuration) * 7 : duration}일 ({customDuration || Math.round(duration / 7)}주)
+          </p>
         )}
       </div>
     );
