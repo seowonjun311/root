@@ -114,6 +114,7 @@ export default function NotificationSettings() {
         if (Notification.permission !== 'granted') return;
         setPermission('granted');
       }
+      setSwitchPending(true);
       setPendingTime(settings.time);
       setPendingDays(settings.days);
       setShowTimeDialog(true);
@@ -131,11 +132,13 @@ export default function NotificationSettings() {
     setSettings(next);
     saveSettings(next);
     scheduleNotifications(next);
+    setSwitchPending(false);
     setShowTimeDialog(false);
     toast.success('알림이 활성화되었습니다.');
   };
 
   const handleDialogCancel = () => {
+    setSwitchPending(false);
     setShowTimeDialog(false);
   };
 
