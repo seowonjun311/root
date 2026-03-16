@@ -71,7 +71,15 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
         goal_id: goal.id,
       });
       await completeActionGoals();
-      queryClient.invalidateQueries({ queryKey: ['goals'] });
+
+      // XP 부여 및 레벨업
+      const user = await base44.auth.me();
+      const xpReward = Math.max(100, goal.duration_days * 10);
+      const nextXP = (user.xp || 0) + xpReward;
+      const nextLevel = Math.floor(Math.sqrt(nextXP / 500)) + 1;
+      await base44.auth.updateMe({ xp: nextXP, level: nextLevel });
+
+      queryClient.invalidateQueries({ queryKey: ['goals', 'me'] });
     }
     setSaving(false);
     fireConfetti();
