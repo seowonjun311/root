@@ -38,6 +38,7 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
         achievement_confirmed: true,
         achievement_success: false,
       });
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
     }
     setSaving(false);
     setPhase('consolation');
