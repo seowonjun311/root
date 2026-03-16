@@ -36,6 +36,7 @@ export default function Records() {
   const totalSessions = filteredLogs.length;
   const completedGoalsList = goals.filter(g => g.status === 'completed');
   const completedGoals = completedGoalsList.length;
+  const filteredBadges = catFilter === 'all' ? badges : badges.filter(b => b.category === catFilter);
 
   // Category breakdown
   const catBreakdown = Object.entries(
