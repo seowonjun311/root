@@ -134,18 +134,19 @@ export default function CreateGoal() {
               ))}
             </div>
           </div>
-          {actionType === 'timer' && (
+          {(actionType === 'timer' || actionType === 'confirm') && (
             <div>
               <label className="text-sm font-semibold text-amber-800 mb-2 block">주 횟수</label>
-              <div className="flex gap-2">
-                {[3, 5, 7].map(f => (
+              <div className="grid grid-cols-7 gap-1.5">
+                {[1, 2, 3, 4, 5, 6, 7].map(f => (
                   <button key={f} onClick={() => setFrequency(f)}
-                    className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
+                    className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
                       frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
-                    주 {f}회
+                    {f}
                   </button>
                 ))}
               </div>
+              <p className="text-xs text-muted-foreground mt-1.5">주 {frequency}회</p>
             </div>
           )}
           {actionType === 'timer' && (
