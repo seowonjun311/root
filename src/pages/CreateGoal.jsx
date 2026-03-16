@@ -134,8 +134,7 @@ export default function CreateGoal() {
               ))}
             </div>
           </div>
-          {(actionType === 'timer' || actionType === 'confirm') && (
-            <div>
+          <div>
               <label className="text-sm font-semibold text-amber-800 mb-2 block">주 횟수</label>
               <div className="grid grid-cols-7 gap-1.5">
                 {[1, 2, 3, 4, 5, 6, 7].map(f => (
@@ -148,7 +147,6 @@ export default function CreateGoal() {
               </div>
               <p className="text-xs text-muted-foreground mt-1.5">주 {frequency}회</p>
             </div>
-          )}
           {actionType === 'timer' && (
             <div>
               <label className="text-sm font-semibold text-amber-800 mb-2 block">1회 시간</label>
