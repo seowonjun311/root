@@ -61,6 +61,23 @@ export default function CreateGoal() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+
+    // 행동 목표만 추가하는 경우
+    if (isAddingActionOnly) {
+      await base44.entities.ActionGoal.create({
+        goal_id: existingGoalId,
+        category,
+        title: actionTitle,
+        action_type: actionType,
+        weekly_frequency: frequency,
+        duration_minutes: actionType === 'timer' ? minutes : 0,
+        status: 'active',
+      });
+      toast.success('행동 목표가 추가되었습니다! 🦊');
+      navigate('/Home');
+      return;
+    }
+
     const finalDuration = isStudy && hasDDay ? calcDuration() : duration;
     const finalTitle = isStudy && hasDDay ? examTitle : goalTitle;
     const finalDDay = isStudy && hasDDay ? dDay : undefined;
