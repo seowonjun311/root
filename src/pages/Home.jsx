@@ -95,12 +95,12 @@ export default function Home() {
     : [];
 
   const today = new Date();
+  const todayLocalStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const dayOfWeek = today.getDay();
   const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() + mondayOffset);
-  weekStart.setHours(0, 0, 0, 0);
-  const weekStartStr = weekStart.toISOString().split('T')[0];
+  const weekStartDate = new Date(today);
+  weekStartDate.setDate(today.getDate() + mondayOffset);
+  const weekStartStr = `${weekStartDate.getFullYear()}-${String(weekStartDate.getMonth() + 1).padStart(2, '0')}-${String(weekStartDate.getDate()).padStart(2, '0')}`;
 
   const getWeeklyLogs = (actionGoalId) =>
     allLogs.filter(l => l.action_goal_id === actionGoalId && l.date >= weekStartStr);
