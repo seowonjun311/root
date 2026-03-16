@@ -316,6 +316,29 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
               </div>
               <p className="text-xs text-muted-foreground mt-1.5">주 {editFrequency}회</p>
             </div>
+            {actionGoal.action_type === 'timer' && (
+              <div>
+                <label className="text-xs font-semibold text-amber-800 mb-1.5 block">1회 시간</label>
+                <div className="flex gap-2 mb-2">
+                  {[20, 30, 60].map(m => (
+                    <button key={m} onClick={() => setEditMinutes(m)}
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                        editMinutes === m ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                      {m}분
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number" min="1" max="300"
+                    value={editMinutes}
+                    onChange={e => setEditMinutes(Number(e.target.value))}
+                    className="flex-1 h-10 rounded-xl border border-input bg-white/80 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                  />
+                  <span className="text-sm font-semibold text-muted-foreground">분</span>
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter className="flex gap-2">
             <Button variant="outline" onClick={() => setShowEdit(false)} className="flex-1 rounded-xl">취소</Button>
