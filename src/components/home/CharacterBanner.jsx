@@ -16,10 +16,53 @@ const seasonConfig = {
   winter: { skyTop: '#e3f2fd', skyBot: '#f8fbff', ground: '#e0e0e0', groundDark: '#bdbdbd', accent: '#b3c6e0' },
 };
 
-// 여우 SVG 캐릭터
-function FoxCharacter() {
+// 여우 SVG 캐릭터 - 레벨별 업그레이드
+function FoxCharacter({ level = 1 }) {
+  const getAuraColor = () => {
+    if (level >= 10) return '#fbbf24'; // 금색 오라
+    if (level >= 5) return '#ec4899'; // 분홍색 오라
+    return 'none';
+  };
+
+  const getEyeGlow = () => {
+    if (level >= 8) return '#00d9ff'; // 시안빛
+    if (level >= 4) return '#fbbf24'; // 황금빛
+    return 'white';
+  };
+
+  const getCrownScale = level >= 3 ? 1 : 0;
+  const getWingsScale = level >= 7 ? 1 : 0;
+  const getHaloOpacity = level >= 5 ? 0.6 : 0;
+
   return (
     <g>
+      {/* 후광 (레벨 5+) */}
+      {level >= 5 && (
+        <motion.circle
+          cx="30"
+          cy="30"
+          r="24"
+          fill="none"
+          stroke={getAuraColor()}
+          strokeWidth="2"
+          opacity={getHaloOpacity}
+          animate={{ r: [24, 26, 24] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )}
+
+      {/* 날개 (레벨 7+) */}
+      {level >= 7 && (
+        <motion.g
+          animate={{ rotate: [-5, 5, -5] }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ originX: '30px', originY: '40px' }}
+        >
+          <ellipse cx="12" cy="38" rx="6" ry="12" fill="#fbbf24" opacity="0.4" />
+          <ellipse cx="48" cy="38" rx="6" ry="12" fill="#fbbf24" opacity="0.4" />
+        </motion.g>
+      )}
+
       {/* 꼬리 - 흔들기 애니메이션 */}
       <motion.g
         animate={{ rotate: [-20, -5, -20, -30, -20] }}
@@ -28,13 +71,31 @@ function FoxCharacter() {
       >
         <ellipse cx="18" cy="44" rx="10" ry="6" fill="#f97316" transform="rotate(-20 18 44)" />
         <ellipse cx="14" cy="42" rx="5" ry="3" fill="#fff7ed" transform="rotate(-20 14 42)" />
+        {level >= 6 && <ellipse cx="16" cy="40" rx="3" ry="2" fill="#fbbf24" opacity="0.7" transform="rotate(-20 16 40)" />}
       </motion.g>
+
       {/* 몸통 */}
       <ellipse cx="30" cy="42" rx="12" ry="10" fill="#f97316" />
       {/* 배 */}
       <ellipse cx="30" cy="44" rx="7" ry="6" fill="#fff7ed" />
+      {level >= 4 && <ellipse cx="30" cy="44" rx="5" ry="4" fill="#fbbf24" opacity="0.5" />}
+
       {/* 머리 */}
       <circle cx="30" cy="26" r="11" fill="#f97316" />
+
+      {/* 왕관 (레벨 3+) */}
+      {level >= 3 && (
+        <motion.g
+          animate={{ y: [0, -1.5, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <polygon points="20,16 25,10 30,12 35,10 40,16" fill="#fbbf24" />
+          <circle cx="25" cy="10" r="1.5" fill="#dc2626" />
+          <circle cx="30" cy="8" r="1.5" fill="#dc2626" />
+          <circle cx="35" cy="10" r="1.5" fill="#dc2626" />
+        </motion.g>
+      )}
+
       {/* 귀 - 쫑긋 애니메이션 */}
       <motion.g
         animate={{ y: [0, -2, 0, -1, 0] }}
@@ -44,29 +105,63 @@ function FoxCharacter() {
         <polygon points="38,18 42,8 34,16" fill="#f97316" />
         <polygon points="23,17 20,11 27,16" fill="#fca5a5" />
         <polygon points="37,17 40,11 33,16" fill="#fca5a5" />
+        {level >= 2 && (
+          <>
+            <polygon points="22,18 18,5 26,16" fill="#fbbf24" opacity="0.4" />
+            <polygon points="38,18 42,5 34,16" fill="#fbbf24" opacity="0.4" />
+          </>
+        )}
       </motion.g>
+
       {/* 얼굴 */}
       <ellipse cx="27" cy="28" rx="2.2" ry="2.5" fill="#1e1b4b" />
       <ellipse cx="33" cy="28" rx="2.2" ry="2.5" fill="#1e1b4b" />
-      <circle cx="27.8" cy="27.2" r="0.8" fill="white" />
-      <circle cx="33.8" cy="27.2" r="0.8" fill="white" />
+      <circle cx="27.8" cy="27.2" r="0.8" fill={getEyeGlow()} />
+      <circle cx="33.8" cy="27.2" r="0.8" fill={getEyeGlow()} />
+      {level >= 4 && (
+        <>
+          <circle cx="27.8" cy="27.2" r="1.3" fill="none" stroke={getEyeGlow()} strokeWidth="0.5" opacity="0.6" />
+          <circle cx="33.8" cy="27.2" r="1.3" fill="none" stroke={getEyeGlow()} strokeWidth="0.5" opacity="0.6" />
+        </>
+      )}
+
       {/* 코 */}
       <ellipse cx="30" cy="31" rx="1.5" ry="1" fill="#7c3aed" />
+
       {/* 볼 */}
       <circle cx="24" cy="30" r="2.5" fill="#fca5a5" opacity="0.6" />
       <circle cx="36" cy="30" r="2.5" fill="#fca5a5" opacity="0.6" />
+
       {/* 미소 */}
       <path d="M27 33 Q30 35.5 33 33" stroke="#7c3aed" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+
       {/* 다리 */}
       <rect x="24" y="50" width="5" height="7" rx="2.5" fill="#ea580c" />
       <rect x="31" y="50" width="5" height="7" rx="2.5" fill="#ea580c" />
+
       {/* 발 */}
       <ellipse cx="26.5" cy="57" rx="4" ry="2.5" fill="#c2410c" />
       <ellipse cx="33.5" cy="57" rx="4" ry="2.5" fill="#c2410c" />
+
       {/* 검 */}
       <rect x="42" y="20" width="3" height="18" rx="1.5" fill="#94a3b8" />
       <rect x="39" y="27" width="9" height="2.5" rx="1.2" fill="#64748b" />
       <rect x="42.5" y="18" width="2" height="4" rx="1" fill="#fbbf24" />
+
+      {/* 검의 빛 (레벨 5+) */}
+      {level >= 5 && (
+        <motion.rect
+          x="42"
+          y="20"
+          width="3"
+          height="18"
+          rx="1.5"
+          fill="#fbbf24"
+          opacity={0}
+          animate={{ opacity: [0.6, 0.2, 0.6] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        />
+      )}
     </g>
   );
 }
