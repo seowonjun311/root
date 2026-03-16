@@ -232,7 +232,7 @@ export default function CreateGoal() {
             <label className="text-sm font-semibold text-amber-800 mb-2 block">행동 유형</label>
             <div className="space-y-2">
               {ACTION_TYPES.map(t => (
-                <button key={t.value} onClick={() => setActionType(t.value)}
+                <button key={t.value} onClick={() => { setActionType(t.value); if (t.value !== 'timer') setFrequency(7); }}
                   className={`w-full p-3 rounded-xl border text-left transition-all ${
                     actionType === t.value ? 'border-amber-600 bg-amber-50/80' : 'border-border bg-card'}`}>
                   <p className="text-sm font-semibold">{t.label}</p>
