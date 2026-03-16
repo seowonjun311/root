@@ -163,12 +163,16 @@ export default function Records() {
   );
 }
 
-function StatCard({ icon, label, value }) {
+function StatCard({ icon, label, value, onClick, clickable }) {
   return (
-    <div className="p-4 rounded-2xl bg-card border border-border/60">
+    <div
+      className={`p-4 rounded-2xl bg-card border border-border/60 ${clickable ? 'cursor-pointer hover:border-amber-400 hover:bg-amber-50/50 transition-colors' : ''}`}
+      onClick={onClick}
+    >
       <div className="mb-2">{icon}</div>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-xl font-bold text-amber-900">{value}</p>
+      {clickable && <p className="text-[10px] text-amber-500 mt-1">탭하여 보기 →</p>}
     </div>
   );
 }
