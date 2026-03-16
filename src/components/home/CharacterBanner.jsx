@@ -20,20 +20,31 @@ const seasonConfig = {
 function FoxCharacter() {
   return (
     <g>
-      {/* 꼬리 */}
-      <ellipse cx="18" cy="44" rx="10" ry="6" fill="#f97316" transform="rotate(-20 18 44)" />
-      <ellipse cx="14" cy="42" rx="5" ry="3" fill="#fff7ed" transform="rotate(-20 14 42)" />
+      {/* 꼬리 - 흔들기 애니메이션 */}
+      <motion.g
+        animate={{ rotate: [-20, -5, -20, -30, -20] }}
+        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ originX: '30px', originY: '50px' }}
+      >
+        <ellipse cx="18" cy="44" rx="10" ry="6" fill="#f97316" transform="rotate(-20 18 44)" />
+        <ellipse cx="14" cy="42" rx="5" ry="3" fill="#fff7ed" transform="rotate(-20 14 42)" />
+      </motion.g>
       {/* 몸통 */}
       <ellipse cx="30" cy="42" rx="12" ry="10" fill="#f97316" />
       {/* 배 */}
       <ellipse cx="30" cy="44" rx="7" ry="6" fill="#fff7ed" />
       {/* 머리 */}
       <circle cx="30" cy="26" r="11" fill="#f97316" />
-      {/* 귀 */}
-      <polygon points="22,18 18,8 26,16" fill="#f97316" />
-      <polygon points="38,18 42,8 34,16" fill="#f97316" />
-      <polygon points="23,17 20,11 27,16" fill="#fca5a5" />
-      <polygon points="37,17 40,11 33,16" fill="#fca5a5" />
+      {/* 귀 - 쫑긋 애니메이션 */}
+      <motion.g
+        animate={{ y: [0, -2, 0, -1, 0] }}
+        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+      >
+        <polygon points="22,18 18,8 26,16" fill="#f97316" />
+        <polygon points="38,18 42,8 34,16" fill="#f97316" />
+        <polygon points="23,17 20,11 27,16" fill="#fca5a5" />
+        <polygon points="37,17 40,11 33,16" fill="#fca5a5" />
+      </motion.g>
       {/* 얼굴 */}
       <ellipse cx="27" cy="28" rx="2.2" ry="2.5" fill="#1e1b4b" />
       <ellipse cx="33" cy="28" rx="2.2" ry="2.5" fill="#1e1b4b" />
