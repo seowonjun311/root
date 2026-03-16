@@ -36,7 +36,7 @@ export default function CreateGoal() {
 
   const [actionTitle, setActionTitle] = useState('');
   const [actionType, setActionType] = useState('confirm');
-  const [frequency, setFrequency] = useState(5);
+  const [frequency, setFrequency] = useState(7);
   const [minutes, setMinutes] = useState(60);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
