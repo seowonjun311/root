@@ -78,7 +78,7 @@ export default function Records() {
             <StatCard icon={<Clock className="w-5 h-5 text-amber-600" />} label="총 수련 시간" value={`${totalHours}시간`} />
             <StatCard icon={<Target className="w-5 h-5 text-amber-600" />} label="완료한 목표" value={`${completedGoals}개`} />
             <StatCard icon={<Flame className="w-5 h-5 text-amber-600" />} label="총 수련 횟수" value={`${totalSessions}회`} />
-            <StatCard icon={<BarChart3 className="w-5 h-5 text-amber-600" />} label="획득한 칭호" value={`${badges.length}개`} />
+            <StatCard icon={<BarChart3 className="w-5 h-5 text-amber-600" />} label="획득한 칭호" value={`${badges.length}개`} onClick={() => navigate('/Badges')} clickable />
           </div>
 
           {/* Category breakdown */}
