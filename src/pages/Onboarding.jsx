@@ -289,19 +289,20 @@ export default function Onboarding() {
           ))}
         </div>
         <p className="text-xs font-semibold text-amber-800 mb-2">주 횟수</p>
-        <div className="flex gap-2 mb-4">
-          {[{ value: 3, label: '주 3회' }, { value: 5, label: '주 5회' }, { value: 7, label: '매일' }].map(opt => (
-            <button key={opt.value} onClick={() => setFrequency(opt.value)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                frequency === opt.value ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
-              {opt.label}
+        <div className="grid grid-cols-7 gap-1.5 mb-4">
+          {[1, 2, 3, 4, 5, 6, 7].map(f => (
+            <button key={f} onClick={() => setFrequency(f)}
+              className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+              {f}
             </button>
           ))}
         </div>
+        <p className="text-xs text-muted-foreground mb-4">주 {frequency}회</p>
         {actionType === 'timer' && (
           <>
             <p className="text-xs font-semibold text-amber-800 mb-2">1회 시간</p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mb-2">
               {[20, 30, 60].map(m => (
                 <button key={m} onClick={() => setActionMinutes(m)}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
@@ -309,6 +310,13 @@ export default function Onboarding() {
                   {m}분
                 </button>
               ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="number" min="1" max="300"
+                placeholder="직접 입력"
+                onChange={e => setActionMinutes(Number(e.target.value))}
+                className="flex-1 h-10 rounded-xl border border-input bg-white/80 px-3 text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-400/50" />
+              <span className="text-sm font-semibold text-muted-foreground">분</span>
             </div>
           </>
         )}
