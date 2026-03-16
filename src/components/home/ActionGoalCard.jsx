@@ -163,6 +163,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
   const handleEditOpen = () => {
     setEditTitle(actionGoal.title);
     setEditFrequency(actionGoal.weekly_frequency || 5);
+    setEditMinutes(actionGoal.duration_minutes || 30);
     setShowMenu(false);
     setShowEdit(true);
   };
