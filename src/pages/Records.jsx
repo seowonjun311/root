@@ -45,8 +45,52 @@ export default function Records() {
     }, {})
   ).sort((a, b) => b[1] - a[1]);
 
+  const CAT_EMOJIS = { exercise: '🏃', study: '📚', mental: '🧘', daily: '🏠' };
+
   return (
     <div className="min-h-screen bg-background">
+      {/* 완료한 목표 다이얼로그 */}
+      <Dialog open={showCompletedGoals} onOpenChange={setShowCompletedGoals}>
+        <DialogContent className="max-w-sm rounded-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-center">🏆 완료한 목표</DialogTitle>
+          </DialogHeader>
+          {completedGoalsList.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-3xl mb-2">🦊</p>
+              <p className="text-sm">아직 완료한 목표가 없어요.</p>
+            </div>
+          ) : (
+            <div className="space-y-3 mt-1">
+              {completedGoalsList.map(g => {
+                const relatedBadge = badges.find(b => b.goal_id === g.id);
+                return (
+                  <div key={g.id} className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300/60">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span>{CAT_EMOJIS[g.category] || '🎯'}</span>
+                      <p className="text-sm font-bold text-amber-900 flex-1">{g.title}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      {g.duration_days}일 도전 · {g.end_date || g.updated_date?.split('T')[0]}
+                    </p>
+                    {relatedBadge && (
+                      <p className="text-xs text-amber-700 font-semibold">🏅 {relatedBadge.title}</p>
+                    )}
+                    {g.result_note && (
+                      <p className="text-xs text-amber-800 italic mt-1">"{g.result_note}"</p>
+                    )}
+                    <span className={`inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                      g.achievement_success ? 'bg-green-100 text-green-700' : 'bg-secondary text-muted-foreground'
+                    }`}>
+                      {g.achievement_success ? '✅ 달성' : '종료'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       <div className="p-6 pb-3">
         <h1 className="text-xl font-bold text-amber-900 flex items-center gap-2">
           📜 기록의 여정
