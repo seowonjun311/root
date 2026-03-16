@@ -168,6 +168,7 @@ export default function NotificationSettings() {
   };
 
   const activeCount = Object.values(settings.days).filter(Boolean).length;
+  const pendingActiveCount = Object.values(pendingDays).filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-background">
