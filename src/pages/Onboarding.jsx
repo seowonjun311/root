@@ -65,7 +65,7 @@ export default function Onboarding() {
     setIsSubmitting(true);
     const isStudyDDay = category === 'study' && hasDDay === true;
     const finalTitle = isStudyDDay ? examTitle : goalInput;
-    const finalDuration = isStudyDDay ? calcDDayDuration() : (duration === 0 ? (parseInt(customDuration) || 30) : duration);
+    const finalDuration = isStudyDDay ? calcDDayDuration() : (customDuration ? (parseInt(customDuration) || 4) * 7 : duration);
 
     const goal = await base44.entities.Goal.create({
       category,
