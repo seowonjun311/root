@@ -12,8 +12,9 @@ import PhotoConfirmModal from '../components/home/PhotoConfirmModal';
 import BossVictoryModal from '../components/home/BossVictoryModal';
 import CelebrationToast from '../components/home/CelebrationToast';
 import { computeStreak, getStreakTrigger, getBadgeForGoal } from '../components/badgeUtils';
-import { Plus } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
 function isGoalComplete(goal) {
   if (!goal || !goal.start_date || !goal.duration_days) return false;
