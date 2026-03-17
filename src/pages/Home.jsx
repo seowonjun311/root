@@ -222,15 +222,18 @@ export default function Home() {
     if (e.touches && window.scrollY === 0) {
       const startY = e.touches[0].clientY;
       let lastY = startY;
+      let triggered = false;
 
       const handleMove = (moveE) => {
         if (moveE.touches) {
           const currentY = moveE.touches[0].clientY;
           const distance = currentY - startY;
           if (distance > 0) {
+            moveE.preventDefault?.();
             const progress = Math.min(distance / 80, 1);
             setPullProgress(progress);
-            if (progress >= 1 && !isRefreshing) {
+            if (progress >= 1 && !isRefreshing && !triggered) {
+              triggered = true;
               handleRefresh();
             }
           }
@@ -241,9 +244,10 @@ export default function Home() {
         document.removeEventListener('touchmove', handleMove);
         document.removeEventListener('touchend', handleEnd);
         setPullProgress(0);
+        triggered = false;
       };
 
-      document.addEventListener('touchmove', handleMove);
+      document.addEventListener('touchmove', handleMove, { passive: false });
       document.addEventListener('touchend', handleEnd);
     }
   };
