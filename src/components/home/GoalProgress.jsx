@@ -160,10 +160,13 @@ export default function GoalProgress({ goal, logs = [] }) {
   };
 
   const handleDelete = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    setShowDelete(false);
     await base44.entities.Goal.delete(goal.id);
     queryClient.invalidateQueries({ queryKey: ['goals'] });
     toast.success('목표가 삭제되었습니다.');
-    setShowDelete(false);
+    setDeleting(false);
   };
 
   return (
