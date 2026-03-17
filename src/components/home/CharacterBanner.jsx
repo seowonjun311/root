@@ -309,34 +309,7 @@ export default function CharacterBanner({ nickname, message, category = 'exercis
         </motion.g>
       </svg>
 
-      {/* 카테고리별 레벨 표시 - 하단 그리드 */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 py-3 flex gap-2" style={{
-        background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.15) 100%)',
-      }}>
-        {['exercise', 'study', 'mental', 'daily'].map((cat) => {
-          const catLevel = userLevels[`${cat}_level`] || 1;
-          const catXp = userLevels[`${cat}_xp`] || 0;
-          const catCurrentXp = catXp % 30;
-          const catEmoji = { exercise: '🏃', study: '📚', mental: '🧘', daily: '🏠' }[cat];
-          
-          return (
-            <div key={cat} className="flex-1 flex flex-col gap-1">
-              <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-black/50 backdrop-blur-sm border border-amber-600/60">
-                <span className="text-xs">{catEmoji}</span>
-                <span className="text-xs font-bold text-amber-100">Lv.{catLevel}</span>
-              </div>
-              <div className="h-1 bg-black/60 rounded-full overflow-hidden border border-amber-600/40">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-amber-400 to-amber-500"
-                  initial={{ width: `${(catCurrentXp / 30) * 100}%` }}
-                  animate={{ width: `${(catCurrentXp / 30) * 100}%` }}
-                  transition={{ duration: 0.3 }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
+
 
       {/* 텍스트 오버레이 - 스크롤 배너 스타일 */}
       <div className="absolute bottom-0 left-0 right-0 py-2.5 px-5" style={{
