@@ -26,7 +26,7 @@ export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip 
       uploadedUrl = res.file_url;
       setUploading(false);
     }
-    onSave(uploadedUrl);
+    onSave(uploadedUrl, gpsData);
   };
 
   return (
