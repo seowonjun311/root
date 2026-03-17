@@ -306,8 +306,12 @@ export default function CharacterBanner({ nickname, message, category = 'exercis
       </svg>
 
       {/* 레벨 배지 */}
-      <div className="absolute top-4 right-4 flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full px-3 py-1.5 shadow-lg">
-        <span className="text-sm font-bold text-amber-900">Lv. {level}</span>
+      <div className="absolute top-4 right-4 px-3 py-1.5 rounded-md" style={{
+        background: 'linear-gradient(180deg, #c49a4a 0%, #8a6020 100%)',
+        border: '2px solid #6b4e15',
+        boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 2px 6px rgba(60,35,5,0.5)',
+      }}>
+        <span className="text-sm font-bold" style={{ color: '#fff8e8', textShadow: '0 1px 2px rgba(60,30,5,0.5)' }}>Lv. {level}</span>
       </div>
 
       {/* 텍스트 오버레이 */}
