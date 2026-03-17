@@ -142,6 +142,23 @@ export default function Home() {
 
     createLogMutation.mutate(logData);
 
+    // 경험치 추가 및 레벨 업데이트
+    const catKey = actionGoal.category;
+    const xpKey = `${catKey}_xp`;
+    const levelKey = `${catKey}_level`;
+    const currentXp = user?.[xpKey] || 0;
+    const currentLevel = user?.[levelKey] || 1;
+    
+    const newXp = currentXp + 1;
+    const newLevel = Math.floor(newXp / 30) + 1;
+    
+    base44.auth.updateMe({
+      [xpKey]: newXp,
+      [levelKey]: newLevel,
+    }).catch(() => {});
+
+    queryClient.invalidateQueries({ queryKey: ['me'] });
+
     setPendingLog(null);
 
     if (streakTrigger) {
