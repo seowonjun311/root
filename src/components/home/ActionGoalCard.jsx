@@ -414,24 +414,25 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
             <DrawerTitle>행동 목표 관리</DrawerTitle>
           </DrawerHeader>
           <div className="px-4 pb-6">
-          <div className="space-y-2 mt-1">
-            <button
-              onClick={handleEditOpen}
-              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left"
-            >
-              <Pencil className="w-4 h-4 text-amber-600" />
-              <span className="text-sm font-semibold">목표 수정</span>
-            </button>
-            <button
-              onClick={handleDeleteOpen}
-              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 transition-colors text-left"
-            >
-              <Trash2 className="w-4 h-4 text-red-500" />
-              <span className="text-sm font-semibold text-red-500">목표 삭제</span>
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={handleEditOpen}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left"
+              >
+                <Pencil className="w-4 h-4 text-amber-600" />
+                <span className="text-sm font-semibold">목표 수정</span>
+              </button>
+              <button
+                onClick={handleDeleteOpen}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 transition-colors text-left"
+              >
+                <Trash2 className="w-4 h-4 text-red-500" />
+                <span className="text-sm font-semibold text-red-500">목표 삭제</span>
+              </button>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
 
       {/* 수정 다이얼로그 */}
       <Dialog open={showEdit} onOpenChange={setShowEdit}>
