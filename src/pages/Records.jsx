@@ -64,9 +64,9 @@ export default function Records() {
       {/* 획득한 칭호 드로워 */}
       <Drawer open={showBadges} onOpenChange={setShowBadges}>
         <DrawerContent className="max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-center">🏅 획득한 칭호</DialogTitle>
-          </DialogHeader>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>🏅 획득한 칭호</DrawerTitle>
+          </DrawerHeader>
           {filteredBadges.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p className="text-3xl mb-2">🦊</p>
