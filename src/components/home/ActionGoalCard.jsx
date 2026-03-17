@@ -171,6 +171,48 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
+  const startGpsTracking = () => {
+    if (actionGoal.category !== 'exercise' || !gpsEnabled) return;
+    if ('geolocation' in navigator) {
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const coords = JSON.parse(localStorage.getItem(GPS_COORDS_KEY(actionGoal.id)) || '[]');
+          coords.push([latitude, longitude]);
+          localStorage.setItem(GPS_COORDS_KEY(actionGoal.id), JSON.stringify(coords));
+        },
+        (error) => console.log('GPS 오류:', error),
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+    }
+  };
+
+  const stopGpsTracking = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+  };
+
+  const calculateDistance = (coords) => {
+    if (coords.length < 2) return 0;
+    let distance = 0;
+    for (let i = 1; i < coords.length; i++) {
+      const [lat1, lng1] = coords[i - 1];
+      const [lat2, lng2] = coords[i];
+      const R = 6371; // 지구 반지름 (km)
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLng = ((lng2 - lng1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      distance += R * c;
+    }
+    return Math.round(distance * 100) / 100;
+  };
+
   const handleTimerToggle = () => {
     if (isRunning) {
       const start = parseInt(localStorage.getItem(TIMER_KEY(actionGoal.id)) || '0', 10);
@@ -179,11 +221,18 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
       clearInterval(intervalRef.current);
       setIsRunning(false);
       setElapsed(0);
+      stopGpsTracking();
       const minutes = Math.round(totalElapsed / 60);
-      if (minutes > 0 || totalElapsed > 30) onComplete(actionGoal, Math.max(1, minutes));
+      if (minutes > 0 || totalElapsed > 30) {
+        const coords = gpsEnabled ? JSON.parse(localStorage.getItem(GPS_COORDS_KEY(actionGoal.id)) || '[]') : [];
+        const distance = gpsEnabled ? calculateDistance(coords) : null;
+        localStorage.removeItem(GPS_COORDS_KEY(actionGoal.id));
+        onComplete(actionGoal, Math.max(1, minutes), { gpsEnabled, distance, coords });
+      }
     } else {
       localStorage.setItem(TIMER_KEY(actionGoal.id), String(Date.now()));
       setIsRunning(true);
+      startGpsTracking();
     }
   };
 
