@@ -44,21 +44,51 @@ const AuthenticatedApp = () => {
   }
   */
 
-  // Render the main app
+  // Render the main app with page transitions
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/Onboarding" replace />} />
-      <Route path="/Onboarding" element={<Onboarding />} />
-      <Route path="/CreateGoal" element={<CreateGoal />} />
-      <Route element={<AppLayout />}>
-        <Route path="/Home" element={<Home />} />
-        <Route path="/Records" element={<Records />} />
-        <Route path="/Badges" element={<Badges />} />
-        <Route path="/AppSettings" element={<AppSettings />} />
-        <Route path="/NotificationSettings" element={<NotificationSettings />} />
-      </Route>
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+    <AnimatePresence mode="wait">
+      <Routes>
+        <Route path="/" element={<Navigate to="/Onboarding" replace />} />
+        <Route path="/Onboarding" element={
+          <motion.div key="onboarding" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <Onboarding />
+          </motion.div>
+        } />
+        <Route path="/CreateGoal" element={
+          <motion.div key="creategoal" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <CreateGoal />
+          </motion.div>
+        } />
+        <Route element={<AppLayout />}>
+          <Route path="/Home" element={
+            <motion.div key="home" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
+              <Home />
+            </motion.div>
+          } />
+          <Route path="/Records" element={
+            <motion.div key="records" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
+              <Records />
+            </motion.div>
+          } />
+          <Route path="/Badges" element={
+            <motion.div key="badges" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
+              <Badges />
+            </motion.div>
+          } />
+          <Route path="/AppSettings" element={
+            <motion.div key="appsettings" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
+              <AppSettings />
+            </motion.div>
+          } />
+          <Route path="/NotificationSettings" element={
+            <motion.div key="notificationsettings" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
+              <NotificationSettings />
+            </motion.div>
+          } />
+        </Route>
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </AnimatePresence>
   );
 };
 
