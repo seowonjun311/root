@@ -46,6 +46,7 @@ function MonthCalendar({ weeklyLogs, onClose }) {
       exit={{ opacity: 0, y: 8, scale: 0.96 }}
       transition={{ duration: 0.18 }}
       className="absolute top-full left-0 right-0 mt-2 z-50 bg-card border border-border/70 rounded-2xl shadow-xl p-4"
+      data-scrollable
       onClick={e => e.stopPropagation()}
     >
       <div className="flex items-center justify-between mb-3">
