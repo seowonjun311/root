@@ -105,8 +105,8 @@ export default function Home() {
   const getWeeklyLogs = (actionGoalId) =>
     allLogs.filter(l => l.action_goal_id === actionGoalId && l.date >= weekStartStr);
 
-  const handleComplete = (actionGoal, minutes) => {
-    setPendingLog({ actionGoal, minutes });
+  const handleComplete = (actionGoal, minutes, gpsData = {}) => {
+    setPendingLog({ actionGoal, minutes, gpsData });
   };
 
   const handlePhotoSave = async (photoUrl) => {
