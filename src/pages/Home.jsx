@@ -183,7 +183,7 @@ export default function Home() {
     const newXp = currentXp + 1;
     const newLevel = Math.floor(newXp / 30) + 1;
     
-    base44.auth.updateMe({
+    await base44.auth.updateMe({
       [xpKey]: newXp,
       [levelKey]: newLevel,
     }).catch(() => {});
