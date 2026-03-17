@@ -368,7 +368,7 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-background max-w-lg mx-auto flex flex-col">
+    <div className="min-h-screen bg-background max-w-lg mx-auto flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       {/* Progress */}
       <div className="flex gap-1 px-6 pt-6 pb-2">
         {Array.from({ length: totalSteps }).map((_, i) => (
