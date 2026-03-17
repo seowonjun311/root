@@ -67,12 +67,13 @@ const AuthenticatedApp = () => {
           <Route path="/Records" element={<div />} />
           <Route path="/Badges" element={<div />} />
           <Route path="/AppSettings" element={<div />} />
-          <Route path="/NotificationSettings" element={
-            <motion.div key="notificationsettings" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
-              <NotificationSettings />
-            </motion.div>
-          } />
         </Route>
+        <Route path="/NotificationSettings" element={
+          <motion.div key="notificationsettings" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <Header />
+            <NotificationSettings />
+          </motion.div>
+        } />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </AnimatePresence>
