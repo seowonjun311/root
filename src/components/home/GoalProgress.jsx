@@ -240,12 +240,12 @@ export default function GoalProgress({ goal, logs = [] }) {
       </div>
 
       {/* 액션 메뉴 */}
-      <Dialog open={showMenu} onOpenChange={setShowMenu}>
-        <DialogContent className="max-w-xs rounded-2xl p-4">
-          <DialogHeader>
-            <DialogTitle className="text-center text-base">목표 관리</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 mt-1">
+      <Drawer open={showMenu} onOpenChange={setShowMenu}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>목표 관리</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 space-y-2 pb-6">
             <button
               onClick={handleEditOpen}
               className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left"
@@ -261,8 +261,8 @@ export default function GoalProgress({ goal, logs = [] }) {
               <span className="text-sm font-semibold text-red-500">목표 삭제</span>
             </button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
 
       {/* 수정 다이얼로그 */}
       <Dialog open={showEdit} onOpenChange={setShowEdit}>
