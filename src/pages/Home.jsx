@@ -199,14 +199,18 @@ export default function Home() {
           ))}
 
           <div className="px-4 pb-4">
-            <Button
-              variant="outline"
+            <button
               onClick={() => navigate(`/CreateGoal?category=${activeCategory}&goalId=${activeGoal.id}`)}
-              className="w-full h-11 rounded-xl border-dashed border-amber-400/60 text-amber-700 hover:bg-amber-50/50 font-medium"
+              className="w-full h-11 rounded-lg font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
+              style={{
+                background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 60%, #f0e0bc 100%)',
+                border: '2px dashed #a07840',
+                color: '#7a5020',
+              }}
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4" />
               행동 목표 직접 추가하기
-            </Button>
+            </button>
           </div>
         </div>
       ) : (
