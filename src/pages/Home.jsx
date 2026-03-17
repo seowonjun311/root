@@ -44,6 +44,8 @@ export default function Home() {
   const [shownVictoryIds, setShownVictoryIds] = useState(() => {
     try { return JSON.parse(localStorage.getItem('shownVictory') || '[]'); } catch { return []; }
   });
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullProgress, setPullProgress] = useState(0);
 
   const { data: user } = useQuery({
     queryKey: ['me'],
