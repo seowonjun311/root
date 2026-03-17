@@ -39,6 +39,7 @@ const Button = React.forwardRef(({ className, variant, size, asChild = false, ..
   return (
     (<Comp
       className={cn(buttonVariants({ variant, size, className }))}
+      style={{ touchAction: 'manipulation', ...props.style }}
       ref={ref}
       {...props} />)
   );
