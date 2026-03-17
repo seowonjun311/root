@@ -216,6 +216,21 @@ export default function Records() {
         </TabsContent>
 
         <TabsContent value="timeline" className="mt-4 space-y-3 pb-4">
+          {/* Category filter */}
+          <div className="flex gap-1.5 flex-wrap">
+            {['all', 'exercise', 'study', 'mental', 'daily'].map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCatFilter(cat)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  catFilter === cat
+                    ? 'bg-amber-700 text-amber-50'
+                    : 'bg-secondary text-muted-foreground'}`}
+              >
+                {cat === 'all' ? '전체' : CAT_LABELS[cat]}
+              </button>
+            ))}
+          </div>
           {/* 완료 목표 (칭호 + 소감) */}
           {(() => {
             const completedGoals = goals.filter(g =>
