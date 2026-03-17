@@ -127,3 +127,51 @@ export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip 
     </AnimatePresence>
   );
 }
+
+function SimpleMap({ coords }) {
+  if (!coords || coords.length < 2) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-2">
+        <MapPin className="w-6 h-6 text-blue-600" />
+        <p className="text-xs text-blue-600 font-semibold">경로 지도</p>
+      </div>
+    );
+  }
+
+  // 좌표의 범위 계산
+  const lats = coords.map(c => c[0]);
+  const lngs = coords.map(c => c[1]);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+  const latRange = maxLat - minLat || 0.001;
+  const lngRange = maxLng - minLng || 0.001;
+
+  // SVG 좌표 변환
+  const toSvgX = (lng) => ((lng - minLng) / lngRange) * 100;
+  const toSvgY = (lat) => 100 - ((lat - minLat) / latRange) * 100;
+
+  return (
+    <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+      {/* 배경 */}
+      <rect width="100" height="100" fill="#e0f2fe" />
+      
+      {/* 경로 선 */}
+      <polyline
+        points={coords.map((c) => `${toSvgX(c[1])},${toSvgY(c[0])}`).join(' ')}
+        fill="none"
+        stroke="#0ea5e9"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      
+      {/* 시작점 */}
+      <circle cx={toSvgX(coords[0][1])} cy={toSvgY(coords[0][0])} r="2" fill="#10b981" />
+      
+      {/* 끝점 */}
+      <circle cx={toSvgX(coords[coords.length - 1][1])} cy={toSvgY(coords[coords.length - 1][0])} r="2" fill="#ef4444" />
+    </svg>
+  );
+}
