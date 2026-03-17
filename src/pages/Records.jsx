@@ -269,23 +269,27 @@ export default function Records() {
               <p className="text-sm">첫 번째 수련을 시작해 보세요.</p>
             </div>
           ) : (
-            filteredLogs.map(log => (
-              <div key={log.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
-                <div className="w-2 h-2 rounded-full bg-amber-500" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{log.date}</p>
-                  {log.duration_minutes > 0 && (
-                    <p className="text-xs text-muted-foreground">{log.duration_minutes}분 수련</p>
+            filteredLogs.map(log => {
+              const actionGoal = actionGoals.find(ag => ag.id === log.action_goal_id);
+              return (
+                <div key={log.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+                  <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{actionGoal?.title || log.date}</p>
+                    <p className="text-xs text-muted-foreground">{log.date}{log.duration_minutes > 0 ? ` · ${log.duration_minutes}분` : ''}</p>
+                    {log.memo && (
+                      <p className="text-xs text-muted-foreground italic">"{log.memo}"</p>
+                    )}
+                  </div>
+                  {log.photo_url && (
+                    <img src={log.photo_url} alt="수련 사진" className="w-12 h-12 rounded-lg object-cover shrink-0" />
                   )}
-                  {log.memo && (
-                    <p className="text-xs text-muted-foreground italic">"{log.memo}"</p>
-                  )}
+                  <span className="text-xs px-2 py-1 rounded-lg bg-amber-100/80 text-amber-700 shrink-0">
+                    {CAT_LABELS[log.category] || '기타'}
+                  </span>
                 </div>
-                <span className="text-xs px-2 py-1 rounded-lg bg-amber-100/80 text-amber-700">
-                  {CAT_LABELS[log.category] || '기타'}
-                </span>
-              </div>
-            ))
+              );
+            })
           )}
         </TabsContent>
 
