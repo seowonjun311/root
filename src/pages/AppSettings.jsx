@@ -114,22 +114,22 @@ export default function AppSettings() {
         </DrawerContent>
       </Drawer>
 
-      {/* Logout Dialog */}
-      <Dialog open={showLogout} onOpenChange={setShowLogout}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-center">로그아웃할까요?</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground text-center">
+      {/* Logout Drawer */}
+      <Drawer open={showLogout} onOpenChange={setShowLogout}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>로그아웃할까요?</DrawerTitle>
+          </DrawerHeader>
+          <p className="px-4 text-sm text-muted-foreground text-center">
             이 기기에서는 로그인이 해제됩니다.<br />
             기록은 계정에 안전하게 저장됩니다.
           </p>
-          <DialogFooter className="flex gap-2">
+          <DrawerFooter className="flex gap-2 pt-6">
             <Button variant="outline" onClick={() => setShowLogout(false)} className="flex-1 rounded-xl">취소</Button>
             <Button onClick={handleLogout} className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white">로그아웃</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       {/* Delete Account Dialog */}
       <Dialog open={showDelete} onOpenChange={setShowDelete}>
