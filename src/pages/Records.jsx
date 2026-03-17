@@ -300,6 +300,33 @@ export default function Records() {
           <AlbumTab logs={logs} goals={goals} catFilter={catFilter} />
         </TabsContent>
       </Tabs>
+
+      {/* 타임라인 사진 확대 다이얼로그 */}
+      <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
+        <DialogContent className="max-w-sm rounded-2xl p-4">
+          <DialogHeader>
+            <DialogTitle className="text-center text-sm">
+              {CAT_EMOJIS[selectedPhoto?.category]} {selectedPhoto?.date}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedPhoto && (
+            <div className="space-y-3">
+              <img src={selectedPhoto.photo_url} alt={selectedPhoto.date} className="w-full rounded-xl object-cover max-h-80" />
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs px-2 py-1 rounded-lg bg-amber-100 text-amber-700 font-semibold">
+                  {CAT_LABELS[selectedPhoto.category] || '기타'}
+                </span>
+                {selectedPhoto.duration_minutes > 0 && (
+                  <span className="text-xs text-muted-foreground">{selectedPhoto.duration_minutes}분 수련</span>
+                )}
+              </div>
+              {selectedPhoto.memo && (
+                <p className="text-sm text-amber-800 italic bg-amber-50/80 p-3 rounded-xl">"{selectedPhoto.memo}"</p>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
