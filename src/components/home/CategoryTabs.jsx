@@ -17,7 +17,7 @@ export default function CategoryTabs({ active, onChange, userLevels = {} }) {
           <button
             key={id}
             onClick={() => onChange(id)}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold transition-all duration-200
+            className={`flex-1 flex items-center justify-center gap-1 px-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200
               ${active === id ? 'wood-btn-active' : 'wood-btn'}`}
             style={active === id ? {
               background: 'linear-gradient(180deg, #8b5e20 0%, #6b4010 50%, #5a3008 100%)',
@@ -32,9 +32,8 @@ export default function CategoryTabs({ active, onChange, userLevels = {} }) {
               textShadow: '0 1px 2px rgba(60,30,5,0.5)',
             }}
           >
-            <span className="text-base leading-none">{emoji}</span>
-            <span className="text-[10px]">Lv.{level}</span>
-            <span>{label}</span>
+            <span className="text-sm">{emoji}</span>
+            <span>{label} Lv.{level}</span>
           </button>
         );
       })}
