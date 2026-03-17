@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Image, X, Check } from 'lucide-react';
+import { Camera, Image, X, Check, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function PhotoConfirmModal({ actionGoal, onSave, onSkip }) {
+export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip }) {
   const [photo, setPhoto] = useState(null);
   const [photoUrl, setPhotoUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
