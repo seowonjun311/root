@@ -168,6 +168,12 @@ export default function Onboarding() {
           >
             <span className="mr-2">⭐</span>Kakao로 시작
           </button>
+          <button
+            onClick={() => goNext('goal')}
+            className="w-full py-3 rounded-xl font-semibold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors border-2 border-dashed border-amber-300"
+          >
+            <span className="mr-2">🦊</span>가입없이 시작
+          </button>
         </div>
       </div>
     );
