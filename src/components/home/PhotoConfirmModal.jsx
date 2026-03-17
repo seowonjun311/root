@@ -8,7 +8,8 @@ export default function PhotoConfirmModal({ actionGoal, onSave, onSkip }) {
   const [photo, setPhoto] = useState(null);
   const [photoUrl, setPhotoUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const fileRef = useRef(null);
+  const galleryRef = useRef(null);
+  const cameraRef = useRef(null);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -67,17 +68,37 @@ export default function PhotoConfirmModal({ actionGoal, onSave, onSkip }) {
               </button>
             </div>
           ) : (
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="w-full aspect-video rounded-2xl border-2 border-dashed border-amber-300/70 bg-amber-50/40 flex flex-col items-center justify-center gap-2 mb-4 hover:bg-amber-50/80 transition-colors"
-            >
-              <Camera className="w-8 h-8 text-amber-400" />
-              <span className="text-sm text-amber-600 font-medium">사진 촬영 또는 선택</span>
-            </button>
+            <div className="flex gap-3 mb-4">
+              {/* 갤러리에서 선택 */}
+              <button
+                onClick={() => galleryRef.current?.click()}
+                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-amber-300/70 bg-amber-50/40 flex flex-col items-center justify-center gap-2 hover:bg-amber-50/80 transition-colors"
+              >
+                <Image className="w-7 h-7 text-amber-500" />
+                <span className="text-xs text-amber-700 font-semibold">갤러리</span>
+              </button>
+              {/* 카메라로 촬영 */}
+              <button
+                onClick={() => cameraRef.current?.click()}
+                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-amber-300/70 bg-amber-50/40 flex flex-col items-center justify-center gap-2 hover:bg-amber-50/80 transition-colors"
+              >
+                <Camera className="w-7 h-7 text-amber-500" />
+                <span className="text-xs text-amber-700 font-semibold">카메라</span>
+              </button>
+            </div>
           )}
 
+          {/* 갤러리용 input (capture 없음) */}
           <input
-            ref={fileRef}
+            ref={galleryRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          {/* 카메라용 input (capture="environment") */}
+          <input
+            ref={cameraRef}
             type="file"
             accept="image/*"
             capture="environment"
