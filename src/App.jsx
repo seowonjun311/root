@@ -52,11 +52,13 @@ const AuthenticatedApp = () => {
         <Route path="/" element={<Navigate to="/Onboarding" replace />} />
         <Route path="/Onboarding" element={
           <motion.div key="onboarding" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <Header />
             <Onboarding />
           </motion.div>
         } />
         <Route path="/CreateGoal" element={
           <motion.div key="creategoal" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <Header />
             <CreateGoal />
           </motion.div>
         } />
