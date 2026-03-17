@@ -154,12 +154,12 @@ export default function Records() {
               })}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
 
-      {/* 완료한 목표 다이얼로그 */}
-      <Dialog open={showCompletedGoals} onOpenChange={setShowCompletedGoals}>
-        <DialogContent className="max-w-sm rounded-2xl max-h-[80vh] overflow-y-auto">
+      {/* 완료한 목표 드로워 */}
+      <Drawer open={showCompletedGoals} onOpenChange={setShowCompletedGoals}>
+        <DrawerContent className="max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center">🏆 완료한 목표</DialogTitle>
           </DialogHeader>
