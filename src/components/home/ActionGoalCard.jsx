@@ -237,29 +237,43 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
 
               <div className="flex items-center gap-1.5 ml-2">
                 {actionGoal.action_type === 'timer' ? (
-                  <button
-                    className="h-8 px-3 text-xs font-bold rounded-md transition-all active:scale-95"
-                    style={isRunning ? {
-                      background: 'linear-gradient(180deg, #c0392b 0%, #962d22 100%)',
-                      border: '2px solid #7a1f16',
-                      boxShadow: 'inset 0 1px 2px rgba(255,150,120,0.3), 0 2px 4px rgba(60,10,5,0.4)',
-                      color: '#ffe8e8',
-                      textShadow: '0 1px 2px rgba(80,10,5,0.5)',
-                    } : {
-                      background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 50%, #8a6520 100%)',
-                      border: '2px solid #6b4e15',
-                      boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 2px 4px rgba(60,35,5,0.4)',
-                      color: '#fff8e8',
-                      textShadow: '0 1px 2px rgba(60,30,5,0.5)',
-                    }}
-                    onClick={handleTimerToggle}
-                  >
-                    {isRunning ? (
-                      <span className="flex items-center gap-1"><Square className="w-3 h-3" />{formatTime(elapsed)}</span>
-                    ) : (
-                      <span className="flex items-center gap-1"><Play className="w-3 h-3" />시작</span>
-                    )}
-                  </button>
+                  doneToday && !isRunning ? (
+                    <span className="h-8 px-3 text-xs font-bold rounded-md flex items-center gap-1" style={{
+                      background: 'rgba(120,80,20,0.15)',
+                      border: '2px solid rgba(120,80,20,0.25)',
+                      color: '#a07840',
+                    }}>✓ 완료</span>
+                  ) : (
+                    <button
+                      className="h-8 px-3 text-xs font-bold rounded-md transition-all active:scale-95"
+                      style={isRunning ? {
+                        background: 'linear-gradient(180deg, #c0392b 0%, #962d22 100%)',
+                        border: '2px solid #7a1f16',
+                        boxShadow: 'inset 0 1px 2px rgba(255,150,120,0.3), 0 2px 4px rgba(60,10,5,0.4)',
+                        color: '#ffe8e8',
+                        textShadow: '0 1px 2px rgba(80,10,5,0.5)',
+                      } : {
+                        background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 50%, #8a6520 100%)',
+                        border: '2px solid #6b4e15',
+                        boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 2px 4px rgba(60,35,5,0.4)',
+                        color: '#fff8e8',
+                        textShadow: '0 1px 2px rgba(60,30,5,0.5)',
+                      }}
+                      onClick={handleTimerToggle}
+                    >
+                      {isRunning ? (
+                        <span className="flex items-center gap-1"><Square className="w-3 h-3" />{formatTime(elapsed)}</span>
+                      ) : (
+                        <span className="flex items-center gap-1"><Play className="w-3 h-3" />시작</span>
+                      )}
+                    </button>
+                  )
+                ) : doneToday ? (
+                  <span className="h-8 px-3 text-xs font-bold rounded-md flex items-center gap-1" style={{
+                    background: 'rgba(120,80,20,0.15)',
+                    border: '2px solid rgba(120,80,20,0.25)',
+                    color: '#a07840',
+                  }}>✓ 완료</span>
                 ) : (
                   <button
                     className="h-8 px-3 text-xs font-bold rounded-md transition-all active:scale-95"
