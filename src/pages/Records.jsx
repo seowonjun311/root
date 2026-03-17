@@ -246,7 +246,7 @@ export default function Records() {
             <StatCard icon={<Target className="w-5 h-5 text-amber-600" />} label="완료한 목표" value={`${completedGoals}개`} onClick={() => setShowCompletedGoals(true)} clickable />
             <StatCard icon={<Flame className="w-5 h-5 text-amber-600" />} label="총 수련 횟수" value={`${totalSessions}회`} onClick={() => setShowSessions(true)} clickable />
             {(catFilter === 'all' || catFilter === 'exercise') && (
-              <StatCard icon={<BarChart3 className="w-5 h-5 text-amber-600" />} label="총 이동거리" value={`${totalDistance}km`} />
+              <StatCard icon={<BarChart3 className="w-5 h-5 text-amber-600" />} label="총 이동거리" value={`${totalDistance}km`} onClick={() => setShowDistance(true)} clickable />
             )}
             <StatCard icon={<BarChart3 className="w-5 h-5 text-amber-600" />} label="획득한 칭호" value={`${filteredBadges.length}개`} onClick={() => setShowBadges(true)} clickable />
           </div>
