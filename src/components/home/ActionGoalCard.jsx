@@ -124,6 +124,9 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
   const targetFreq = actionGoal.weekly_frequency || 7;
   const progressPercent = Math.min(100, Math.round((weeklyCount / targetFreq) * 100));
 
+  const todayStr = new Date().toISOString().split('T')[0];
+  const doneToday = weeklyLogs.some(l => l.date === todayStr);
+
   // localStorage 기반으로 시작 시각을 저장 → 화면 이탈/복귀 후에도 경과 시간 유지
   const startTs = localStorage.getItem(TIMER_KEY(actionGoal.id));
   const isRunning = !!startTs;
