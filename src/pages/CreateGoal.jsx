@@ -317,7 +317,7 @@ export default function CreateGoal() {
             <Input
               value={actionTitle}
               onChange={e => setActionTitle(e.target.value)}
-              placeholder={category === 'daily' ? "예: 팩하기, 집청소, 빨래, 부모님연락" : category === 'mental' ? "예: 7시기상, 일기쓰기, 부모님 연락하기, 금연, 금주, 야식끊기" : "예: 러닝, LC 공부, 명상..."}
+              placeholder={category === 'daily' ? "예: 팩하기, 집청소, 빨래, 부모님연락" : category === 'mental' ? "예: 7시기상, 일기쓰기, 부모님연락하기, 금연, ..." : "예: 러닝, LC 공부, 명상..."}
               className="h-12 rounded-xl bg-white/80"
             />
           </div>
