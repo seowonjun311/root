@@ -356,7 +356,7 @@ export default function Records() {
 
       {/* 타임라인 사진 확대 다이얼로그 */}
       <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
-        <DialogContent className="max-w-sm rounded-2xl p-4">
+        <DialogContent className="max-w-sm rounded-2xl p-4 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center text-sm">
               {CAT_EMOJIS[selectedPhoto?.category]} {selectedPhoto?.date}
@@ -364,13 +364,23 @@ export default function Records() {
           </DialogHeader>
           {selectedPhoto && (
             <div className="space-y-3">
-              <img src={selectedPhoto.photo_url} alt={selectedPhoto.date} className="w-full rounded-xl object-cover max-h-80" />
+              {selectedPhoto.photo_url && (
+                <img src={selectedPhoto.photo_url} alt={selectedPhoto.date} className="w-full rounded-xl object-cover max-h-80" />
+              )}
+              {selectedPhoto.gps_enabled && selectedPhoto.route_coordinates && (
+                <div className="rounded-xl overflow-hidden bg-blue-50 border-2 border-blue-200 h-32">
+                  <GPSMapPreview coords={JSON.parse(selectedPhoto.route_coordinates)} />
+                </div>
+              )}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs px-2 py-1 rounded-lg bg-amber-100 text-amber-700 font-semibold">
                   {CAT_LABELS[selectedPhoto.category] || '기타'}
                 </span>
                 {selectedPhoto.duration_minutes > 0 && (
-                  <span className="text-xs text-muted-foreground">{selectedPhoto.duration_minutes}분 수련</span>
+                  <span className="text-xs text-muted-foreground">⏱️ {selectedPhoto.duration_minutes}분</span>
+                )}
+                {selectedPhoto.gps_enabled && (
+                  <span className="text-xs text-blue-600">🗺️ {selectedPhoto.distance_km?.toFixed(2)}km</span>
                 )}
               </div>
               {selectedPhoto.memo && (
