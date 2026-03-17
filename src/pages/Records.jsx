@@ -12,6 +12,7 @@ export default function Records() {
   const [catFilter, setCatFilter] = useState('all');
   const [showCompletedGoals, setShowCompletedGoals] = useState(false);
   const [showBadges, setShowBadges] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
   const navigate = useNavigate();
 
   const { data: logs = [] } = useQuery({
