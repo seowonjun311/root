@@ -218,6 +218,14 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     return Math.round(distance * 100) / 100;
   };
 
+  const handleTimerStart = (enableGps) => {
+    localStorage.setItem(TIMER_KEY(actionGoal.id), String(Date.now()));
+    setIsRunning(true);
+    setGpsEnabled(enableGps);
+    if (enableGps) startGpsTracking();
+    setShowGpsDialog(false);
+  };
+
   const handleTimerToggle = () => {
     if (isRunning) {
       const start = parseInt(localStorage.getItem(TIMER_KEY(actionGoal.id)) || '0', 10);
@@ -235,9 +243,12 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
         onComplete(actionGoal, Math.max(1, minutes), { gpsEnabled, distance, coords });
       }
     } else {
-      localStorage.setItem(TIMER_KEY(actionGoal.id), String(Date.now()));
-      setIsRunning(true);
-      startGpsTracking();
+      if (actionGoal.category === 'exercise' && actionGoal.action_type === 'timer') {
+        setShowGpsDialog(true);
+      } else {
+        localStorage.setItem(TIMER_KEY(actionGoal.id), String(Date.now()));
+        setIsRunning(true);
+      }
     }
   };
 
