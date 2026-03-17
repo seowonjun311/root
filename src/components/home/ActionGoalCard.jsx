@@ -128,8 +128,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
   const doneToday = weeklyLogs.some(l => l.date === todayStr);
 
   // localStorage 기반으로 시작 시각을 저장 → 화면 이탈/복귀 후에도 경과 시간 유지
-  const startTs = localStorage.getItem(TIMER_KEY(actionGoal.id));
-  const isRunning = !!startTs;
+  const [isRunning, setIsRunning] = useState(() => !!localStorage.getItem(TIMER_KEY(actionGoal.id)));
 
   useEffect(() => {
     if (!isRunning) {
