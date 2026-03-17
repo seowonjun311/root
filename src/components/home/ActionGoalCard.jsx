@@ -157,6 +157,10 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
   }, [isRunning, actionGoal.id]);
 
   useEffect(() => {
+    localStorage.setItem(GPS_KEY(actionGoal.id), JSON.stringify(gpsEnabled));
+  }, [gpsEnabled, actionGoal.id]);
+
+  useEffect(() => {
     if (!showCalendar) return;
     const handler = (e) => {
       if (cardRef.current && !cardRef.current.contains(e.target)) setShowCalendar(false);
