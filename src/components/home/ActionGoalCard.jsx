@@ -105,6 +105,9 @@ function MonthCalendar({ weeklyLogs, onClose }) {
 
 const TIMER_KEY = (id) => `timer_start_${id}`;
 
+const GPS_KEY = (id) => `gps_enabled_${id}`;
+const GPS_COORDS_KEY = (id) => `gps_coords_${id}`;
+
 export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete }) {
   const queryClient = useQueryClient();
   const [elapsed, setElapsed] = useState(0);
@@ -112,6 +115,13 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
   const [showMenu, setShowMenu] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [gpsEnabled, setGpsEnabled] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(GPS_KEY(actionGoal.id)) || 'false');
+    } catch {
+      return false;
+    }
+  });
   const [editTitle, setEditTitle] = useState(actionGoal.title || '');
   const [editFrequency, setEditFrequency] = useState(actionGoal.weekly_frequency || 5);
   const [editMinutes, setEditMinutes] = useState(actionGoal.duration_minutes || 30);
@@ -119,6 +129,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
 
   const intervalRef = useRef(null);
   const cardRef = useRef(null);
+  const watchIdRef = useRef(null);
 
   const weeklyCount = weeklyLogs.length;
   const targetFreq = actionGoal.weekly_frequency || 7;
