@@ -60,26 +60,10 @@ const AuthenticatedApp = () => {
           </motion.div>
         } />
         <Route element={<AppLayout />}>
-          <Route path="/Home" element={
-            <motion.div key="home" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
-              <Home />
-            </motion.div>
-          } />
-          <Route path="/Records" element={
-            <motion.div key="records" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
-              <Records />
-            </motion.div>
-          } />
-          <Route path="/Badges" element={
-            <motion.div key="badges" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
-              <Badges />
-            </motion.div>
-          } />
-          <Route path="/AppSettings" element={
-            <motion.div key="appsettings" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
-              <AppSettings />
-            </motion.div>
-          } />
+          <Route path="/Home" element={<div />} />
+          <Route path="/Records" element={<div />} />
+          <Route path="/Badges" element={<div />} />
+          <Route path="/AppSettings" element={<div />} />
           <Route path="/NotificationSettings" element={
             <motion.div key="notificationsettings" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
               <NotificationSettings />
