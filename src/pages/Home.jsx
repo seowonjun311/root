@@ -250,6 +250,19 @@ export default function Home() {
 
   return (
     <div className="bg-background min-h-screen" onTouchStart={handlePullStart}>
+      {/* Pull-to-Refresh indicator */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 flex justify-center pt-4 z-50"
+        animate={{ opacity: pullProgress > 0 ? 1 : 0 }}
+      >
+        <motion.div
+          animate={{ rotate: pullProgress * 360 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
+          <RefreshCw className="w-6 h-6 text-amber-600" />
+        </motion.div>
+      </motion.div>
+
       <CharacterBanner 
         nickname={user?.nickname} 
         message={getGreeting()} 
