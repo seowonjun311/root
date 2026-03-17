@@ -41,6 +41,7 @@ export default function Records() {
   const totalMinutes = filteredLogs.reduce((sum, l) => sum + (l.duration_minutes || 0), 0);
   const totalHours = Math.round(totalMinutes / 60);
   const totalSessions = filteredLogs.length;
+  const totalDistance = Math.round(filteredLogs.reduce((sum, l) => sum + (l.gps_enabled && l.distance_km ? l.distance_km : 0), 0) * 10) / 10;
   const completedGoalsList = goals.filter(g => (g.status === 'completed' || g.status === 'failed') && (catFilter === 'all' || g.category === catFilter));
   const completedGoals = completedGoalsList.length;
   const filteredBadges = catFilter === 'all' ? badges : badges.filter(b => b.category === catFilter);
