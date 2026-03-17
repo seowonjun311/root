@@ -34,7 +34,7 @@ export default function Records() {
   const totalMinutes = filteredLogs.reduce((sum, l) => sum + (l.duration_minutes || 0), 0);
   const totalHours = Math.round(totalMinutes / 60);
   const totalSessions = filteredLogs.length;
-  const completedGoalsList = goals.filter(g => g.status === 'completed');
+  const completedGoalsList = goals.filter(g => g.status === 'completed' || g.status === 'failed');
   const completedGoals = completedGoalsList.length;
   const filteredBadges = catFilter === 'all' ? badges : badges.filter(b => b.category === catFilter);
 
