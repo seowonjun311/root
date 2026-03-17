@@ -98,13 +98,6 @@ export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip 
 
           <div className="flex gap-3">
             <Button
-              variant="outline"
-              onClick={onSkip}
-              className="flex-1 h-12 rounded-xl font-semibold"
-            >
-              저장 안함
-            </Button>
-            <Button
               onClick={handleSave}
               disabled={uploading}
               className="flex-1 h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
