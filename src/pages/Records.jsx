@@ -331,7 +331,7 @@ export default function Records() {
   );
 }
 
-function AlbumTab({ logs, goals, catFilter }) {
+function AlbumTab({ logs, goals, catFilter, onCatFilterChange }) {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const CAT_EMOJIS = { exercise: '🏃', study: '📚', mental: '🧘', daily: '🏠' };
 
