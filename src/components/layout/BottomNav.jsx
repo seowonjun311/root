@@ -14,6 +14,12 @@ const navItems = [
 export default function BottomNav() {
   const location = useLocation();
 
+  const handleNavClick = (path) => {
+    if (location.pathname === path) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom" style={{
       background: 'linear-gradient(180deg, #7a5020 0%, #5a3510 60%, #3d2008 100%)',
