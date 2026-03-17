@@ -81,6 +81,12 @@ export default function AppSettings() {
           desc="이 기기에서 로그인이 해제됩니다"
           onClick={() => setShowLogout(true)}
         />
+        <SettingItem
+          icon={<Trash2 className="w-5 h-5 text-red-600" />}
+          label="계정 삭제"
+          desc="모든 데이터가 영구 삭제됩니다"
+          onClick={() => setShowDelete(true)}
+        />
       </div>
 
       {/* Nickname Dialog */}
