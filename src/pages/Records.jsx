@@ -387,11 +387,11 @@ function AlbumTab({ logs, goals, catFilter, onCatFilterChange }) {
               </div>
             ))}
           </div>
-        </div>
-      )}
+          </div>
+          )}
 
-      {/* 사진 그리드 */}
-      {photoLogs.length > 0 && (
+          {/* 사진 그리드 */}
+          {photoLogs.length > 0 && (
         <div>
           <p className="text-xs font-bold text-amber-800 mb-2">📸 수련 사진 ({photoLogs.length}장)</p>
           <div className="grid grid-cols-3 gap-1.5">
