@@ -45,7 +45,12 @@ function MonthCalendar({ logs, onClose }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 8, scale: 0.96 }}
       transition={{ duration: 0.18 }}
-      className="absolute top-full left-0 right-0 mt-2 z-50 bg-card border border-border/70 rounded-2xl shadow-xl p-4"
+      className="absolute top-full left-0 right-0 mt-2 z-50 rounded-lg shadow-xl p-4"
+      style={{
+        background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 60%, #e8d4a0 100%)',
+        border: '2px solid #a07840',
+        boxShadow: '0 4px 16px rgba(80,50,10,0.3)',
+      }}
       onClick={e => e.stopPropagation()}
     >
       <div className="flex items-center justify-between mb-3">
