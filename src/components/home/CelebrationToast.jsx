@@ -29,7 +29,7 @@ export default function CelebrationToast({ trigger, onDone }) {
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm"
+        className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-4 max-w-sm"
         initial={{ y: -80, opacity: 0, scale: 0.9 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
         exit={{ y: -80, opacity: 0, scale: 0.9 }}
