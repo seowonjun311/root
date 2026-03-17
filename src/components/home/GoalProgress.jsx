@@ -164,34 +164,60 @@ export default function GoalProgress({ goal, logs = [] }) {
     <>
       <div ref={cardRef} className="mx-4 relative">
         <div
-          className="p-4 rounded-2xl bg-card border border-border/60 shadow-sm cursor-pointer"
+          className="cursor-pointer rounded-lg overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 40%, #e8d4a0 70%, #f0e0bc 100%)',
+            border: '2px solid #a07840',
+            boxShadow: 'inset 0 1px 3px rgba(255,240,180,0.6), 0 3px 8px rgba(80,50,10,0.25)',
+          }}
           onClick={() => setShowCalendar(v => !v)}
         >
-          <div className="flex items-center justify-between mb-2">
+          {/* 상단 배너 */}
+          <div className="py-2 px-4 flex items-center justify-between" style={{
+            background: 'linear-gradient(90deg, #b08030 0%, #d4a850 50%, #b08030 100%)',
+            borderBottom: '1px solid #8a6020',
+          }}>
             <div className="flex items-center gap-2">
               <span className="text-sm">⚔️</span>
-              <span className="text-sm font-semibold text-foreground">{goal.title}</span>
+              <span className="text-sm font-bold" style={{ color: '#fff8e8', textShadow: '0 1px 2px rgba(60,30,5,0.5)' }}>{goal.title}</span>
             </div>
             <button
               onClick={e => { e.stopPropagation(); setShowMenu(true); }}
-              className="p-1.5 rounded-lg hover:bg-secondary transition-colors"
+              className="p-1.5 rounded transition-colors"
+              style={{ color: '#fff8e8' }}
             >
-              <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+              <Pencil className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Progress value={progressPercent} className="flex-1 h-2.5 bg-secondary" />
-            <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-              {elapsedDays}/{totalDays}일
-            </span>
+          {/* 진행도 */}
+          <div className="px-4 py-3">
+            <div className="flex items-center gap-3">
+              {/* 커스텀 프로그레스 바 */}
+              <div className="flex-1 h-3 rounded-full overflow-hidden" style={{
+                background: 'rgba(120,80,20,0.2)',
+                border: '1px solid rgba(120,80,20,0.3)',
+                boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.2)',
+              }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${progressPercent}%`,
+                    background: 'linear-gradient(90deg, #8a6020 0%, #c49a4a 50%, #e8c060 100%)',
+                    boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.5)',
+                  }}
+                />
+              </div>
+              <span className="text-xs font-bold whitespace-nowrap" style={{ color: '#6a3c10' }}>
+                {elapsedDays}/{totalDays}일
+              </span>
+            </div>
+            {goal.target_value && (
+              <p className="text-xs mt-1.5" style={{ color: '#7a5030' }}>
+                {totalDays}일 동안 {goal.target_value}{goal.target_unit || ''} 목표
+              </p>
+            )}
           </div>
-
-          {goal.target_value && (
-            <p className="text-xs text-muted-foreground mt-2">
-              {totalDays}일 동안 {goal.target_value}{goal.target_unit || ''} 목표
-            </p>
-          )}
         </div>
 
         <AnimatePresence>
