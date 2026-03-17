@@ -307,7 +307,10 @@ export default function Onboarding() {
                 actionType === opt.value ? 'border-amber-600 bg-amber-50/80' : 'border-border bg-card hover:border-amber-300'}`}>
               <span className="text-xl">{opt.emoji}</span>
               <div>
-                <p className="text-sm font-semibold">{opt.label}</p>
+                <p className="text-sm font-semibold">
+                  {opt.label}
+                  {category === 'exercise' && opt.value === 'timer' && ' (GPS 측정 가능)'}
+                </p>
                 <p className="text-xs text-muted-foreground">{opt.desc}</p>
               </div>
             </button>
