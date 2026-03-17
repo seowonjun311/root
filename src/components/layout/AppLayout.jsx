@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import BottomNav from './BottomNav';
+import Header from './Header';
 import Home from '../../pages/Home';
 import Records from '../../pages/Records';
 import Badges from '../../pages/Badges';
