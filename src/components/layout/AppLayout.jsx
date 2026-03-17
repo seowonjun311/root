@@ -19,7 +19,8 @@ export default function AppLayout() {
   const currentPath = location.pathname;
 
   return (
-    <div className="min-h-screen bg-background max-w-lg mx-auto relative" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+    <div className="min-h-screen bg-background max-w-lg mx-auto relative">
+      <Header />
       <main className="pb-20">
         {pages.map(({ path, component: Component }) => (
           <div
