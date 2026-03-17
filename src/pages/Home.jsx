@@ -109,7 +109,7 @@ export default function Home() {
     setPendingLog({ actionGoal, minutes, gpsData });
   };
 
-  const handlePhotoSave = async (photoUrl, gpsData) => {
+  const handlePhotoSave = async (photoUrl, receivedGpsData) => {
     const { actionGoal, minutes, gpsData } = pendingLog;
     const todayStr = new Date().toISOString().split('T')[0];
 
