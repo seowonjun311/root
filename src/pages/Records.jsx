@@ -61,9 +61,9 @@ export default function Records() {
 
   return (
     <div className="min-h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-      {/* 획득한 칭호 다이얼로그 */}
-      <Dialog open={showBadges} onOpenChange={setShowBadges}>
-        <DialogContent className="max-w-sm rounded-2xl max-h-[80vh] overflow-y-auto">
+      {/* 획득한 칭호 드로워 */}
+      <Drawer open={showBadges} onOpenChange={setShowBadges}>
+        <DrawerContent className="max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center">🏅 획득한 칭호</DialogTitle>
           </DialogHeader>
