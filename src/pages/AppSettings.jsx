@@ -13,6 +13,7 @@ export default function AppSettings() {
   const [showNickname, setShowNickname] = useState(false);
   const [newNickname, setNewNickname] = useState('');
   const [showLogout, setShowLogout] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ['me'],
