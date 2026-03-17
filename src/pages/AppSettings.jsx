@@ -28,7 +28,7 @@ export default function AppSettings() {
   };
 
   const handleLogout = () => {
-    base44.auth.logout();
+    base44.auth.logout('/Onboarding');
   };
 
   return (
