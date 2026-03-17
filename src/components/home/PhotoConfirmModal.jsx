@@ -70,27 +70,27 @@ export default function PhotoConfirmModal({ actionGoal, onSave, onSkip }) {
           ) : (
             <div className="flex gap-3 mb-4">
               {/* 갤러리에서 선택 */}
-              <button
-                onClick={() => galleryRef.current?.click()}
-                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-amber-300/70 bg-amber-50/40 flex flex-col items-center justify-center gap-2 hover:bg-amber-50/80 transition-colors"
+              <label
+                htmlFor="gallery-input"
+                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-amber-300/70 bg-amber-50/40 flex flex-col items-center justify-center gap-2 hover:bg-amber-50/80 transition-colors cursor-pointer"
               >
                 <Image className="w-7 h-7 text-amber-500" />
                 <span className="text-xs text-amber-700 font-semibold">갤러리</span>
-              </button>
+              </label>
               {/* 카메라로 촬영 */}
-              <button
-                onClick={() => cameraRef.current?.click()}
-                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-amber-300/70 bg-amber-50/40 flex flex-col items-center justify-center gap-2 hover:bg-amber-50/80 transition-colors"
+              <label
+                htmlFor="camera-input"
+                className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-amber-300/70 bg-amber-50/40 flex flex-col items-center justify-center gap-2 hover:bg-amber-50/80 transition-colors cursor-pointer"
               >
                 <Camera className="w-7 h-7 text-amber-500" />
                 <span className="text-xs text-amber-700 font-semibold">카메라</span>
-              </button>
+              </label>
             </div>
           )}
 
           {/* 갤러리용 input (capture 없음) */}
           <input
-            ref={galleryRef}
+            id="gallery-input"
             type="file"
             accept="image/*"
             className="hidden"
@@ -98,7 +98,7 @@ export default function PhotoConfirmModal({ actionGoal, onSave, onSkip }) {
           />
           {/* 카메라용 input (capture="environment") */}
           <input
-            ref={cameraRef}
+            id="camera-input"
             type="file"
             accept="image/*"
             capture="environment"
