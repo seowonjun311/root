@@ -515,25 +515,25 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
         </DrawerContent>
       </Drawer>
 
-      {/* GPS 활성화 선택 다이얼로그 */}
-      <Dialog open={showGpsDialog} onOpenChange={setShowGpsDialog}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-center">🗺️ GPS 추적을 하시겠습니까?</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground text-center">
+      {/* GPS 활성화 선택 드로워 */}
+      <Drawer open={showGpsDialog} onOpenChange={setShowGpsDialog}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>🗺️ GPS 추적을 하시겠습니까?</DrawerTitle>
+          </DrawerHeader>
+          <p className="px-4 text-sm text-muted-foreground text-center">
             GPS를 활성화하면 운동 경로와 거리를 기록할 수 있습니다.
           </p>
-          <DialogFooter className="flex gap-2">
+          <DrawerFooter className="flex gap-2 pt-6">
             <Button variant="outline" onClick={() => handleTimerStart(false)} className="flex-1 rounded-xl">
               안하겠습니다
             </Button>
             <Button onClick={() => handleTimerStart(true)} className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
               🗺️ 활성화
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }
