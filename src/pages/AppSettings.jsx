@@ -131,22 +131,22 @@ export default function AppSettings() {
         </DrawerContent>
       </Drawer>
 
-      {/* Delete Account Dialog */}
-      <Dialog open={showDelete} onOpenChange={setShowDelete}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-center text-red-600">⚠️ 계정을 삭제할까요?</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground text-center">
+      {/* Delete Account Drawer */}
+      <Drawer open={showDelete} onOpenChange={setShowDelete}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle className="text-red-600">⚠️ 계정을 삭제할까요?</DrawerTitle>
+          </DrawerHeader>
+          <p className="px-4 text-sm text-muted-foreground text-center">
             이 작업은 되돌릴 수 없습니다.<br />
             모든 기록과 데이터가 영구적으로 삭제됩니다.
           </p>
-          <DialogFooter className="flex gap-2">
+          <DrawerFooter className="flex gap-2 pt-6">
             <Button variant="outline" onClick={() => setShowDelete(false)} className="flex-1 rounded-xl">취소</Button>
             <Button onClick={handleDeleteAccount} className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white">삭제</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
