@@ -63,7 +63,7 @@ const AuthenticatedApp = () => {
 
 function App() {
   // 시스템 다크모드 감지
-  React.useEffect(() => {
+  useEffect(() => {
     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.documentElement.classList.add('dark');
     }
