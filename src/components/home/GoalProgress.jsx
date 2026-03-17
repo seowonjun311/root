@@ -264,13 +264,13 @@ export default function GoalProgress({ goal, logs = [] }) {
         </DrawerContent>
       </Drawer>
 
-      {/* 수정 다이얼로그 */}
-      <Dialog open={showEdit} onOpenChange={setShowEdit}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-center">✏️ 목표 수정</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
+      {/* 수정 드로워 */}
+      <Drawer open={showEdit} onOpenChange={setShowEdit}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>✏️ 목표 수정</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 space-y-4 pb-6">
             <div>
               <label className="text-xs font-semibold text-amber-800 mb-1.5 block">결과 목표</label>
               <Input
