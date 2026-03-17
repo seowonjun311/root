@@ -63,38 +63,43 @@ export default function Onboarding() {
 
   const handleComplete = async () => {
     setIsSubmitting(true);
-    const isStudyDDay = category === 'study' && hasDDay === true;
-    const finalTitle = isStudyDDay ? examTitle : goalInput;
-    const finalDuration = isStudyDDay ? calcDDayDuration() : (customDuration ? (parseInt(customDuration) || 4) * 7 : duration);
+    try {
+      const isStudyDDay = category === 'study' && hasDDay === true;
+      const finalTitle = isStudyDDay ? examTitle : goalInput;
+      const finalDuration = isStudyDDay ? calcDDayDuration() : (customDuration ? (parseInt(customDuration) || 4) * 7 : duration);
 
-    const goal = await base44.entities.Goal.create({
-      category,
-      goal_type: 'result',
-      title: finalTitle,
-      duration_days: finalDuration,
-      start_date: new Date().toISOString().split('T')[0],
-      ...(isStudyDDay ? { d_day: dDay, has_d_day: true } : {}),
-      status: 'active',
-    });
+      const goal = await base44.entities.Goal.create({
+        category,
+        goal_type: 'result',
+        title: finalTitle,
+        duration_days: finalDuration,
+        start_date: new Date().toISOString().split('T')[0],
+        ...(isStudyDDay ? { d_day: dDay, has_d_day: true } : {}),
+        status: 'active',
+      });
 
-    await base44.entities.ActionGoal.create({
-      goal_id: goal.id,
-      category,
-      title: actionTitle || finalTitle,
-      action_type: actionType,
-      weekly_frequency: frequency,
-      duration_minutes: actionType === 'timer' ? actionMinutes : 0,
-      duration_days: finalDuration,
-      status: 'active',
-    });
+      await base44.entities.ActionGoal.create({
+        goal_id: goal.id,
+        category,
+        title: actionTitle || finalTitle,
+        action_type: actionType,
+        weekly_frequency: frequency,
+        duration_minutes: actionType === 'timer' ? actionMinutes : 0,
+        duration_days: finalDuration,
+        status: 'active',
+      });
 
-    await base44.auth.updateMe({
-      nickname: nickname || '용사',
-      onboarding_complete: true,
-      active_category: category,
-    });
+      await base44.auth.updateMe({
+        nickname: nickname || '용사',
+        onboarding_complete: true,
+        active_category: category,
+      });
 
-    navigate('/Home');
+      navigate('/Home');
+    } catch (error) {
+      console.error('온보딩 완료 오류:', error);
+      setIsSubmitting(false);
+    }
   };
 
   const canNext = () => {
