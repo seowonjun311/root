@@ -28,6 +28,8 @@ const AuthenticatedApp = () => {
   }
 
   // Handle authentication errors
+  // [로그인 시스템 일시 정지] - 필요시 아래 주석 제거
+  /*
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
@@ -37,6 +39,7 @@ const AuthenticatedApp = () => {
       return null;
     }
   }
+  */
 
   // Render the main app
   return (
