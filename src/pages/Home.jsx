@@ -252,8 +252,9 @@ export default function Home() {
       {pendingLog && (
         <PhotoConfirmModal
           actionGoal={pendingLog.actionGoal}
+          gpsData={pendingLog.gpsData}
           onSave={handlePhotoSave}
-          onSkip={() => handlePhotoSave(null)}
+          onSkip={() => handlePhotoSave(null, pendingLog.gpsData)}
         />
       )}
 
