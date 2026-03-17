@@ -397,13 +397,7 @@ export default function CreateGoal() {
   };
 
   return (
-    <div className="min-h-screen bg-background max-w-lg mx-auto">
-      <div className="flex items-center gap-3 p-4 border-b border-border/50">
-        <button onClick={handleBack} className="p-3 -ml-2 touch-manipulation">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <h1 className="font-bold text-lg">{isAddingActionOnly ? `${categoryNames[category]} 행동 목표 추가` : `${categoryNames[category]} 목표 만들기`}</h1>
-      </div>
+    <div className="min-h-screen bg-background max-w-lg mx-auto" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="p-6">
         {renderStep()}
       </div>
