@@ -279,7 +279,11 @@ export default function CharacterBanner({ nickname, message, category = 'exercis
   const season = getSeason();
   const colors = seasonConfig[season];
   const levelKey = `${category}_level`;
+  const xpKey = `${category}_xp`;
   const level = userLevels[levelKey] || 1;
+  const xp = userLevels[xpKey] || 0;
+  const currentXp = xp % 30;
+  const nextLevelXp = 30;
 
   return (
     <div className="relative overflow-hidden rounded-b-3xl shadow-md" style={{ background: colors.skyTop }}>
@@ -305,13 +309,28 @@ export default function CharacterBanner({ nickname, message, category = 'exercis
         </motion.g>
       </svg>
 
-      {/* 레벨 배지 */}
-      <div className="absolute top-4 right-4 px-3 py-1.5 rounded-md" style={{
-        background: 'linear-gradient(180deg, #c49a4a 0%, #8a6020 100%)',
-        border: '2px solid #6b4e15',
-        boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 2px 6px rgba(60,35,5,0.5)',
-      }}>
-        <span className="text-sm font-bold" style={{ color: '#fff8e8', textShadow: '0 1px 2px rgba(60,30,5,0.5)' }}>Lv. {level}</span>
+      {/* 레벨 배지 + XP 게이지 */}
+      <div className="absolute top-4 right-4 flex flex-col gap-1.5">
+        {/* 레벨 표시 */}
+        <div className="px-3 py-1.5 rounded-md" style={{
+          background: 'linear-gradient(180deg, #c49a4a 0%, #8a6020 100%)',
+          border: '2px solid #6b4e15',
+          boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 2px 6px rgba(60,35,5,0.5)',
+        }}>
+          <span className="text-sm font-bold" style={{ color: '#fff8e8', textShadow: '0 1px 2px rgba(60,30,5,0.5)' }}>Lv. {level}</span>
+        </div>
+        {/* XP 게이지 */}
+        <div className="px-2.5 py-1.5 rounded-md bg-black/40 backdrop-blur-sm border border-amber-600/60 flex flex-col gap-0.5">
+          <div className="h-1.5 bg-black/60 rounded-full overflow-hidden border border-amber-600/40">
+            <motion.div
+              className="h-full bg-gradient-to-r from-amber-400 to-amber-500"
+              initial={{ width: `${(currentXp / nextLevelXp) * 100}%` }}
+              animate={{ width: `${(currentXp / nextLevelXp) * 100}%` }}
+              transition={{ duration: 0.3 }}
+            />
+          </div>
+          <span className="text-[10px] text-amber-100 font-semibold text-center">{currentXp} / {nextLevelXp}</span>
+        </div>
       </div>
 
       {/* 텍스트 오버레이 - 스크롤 배너 스타일 */}
