@@ -38,7 +38,7 @@ export default function PhotoConfirmModal({ actionGoal, onSave, onSkip }) {
         exit={{ opacity: 0 }}
       >
         <motion.div
-          className="w-full max-w-lg bg-background rounded-t-3xl p-6 pb-10"
+          className="w-full max-w-lg bg-background rounded-t-3xl p-6 pb-28"
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
