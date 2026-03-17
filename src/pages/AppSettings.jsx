@@ -46,7 +46,7 @@ export default function AppSettings() {
     <div className="min-h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="p-6 pb-3">
         <h1 className="text-xl font-bold text-amber-900 flex items-center gap-2">
-          ⚙️ 설정
+          🏠 홈
         </h1>
       </div>
 
