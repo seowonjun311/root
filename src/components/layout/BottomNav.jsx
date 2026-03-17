@@ -19,6 +19,7 @@ export default function BottomNav() {
       background: 'linear-gradient(180deg, #7a5020 0%, #5a3510 60%, #3d2008 100%)',
       borderTop: '3px solid #a07030',
       boxShadow: '0 -3px 12px rgba(40,20,5,0.5)',
+      paddingBottom: 'env(safe-area-inset-bottom)',
     }}>
       {/* 상단 장식선 */}
       <div className="h-0.5 w-full" style={{
