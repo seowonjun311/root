@@ -297,7 +297,7 @@ export default function Records() {
         </TabsContent>
 
         <TabsContent value="album" className="mt-4 pb-4">
-          <AlbumTab logs={logs} goals={goals} catFilter={catFilter} />
+          <AlbumTab logs={logs} goals={goals} catFilter={catFilter} onCatFilterChange={setCatFilter} />
         </TabsContent>
       </Tabs>
 
