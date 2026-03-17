@@ -112,29 +112,40 @@ export default function Records() {
               <p className="text-sm">아직 완료한 목표가 없어요.</p>
             </div>
           ) : (
-            <div className="space-y-3 mt-1">
-              {completedGoalsList.map(g => {
-                const relatedBadge = badges.find(b => b.goal_id === g.id);
+            <div className="space-y-5 mt-1">
+              {['exercise', 'study', 'mental', 'daily'].map(cat => {
+                const catGoals = completedGoalsList.filter(g => g.category === cat);
+                if (catGoals.length === 0) return null;
+                const catInfo = { exercise: { label: '운동', emoji: '🏃' }, study: { label: '공부', emoji: '📚' }, mental: { label: '정신', emoji: '🧘' }, daily: { label: '일상', emoji: '🏠' } }[cat];
                 return (
-                  <div key={g.id} className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300/60">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span>{CAT_EMOJIS[g.category] || '🎯'}</span>
-                      <p className="text-sm font-bold text-amber-900 flex-1">{g.title}</p>
+                  <div key={cat}>
+                    <p className="text-xs font-bold text-amber-800 mb-2">{catInfo.emoji} {catInfo.label} ({catGoals.length}개)</p>
+                    <div className="space-y-2">
+                      {catGoals.map(g => {
+                        const relatedBadge = badges.find(b => b.goal_id === g.id);
+                        return (
+                          <div key={g.id} className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300/60">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-sm font-bold text-amber-900 flex-1">{g.title}</p>
+                            </div>
+                            <p className="text-xs text-muted-foreground mb-1">
+                              {g.duration_days}일 도전 · {g.end_date || g.updated_date?.split('T')[0]}
+                            </p>
+                            {relatedBadge && (
+                              <p className="text-xs text-amber-700 font-semibold">🏅 {relatedBadge.title}</p>
+                            )}
+                            {g.result_note && (
+                              <p className="text-xs text-amber-800 italic mt-1">"{g.result_note}"</p>
+                            )}
+                            <span className={`inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                              g.achievement_success ? 'bg-green-100 text-green-700' : 'bg-secondary text-muted-foreground'
+                            }`}>
+                              {g.achievement_success ? '✅ 달성' : '종료'}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <p className="text-xs text-muted-foreground mb-1">
-                      {g.duration_days}일 도전 · {g.end_date || g.updated_date?.split('T')[0]}
-                    </p>
-                    {relatedBadge && (
-                      <p className="text-xs text-amber-700 font-semibold">🏅 {relatedBadge.title}</p>
-                    )}
-                    {g.result_note && (
-                      <p className="text-xs text-amber-800 italic mt-1">"{g.result_note}"</p>
-                    )}
-                    <span className={`inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full font-semibold ${
-                      g.achievement_success ? 'bg-green-100 text-green-700' : 'bg-secondary text-muted-foreground'
-                    }`}>
-                      {g.achievement_success ? '✅ 달성' : '종료'}
-                    </span>
                   </div>
                 );
               })}
