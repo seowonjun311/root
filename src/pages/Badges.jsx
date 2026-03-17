@@ -20,7 +20,7 @@ export default function Badges() {
   const filtered = filter === 'all' ? badges : badges.filter(b => b.category === filter);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="p-6 pb-3">
         <h1 className="text-xl font-bold text-amber-900 flex items-center gap-2">
           🏆 명예의 전당
