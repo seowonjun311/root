@@ -293,17 +293,7 @@ export default function NotificationSettings() {
         </DialogContent>
       </Dialog>
 
-      {/* Header */}
-      <div className="flex items-center gap-3 p-5 pb-3">
-        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-secondary transition-colors">
-          <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-        </button>
-        <h1 className="text-xl font-bold text-amber-900 flex items-center gap-2">
-          🔔 알림 설정
-        </h1>
-      </div>
-
-      <div className="px-4 space-y-4 pb-8">
+      <div className="px-4 space-y-4 pb-8" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         {/* Permission banners */}
         {permission === 'unsupported' && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
