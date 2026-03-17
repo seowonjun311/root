@@ -438,6 +438,8 @@ function AlbumTab({ logs, goals, catFilter, onCatFilterChange }) {
           )}
         </DialogContent>
       </Dialog>
+        </>
+      )}
     </div>
   );
 }
