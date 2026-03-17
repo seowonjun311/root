@@ -210,7 +210,16 @@ export default function Home() {
           daily_level: user?.daily_level || 1,
         }}
       />
-      <CategoryTabs active={activeCategory} onChange={handleCategoryChange} />
+      <CategoryTabs active={activeCategory} onChange={handleCategoryChange} userLevels={{
+        exercise_level: user?.exercise_level || 1,
+        exercise_xp: user?.exercise_xp || 0,
+        study_level: user?.study_level || 1,
+        study_xp: user?.study_xp || 0,
+        mental_level: user?.mental_level || 1,
+        mental_xp: user?.mental_xp || 0,
+        daily_level: user?.daily_level || 1,
+        daily_xp: user?.daily_xp || 0,
+      }} />
 
       {activeGoal ? (
         <div className="space-y-3">
