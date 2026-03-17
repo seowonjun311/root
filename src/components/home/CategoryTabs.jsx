@@ -12,12 +12,15 @@ export default function CategoryTabs({ active, onChange, userLevels = {} }) {
     <div className="flex gap-2 px-4 py-3">
       {categories.map(({ id, label, emoji }) => {
         const level = userLevels[`${id}_level`] || 1;
+        const xp = userLevels[`${id}_xp`] || 0;
+        const currentXp = xp % 30;
+        const xpPercent = (currentXp / 30) * 100;
         
         return (
           <button
             key={id}
             onClick={() => onChange(id)}
-            className={`flex-1 flex items-center justify-center gap-1 px-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200
+            className={`flex-1 flex flex-col gap-1 px-2 py-2 rounded-lg text-xs font-bold transition-all duration-200 relative overflow-hidden
               ${active === id ? 'wood-btn-active' : 'wood-btn'}`}
             style={active === id ? {
               background: 'linear-gradient(180deg, #8b5e20 0%, #6b4010 50%, #5a3008 100%)',
@@ -32,8 +35,17 @@ export default function CategoryTabs({ active, onChange, userLevels = {} }) {
               textShadow: '0 1px 2px rgba(60,30,5,0.5)',
             }}
           >
-            <span className="text-sm">{emoji}</span>
-            <span>{label} Lv.{level}</span>
+            <div className="flex items-center justify-center gap-1">
+              <span className="text-sm">{emoji}</span>
+              <span>{label} Lv.{level}</span>
+            </div>
+            <div className="h-1.5 bg-black/40 rounded-full overflow-hidden border border-amber-600/40">
+              <div 
+                className="h-full bg-gradient-to-r from-yellow-300 to-yellow-500 rounded-full transition-all duration-300"
+                style={{ width: `${xpPercent}%` }}
+              />
+            </div>
+            <span className="text-[9px] opacity-80">{currentXp}/30</span>
           </button>
         );
       })}
