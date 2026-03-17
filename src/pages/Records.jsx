@@ -355,6 +355,79 @@ export default function Records() {
         </TabsContent>
       </Tabs>
 
+      {/* 이동거리 상세 다이얼로그 */}
+      <Dialog open={showDistance} onOpenChange={setShowDistance}>
+        <DialogContent className="max-w-sm rounded-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-center">🗺️ 이동거리 상세</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            {(() => {
+              const distanceLogs = filteredLogs.filter(l => l.gps_enabled && l.distance_km);
+              if (distanceLogs.length === 0) {
+                return (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p className="text-3xl mb-2">🗺️</p>
+                    <p className="text-sm">저장된 GPS 기록이 없어요.</p>
+                  </div>
+                );
+              }
+
+              const byCategory = {};
+              distanceLogs.forEach(log => {
+                const cat = log.category || 'exercise';
+                if (!byCategory[cat]) byCategory[cat] = [];
+                byCategory[cat].push(log);
+              });
+
+              return Object.entries(byCategory).map(([cat, logs]) => {
+                const catDistance = Math.round(logs.reduce((sum, l) => sum + (l.distance_km || 0), 0) * 10) / 10;
+                const CAT_EMOJI = { exercise: '🏃', study: '📚', mental: '🧘', daily: '🏠' };
+                const CAT_LABEL = { exercise: '운동', study: '공부', mental: '정신', daily: '일상' };
+                
+                return (
+                  <div key={cat}>
+                    <p className="text-xs font-bold text-amber-800 mb-2">
+                      {CAT_EMOJI[cat]} {CAT_LABEL[cat]} - {catDistance}km
+                    </p>
+                    <div className="space-y-2">
+                      {logs.map(log => {
+                        const actionGoal = actionGoals.find(ag => ag.id === log.action_goal_id);
+                        return (
+                          <button
+                            key={log.id}
+                            onClick={() => setSelectedPhoto(log)}
+                            className="w-full p-3 rounded-xl bg-amber-50/80 border border-amber-200/60 text-left hover:bg-amber-100/80 transition-colors"
+                          >
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <p className="text-sm font-semibold text-amber-900">{actionGoal?.title || '기록'}</p>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-200 text-blue-800 font-semibold">
+                                {log.distance_km?.toFixed(2)}km
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground">{log.date}</span>
+                            {log.photo_url && (
+                              <div className="mt-2 rounded-lg overflow-hidden">
+                                <img src={log.photo_url} alt="수련 사진" className="w-full h-20 object-cover rounded-lg" />
+                              </div>
+                            )}
+                            {log.route_coordinates && (
+                              <div className="mt-2 rounded-lg overflow-hidden bg-blue-50 border border-blue-200 h-16">
+                                <GPSMapPreview coords={JSON.parse(log.route_coordinates)} />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* 타임라인 사진 확대 다이얼로그 */}
       <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
         <DialogContent className="max-w-sm rounded-2xl p-4 max-h-[90vh] overflow-y-auto">
