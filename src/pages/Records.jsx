@@ -434,10 +434,10 @@ export default function Records() {
           <DrawerHeader>
             <DrawerTitle className="text-center text-sm">
               {CAT_EMOJIS[selectedPhoto?.category]} {selectedPhoto?.date}
-            </DialogTitle>
-          </DialogHeader>
+            </DrawerTitle>
+          </DrawerHeader>
           {selectedPhoto && (
-            <div className="space-y-3">
+            <div className="space-y-3 px-4 pb-6">
               {selectedPhoto.photo_url && (
                 <img src={selectedPhoto.photo_url} alt={selectedPhoto.date} className="w-full rounded-xl object-cover max-h-80" />
               )}
@@ -462,8 +462,8 @@ export default function Records() {
               )}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
