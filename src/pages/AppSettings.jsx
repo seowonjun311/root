@@ -32,6 +32,16 @@ export default function AppSettings() {
     base44.auth.logout('/Onboarding');
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      await base44.auth.deleteAccount();
+      toast.success('계정이 삭제되었습니다.');
+      base44.auth.logout('/Onboarding');
+    } catch (error) {
+      toast.error('계정 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="p-6 pb-3">
