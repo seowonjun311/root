@@ -314,12 +314,16 @@ export default function CharacterBanner({ nickname, message, category = 'exercis
         <span className="text-sm font-bold" style={{ color: '#fff8e8', textShadow: '0 1px 2px rgba(60,30,5,0.5)' }}>Lv. {level}</span>
       </div>
 
-      {/* 텍스트 오버레이 */}
-      <div className="absolute bottom-0 left-0 right-0 px-5 py-3 bg-gradient-to-t from-amber-900/60 to-transparent">
-        <p className="font-bold text-base text-amber-50 drop-shadow">
+      {/* 텍스트 오버레이 - 스크롤 배너 스타일 */}
+      <div className="absolute bottom-0 left-0 right-0 py-2.5 px-5" style={{
+        background: 'linear-gradient(90deg, rgba(160,120,48,0.92) 0%, rgba(210,170,80,0.92) 30%, rgba(235,195,100,0.95) 50%, rgba(210,170,80,0.92) 70%, rgba(160,120,48,0.92) 100%)',
+        borderTop: '2px solid rgba(180,130,40,0.8)',
+        boxShadow: '0 -2px 8px rgba(60,30,5,0.3)',
+      }}>
+        <p className="font-bold text-base drop-shadow" style={{ color: '#3a1f05', textShadow: '0 1px 2px rgba(255,220,120,0.4)' }}>
           {nickname || '용사님'}
         </p>
-        <p className="text-xs text-amber-100/90 drop-shadow leading-relaxed">
+        <p className="text-xs leading-relaxed" style={{ color: '#5a3510' }}>
           {message || '당신을 기다리고 있습니다.'}
         </p>
       </div>
