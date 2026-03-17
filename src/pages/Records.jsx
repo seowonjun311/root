@@ -283,7 +283,9 @@ export default function Records() {
                     )}
                   </div>
                   {log.photo_url && (
-                    <img src={log.photo_url} alt="수련 사진" className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                    <button onClick={() => setSelectedPhoto(log)} className="shrink-0">
+                      <img src={log.photo_url} alt="수련 사진" className="w-12 h-12 rounded-lg object-cover" />
+                    </button>
                   )}
                   <span className="text-xs px-2 py-1 rounded-lg bg-amber-100/80 text-amber-700 shrink-0">
                     {CAT_LABELS[log.category] || '기타'}
