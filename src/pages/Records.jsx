@@ -124,15 +124,20 @@ export default function Records() {
               {filteredLogs.map(log => {
                 const actionGoal = actionGoals.find(ag => ag.id === log.action_goal_id);
                 return (
-                  <div key={log.id} className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/60">
+                  <button key={log.id} onClick={() => setSelectedPhoto(log)} className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/60 text-left hover:bg-amber-100/80 transition-colors">
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <p className="text-sm font-semibold text-amber-900">{actionGoal?.title || '기록'}</p>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 font-semibold">{log.date}</span>
                     </div>
                     {log.photo_url && (
-                      <button onClick={() => setSelectedPhoto(log)} className="mb-2 rounded-lg overflow-hidden hover:opacity-80 transition-opacity">
+                      <div className="mb-2 rounded-lg overflow-hidden">
                         <img src={log.photo_url} alt="수련 사진" className="w-full h-24 object-cover rounded-lg" />
-                      </button>
+                      </div>
+                    )}
+                    {log.gps_enabled && log.route_coordinates && (
+                      <div className="mb-2 rounded-lg overflow-hidden bg-blue-50 border border-blue-200 h-20">
+                        <GPSMapPreview coords={JSON.parse(log.route_coordinates)} />
+                      </div>
                     )}
                     <div className="flex items-center gap-2">
                       {log.duration_minutes > 0 && (
@@ -142,7 +147,7 @@ export default function Records() {
                         <span className="text-xs text-blue-600">🗺️ {log.distance_km?.toFixed(2)}km</span>
                       )}
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
