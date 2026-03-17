@@ -150,7 +150,7 @@ export default function CreateGoal() {
           {actionType === 'timer' && (
             <div>
               <label className="text-sm font-semibold text-amber-800 mb-2 block">1회 시간</label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mb-2">
                 {[20, 30, 60].map(m => (
                   <button key={m} onClick={() => setMinutes(m)}
                     className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
@@ -158,6 +158,15 @@ export default function CreateGoal() {
                     {m}분
                   </button>
                 ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number" min="1" max="300"
+                  value={minutes}
+                  onChange={e => setMinutes(Number(e.target.value))}
+                  className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                />
+                <span className="text-sm font-semibold text-muted-foreground">분</span>
               </div>
             </div>
           )}
