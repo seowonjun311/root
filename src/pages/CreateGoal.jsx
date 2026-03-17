@@ -78,6 +78,18 @@ export default function CreateGoal() {
       return;
     }
 
+    // 같은 카테고리의 기존 결과 목표 삭제
+    const existingGoals = await base44.entities.Goal.filter({ category, goal_type: 'result' });
+    for (const oldGoal of existingGoals) {
+      // 해당 목표의 모든 행동 목표 삭제
+      const actionGoals = await base44.entities.ActionGoal.filter({ goal_id: oldGoal.id });
+      for (const ag of actionGoals) {
+        await base44.entities.ActionGoal.delete(ag.id);
+      }
+      // 결과 목표 삭제
+      await base44.entities.Goal.delete(oldGoal.id);
+    }
+
     const finalDuration = isStudy && hasDDay ? calcDuration() : duration;
     const finalTitle = isStudy && hasDDay ? examTitle : goalTitle;
     const finalDDay = isStudy && hasDDay ? dDay : undefined;
