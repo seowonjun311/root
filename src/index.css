@@ -93,6 +93,7 @@
   button, nav, a, input, [role="button"] {
     @apply select-none;
     -webkit-user-select: none;
+    touch-action: manipulation;
   }
 
   /* 양피지 카드 스타일 */
