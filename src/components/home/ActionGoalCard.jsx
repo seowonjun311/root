@@ -199,58 +199,94 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
   return (
     <>
       <div ref={cardRef} className="mx-4 relative">
-        <div className="p-4 rounded-2xl bg-card border border-border/60 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <button
-              onClick={() => setShowCalendar(v => !v)}
-              className="flex items-center gap-2 flex-1 min-w-0 text-left"
-            >
-              <span className="text-base">{typeEmoji}</span>
-              <span className="font-semibold text-sm text-foreground truncate">{actionGoal.title}</span>
-              {typeLabel && <span className="text-xs text-muted-foreground">{typeLabel}</span>}
-              <span className="text-xs text-amber-600 font-semibold ml-1 shrink-0">
-                {weeklyCount}/{targetFreq}
-              </span>
-            </button>
-
-            <div className="flex items-center gap-1.5 ml-2">
-              {actionGoal.action_type === 'timer' ? (
-                <Button
-                  size="sm"
-                  variant={isRunning ? 'destructive' : 'default'}
-                  className={`h-8 px-3 text-xs font-semibold rounded-xl ${
-                    isRunning
-                      ? 'bg-red-500/90 hover:bg-red-600'
-                      : 'bg-amber-700 hover:bg-amber-800 text-amber-50'
-                  }`}
-                  onClick={handleTimerToggle}
-                >
-                  {isRunning ? (
-                    <><Square className="w-3 h-3 mr-1" />{formatTime(elapsed)}</>
-                  ) : (
-                    <><Play className="w-3 h-3 mr-1" />시작</>
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  className="h-8 px-3 text-xs font-semibold rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50"
-                  onClick={handleConfirm}
-                >
-                  <Check className="w-3 h-3 mr-1" />
-                  {actionGoal.action_type === 'abstain' ? '성공' : '확인'}
-                </Button>
-              )}
+        <div className="rounded-lg overflow-hidden" style={{
+          background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 50%, #f0e0bc 100%)',
+          border: '2px solid #a07840',
+          boxShadow: 'inset 0 1px 3px rgba(255,240,180,0.6), 0 3px 8px rgba(80,50,10,0.2)',
+        }}>
+          <div className="px-4 pt-3 pb-2">
+            <div className="flex items-center justify-between mb-2.5">
               <button
-                onClick={() => setShowMenu(true)}
-                className="p-1.5 rounded-lg hover:bg-secondary transition-colors"
+                onClick={() => setShowCalendar(v => !v)}
+                className="flex items-center gap-2 flex-1 min-w-0 text-left"
               >
-                <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-base">{typeEmoji}</span>
+                <span className="font-bold text-sm truncate" style={{ color: '#4a2c08' }}>{actionGoal.title}</span>
+                {typeLabel && <span className="text-xs ml-1" style={{ color: '#7a5030' }}>{typeLabel}</span>}
+                <span className="text-xs font-bold ml-1 shrink-0" style={{ color: '#8a6020' }}>
+                  {weeklyCount}/{targetFreq}
+                </span>
               </button>
+
+              <div className="flex items-center gap-1.5 ml-2">
+                {actionGoal.action_type === 'timer' ? (
+                  <button
+                    className="h-8 px-3 text-xs font-bold rounded-md transition-all active:scale-95"
+                    style={isRunning ? {
+                      background: 'linear-gradient(180deg, #c0392b 0%, #962d22 100%)',
+                      border: '2px solid #7a1f16',
+                      boxShadow: 'inset 0 1px 2px rgba(255,150,120,0.3), 0 2px 4px rgba(60,10,5,0.4)',
+                      color: '#ffe8e8',
+                      textShadow: '0 1px 2px rgba(80,10,5,0.5)',
+                    } : {
+                      background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 50%, #8a6520 100%)',
+                      border: '2px solid #6b4e15',
+                      boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 2px 4px rgba(60,35,5,0.4)',
+                      color: '#fff8e8',
+                      textShadow: '0 1px 2px rgba(60,30,5,0.5)',
+                    }}
+                    onClick={handleTimerToggle}
+                  >
+                    {isRunning ? (
+                      <span className="flex items-center gap-1"><Square className="w-3 h-3" />{formatTime(elapsed)}</span>
+                    ) : (
+                      <span className="flex items-center gap-1"><Play className="w-3 h-3" />시작</span>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    className="h-8 px-3 text-xs font-bold rounded-md transition-all active:scale-95"
+                    style={{
+                      background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 50%, #8a6520 100%)',
+                      border: '2px solid #6b4e15',
+                      boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 2px 4px rgba(60,35,5,0.4)',
+                      color: '#fff8e8',
+                      textShadow: '0 1px 2px rgba(60,30,5,0.5)',
+                    }}
+                    onClick={handleConfirm}
+                  >
+                    <span className="flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      {actionGoal.action_type === 'abstain' ? '성공' : '확인'}
+                    </span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowMenu(true)}
+                  className="p-1.5 rounded transition-colors"
+                  style={{ color: '#7a5030' }}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* 커스텀 프로그레스 바 */}
+            <div className="h-2.5 rounded-full overflow-hidden" style={{
+              background: 'rgba(120,80,20,0.2)',
+              border: '1px solid rgba(120,80,20,0.25)',
+              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.15)',
+            }}>
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${progressPercent}%`,
+                  background: 'linear-gradient(90deg, #8a6020 0%, #c49a4a 50%, #e8c060 100%)',
+                  boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.5)',
+                }}
+              />
             </div>
           </div>
-
-          <Progress value={progressPercent} className="h-2 bg-secondary" />
         </div>
 
         <AnimatePresence>
