@@ -103,9 +103,10 @@ function MonthCalendar({ weeklyLogs, onClose }) {
   );
 }
 
+const TIMER_KEY = (id) => `timer_start_${id}`;
+
 export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete }) {
   const queryClient = useQueryClient();
-  const [isRunning, setIsRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -123,14 +124,24 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
   const targetFreq = actionGoal.weekly_frequency || 7;
   const progressPercent = Math.min(100, Math.round((weeklyCount / targetFreq) * 100));
 
+  // localStorage 기반으로 시작 시각을 저장 → 화면 이탈/복귀 후에도 경과 시간 유지
+  const startTs = localStorage.getItem(TIMER_KEY(actionGoal.id));
+  const isRunning = !!startTs;
+
   useEffect(() => {
-    if (isRunning) {
-      intervalRef.current = setInterval(() => setElapsed(prev => prev + 1), 1000);
-    } else {
+    if (!isRunning) {
+      setElapsed(0);
       clearInterval(intervalRef.current);
+      return;
     }
+    const tick = () => {
+      const start = parseInt(localStorage.getItem(TIMER_KEY(actionGoal.id)) || '0', 10);
+      setElapsed(Math.floor((Date.now() - start) / 1000));
+    };
+    tick(); // 즉시 한 번 계산
+    intervalRef.current = setInterval(tick, 1000);
     return () => clearInterval(intervalRef.current);
-  }, [isRunning]);
+  }, [isRunning, actionGoal.id]);
 
   useEffect(() => {
     if (!showCalendar) return;
