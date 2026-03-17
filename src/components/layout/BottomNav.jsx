@@ -37,28 +37,25 @@ export default function BottomNav() {
         opacity: 0.6,
       }} />
       <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-2">
-         {navItems.map(({ path, label, icon: Icon }) => {
-           const isActive = location.pathname === path;
-           return (
-             <Link
-               key={path}
-               to={path}
-               onClick={() => handleNavClick(path)}
-               className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-all duration-200 select-none"
-               style={isActive ? {
-                 color: '#ffe8a0',
-                 textShadow: '0 0 8px rgba(255,200,80,0.6)',
-                 transform: 'scale(1.05)',
-               } : {
-                 color: 'rgba(220,180,100,0.55)',
-               }}
-             >
-               <Icon className="w-5 h-5" />
-               <span className="text-[10px] font-bold">{label}</span>
-             </Link>
-           );
-         })}
-       </div>
+        {navItems.map(({ path, label, icon: Icon }) => (
+          <Link
+            key={path}
+            to={path}
+            onClick={() => handleNavClick(path)}
+            className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-all duration-200 select-none"
+            style={isActive(path) ? {
+              color: '#ffe8a0',
+              textShadow: '0 0 8px rgba(255,200,80,0.6)',
+              transform: 'scale(1.05)',
+            } : {
+              color: 'rgba(220,180,100,0.55)',
+            }}
+          >
+            <Icon className="w-5 h-5" />
+            <span className="text-[10px] font-bold">{label}</span>
+          </Link>
+        ))}
+      </div>
     </nav>
   );
 }
