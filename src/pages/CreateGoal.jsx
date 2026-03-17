@@ -261,7 +261,7 @@ export default function CreateGoal() {
             <Input
               value={goalTitle}
               onChange={e => setGoalTitle(e.target.value)}
-              placeholder="어떤 결과를 이루고 싶으신가요?"
+              placeholder={category === 'daily' ? "예) 갓생살기, 일찍일어나기, 루틴찾기" : "어떤 결과를 이루고 싶으신가요?"}
               className="h-12 rounded-xl bg-white/80"
             />
           </div>
