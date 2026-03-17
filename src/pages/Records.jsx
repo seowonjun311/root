@@ -372,7 +372,7 @@ function AlbumTab({ logs, goals, catFilter, onCatFilterChange }) {
         <>
           {/* 달성 목표 하이라이트 */}
           {completedGoals.length > 0 && (
-        <div>
+            <div>
           <p className="text-xs font-bold text-amber-800 mb-2">🏆 달성한 목표</p>
           <div className="space-y-2">
             {completedGoals.map(g => (
