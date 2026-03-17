@@ -355,12 +355,12 @@ export default function Records() {
         </TabsContent>
       </Tabs>
 
-      {/* 이동거리 상세 다이얼로그 */}
-      <Dialog open={showDistance} onOpenChange={setShowDistance}>
-        <DialogContent className="max-w-sm rounded-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-center">🗺️ 이동거리 상세</DialogTitle>
-          </DialogHeader>
+      {/* 이동거리 상세 드로워 */}
+      <Drawer open={showDistance} onOpenChange={setShowDistance}>
+        <DrawerContent className="max-h-[80vh] overflow-y-auto">
+          <DrawerHeader>
+            <DrawerTitle className="text-center">🗺️ 이동거리 상세</DrawerTitle>
+          </DrawerHeader>
           <div className="space-y-4 mt-2">
             {(() => {
               const distanceLogs = filteredLogs.filter(l => l.gps_enabled && l.distance_km);
