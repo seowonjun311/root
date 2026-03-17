@@ -160,9 +160,9 @@ export default function Records() {
       {/* 완료한 목표 드로워 */}
       <Drawer open={showCompletedGoals} onOpenChange={setShowCompletedGoals}>
         <DrawerContent className="max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-center">🏆 완료한 목표</DialogTitle>
-          </DialogHeader>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>🏆 완료한 목표</DrawerTitle>
+          </DrawerHeader>
           {completedGoalsList.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p className="text-3xl mb-2">🦊</p>
