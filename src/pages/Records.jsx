@@ -207,10 +207,11 @@ export default function Records() {
                 );
               })}
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
-      <div className="p-6 pb-3">
+            )}
+            </DrawerContent>
+            </Drawer>
+
+            <div className="p-6 pb-3">
         <h1 className="text-xl font-bold text-amber-900 flex items-center gap-2">
           📜 기록의 여정
         </h1>
