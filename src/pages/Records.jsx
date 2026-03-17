@@ -14,6 +14,7 @@ export default function Records() {
   const [showCompletedGoals, setShowCompletedGoals] = useState(false);
   const [showBadges, setShowBadges] = useState(false);
   const [showSessions, setShowSessions] = useState(false);
+  const [showDistance, setShowDistance] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const navigate = useNavigate();
 
