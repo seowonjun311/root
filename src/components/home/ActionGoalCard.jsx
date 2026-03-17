@@ -408,11 +408,12 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
       </div>
 
       {/* 액션 메뉴 */}
-      <Dialog open={showMenu} onOpenChange={setShowMenu}>
-        <DialogContent className="max-w-xs rounded-2xl p-4">
-          <DialogHeader>
-            <DialogTitle className="text-center text-base">행동 목표 관리</DialogTitle>
-          </DialogHeader>
+      <Drawer open={showMenu} onOpenChange={setShowMenu}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>행동 목표 관리</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 pb-6">
           <div className="space-y-2 mt-1">
             <button
               onClick={handleEditOpen}
