@@ -356,6 +356,22 @@ function AlbumTab({ logs, goals, catFilter, onCatFilterChange }) {
 
   return (
     <div className="space-y-5">
+      {/* Category filter */}
+      <div className="flex gap-1.5 flex-wrap">
+        {['all', 'exercise', 'study', 'mental', 'daily'].map(cat => (
+          <button
+            key={cat}
+            onClick={() => onCatFilterChange(cat)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              catFilter === cat
+                ? 'bg-amber-700 text-amber-50'
+                : 'bg-secondary text-muted-foreground'}`}
+          >
+            {cat === 'all' ? '전체' : CAT_LABELS[cat]}
+          </button>
+        ))}
+      </div>
+
       {/* 달성 목표 하이라이트 */}
       {completedGoals.length > 0 && (
         <div>
