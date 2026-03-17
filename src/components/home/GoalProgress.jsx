@@ -307,7 +307,7 @@ export default function GoalProgress({ goal, logs = [] }) {
               )}
             </div>
           </div>
-          <DialogFooter className="flex gap-2">
+          <DrawerFooter className="flex gap-2 pt-4">
             <Button variant="outline" onClick={() => setShowEdit(false)} className="flex-1 rounded-xl">취소</Button>
             <Button
               onClick={handleSave}
@@ -316,9 +316,9 @@ export default function GoalProgress({ goal, logs = [] }) {
             >
               {saving ? '저장 중...' : '저장'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       {/* 삭제 확인 다이얼로그 */}
       <Dialog open={showDelete} onOpenChange={setShowDelete}>
