@@ -89,13 +89,13 @@ export default function AppSettings() {
         />
       </div>
 
-      {/* Nickname Dialog */}
-      <Dialog open={showNickname} onOpenChange={setShowNickname}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-center">🦊 닉네임 변경</DialogTitle>
-          </DialogHeader>
-          <div className="py-2">
+      {/* Nickname Drawer */}
+      <Drawer open={showNickname} onOpenChange={setShowNickname}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>🦊 닉네임 변경</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 py-2 space-y-2">
             <Input
               value={newNickname}
               onChange={e => setNewNickname(e.target.value)}
@@ -103,16 +103,16 @@ export default function AppSettings() {
               maxLength={12}
               className="h-12 rounded-xl text-center"
             />
-            <p className="text-xs text-muted-foreground text-center mt-2">
+            <p className="text-xs text-muted-foreground text-center">
               닉네임은 변경 후 7일 동안 재변경 불가합니다.
             </p>
           </div>
-          <DialogFooter className="flex gap-2">
+          <DrawerFooter className="flex gap-2 pt-4">
             <Button variant="outline" onClick={() => setShowNickname(false)} className="flex-1 rounded-xl">취소</Button>
             <Button onClick={handleNicknameChange} className="flex-1 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50">확인</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       {/* Logout Dialog */}
       <Dialog open={showLogout} onOpenChange={setShowLogout}>
