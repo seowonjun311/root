@@ -86,13 +86,23 @@ export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip 
             </div>
           )}
 
+          {/* Info text */}
+          {gpsData?.gpsEnabled && (
+            <div className="flex items-center gap-2 mb-4 p-3 rounded-xl bg-blue-50 border border-blue-200">
+              <MapPin className="w-4 h-4 text-blue-600" />
+              <p className="text-xs text-blue-700 font-semibold">
+                거리: {gpsData.distance?.toFixed(2) || '0'}km
+              </p>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <Button
               variant="outline"
               onClick={onSkip}
               className="flex-1 h-12 rounded-xl font-semibold"
             >
-              기록만 저장
+              저장 안함
             </Button>
             <Button
               onClick={handleSave}
@@ -107,7 +117,7 @@ export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip 
               ) : (
                 <>
                   <Check className="w-4 h-4 mr-2" />
-                  {photo ? '사진과 함께 저장' : '저장'}
+                  저장
                 </>
               )}
             </Button>
