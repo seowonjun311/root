@@ -107,12 +107,12 @@ export default function Records() {
               })}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
 
-      {/* 수련 세션 다이얼로그 */}
-      <Dialog open={showSessions} onOpenChange={setShowSessions}>
-        <DialogContent className="max-w-sm rounded-2xl max-h-[80vh] overflow-y-auto">
+      {/* 수련 세션 드로워 */}
+      <Drawer open={showSessions} onOpenChange={setShowSessions}>
+        <DrawerContent className="max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center">🏃 수련 내역 ({filteredLogs.length}회)</DialogTitle>
           </DialogHeader>
