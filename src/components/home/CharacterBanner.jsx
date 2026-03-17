@@ -316,6 +316,7 @@ export default function CharacterBanner({ nickname, message, category = 'exercis
         background: 'linear-gradient(90deg, rgba(160,120,48,0.92) 0%, rgba(210,170,80,0.92) 30%, rgba(235,195,100,0.95) 50%, rgba(210,170,80,0.92) 70%, rgba(160,120,48,0.92) 100%)',
         borderTop: '2px solid rgba(180,130,40,0.8)',
         boxShadow: '0 -2px 8px rgba(60,30,5,0.3)',
+        paddingTop: 'env(safe-area-inset-top)',
       }}>
         <p className="font-bold text-base drop-shadow" style={{ color: '#3a1f05', textShadow: '0 1px 2px rgba(255,220,120,0.4)' }}>
           {nickname || '용사님'}
