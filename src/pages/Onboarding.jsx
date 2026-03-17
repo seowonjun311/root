@@ -277,7 +277,7 @@ export default function Onboarding() {
         <p className="text-xs font-semibold text-amber-800 mb-2">행동 유형</p>
         <div className="space-y-2 mb-4">
           {ACTION_TYPE_OPTIONS.map(opt => (
-            <button key={opt.value} onClick={() => { setActionType(opt.value); if (opt.value !== 'timer') setFrequency(7); }}
+            <button key={opt.value} onClick={() => setActionType(opt.value)}
               className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
                 actionType === opt.value ? 'border-amber-600 bg-amber-50/80' : 'border-border bg-card hover:border-amber-300'}`}>
               <span className="text-xl">{opt.emoji}</span>
@@ -288,21 +288,17 @@ export default function Onboarding() {
             </button>
           ))}
         </div>
-        {actionType === 'timer' && (
-          <>
-            <p className="text-xs font-semibold text-amber-800 mb-2">주 횟수</p>
-            <div className="grid grid-cols-7 gap-1.5 mb-4">
-              {[1, 2, 3, 4, 5, 6, 7].map(f => (
-                <button key={f} onClick={() => setFrequency(f)}
-                  className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                    frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
-                  {f}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground mb-4">주 {frequency}회</p>
-          </>
-        )}
+        <p className="text-xs font-semibold text-amber-800 mb-2">주 횟수</p>
+        <div className="grid grid-cols-7 gap-1.5 mb-4">
+          {[1, 2, 3, 4, 5, 6, 7].map(f => (
+            <button key={f} onClick={() => setFrequency(f)}
+              className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+              {f}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">주 {frequency}회</p>
         {actionType === 'timer' && (
           <>
             <p className="text-xs font-semibold text-amber-800 mb-2">1회 시간</p>
