@@ -236,7 +236,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     }
   };
 
-  const handleConfirm = () => onComplete(actionGoal, actionGoal.duration_minutes || 0);
+  const handleConfirm = () => onComplete(actionGoal, actionGoal.duration_minutes || 0, { gpsEnabled: false });
 
   const handleEditOpen = () => {
     setEditTitle(actionGoal.title);
