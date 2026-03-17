@@ -392,52 +392,52 @@ function AlbumTab({ logs, goals, catFilter, onCatFilterChange }) {
 
           {/* 사진 그리드 */}
           {photoLogs.length > 0 && (
-        <div>
-          <p className="text-xs font-bold text-amber-800 mb-2">📸 수련 사진 ({photoLogs.length}장)</p>
-          <div className="grid grid-cols-3 gap-1.5">
-            {photoLogs.map(log => (
-              <button
-                key={log.id}
-                onClick={() => setSelectedPhoto(log)}
-                className="aspect-square rounded-xl overflow-hidden relative group"
-              >
-                <img src={log.photo_url} alt={log.date} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
-                  <span className="text-[10px] text-white font-semibold">{log.date}</span>
-                </div>
-                <span className="absolute top-1 right-1 text-xs">{CAT_EMOJIS[log.category] || '📝'}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 사진 상세 다이얼로그 */}
-      <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
-        <DialogContent className="max-w-sm rounded-2xl p-4">
-          <DialogHeader>
-            <DialogTitle className="text-center text-sm">
-              {CAT_EMOJIS[selectedPhoto?.category]} {selectedPhoto?.date}
-            </DialogTitle>
-          </DialogHeader>
-          {selectedPhoto && (
-            <div className="space-y-3">
-              <img src={selectedPhoto.photo_url} alt={selectedPhoto.date} className="w-full rounded-xl object-cover max-h-72" />
-              <div className="flex items-center gap-2">
-                <span className="text-xs px-2 py-1 rounded-lg bg-amber-100 text-amber-700 font-semibold">
-                  {CAT_LABELS[selectedPhoto.category] || '기타'}
-                </span>
-                {selectedPhoto.duration_minutes > 0 && (
-                  <span className="text-xs text-muted-foreground">{selectedPhoto.duration_minutes}분 수련</span>
-                )}
+            <div>
+              <p className="text-xs font-bold text-amber-800 mb-2">📸 수련 사진 ({photoLogs.length}장)</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {photoLogs.map(log => (
+                  <button
+                    key={log.id}
+                    onClick={() => setSelectedPhoto(log)}
+                    className="aspect-square rounded-xl overflow-hidden relative group"
+                  >
+                    <img src={log.photo_url} alt={log.date} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
+                      <span className="text-[10px] text-white font-semibold">{log.date}</span>
+                    </div>
+                    <span className="absolute top-1 right-1 text-xs">{CAT_EMOJIS[log.category] || '📝'}</span>
+                  </button>
+                ))}
               </div>
-              {selectedPhoto.memo && (
-                <p className="text-sm text-amber-800 italic bg-amber-50/80 p-3 rounded-xl">"{selectedPhoto.memo}"</p>
-              )}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+
+          {/* 사진 상세 다이얼로그 */}
+          <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
+            <DialogContent className="max-w-sm rounded-2xl p-4">
+              <DialogHeader>
+                <DialogTitle className="text-center text-sm">
+                  {CAT_EMOJIS[selectedPhoto?.category]} {selectedPhoto?.date}
+                </DialogTitle>
+              </DialogHeader>
+              {selectedPhoto && (
+                <div className="space-y-3">
+                  <img src={selectedPhoto.photo_url} alt={selectedPhoto.date} className="w-full rounded-xl object-cover max-h-72" />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-2 py-1 rounded-lg bg-amber-100 text-amber-700 font-semibold">
+                      {CAT_LABELS[selectedPhoto.category] || '기타'}
+                    </span>
+                    {selectedPhoto.duration_minutes > 0 && (
+                      <span className="text-xs text-muted-foreground">{selectedPhoto.duration_minutes}분 수련</span>
+                    )}
+                  </div>
+                  {selectedPhoto.memo && (
+                    <p className="text-sm text-amber-800 italic bg-amber-50/80 p-3 rounded-xl">"{selectedPhoto.memo}"</p>
+                  )}
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>
