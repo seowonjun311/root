@@ -94,11 +94,28 @@ const AuthenticatedApp = () => {
 
 
 function App() {
-  // 시스템 다크모드 감지
+  // 시스템 다크모드 감지 및 실시간 모니터링
   useEffect(() => {
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    // 초기 설정
+    if (darkModeQuery.matches) {
       document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
+    
+    // 실시간 변경 감지
+    const handleChange = (e) => {
+      if (e.matches) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+    
+    darkModeQuery.addEventListener('change', handleChange);
+    return () => darkModeQuery.removeEventListener('change', handleChange);
   }, []);
 
   return (
