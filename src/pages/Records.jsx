@@ -113,9 +113,9 @@ export default function Records() {
       {/* 수련 세션 드로워 */}
       <Drawer open={showSessions} onOpenChange={setShowSessions}>
         <DrawerContent className="max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-center">🏃 수련 내역 ({filteredLogs.length}회)</DialogTitle>
-          </DialogHeader>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>🏃 수련 내역 ({filteredLogs.length}회)</DrawerTitle>
+          </DrawerHeader>
           {filteredLogs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p className="text-3xl mb-2">🦊</p>
