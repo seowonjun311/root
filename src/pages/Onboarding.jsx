@@ -151,28 +151,10 @@ export default function Onboarding() {
         </p>
         <div className="space-y-3 mt-8 w-full">
           <button
-            onClick={() => base44.auth.redirectToLogin('/Onboarding')}
-            className="w-full py-3 rounded-xl font-semibold text-sm bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            <span className="mr-2">🔍</span>Google로 시작
-          </button>
-          <button
-            onClick={() => base44.auth.redirectToLogin('/Onboarding')}
-            className="w-full py-3 rounded-xl font-semibold text-sm bg-green-500 text-white hover:bg-green-600 transition-colors"
-          >
-            <span className="mr-2">✓</span>Naver로 시작
-          </button>
-          <button
-            onClick={() => base44.auth.redirectToLogin('/Onboarding')}
-            className="w-full py-3 rounded-xl font-semibold text-sm bg-yellow-400 text-gray-800 hover:bg-yellow-500 transition-colors"
-          >
-            <span className="mr-2">⭐</span>Kakao로 시작
-          </button>
-          <button
             onClick={() => goNext('goal')}
-            className="w-full py-3 rounded-xl font-semibold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors border-2 border-dashed border-amber-300"
+            className="w-full py-3 rounded-xl font-semibold text-base bg-amber-700 hover:bg-amber-800 text-amber-50 transition-colors shadow-lg"
           >
-            <span className="mr-2">🦊</span>가입없이 시작
+            <span className="mr-2">🦊</span>루트 시작하기
           </button>
         </div>
       </div>
