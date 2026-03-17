@@ -149,6 +149,26 @@ export default function Onboarding() {
           채찍도, 비교도, 성과 압박도 없습니다.<br />
           "너 오늘도 조금 해냈네." 라고 말해주는 존재.
         </p>
+        <div className="space-y-3 mt-8 w-full">
+          <button
+            onClick={() => base44.auth.redirectToLogin('/Onboarding')}
+            className="w-full py-3 rounded-xl font-semibold text-sm bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <span className="mr-2">🔍</span>Google로 시작
+          </button>
+          <button
+            onClick={() => base44.auth.redirectToLogin('/Onboarding')}
+            className="w-full py-3 rounded-xl font-semibold text-sm bg-green-500 text-white hover:bg-green-600 transition-colors"
+          >
+            <span className="mr-2">✓</span>Naver로 시작
+          </button>
+          <button
+            onClick={() => base44.auth.redirectToLogin('/Onboarding')}
+            className="w-full py-3 rounded-xl font-semibold text-sm bg-yellow-400 text-gray-800 hover:bg-yellow-500 transition-colors"
+          >
+            <span className="mr-2">⭐</span>Kakao로 시작
+          </button>
+        </div>
       </div>
     );
 
