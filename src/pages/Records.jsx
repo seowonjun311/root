@@ -344,16 +344,6 @@ function AlbumTab({ logs, goals, catFilter, onCatFilterChange }) {
     (catFilter === 'all' || g.category === catFilter)
   );
 
-  if (photoLogs.length === 0 && completedGoals.length === 0) {
-    return (
-      <div className="text-center py-16 text-muted-foreground">
-        <p className="text-4xl mb-3">🖼️</p>
-        <p className="text-sm font-semibold">아직 앨범이 비어있어요.</p>
-        <p className="text-xs mt-1">수련 완료 시 사진을 찍으면 여기에 쌓여요!</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-5">
       {/* Category filter */}
@@ -372,8 +362,16 @@ function AlbumTab({ logs, goals, catFilter, onCatFilterChange }) {
         ))}
       </div>
 
-      {/* 달성 목표 하이라이트 */}
-      {completedGoals.length > 0 && (
+      {photoLogs.length === 0 && completedGoals.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground">
+          <p className="text-4xl mb-3">🖼️</p>
+          <p className="text-sm font-semibold">아직 앨범이 비어있어요.</p>
+          <p className="text-xs mt-1">수련 완료 시 사진을 찍으면 여기에 쌓여요!</p>
+        </div>
+      ) : (
+        <>
+          {/* 달성 목표 하이라이트 */}
+          {completedGoals.length > 0 && (
         <div>
           <p className="text-xs font-bold text-amber-800 mb-2">🏆 달성한 목표</p>
           <div className="space-y-2">
