@@ -110,7 +110,7 @@ export default function Home() {
   };
 
   const handlePhotoSave = async (photoUrl) => {
-    const { actionGoal, minutes } = pendingLog;
+    const { actionGoal, minutes, gpsData } = pendingLog;
     const todayStr = new Date().toISOString().split('T')[0];
 
     const newLogs = [...allLogs, { action_goal_id: actionGoal.id, date: todayStr, completed: true }];
@@ -121,7 +121,7 @@ export default function Home() {
     const target = actionGoal.weekly_frequency || 7;
     const weeklyComplete = thisWeekLogs.length >= target && thisWeekLogs.length - 1 < target;
 
-    createLogMutation.mutate({
+    const logData = {
       action_goal_id: actionGoal.id,
       goal_id: actionGoal.goal_id,
       category: actionGoal.category,
@@ -129,7 +129,18 @@ export default function Home() {
       duration_minutes: minutes,
       completed: true,
       photo_url: photoUrl || null,
-    });
+    };
+
+    // GPS 데이터 추가
+    if (gpsData?.gpsEnabled && gpsData?.distance) {
+      logData.gps_enabled = true;
+      logData.distance_km = gpsData.distance;
+      logData.route_coordinates = JSON.stringify(gpsData.coords || []);
+    } else {
+      logData.gps_enabled = false;
+    }
+
+    createLogMutation.mutate(logData);
 
     setPendingLog(null);
 
