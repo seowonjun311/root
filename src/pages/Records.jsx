@@ -124,19 +124,21 @@ export default function Records() {
                 const actionGoal = actionGoals.find(ag => ag.id === log.action_goal_id);
                 return (
                   <div key={log.id} className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/60">
-                    <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center justify-between gap-2 mb-2">
                       <p className="text-sm font-semibold text-amber-900">{actionGoal?.title || '기록'}</p>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 font-semibold">{log.date}</span>
                     </div>
+                    {log.photo_url && (
+                      <button onClick={() => setSelectedPhoto(log)} className="mb-2 rounded-lg overflow-hidden hover:opacity-80 transition-opacity">
+                        <img src={log.photo_url} alt="수련 사진" className="w-full h-24 object-cover rounded-lg" />
+                      </button>
+                    )}
                     <div className="flex items-center gap-2">
                       {log.duration_minutes > 0 && (
                         <span className="text-xs text-muted-foreground">⏱️ {log.duration_minutes}분</span>
                       )}
                       {log.gps_enabled && (
                         <span className="text-xs text-blue-600">🗺️ {log.distance_km?.toFixed(2)}km</span>
-                      )}
-                      {log.photo_url && (
-                        <span className="text-xs text-amber-600">📸 사진</span>
                       )}
                     </div>
                   </div>
