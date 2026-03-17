@@ -29,6 +29,11 @@ export default function Records() {
     queryFn: () => base44.entities.Badge.list('-earned_date', 100),
   });
 
+  const { data: actionGoals = [] } = useQuery({
+    queryKey: ['actionGoalsAll'],
+    queryFn: () => base44.entities.ActionGoal.list('-created_date', 200),
+  });
+
   const filteredLogs = catFilter === 'all' ? logs : logs.filter(l => l.category === catFilter);
   
   const totalMinutes = filteredLogs.reduce((sum, l) => sum + (l.duration_minutes || 0), 0);
