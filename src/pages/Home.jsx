@@ -50,7 +50,8 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (user && !user.onboarding_complete) navigate('/Onboarding');
+    // [온보딩 체크 일시 정지]
+    // if (user && !user.onboarding_complete) navigate('/Onboarding');
     if (user?.active_category) setActiveCategory(user.active_category);
   }, [user, navigate]);
 
