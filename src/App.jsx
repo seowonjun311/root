@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { Navigate } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
+import Header from './components/layout/Header';
 import Home from './pages/Home';
 import Onboarding from './pages/Onboarding';
 import CreateGoal from './pages/CreateGoal';
