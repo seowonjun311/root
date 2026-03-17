@@ -313,19 +313,6 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
               </button>
 
               <div className="flex items-center gap-1.5 ml-2">
-                {actionGoal.action_type === 'timer' && actionGoal.category === 'exercise' && !doneToday && (
-                  <button
-                    onClick={() => setGpsEnabled(!gpsEnabled)}
-                    className={`h-8 px-2.5 text-xs font-bold rounded-md transition-all ${
-                      gpsEnabled
-                        ? 'bg-blue-100 border-2 border-blue-400 text-blue-700'
-                        : 'bg-secondary border-2 border-secondary text-muted-foreground'
-                    }`}
-                    title="GPS 추적 활성화"
-                  >
-                    <MapPin className="w-3.5 h-3.5" />
-                  </button>
-                )}
                 {actionGoal.action_type === 'timer' ? (
                   doneToday && !isRunning ? (
                     <span className="h-8 px-3 text-xs font-bold rounded-md flex items-center gap-1" style={{
