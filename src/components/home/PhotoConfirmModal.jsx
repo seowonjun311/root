@@ -56,7 +56,7 @@ export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip 
             </button>
           </div>
 
-          {/* Photo preview */}
+          {/* Photo preview or GPS map */}
           {photoUrl ? (
             <div className="relative mb-4 rounded-2xl overflow-hidden aspect-video bg-secondary">
               <img src={photoUrl} alt="수련 사진" className="w-full h-full object-cover" />
@@ -66,6 +66,10 @@ export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip 
               >
                 <X className="w-4 h-4 text-white" />
               </button>
+            </div>
+          ) : gpsData?.gpsEnabled && gpsData?.coords?.length > 0 ? (
+            <div className="mb-4 rounded-2xl overflow-hidden aspect-video bg-blue-50 border-2 border-blue-200 flex items-center justify-center">
+              <SimpleMap coords={gpsData.coords} />
             </div>
           ) : (
             <div className="flex gap-3 mb-4">
