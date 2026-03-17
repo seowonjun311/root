@@ -89,11 +89,17 @@ export default function Onboarding() {
         status: 'active',
       });
 
-      await base44.auth.updateMe({
-        nickname: nickname || '용사',
-        onboarding_complete: true,
-        active_category: category,
-      });
+      // 로그인 상태면 유저 정보 업데이트, 아니면 localStorage에 저장
+      try {
+        await base44.auth.updateMe({
+          nickname: nickname || '용사',
+          onboarding_complete: true,
+          active_category: category,
+        });
+      } catch {
+        localStorage.setItem('guest_nickname', nickname || '용사');
+        localStorage.setItem('guest_active_category', category);
+      }
 
       navigate('/Home');
     } catch (error) {
