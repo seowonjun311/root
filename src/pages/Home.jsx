@@ -62,6 +62,25 @@ export default function Home() {
     queryFn: () => base44.entities.Goal.filter({ status: 'active' }),
   });
 
+  // Optimistic mutations for goal deletion
+  const deleteGoalMutation = useMutation({
+    mutationFn: (goalId) => base44.entities.Goal.delete(goalId),
+    onMutate: async (deletedGoalId) => {
+      await queryClient.cancelQueries({ queryKey: ['goals'] });
+      const previousGoals = queryClient.getQueryData(['goals']);
+      queryClient.setQueryData(['goals'], (old) => old.filter(g => g.id !== deletedGoalId));
+      return { previousGoals, deletedGoalId };
+    },
+    onError: (err, goalId, context) => {
+      if (context?.previousGoals) {
+        queryClient.setQueryData(['goals'], context.previousGoals);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
+    },
+  });
+
   const { data: actionGoals = [] } = useQuery({
     queryKey: ['actionGoals'],
     queryFn: () => base44.entities.ActionGoal.filter({ status: 'active' }),
