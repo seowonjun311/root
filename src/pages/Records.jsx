@@ -60,7 +60,7 @@ export default function Records() {
   const CAT_EMOJIS = { exercise: '🏃', study: '📚', mental: '🧘', daily: '🏠' };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       {/* 획득한 칭호 다이얼로그 */}
       <Dialog open={showBadges} onOpenChange={setShowBadges}>
         <DialogContent className="max-w-sm rounded-2xl max-h-[80vh] overflow-y-auto">
