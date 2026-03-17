@@ -403,7 +403,26 @@ export default function Onboarding() {
         </AnimatePresence>
       </div>
 
-
+      {/* Navigation - 첫 화면 제외 */}
+      {currentStep !== 'welcome' && (
+        <div className="px-6 pb-8 flex gap-3">
+          {stepHistory.length > 1 && (
+            <Button variant="outline" onClick={goBack} className="rounded-xl h-12 px-4">
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+          )}
+          <Button
+            className="flex-1 h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold text-base"
+            disabled={!canNext() || isSubmitting}
+            onClick={handleNext}
+          >
+            {isLastStep
+              ? (isSubmitting ? '여정을 시작하는 중...' : '여정 시작하기 🦊')
+              : (<>다음 <ChevronRight className="w-4 h-4 ml-1" /></>)
+            }
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
