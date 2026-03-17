@@ -160,12 +160,15 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
 
   const handleTimerToggle = () => {
     if (isRunning) {
-      setIsRunning(false);
-      const minutes = Math.round(elapsed / 60);
-      if (minutes > 0 || elapsed > 30) onComplete(actionGoal, Math.max(1, minutes));
+      const start = parseInt(localStorage.getItem(TIMER_KEY(actionGoal.id)) || '0', 10);
+      const totalElapsed = Math.floor((Date.now() - start) / 1000);
+      localStorage.removeItem(TIMER_KEY(actionGoal.id));
+      clearInterval(intervalRef.current);
       setElapsed(0);
+      const minutes = Math.round(totalElapsed / 60);
+      if (minutes > 0 || totalElapsed > 30) onComplete(actionGoal, Math.max(1, minutes));
     } else {
-      setIsRunning(true);
+      localStorage.setItem(TIMER_KEY(actionGoal.id), String(Date.now()));
     }
   };
 
