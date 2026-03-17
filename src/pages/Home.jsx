@@ -238,7 +238,8 @@ export default function Home() {
   };
 
   const handlePullStart = (e) => {
-    if (e.touches && window.scrollY === 0) {
+    // Only trigger pull-to-refresh if scrolling at top and not on a scrollable element
+    if (e.touches && window.scrollY === 0 && !e.target.closest('[data-scrollable]')) {
       const startY = e.touches[0].clientY;
       let lastY = startY;
       let triggered = false;
