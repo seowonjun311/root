@@ -499,21 +499,21 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
         </DrawerContent>
       </Drawer>
 
-      {/* 삭제 확인 다이얼로그 */}
-      <Dialog open={showDelete} onOpenChange={setShowDelete}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-center">행동 목표를 삭제할까요?</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground text-center">
+      {/* 삭제 확인 드로워 */}
+      <Drawer open={showDelete} onOpenChange={setShowDelete}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>행동 목표를 삭제할까요?</DrawerTitle>
+          </DrawerHeader>
+          <p className="px-4 text-sm text-muted-foreground text-center">
             "{actionGoal.title}" 목표와 관련 기록이 모두 삭제됩니다.
           </p>
-          <DialogFooter className="flex gap-2">
+          <DrawerFooter className="flex gap-2 pt-6">
             <Button variant="outline" onClick={() => setShowDelete(false)} className="flex-1 rounded-xl">취소</Button>
             <Button onClick={handleDelete} className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white">삭제</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       {/* GPS 활성화 선택 다이얼로그 */}
       <Dialog open={showGpsDialog} onOpenChange={setShowGpsDialog}>
