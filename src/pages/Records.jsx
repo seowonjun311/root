@@ -425,14 +425,14 @@ export default function Records() {
               });
             })()}
           </div>
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
 
-      {/* 타임라인 사진 확대 다이얼로그 */}
-      <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
-        <DialogContent className="max-w-sm rounded-2xl p-4 max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-center text-sm">
+      {/* 타임라인 사진 확대 드로워 */}
+      <Drawer open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
+        <DrawerContent className="max-h-[90vh] overflow-y-auto">
+          <DrawerHeader>
+            <DrawerTitle className="text-center text-sm">
               {CAT_EMOJIS[selectedPhoto?.category]} {selectedPhoto?.date}
             </DialogTitle>
           </DialogHeader>
