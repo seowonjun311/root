@@ -192,10 +192,13 @@ export default function CreateGoal() {
               </div>
               <div className="flex items-center gap-2">
                 <input
-                  type="number" min="1" max="300"
+                  type="number" 
+                  min="1" 
+                  max="300"
                   value={minutes}
                   onChange={e => setMinutes(Number(e.target.value))}
                   className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                  aria-label="1회 시간 분단위 입력"
                 />
                 <span className="text-sm font-semibold text-muted-foreground">분</span>
               </div>
@@ -330,15 +333,15 @@ export default function CreateGoal() {
             {isCustomDuration && (
               <div className="flex items-center gap-2 mt-2">
                 <input
-                  type="number"
-                  min="1"
-                  max="52"
-                  value={customWeeks}
-                  onChange={e => { setCustomWeeks(e.target.value); setDuration(Number(e.target.value) * 7); }}
-                  placeholder="주 수 입력"
-                  className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
-                  aria-label="기간(주 수) 입력"
-                />
+                    type="number"
+                    min="1"
+                    max="52"
+                    value={customWeeks}
+                    onChange={e => { setCustomWeeks(e.target.value); setDuration(Number(e.target.value) * 7); }}
+                    placeholder="주 수 입력"
+                    className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                    aria-label="기간 주 수 직접 입력"
+                  />
                 <span className="text-sm font-semibold text-muted-foreground">주</span>
               </div>
             )}
@@ -417,10 +420,13 @@ export default function CreateGoal() {
               </div>
               <div className="flex items-center gap-2">
                 <input
-                  type="number" min="1" max="300"
+                  type="number" 
+                  min="1" 
+                  max="300"
                   value={minutes}
                   onChange={e => setMinutes(Number(e.target.value))}
                   className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                  aria-label="1회 시간 분단위 입력"
                 />
                 <span className="text-sm font-semibold text-muted-foreground">분</span>
               </div>
