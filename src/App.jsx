@@ -168,10 +168,7 @@ function App() {
     <QueryClientProvider client={queryClientInstance}>
       <AuthProvider>
         <Router>
-          <NavigationProvider>
-            <AuthenticatedApp />
-            <Toaster />
-          </NavigationProvider>
+          <AuthenticatedApp />
         </Router>
       </AuthProvider>
     </QueryClientProvider>
