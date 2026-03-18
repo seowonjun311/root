@@ -148,12 +148,16 @@ class NavigationStackManager {
   /**
    * Force-sync internal navigation stack with browser history state
    * Ensures WebView consistency across all platforms (Android, iOS, Web)
+   * Strips all query parameters to keep URL clean and prevent persistent state
    * Critical for deep links and avoiding history desync on back button
    */
   syncBrowserHistory() {
     try {
       const currentPath = this.getCurrentPath();
       if (!currentPath) return;
+
+      // Strip query parameters to prevent persistent state in address bar
+      const cleanPath = currentPath.split('?')[0];
 
       const state = {
         stackIndex: this.currentIndex,
@@ -163,7 +167,7 @@ class NavigationStackManager {
       };
 
       // Use replaceState to maintain clean history without creating entries
-      window.history.replaceState(state, '', currentPath);
+      window.history.replaceState(state, '', cleanPath);
     } catch (error) {
       console.warn('[NavigationStackManager] Failed to sync browser history:', error);
     }
