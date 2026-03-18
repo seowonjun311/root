@@ -11,7 +11,8 @@ export function NavigationProvider({ children }) {
   useEffect(() => {
     // Initialize on first load
     if (navigationStackManager.getStack().length === 0) {
-      navigationStackManager.initialize(location.pathname);
+      // Detect deep link on initial load
+      navigationStackManager.initializeFromCurrentLocation(location.pathname);
     } else {
       const currentPath = navigationStackManager.getCurrentPath();
       const newPath = location.pathname;
