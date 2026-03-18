@@ -15,6 +15,7 @@ import { computeStreak, getStreakTrigger, getBadgeForGoal } from '../components/
 import { Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
 
 function isGoalComplete(goal) {
   if (!goal || !goal.start_date || !goal.duration_days) return false;
