@@ -96,6 +96,22 @@
     touch-action: manipulation;
   }
 
+  /* Mobile active feedback states for all buttons */
+  button:active:not(:disabled),
+  [role="button"]:active:not(:disabled) {
+    @apply scale-[0.98] opacity-80;
+    transition: transform 0.05s ease-out, opacity 0.05s ease-out;
+  }
+
+  /* Prevent active state flicker on WebView */
+  button:active:not(:disabled)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.05);
+    pointer-events: none;
+  }
+
   /* ── Mobile accessibility ── */
   /* Minimum font size 14px for readability */
   body {

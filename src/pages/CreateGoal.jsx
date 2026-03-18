@@ -43,6 +43,7 @@ export default function CreateGoal() {
   const [actionType, setActionType] = useState('confirm');
   const [frequency, setFrequency] = useState(7);
   const [minutes, setMinutes] = useState(60);
+  const [formErrors, setFormErrors] = useState({});
 
   const createGoalMutation = useMutation({
     mutationFn: async (payload) => {
@@ -137,11 +138,18 @@ export default function CreateGoal() {
           <div>
             <label className="text-sm font-semibold text-amber-800 mb-2 block">행동 목표 이름</label>
             <Input
+              id="action-title-input"
               value={actionTitle}
               onChange={e => setActionTitle(e.target.value)}
               placeholder={category === 'daily' ? "예: 팩하기, 집청소, 설거지, 부모님 연락" : category === 'mental' ? "예: 7시기상, 일기쓰기, 부모님연락하기, 금연, ..." : category === 'study' ? "예: 독해, 듣기, 회화, 전공서, 수학, ..." : category === 'exercise' ? "예: 러닝, 등산, 헬스, 야식참기, ..." : "예: 러닝, LC 공부, 명상..."}
               className="h-12 rounded-xl bg-white/80"
+              aria-describedby={formErrors.actionTitle ? 'error-actionTitle' : undefined}
             />
+            {formErrors.actionTitle && (
+              <p id="error-actionTitle" className="text-xs text-red-600 mt-1.5">
+                {formErrors.actionTitle}
+              </p>
+            )}
           </div>
           <div>
             <label className="text-sm font-semibold text-amber-800 mb-2 block">행동 유형</label>
@@ -259,13 +267,20 @@ export default function CreateGoal() {
               <CalendarDays className="w-4 h-4" /> 시험 날짜 (D-day)
             </label>
             <input
-              type="date"
-              value={dDay}
-              min={new Date().toISOString().split('T')[0]}
-              onChange={e => setDDay(e.target.value)}
-              className="w-full h-12 rounded-xl border border-input bg-white/80 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
-              aria-label="시험 D-day 날짜 선택"
-            />
+                id="dday-input"
+                type="date"
+                value={dDay}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={e => setDDay(e.target.value)}
+                className="w-full h-12 rounded-xl border border-input bg-white/80 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                aria-label="시험 D-day 날짜 선택"
+                aria-describedby={formErrors.dDay ? 'error-dDay' : undefined}
+              />
+              {formErrors.dDay && (
+                <p id="error-dDay" className="text-xs text-red-600 mt-1.5">
+                  {formErrors.dDay}
+                </p>
+              )}
             {daysLeft !== null && daysLeft > 0 && (
               <p className="text-xs text-amber-700 font-semibold mt-2">
                 🎯 D-{daysLeft} · {daysLeft}일 남았습니다
@@ -275,11 +290,18 @@ export default function CreateGoal() {
           <div>
             <label className="text-sm font-semibold text-amber-800 mb-2 block">어떤 시험인가요?</label>
             <Input
+              id="exam-title-input"
               value={examTitle}
               onChange={e => setExamTitle(e.target.value)}
               placeholder="예: 토익 900점, 수능, 정보처리기사..."
               className="h-12 rounded-xl bg-white/80"
+              aria-describedby={formErrors.examTitle ? 'error-examTitle' : undefined}
             />
+            {formErrors.examTitle && (
+              <p id="error-examTitle" className="text-xs text-red-600 mt-1.5">
+                {formErrors.examTitle}
+              </p>
+            )}
           </div>
           <Button
             className="w-full h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
@@ -299,11 +321,18 @@ export default function CreateGoal() {
           <div>
             <label className="text-sm font-semibold text-amber-800 mb-2 block">결과 목표</label>
             <Input
+              id="goal-title-input"
               value={goalTitle}
               onChange={e => setGoalTitle(e.target.value)}
               placeholder={category === 'daily' ? "예) 갓생살기, 일찍일어나기, 루틴찾기" : category === 'mental' ? "예) 자기관리, 생활규칙만들기, 절제, 나 챙기기" : category === 'exercise' ? "예: 살빼기, 턱걸이 30개, 등산 100회..." : "어떤 결과를 이루고 싶으신가요?"}
               className="h-12 rounded-xl bg-white/80"
+              aria-describedby={formErrors.goalTitle ? 'error-goalTitle' : undefined}
             />
+            {formErrors.goalTitle && (
+              <p id="error-goalTitle" className="text-xs text-red-600 mt-1.5">
+                {formErrors.goalTitle}
+              </p>
+            )}
           </div>
           <div>
             <label className="text-sm font-semibold text-amber-800 mb-2 block">기간</label>
@@ -333,6 +362,7 @@ export default function CreateGoal() {
             {isCustomDuration && (
               <div className="flex items-center gap-2 mt-2">
                 <input
+                    id="custom-weeks-input"
                     type="number"
                     min="1"
                     max="52"
@@ -341,7 +371,13 @@ export default function CreateGoal() {
                     placeholder="주 수 입력"
                     className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
                     aria-label="기간 주 수 직접 입력"
+                    aria-describedby={formErrors.customWeeks ? 'error-customWeeks' : undefined}
                   />
+                  {formErrors.customWeeks && (
+                    <p id="error-customWeeks" className="text-xs text-red-600 mt-1.5">
+                      {formErrors.customWeeks}
+                    </p>
+                  )}
                 <span className="text-sm font-semibold text-muted-foreground">주</span>
               </div>
             )}
