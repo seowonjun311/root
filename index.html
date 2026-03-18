@@ -48,12 +48,19 @@
         position: fixed;
         inset: 0;
         z-index: 9999;
+        /* Light mode: amber gradient; Dark mode: dark background (synced with CSS variables) */
         background: linear-gradient(to bottom, #fef3c7, #fed7aa);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         font-family: 'Noto Sans KR', sans-serif;
+        color-scheme: light;
+      }
+      /* Force light mode colors during splash to prevent dark mode flicker during bridge init */
+      html.dark .splash-screen {
+        background: linear-gradient(to bottom, #fef3c7, #fed7aa);
+        color-scheme: light;
       }
       .splash-screen.hidden {
         display: none;
