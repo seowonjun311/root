@@ -1,0 +1,46 @@
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
+
+const TAB_PATHS = ['/Home', '/Records', '/Badges', '/AppSettings'];
+
+const PAGE_TITLES = {
+  '/CreateGoal': '목표 만들기',
+  '/NotificationSettings': '알림 설정',
+};
+
+export default function Header() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isTabPage = TAB_PATHS.includes(location.pathname);
+  const title = PAGE_TITLES[location.pathname] || '';
+  const canGoBack = !isTabPage && location.key !== 'default';
+
+  if (isTabPage) {
+    return (
+      <div
+        className="flex items-center justify-center px-4 shrink-0"
+        style={{ height: '52px', borderBottom: '1px solid hsl(var(--border) / 0.4)' }}
+      >
+        <span className="text-base font-bold text-amber-900">루트</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="flex items-center px-4 gap-3 shrink-0"
+      style={{ height: '52px', borderBottom: '1px solid hsl(var(--border) / 0.4)' }}
+    >
+      {canGoBack && (
+        <button
+          onClick={() => navigate(-1)}
+          className="p-1.5 rounded-lg hover:bg-secondary transition-colors -ml-1.5"
+        >
+          <ChevronLeft className="w-5 h-5 text-amber-800" />
+        </button>
+      )}
+      {title && <span className="text-sm font-bold text-amber-900">{title}</span>}
+    </div>
+  );
+}
