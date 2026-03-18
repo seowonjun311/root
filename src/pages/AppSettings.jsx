@@ -49,7 +49,16 @@ export default function AppSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" onTouchStart={handlePullStart}>
+      <motion.div
+        className="fixed top-12 left-0 right-0 flex justify-center pt-2 z-50 pointer-events-none"
+        animate={{ opacity: pullProgress > 0 ? 1 : 0 }}
+      >
+        <motion.div animate={{ rotate: pullProgress * 360 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
+          <RefreshCw className="w-5 h-5 text-amber-600" />
+        </motion.div>
+      </motion.div>
+
       <div className="p-6 pb-3">
         <h1 className="text-xl font-bold text-amber-900 flex items-center gap-2">
           🏠 홈
