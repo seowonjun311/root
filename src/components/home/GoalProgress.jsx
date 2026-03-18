@@ -150,23 +150,52 @@ export default function GoalProgress({ goal, logs = [] }) {
     setShowDelete(true);
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    await base44.entities.Goal.update(goal.id, { title: editTitle, duration_days: editDuration });
-    queryClient.invalidateQueries({ queryKey: ['goals'] });
-    toast.success('목표가 수정되었습니다.');
-    setShowEdit(false);
-    setSaving(false);
+  const updateMutation = useMutation({
+    mutationFn: (data) => base44.entities.Goal.update(goal.id, data),
+    onMutate: async (updateData) => {
+      await queryClient.cancelQueries({ queryKey: ['goals'] });
+      const previous = queryClient.getQueryData(['goals']);
+      queryClient.setQueryData(['goals'], (old = []) =>
+        old.map(g => g.id === goal.id ? { ...g, ...updateData } : g)
+      );
+      return { previous };
+    },
+    onError: (err, vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['goals'], context.previous);
+      toast.error('수정에 실패했습니다.');
+    },
+    onSuccess: () => {
+      toast.success('목표가 수정되었습니다.');
+      setShowEdit(false);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => base44.entities.Goal.delete(goal.id),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['goals'] });
+      const previous = queryClient.getQueryData(['goals']);
+      queryClient.setQueryData(['goals'], (old = []) =>
+        old.filter(g => g.id !== goal.id)
+      );
+      return { previous };
+    },
+    onError: (err, vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['goals'], context.previous);
+      toast.error('삭제에 실패했습니다.');
+    },
+    onSuccess: () => {
+      toast.success('목표가 삭제되었습니다.');
+      setShowDelete(false);
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate({ title: editTitle, duration_days: editDuration });
   };
 
-  const handleDelete = async () => {
-    if (deleting) return;
-    setDeleting(true);
-    setShowDelete(false);
-    await base44.entities.Goal.delete(goal.id);
-    queryClient.invalidateQueries({ queryKey: ['goals'] });
-    toast.success('목표가 삭제되었습니다.');
-    setDeleting(false);
+  const handleDelete = () => {
+    deleteMutation.mutate();
   };
 
   return (
