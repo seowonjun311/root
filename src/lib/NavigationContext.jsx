@@ -5,8 +5,14 @@ import { navigationStackManager } from './NavigationStackManager';
 const NavigationContext = createContext();
 
 export function NavigationProvider({ children }) {
-  const location = useLocation();
-  const navigate = useNavigate();
+  let location, navigate;
+  try {
+    location = useLocation();
+    navigate = useNavigate();
+  } catch (e) {
+    // Router context not available yet, return fallback
+    return children;
+  }
   const [, setManagerState] = useState(0);
 
   // Initialize navigation stack and sync with router (run once on mount)
