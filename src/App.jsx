@@ -37,10 +37,11 @@ const PageFallback = () => (
   </div>
 );
 
-const AppContent = () => {
+const AppRoutes = () => {
   const { isLoadingAuth, isLoadingPublicSettings } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAnimating } = useAnimationState();
   const [isNavReady, setIsNavReady] = React.useState(false);
 
   React.useEffect(() => {
@@ -52,7 +53,6 @@ const AppContent = () => {
           navigationStackManager.resetStack();
         }
 
-        // On Android WebView, validate sync status for diagnostics
         if (window.device || window.cordova) {
           const syncReport = navigationStackManager.validateAndroidWebViewSync();
           if (!syncReport.isInSync) {
@@ -71,85 +71,27 @@ const AppContent = () => {
     validateNavigation();
   }, []);
 
+  useEffect(() => {
+    const handleAndroidBackButton = (event) => {
+      if (isAnimating) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        console.debug('[App] Back button blocked during animation');
+        return;
+      }
+      navigationStackManager.handleAndroidBackButton(event);
+    };
+
+    document.addEventListener('backbutton', handleAndroidBackButton, true);
+    return () => {
+      document.removeEventListener('backbutton', handleAndroidBackButton, true);
+    };
+  }, [isAnimating]);
+
   if (isLoadingPublicSettings || isLoadingAuth || !isNavReady) {
     return <PageFallback />;
   }
 
-  return <BackButtonHandler />;
-};
-
-function App() {
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const apply = (dark) => document.documentElement.classList.toggle('dark', dark);
-    apply(mq.matches);
-    mq.addEventListener('change', e => apply(e.matches));
-    return () => mq.removeEventListener('change', e => apply(e.matches));
-  }, []);
-
-  // Hide splash screen only after react-query hydration and initial render completes
-  useEffect(() => {
-    const hideSplash = async () => {
-      try {
-        // Wait for QueryClient to hydrate and stabilize
-        // This ensures all initial queries are cached before splash screen is removed
-        const hydrationStart = performance.now();
-        
-        // Use requestAnimationFrame to wait for React's initial render
-        await new Promise((resolve) => {
-          requestAnimationFrame(() => {
-            // Wait one more frame to ensure component mount is complete
-            requestAnimationFrame(resolve);
-          });
-        });
-
-        // Verify QueryClient is fully initialized
-        const queryCache = queryClientInstance.getQueryCache();
-        const initialQueriesCount = queryCache.getAll().length;
-        
-        // Wait a bit longer if queries are still being added (hydration in progress)
-        if (initialQueriesCount === 0) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-
-        const hydrationTime = performance.now() - hydrationStart;
-        console.log(`[App] QueryClient hydration complete in ${hydrationTime.toFixed(2)}ms`);
-
-        // Now safe to hide splash screen
-        const splashScreen = document.getElementById('splash-screen');
-        if (splashScreen && !splashScreen.classList.contains('hidden')) {
-          // Use CSS transition for smooth fade
-          splashScreen.style.transition = 'opacity 0.3s ease-out';
-          splashScreen.style.opacity = '0';
-          
-          // Remove from DOM after transition
-          setTimeout(() => {
-            splashScreen.classList.add('hidden');
-            splashScreen.style.opacity = '1'; // Reset for potential re-init
-          }, 300);
-        }
-      } catch (error) {
-        console.warn('[App] Splash screen removal error:', error);
-        // Force hide on error to prevent indefinite loading state
-        const splashScreen = document.getElementById('splash-screen');
-        if (splashScreen) {
-          splashScreen.classList.add('hidden');
-        }
-      }
-    };
-
-    hideSplash();
-  }, []);
-
-  // Initialize background cleanup for guest data persistence
-  useEffect(() => {
-    guestDataPersistence.startBackgroundCleanup();
-    return () => {
-      guestDataPersistence.stopBackgroundCleanup();
-    };
-  }, []);
-
-  // Wrap in a separate component to use animation state context
   return (
     <div style={{ position: 'relative', height: '100dvh', overflow: 'hidden' }}>
       <ErrorBoundary onResetToHome={() => navigate('/Home', { replace: true })}>
@@ -173,7 +115,6 @@ function App() {
                 </Suspense>
               } />
 
-              {/* Tab routes: AppLayout keeps all tabs mounted for instant switching */}
               <Route element={<AppLayout />}>
                 <Route path="/Home"        element={<div />} />
                 <Route path="/Records"     element={<div />} />
@@ -199,32 +140,64 @@ function App() {
   );
 };
 
-const BackButtonHandler = () => {
-  const { isAnimating } = useAnimationState();
-
-  // Register Android back button handler
+function App() {
   useEffect(() => {
-    const handleAndroidBackButton = (event) => {
-      // Prevent back navigation during page transitions
-      if (isAnimating) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        console.debug('[App] Back button blocked during animation');
-        return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const apply = (dark) => document.documentElement.classList.toggle('dark', dark);
+    apply(mq.matches);
+    mq.addEventListener('change', e => apply(e.matches));
+    return () => mq.removeEventListener('change', e => apply(e.matches));
+  }, []);
+
+  useEffect(() => {
+    const hideSplash = async () => {
+      try {
+        const hydrationStart = performance.now();
+        
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(resolve);
+          });
+        });
+
+        const queryCache = queryClientInstance.getQueryCache();
+        const initialQueriesCount = queryCache.getAll().length;
+        
+        if (initialQueriesCount === 0) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        const hydrationTime = performance.now() - hydrationStart;
+        console.log(`[App] QueryClient hydration complete in ${hydrationTime.toFixed(2)}ms`);
+
+        const splashScreen = document.getElementById('splash-screen');
+        if (splashScreen && !splashScreen.classList.contains('hidden')) {
+          splashScreen.style.transition = 'opacity 0.3s ease-out';
+          splashScreen.style.opacity = '0';
+          
+          setTimeout(() => {
+            splashScreen.classList.add('hidden');
+            splashScreen.style.opacity = '1';
+          }, 300);
+        }
+      } catch (error) {
+        console.warn('[App] Splash screen removal error:', error);
+        const splashScreen = document.getElementById('splash-screen');
+        if (splashScreen) {
+          splashScreen.classList.add('hidden');
+        }
       }
-
-      navigationStackManager.handleAndroidBackButton(event);
     };
 
-    // Single listener at document level with capture phase
-    document.addEventListener('backbutton', handleAndroidBackButton, true);
+    hideSplash();
+  }, []);
 
+  useEffect(() => {
+    guestDataPersistence.startBackgroundCleanup();
     return () => {
-      document.removeEventListener('backbutton', handleAndroidBackButton, true);
+      guestDataPersistence.stopBackgroundCleanup();
     };
-  }, [isAnimating]);
-
-  return <AppContent />;
+  }, []);
 
   return (
     <QueryClientProvider client={queryClientInstance}>
@@ -232,7 +205,7 @@ const BackButtonHandler = () => {
         <Router>
           <NavigationProvider>
             <AnimationStateProvider>
-              <BackButtonHandler />
+              <AppRoutes />
               <Toaster />
             </AnimationStateProvider>
           </NavigationProvider>
