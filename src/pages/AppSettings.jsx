@@ -4,9 +4,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
-import { ChevronRight, Bell, User, LogOut, Trash2 } from 'lucide-react';
+import { ChevronRight, Bell, User, LogOut, Trash2, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { usePullToRefreshTabbed } from '../hooks/usePullToRefreshTabbed';
+import { motion } from 'framer-motion';
 
 export default function AppSettings() {
   const queryClient = useQueryClient();
