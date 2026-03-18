@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { AnimatePresence, motion } from 'framer-motion';
+import { guestDataPersistence } from '@/lib/GuestDataPersistence';
 import OnboardingProgress from '@/components/onboarding/OnboardingProgress';
 import OnboardingNavigation from '@/components/onboarding/OnboardingNavigation';
 import OnboardingWelcome from '@/components/onboarding/OnboardingWelcome';
@@ -108,6 +109,7 @@ export default function Onboarding() {
         });
 
       } else {
+        // Guest mode: use robust data persistence with error handling
         const startDate = new Date().toISOString().split('T')[0];
         const goalData = {
           id: 'local_goal_1',
@@ -133,13 +135,17 @@ export default function Onboarding() {
           created_date: new Date().toISOString(),
         };
 
-        localStorage.setItem('local_goals', JSON.stringify([goalData]));
-        localStorage.setItem('local_action_goals', JSON.stringify([actionGoalData]));
-        localStorage.setItem('local_action_logs', JSON.stringify([]));
-        localStorage.setItem('local_badges', JSON.stringify([]));
-        localStorage.setItem('guest_nickname', nickname || '용사');
-        localStorage.setItem('guest_active_category', category);
-        localStorage.setItem('guest_onboarding_complete', 'true');
+        const savedSuccessfully = guestDataPersistence.saveOnboardingData({
+          goalData,
+          actionGoalData,
+          nickname: nickname || '용사',
+          category,
+        });
+
+        if (!savedSuccessfully) {
+          console.error('Failed to save guest data to localStorage');
+          // Still navigate, but data may be lost if storage fails
+        }
       }
 
       navigate('/Home');
