@@ -8,6 +8,15 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js').then(() => {
       console.log('[SW] Service Worker registered successfully');
+      
+      // Request background sync to cache all lazy-loaded chunks
+      if ('serviceWorker' in navigator && 'SyncManager' in window) {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.sync.register('precache-chunks').catch((error) => {
+            console.warn('[SW] Background sync registration failed:', error);
+          });
+        });
+      }
     }).catch((error) => {
       console.warn('[SW] Service Worker registration failed:', error);
     });
