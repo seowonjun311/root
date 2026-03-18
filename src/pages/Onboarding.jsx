@@ -68,51 +68,85 @@ export default function Onboarding() {
       const finalTitle = isStudyDDay ? examTitle : goalInput;
       const finalDuration = isStudyDDay ? calcDDayDuration() : (customDuration ? (parseInt(customDuration) || 4) * 7 : duration);
 
-      // 기존 데이터 전체 삭제
-      const [existingGoals, existingActionGoals, existingLogs, existingBadges] = await Promise.all([
-        base44.entities.Goal.list('-created_date', 200),
-        base44.entities.ActionGoal.list('-created_date', 200),
-        base44.entities.ActionLog.list('-created_date', 500),
-        base44.entities.Badge.list('-created_date', 200),
-      ]);
-      await Promise.all([
-        ...existingGoals.map(g => base44.entities.Goal.delete(g.id)),
-        ...existingActionGoals.map(ag => base44.entities.ActionGoal.delete(ag.id)),
-        ...existingLogs.map(l => base44.entities.ActionLog.delete(l.id)),
-        ...existingBadges.map(b => base44.entities.Badge.delete(b.id)),
-      ]);
+      // 로그인 여부 확인
+      const isLoggedIn = await base44.auth.isAuthenticated();
 
-      const goal = await base44.entities.Goal.create({
-        category,
-        goal_type: 'result',
-        title: finalTitle,
-        duration_days: finalDuration,
-        start_date: new Date().toISOString().split('T')[0],
-        ...(isStudyDDay ? { d_day: dDay, has_d_day: true } : {}),
-        status: 'active',
-      });
+      if (isLoggedIn) {
+        // ── 로그인 사용자: base44 서버에 저장 ──
+        const [existingGoals, existingActionGoals, existingLogs, existingBadges] = await Promise.all([
+          base44.entities.Goal.list('-created_date', 200),
+          base44.entities.ActionGoal.list('-created_date', 200),
+          base44.entities.ActionLog.list('-created_date', 500),
+          base44.entities.Badge.list('-created_date', 200),
+        ]);
+        await Promise.all([
+          ...existingGoals.map(g => base44.entities.Goal.delete(g.id)),
+          ...existingActionGoals.map(ag => base44.entities.ActionGoal.delete(ag.id)),
+          ...existingLogs.map(l => base44.entities.ActionLog.delete(l.id)),
+          ...existingBadges.map(b => base44.entities.Badge.delete(b.id)),
+        ]);
 
-      await base44.entities.ActionGoal.create({
-        goal_id: goal.id,
-        category,
-        title: actionTitle || finalTitle,
-        action_type: actionType,
-        weekly_frequency: frequency,
-        duration_minutes: actionType === 'timer' ? actionMinutes : 0,
-        duration_days: finalDuration,
-        status: 'active',
-      });
+        const goal = await base44.entities.Goal.create({
+          category,
+          goal_type: 'result',
+          title: finalTitle,
+          duration_days: finalDuration,
+          start_date: new Date().toISOString().split('T')[0],
+          ...(isStudyDDay ? { d_day: dDay, has_d_day: true } : {}),
+          status: 'active',
+        });
 
-      // 로그인 상태면 유저 정보 업데이트, 아니면 localStorage에 저장
-      try {
+        await base44.entities.ActionGoal.create({
+          goal_id: goal.id,
+          category,
+          title: actionTitle || finalTitle,
+          action_type: actionType,
+          weekly_frequency: frequency,
+          duration_minutes: actionType === 'timer' ? actionMinutes : 0,
+          duration_days: finalDuration,
+          status: 'active',
+        });
+
         await base44.auth.updateMe({
           nickname: nickname || '용사',
           onboarding_complete: true,
           active_category: category,
         });
-      } catch {
+
+      } else {
+        // ── 비로그인(가입없이 시작): 기기 localStorage에 저장 ──
+        const startDate = new Date().toISOString().split('T')[0];
+        const goalData = {
+          id: 'local_goal_1',
+          category,
+          goal_type: 'result',
+          title: finalTitle,
+          duration_days: finalDuration,
+          start_date: startDate,
+          ...(isStudyDDay ? { d_day: dDay, has_d_day: true } : {}),
+          status: 'active',
+          created_date: new Date().toISOString(),
+        };
+        const actionGoalData = {
+          id: 'local_ag_1',
+          goal_id: 'local_goal_1',
+          category,
+          title: actionTitle || finalTitle,
+          action_type: actionType,
+          weekly_frequency: frequency,
+          duration_minutes: actionType === 'timer' ? actionMinutes : 0,
+          duration_days: finalDuration,
+          status: 'active',
+          created_date: new Date().toISOString(),
+        };
+
+        localStorage.setItem('local_goals', JSON.stringify([goalData]));
+        localStorage.setItem('local_action_goals', JSON.stringify([actionGoalData]));
+        localStorage.setItem('local_action_logs', JSON.stringify([]));
+        localStorage.setItem('local_badges', JSON.stringify([]));
         localStorage.setItem('guest_nickname', nickname || '용사');
         localStorage.setItem('guest_active_category', category);
+        localStorage.setItem('guest_onboarding_complete', 'true');
       }
 
       navigate('/Home');
