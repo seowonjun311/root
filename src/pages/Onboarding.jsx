@@ -360,7 +360,7 @@ export default function Onboarding() {
         <h2 className="text-lg font-bold text-center text-amber-900 mb-1">이 목표를 위해 어떤 행동을 하시겠습니까?</h2>
         <p className="text-xs text-muted-foreground text-center mb-5">행동 목표를 설정해 주세요</p>
         <Input value={actionTitle} onChange={e => setActionTitle(e.target.value)}
-          placeholder="예: 러닝, LC 공부, 명상..." className="h-11 rounded-xl text-center text-sm border-amber-300 bg-white/80 mb-4" />
+          placeholder="예: 러닝, LC 공부, 명상..." className="h-11 rounded-xl text-center text-sm border-amber-300 bg-white/80 mb-4 text-amber-900 placeholder:text-amber-300" />
         <p className="text-xs font-semibold text-amber-800 mb-2">행동 유형</p>
         <div className="space-y-2 mb-4">
           {ACTION_TYPE_OPTIONS.map(opt => (
