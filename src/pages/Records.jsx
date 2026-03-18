@@ -228,7 +228,7 @@ export default function Records() {
           <DrawerHeader><DrawerTitle className="text-center text-sm">{CAT_EMOJIS[selectedPhoto?.category]} {selectedPhoto?.date}</DrawerTitle></DrawerHeader>
           {selectedPhoto && (
             <div className="space-y-3 px-4 pb-6">
-              {selectedPhoto.photo_url && <img src={selectedPhoto.photo_url} alt={selectedPhoto.date} className="w-full rounded-xl object-cover max-h-80" />}
+              {selectedPhoto.photo_url && <img src={selectedPhoto.photo_url} alt={selectedPhoto.date} className="w-full rounded-xl object-cover max-h-80" loading="lazy" decoding="async" />}
               {selectedPhoto.gps_enabled && selectedPhoto.route_coordinates && (
                 <div className="rounded-xl overflow-hidden bg-blue-50 border-2 border-blue-200 h-32">
                   <GPSMapPreview coords={JSON.parse(selectedPhoto.route_coordinates)} />
@@ -322,7 +322,7 @@ export default function Records() {
                 </div>
                 {log.photo_url && (
                   <button onClick={() => setSelectedPhoto(log)} className="shrink-0 active:opacity-70">
-                    <img src={log.photo_url} alt="수련 사진" className="w-12 h-12 rounded-lg object-cover" />
+                    <img src={log.photo_url} alt="수련 사진" className="w-12 h-12 rounded-lg object-cover" loading="lazy" decoding="async" />
                   </button>
                 )}
                 <span className="text-xs px-2 py-1 rounded-lg bg-amber-100/80 text-amber-700 shrink-0">{CAT_LABELS[log.category] || '기타'}</span>
@@ -418,15 +418,23 @@ function AlbumTab({ logs, goals, catFilter, onCatFilterChange, badges }) {
               <p className="text-xs font-bold text-amber-800 mb-2">📸 수련 사진 ({photoLogs.length}장)</p>
               <div className="grid grid-cols-3 gap-1.5">
                 {photoLogs.map(log => (
-                  <button key={log.id} onClick={() => setSelectedPhoto(log)}
-                    className="aspect-square rounded-xl overflow-hidden relative group active:opacity-80 transition-opacity">
-                    <img src={log.photo_url} alt={log.date} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
-                      <span className="text-[10px] text-white font-semibold">{log.date}</span>
-                    </div>
-                    <span className="absolute top-1 right-1 text-xs">{CAT_EMOJIS[log.category] || '📝'}</span>
-                  </button>
-                ))}
+                        <button key={log.id} onClick={() => setSelectedPhoto(log)}
+                          className="aspect-square rounded-xl overflow-hidden relative group active:opacity-80 transition-opacity"
+                          aria-label={`${log.date} 사진 보기`}
+                        >
+                          <img 
+                            src={log.photo_url} 
+                            alt={log.date} 
+                            className="w-full h-full object-cover" 
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
+                            <span className="text-[10px] text-white font-semibold">{log.date}</span>
+                          </div>
+                          <span className="absolute top-1 right-1 text-xs" aria-hidden="true">{CAT_EMOJIS[log.category] || '📝'}</span>
+                        </button>
+                      ))}
               </div>
             </div>
           )}
@@ -438,7 +446,7 @@ function AlbumTab({ logs, goals, catFilter, onCatFilterChange, badges }) {
               </DialogHeader>
               {selectedPhoto && (
                 <div className="space-y-3">
-                  <img src={selectedPhoto.photo_url} alt={selectedPhoto.date} className="w-full rounded-xl object-cover max-h-72" />
+                  <img src={selectedPhoto.photo_url} alt={selectedPhoto.date} className="w-full rounded-xl object-cover max-h-72" loading="lazy" decoding="async" />
                   <div className="flex items-center gap-2">
                     <span className="text-xs px-2 py-1 rounded-lg bg-amber-100 text-amber-700 font-semibold">{CAT_LABELS[selectedPhoto.category] || '기타'}</span>
                     {selectedPhoto.duration_minutes > 0 && <span className="text-xs text-muted-foreground">{selectedPhoto.duration_minutes}분 수련</span>}
