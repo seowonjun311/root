@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { AnimatePresence, motion } from 'framer-motion';
 import { guestDataPersistence } from '@/lib/GuestDataPersistence';
 import OnboardingProgress from '@/components/onboarding/OnboardingProgress';
@@ -16,6 +17,7 @@ import OnboardingNickname from '@/components/onboarding/OnboardingNickname';
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { triggerHaptic } = useHapticFeedback();
   const formContainerRef = React.useRef(null);
 
   // Auto scroll form inputs into view when focused on mobile
@@ -68,8 +70,14 @@ export default function Onboarding() {
   const totalSteps = category === 'study' && hasDDay === true ? 7 : category === 'study' ? 7 : 6;
   const stepIndex = stepHistory.length - 1;
 
-  const goNext = (nextStep) => setStepHistory(prev => [...prev, nextStep]);
-  const goBack = () => setStepHistory(prev => prev.slice(0, -1));
+  const goNext = (nextStep) => {
+    triggerHaptic('impact', 'light');
+    setStepHistory(prev => [...prev, nextStep]);
+  };
+  const goBack = () => {
+    triggerHaptic('impact', 'light');
+    setStepHistory(prev => prev.slice(0, -1));
+  };
 
   const calcDDayDuration = () => {
     if (!dDay) return 90;
@@ -78,6 +86,7 @@ export default function Onboarding() {
   };
 
   const handleComplete = async () => {
+    triggerHaptic('impact', 'heavy');
     setIsSubmitting(true);
     try {
       const isStudyDDay = category === 'study' && hasDDay === true;
