@@ -486,11 +486,16 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
             </div>
             <div>
               <label className="text-xs font-semibold text-amber-800 mb-1.5 block">주 횟수</label>
-              <div className="grid grid-cols-7 gap-1.5">
+              <div className="grid grid-cols-7 gap-1.5" role="group" aria-label="주 횟수 선택">
                 {[1, 2, 3, 4, 5, 6, 7].map(f => (
-                  <button key={f} onClick={() => setEditFrequency(f)}
+                  <button 
+                    key={f} 
+                    onClick={() => setEditFrequency(f)}
                     className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                      editFrequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                      editFrequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                    aria-label={`주 ${f}회`}
+                    aria-pressed={editFrequency === f}
+                  >
                     {f}
                   </button>
                 ))}
@@ -500,21 +505,29 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
             {actionGoal.action_type === 'timer' && (
               <div>
                 <label className="text-xs font-semibold text-amber-800 mb-1.5 block">1회 시간</label>
-                <div className="flex gap-2 mb-2">
+                <div className="flex gap-2 mb-2" role="group" aria-label="1회 시간 선택">
                   {[20, 30, 60].map(m => (
-                    <button key={m} onClick={() => setEditMinutes(m)}
+                    <button 
+                      key={m} 
+                      onClick={() => setEditMinutes(m)}
                       className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                        editMinutes === m ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                        editMinutes === m ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                      aria-label={`${m}분`}
+                      aria-pressed={editMinutes === m}
+                    >
                       {m}분
                     </button>
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
                   <input
-                    type="number" min="1" max="300"
+                    type="number" 
+                    min="1" 
+                    max="300"
                     value={editMinutes}
                     onChange={e => setEditMinutes(Number(e.target.value))}
                     className="flex-1 h-10 rounded-xl border border-input bg-white/80 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                    aria-label="1회 시간 분 단위 입력"
                   />
                   <span className="text-sm font-semibold text-muted-foreground">분</span>
                 </div>
