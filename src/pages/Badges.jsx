@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getGrade, GRADES } from '../components/badgeUtils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
+import { usePullToRefreshTabbed } from '../hooks/usePullToRefreshTabbed';
+import { RefreshCw } from 'lucide-react';
 
 const CAT_LABELS = { exercise: '운동', study: '공부', mental: '정신', daily: '일상', special: '특별' };
 const FILTERS = ['all', 'exercise', 'study', 'mental', 'daily'];
@@ -11,6 +13,11 @@ const FILTERS = ['all', 'exercise', 'study', 'mental', 'daily'];
 export default function Badges() {
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState(null);
+  const queryClient = useQueryClient();
+
+  const { pullProgress, onTouchStart: handlePullStart } = usePullToRefreshTabbed(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['badges'] });
+  });
 
   const { data: badges = [] } = useQuery({
     queryKey: ['badges'],
