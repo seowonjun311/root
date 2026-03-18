@@ -361,6 +361,72 @@ function StatCard({ icon, label, value, onClick, clickable }) {
   );
 }
 
+// Lazy-loaded image component for timeline
+function TimelineLogItem({ log, ag, onSelectPhoto }) {
+  const { ref, isVisible, isLoaded, onLoad } = useLazyLoadImage();
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+      <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold truncate">{ag?.title || log.date}</p>
+        <p className="text-xs text-muted-foreground">{log.date}{log.duration_minutes > 0 ? ` · ${log.duration_minutes}분` : ''}</p>
+        {log.memo && <p className="text-xs text-muted-foreground italic">"{log.memo}"</p>}
+      </div>
+      {log.photo_url && (
+        <button 
+          ref={ref}
+          onClick={() => onSelectPhoto(log)} 
+          className="shrink-0 active:opacity-70 bg-secondary rounded-lg w-12 h-12 flex items-center justify-center"
+        >
+          {isVisible && (
+            <img 
+              src={log.photo_url} 
+              alt="수련 사진" 
+              className="w-12 h-12 rounded-lg object-cover" 
+              loading="lazy"
+              decoding="async"
+              onLoad={onLoad}
+            />
+          )}
+        </button>
+      )}
+      <span className="text-xs px-2 py-1 rounded-lg bg-amber-100/80 text-amber-700 shrink-0">{CAT_LABELS[log.category] || '기타'}</span>
+    </div>
+  );
+}
+
+// Lazy-loaded image component for album grid
+function AlbumPhotoItem({ log, onSelectPhoto }) {
+  const { ref, isVisible, isLoaded, onLoad } = useLazyLoadImage();
+
+  return (
+    <button 
+      ref={ref}
+      onClick={() => onSelectPhoto(log)}
+      className="aspect-square rounded-xl overflow-hidden relative group active:opacity-80 transition-opacity bg-secondary flex items-center justify-center"
+      aria-label={`${log.date} 사진 보기`}
+    >
+      {isVisible && (
+        <>
+          <img 
+            src={log.photo_url} 
+            alt={log.date} 
+            className="w-full h-full object-cover" 
+            loading="lazy"
+            decoding="async"
+            onLoad={onLoad}
+          />
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
+            <span className="text-[10px] text-white font-semibold">{log.date}</span>
+          </div>
+        </>
+      )}
+      <span className="absolute top-1 right-1 text-xs" aria-hidden="true">{CAT_EMOJIS[log.category] || '📝'}</span>
+    </button>
+  );
+}
+
 function AlbumTab({ logs, goals, catFilter, onCatFilterChange, badges }) {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
