@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ChevronLeft, CalendarDays } from 'lucide-react';
@@ -16,6 +17,7 @@ const categoryNames = { exercise: '운동', study: '공부', mental: '정신', d
 
 export default function CreateGoal() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const params = new URLSearchParams(window.location.search);
   const category = params.get('category') || 'exercise';
   const existingGoalId = params.get('goalId'); // 기존 결과 목표에 행동 목표 추가
@@ -41,7 +43,27 @@ export default function CreateGoal() {
   const [actionType, setActionType] = useState('confirm');
   const [frequency, setFrequency] = useState(7);
   const [minutes, setMinutes] = useState(60);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const createGoalMutation = useMutation({
+    mutationFn: async (payload) => {
+      // Clean up existing goals if creating new result goal
+      if (!isAddingActionOnly && !payload.addingActionOnly) {
+        const existingGoals = await base44.entities.Goal.filter({ category, goal_type: 'result' });
+        for (const oldGoal of existingGoals) {
+          const actionGoals = await base44.entities.ActionGoal.filter({ goal_id: oldGoal.id });
+          for (const ag of actionGoals) await base44.entities.ActionGoal.delete(ag.id);
+          await base44.entities.Goal.delete(oldGoal.id);
+        }
+      }
+      return payload.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['goals', 'actionGoals'] });
+      toast.success(data.message);
+      navigate('/Home');
+    },
+    onError: () => toast.error('목표 생성에 실패했습니다.'),
+  });
 
   // D-day → duration 계산
   const calcDuration = () => {
@@ -60,11 +82,8 @@ export default function CreateGoal() {
   };
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
-
-    // 행동 목표만 추가하는 경우
     if (isAddingActionOnly) {
-      await base44.entities.ActionGoal.create({
+      const actionGoal = await base44.entities.ActionGoal.create({
         goal_id: existingGoalId,
         category,
         title: actionTitle,
@@ -73,21 +92,11 @@ export default function CreateGoal() {
         duration_minutes: actionType === 'timer' ? minutes : 0,
         status: 'active',
       });
-      toast.success('행동 목표가 추가되었습니다! 🦊');
-      navigate('/Home');
+      createGoalMutation.mutate({
+        addingActionOnly: true,
+        data: { message: '행동 목표가 추가되었습니다! 🦊' },
+      });
       return;
-    }
-
-    // 같은 카테고리의 기존 결과 목표 삭제
-    const existingGoals = await base44.entities.Goal.filter({ category, goal_type: 'result' });
-    for (const oldGoal of existingGoals) {
-      // 해당 목표의 모든 행동 목표 삭제
-      const actionGoals = await base44.entities.ActionGoal.filter({ goal_id: oldGoal.id });
-      for (const ag of actionGoals) {
-        await base44.entities.ActionGoal.delete(ag.id);
-      }
-      // 결과 목표 삭제
-      await base44.entities.Goal.delete(oldGoal.id);
     }
 
     const finalDuration = isStudy && hasDDay ? calcDuration() : duration;
@@ -115,8 +124,9 @@ export default function CreateGoal() {
       status: 'active',
     });
 
-    toast.success('새로운 여정이 시작되었습니다! 🦊');
-    navigate('/Home');
+    createGoalMutation.mutate({
+      data: { message: '새로운 여정이 시작되었습니다! 🦊' },
+    });
   };
 
   const renderStep = () => {
@@ -184,10 +194,11 @@ export default function CreateGoal() {
           )}
           <Button
             className="w-full h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-            disabled={!actionTitle.trim() || isSubmitting}
+            disabled={!actionTitle.trim() || createGoalMutation.isPending}
             onClick={handleSubmit}
+            aria-label="행동 목표 추가"
           >
-            {isSubmitting ? '추가 중...' : '행동 목표 추가하기 🦊'}
+            {createGoalMutation.isPending ? '추가 중...' : '행동 목표 추가하기 🦊'}
           </Button>
         </div>
       );
@@ -384,10 +395,11 @@ export default function CreateGoal() {
           )}
           <Button
             className="w-full h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-            disabled={!actionTitle.trim() || isSubmitting}
+            disabled={!actionTitle.trim() || createGoalMutation.isPending}
             onClick={handleSubmit}
+            aria-label="목표 생성"
           >
-            {isSubmitting ? '생성 중...' : '목표 시작하기 🦊'}
+            {createGoalMutation.isPending ? '생성 중...' : '목표 시작하기 🦊'}
           </Button>
         </div>
       );
