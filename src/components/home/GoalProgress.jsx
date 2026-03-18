@@ -360,7 +360,7 @@ export default function GoalProgress({ goal, logs = [] }) {
           </p>
           <DrawerFooter className="flex gap-2 pt-6">
             <Button variant="outline" onClick={() => setShowDelete(false)} className="flex-1 rounded-xl">취소</Button>
-            <Button onClick={handleDelete} disabled={deleting} className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white">{deleting ? '삭제 중...' : '삭제'}</Button>
+            <Button onClick={handleDelete} disabled={deleteMutation.isPending} className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white">{deleteMutation.isPending ? '삭제 중...' : '삭제'}</Button>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
