@@ -32,6 +32,15 @@ export default function Onboarding() {
   const [stepHistory, setStepHistory] = useState(['welcome']);
   const currentStep = stepHistory[stepHistory.length - 1];
 
+  // 로그인 후 리다이렉트 감지: 로그인 상태면 자동으로 goal 스텝으로 이동
+  React.useEffect(() => {
+    base44.auth.isAuthenticated().then(isLoggedIn => {
+      if (isLoggedIn && currentStep === 'welcome') {
+        setStepHistory(['welcome', 'goal']);
+      }
+    });
+  }, []);
+
   const [goalInput, setGoalInput] = useState('');
   const [category, setCategory] = useState('');
   const [hasDDay, setHasDDay] = useState(null); // null | true | false
