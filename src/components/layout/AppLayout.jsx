@@ -43,7 +43,6 @@ export default function AppLayout() {
       style={{
         position: 'absolute',
         inset: 0,
-        paddingTop: 'env(safe-area-inset-top)',
         overflow: 'hidden',
       }}
     >
