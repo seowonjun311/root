@@ -24,10 +24,7 @@ export default function AppLayout() {
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       <Header />
-      <main
-        className="relative"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 64px)' }}
-      >
+      <main className="relative pb-safe-nav">
         {/* Keep all pages mounted for state preservation, only animate the visible one */}
         {pages.map(({ path, component: Component }) => (
           <div
