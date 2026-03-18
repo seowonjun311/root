@@ -334,6 +334,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
               <button
                 onClick={() => setShowCalendar(v => !v)}
                 className="flex items-center gap-2 flex-1 min-w-0 text-left"
+                aria-label={`${actionGoal.title} 달성 현황 (주 ${weeklyCount}/${targetFreq})`}
               >
                 <span className="text-base">{typeEmoji}</span>
                 <span className="font-bold text-sm truncate" style={{ color: '#4a2c08' }}>{actionGoal.title}</span>
@@ -404,8 +405,9 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
                   onClick={() => setShowMenu(true)}
                   className="p-1.5 rounded transition-colors"
                   style={{ color: '#7a5030' }}
+                  aria-label={`${actionGoal.title} 수정`}
                 >
-                  <Pencil className="w-3.5 h-3.5" />
+                  <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -449,15 +451,17 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
               <button
                 onClick={handleEditOpen}
                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left"
+                aria-label="행동 목표 수정"
               >
-                <Pencil className="w-4 h-4 text-amber-600" />
+                <Pencil className="w-4 h-4 text-amber-600" aria-hidden="true" />
                 <span className="text-sm font-semibold">목표 수정</span>
               </button>
               <button
                 onClick={handleDeleteOpen}
                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 transition-colors text-left"
+                aria-label="행동 목표 삭제"
               >
-                <Trash2 className="w-4 h-4 text-red-500" />
+                <Trash2 className="w-4 h-4 text-red-500" aria-hidden="true" />
                 <span className="text-sm font-semibold text-red-500">목표 삭제</span>
               </button>
             </div>
