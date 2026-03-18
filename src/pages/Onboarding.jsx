@@ -242,7 +242,7 @@ export default function Onboarding() {
           value={goalInput}
           onChange={e => setGoalInput(e.target.value)}
           placeholder="예: 살 빼고 싶어요, 토익 공부..."
-          className="h-12 rounded-xl text-center text-base border-amber-300 focus:border-amber-500 bg-white/80"
+          className="h-12 rounded-xl text-center text-base border-amber-300 focus:border-amber-500 bg-white/80 text-amber-900 placeholder:text-amber-300"
         />
         <div className="flex flex-wrap gap-2 mt-4 justify-center">
           {['살 빼고 싶어요', '영어 공부를 시작하고 싶어요', '금연하고 싶어요', '생활을 정리하고 싶어요'].map(ex => (
