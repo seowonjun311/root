@@ -122,13 +122,15 @@ export default function AppSettings() {
           </DrawerHeader>
           <div className="px-4 py-2 space-y-2">
             <Input
+              id="nickname-input"
               value={newNickname}
               onChange={e => setNewNickname(e.target.value)}
               placeholder="새 닉네임"
               maxLength={12}
               className="h-12 rounded-xl text-center"
+              aria-describedby="nickname-helper"
             />
-            <p className="text-xs text-muted-foreground text-center">
+            <p id="nickname-helper" className="text-xs text-muted-foreground text-center">
               닉네임은 변경 후 7일 동안 재변경 불가합니다.
             </p>
           </div>
