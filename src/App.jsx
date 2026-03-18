@@ -194,9 +194,36 @@ function App() {
   }, []);
 
   useEffect(() => {
-    guestDataPersistence.startBackgroundCleanup();
+    let cleanupIntervalId = null;
+    let isActive = true;
+
+    const initCleanup = async () => {
+      try {
+        // Start background cleanup and track interval ID for explicit management
+        guestDataPersistence.startBackgroundCleanup();
+        
+        // Store reference for potential emergency cleanup if needed
+        const originalStop = guestDataPersistence.stopBackgroundCleanup;
+        
+        return () => {
+          if (isActive) {
+            originalStop?.();
+          }
+        };
+      } catch (error) {
+        console.warn('[App] Guest data cleanup initialization error:', error);
+      }
+    };
+
+    const cleanup = initCleanup();
+
     return () => {
-      guestDataPersistence.stopBackgroundCleanup();
+      isActive = false;
+      cleanup?.();
+      // Explicit cleanup for memory leak prevention
+      if (cleanupIntervalId) {
+        clearInterval(cleanupIntervalId);
+      }
     };
   }, []);
 

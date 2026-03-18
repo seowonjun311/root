@@ -380,7 +380,7 @@ function StatCard({ icon, label, value, onClick, clickable }) {
 
 // Lazy-loaded image component for timeline
 function TimelineLogItem({ log, ag, onSelectPhoto }) {
-  const { ref, isVisible, isLoaded, onLoad } = useLazyLoadImage();
+  const { containerRef, isVisible, onLoad } = useLazyLoadImage('1');
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
@@ -392,7 +392,7 @@ function TimelineLogItem({ log, ag, onSelectPhoto }) {
       </div>
       {log.photo_url && (
         <button 
-          ref={ref}
+          ref={containerRef}
           onClick={() => onSelectPhoto(log)} 
           className="shrink-0 active:opacity-70 rounded-lg w-12 h-12 flex items-center justify-center overflow-hidden"
         >
@@ -414,11 +414,11 @@ function TimelineLogItem({ log, ag, onSelectPhoto }) {
 
 // Lazy-loaded image component for album grid
 function AlbumPhotoItem({ log, onSelectPhoto }) {
-  const { ref, isVisible, isLoaded, onLoad } = useLazyLoadImage();
+  const { containerRef, isVisible, onLoad } = useLazyLoadImage('1');
 
   return (
     <button 
-      ref={ref}
+      ref={containerRef}
       onClick={() => onSelectPhoto(log)}
       className="aspect-square rounded-xl overflow-hidden relative group active:opacity-80 transition-opacity flex items-center justify-center"
       aria-label={`${log.date} 사진 보기`}
@@ -437,7 +437,7 @@ function AlbumPhotoItem({ log, onSelectPhoto }) {
           </div>
         </>
       )}
-      <span className="absolute top-1 right-1 text-xs" aria-hidden="true">{CAT_EMOJIS[log.category] || '📝'}</span>
+      <span className="absolute top-1 right-1 text-sm" aria-hidden="true">{CAT_EMOJIS[log.category] || '📝'}</span>
     </button>
   );
 }
