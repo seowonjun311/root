@@ -295,12 +295,12 @@ export default function Records() {
             return (
               <div key={`goal-${g.id}`} className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300/60">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-base">🏆</span>
+                  <span className="text-base" aria-hidden="true">🏆</span>
                   <p className="text-sm font-bold text-amber-900">{g.title}</p>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 ml-auto">{g.end_date || g.updated_date?.split('T')[0]}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-800 text-amber-50 ml-auto font-semibold">{g.end_date || g.updated_date?.split('T')[0]}</span>
                 </div>
-                {relBadge && <p className="text-xs text-amber-700 font-semibold mb-1">🏅 칭호: {relBadge.title}</p>}
-                {g.result_note && <p className="text-xs text-amber-800 italic">"{g.result_note}"</p>}
+                {relBadge && <p className="text-xs text-amber-800 font-semibold mb-1">🏅 칭호: {relBadge.title}</p>}
+                {g.result_note && <p className="text-xs text-amber-900 italic">"{g.result_note}"</p>}
               </div>
             );
           })}
