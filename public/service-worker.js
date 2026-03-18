@@ -1,47 +1,56 @@
-const CACHE_NAME = 'base44-v1';
-const CHUNK_CACHE = 'base44-chunks-v1';
-const OFFLINE_FALLBACK = '/';
+const CACHE_VERSION = 'v1';
+const CACHE_NAME = `app-cache-${CACHE_VERSION}`;
 
-// Core routes that must always have offline fallback
-const CRITICAL_ROUTES = [
+// Critical chunks that must be precached for offline functionality
+const CRITICAL_ASSETS = [
+  '/index.html',
+  '/manifest.json',
   '/',
-  '/Home',
-  '/Onboarding',
-  '/Records',
-  '/Badges',
-  '/AppSettings',
 ];
 
-// Precache critical routes on installation
-self.addEventListener('install', event => {
+// Install event: precache critical assets only
+self.addEventListener('install', (event) => {
+  console.log('[SW] Installing service worker, precaching critical assets...');
+  
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      console.log('[SW] Precaching critical routes');
-      return cache.addAll(CRITICAL_ROUTES);
-    })
-  );
-  self.skipWaiting();
-});
-
-// Activate and clean old caches
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.open(CACHE_NAME).then((cache) => {
       return Promise.all(
-        cacheNames
-          .filter(name => name !== CACHE_NAME && name !== CHUNK_CACHE)
-          .map(name => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
-          })
+        CRITICAL_ASSETS.map((url) => {
+          return cache.add(url).catch((error) => {
+            console.warn(`[SW] Failed to precache ${url}:`, error);
+          });
+        })
       );
+    }).then(() => {
+      console.log('[SW] Critical assets precached successfully');
+      return self.skipWaiting();
     })
   );
-  self.clients.claim();
 });
 
-// Fetch with intelligent caching strategy
-self.addEventListener('fetch', event => {
+// Activate event: clean up old caches
+self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating service worker, cleaning old caches...');
+  
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[SW] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => {
+      console.log('[SW] Claiming clients for immediate control');
+      return self.clients.claim();
+    })
+  );
+});
+
+// Fetch event: Cache-first for static assets, network-first for API calls
+self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
@@ -50,94 +59,92 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Cache all chunk files (.js) with network-first strategy
-  if (url.pathname.endsWith('.js') || url.pathname.includes('/src/')) {
+  // Strategy 1: Network-first for API calls (base44 SDK endpoints)
+  if (url.pathname.includes('/api/') || url.pathname.includes('.json') && !url.pathname.includes('manifest')) {
     event.respondWith(
-      caches.open(CHUNK_CACHE).then(cache => {
-        return fetch(request)
-          .then(response => {
-            if (response.ok) {
-              cache.put(request, response.clone());
+      fetch(request)
+        .then((response) => {
+          // Cache successful API responses
+          if (response && response.status === 200) {
+            const clonedResponse = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, clonedResponse);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Fall back to cache on network error
+          return caches.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+              console.log('[SW] API call failed, serving from cache:', request.url);
+              return cachedResponse;
             }
-            return response;
-          })
-          .catch(() => {
-            // Return cached chunk or offline fallback
-            return cache.match(request).then(cached => {
-              if (cached) return cached;
-              console.warn('[SW] Chunk not cached, serving offline fallback:', url.pathname);
-              return cache.match(OFFLINE_FALLBACK);
-            });
+            // If no cache, return offline fallback
+            return new Response('Offline - API unavailable', { status: 503 });
           });
-      })
+        })
     );
     return;
   }
 
-  // Cache-first for static assets
-  if (url.pathname.match(/\.(png|jpg|jpeg|svg|webp|css|woff2?)$/)) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(cache => {
-        return cache.match(request).then(cached => {
-          if (cached) return cached;
-          return fetch(request)
-            .then(response => {
-              if (response.ok) {
-                cache.put(request, response.clone());
-              }
-              return response;
-            })
-            .catch(() => {
-              console.warn('[SW] Static asset unavailable:', url.pathname);
-              // Return placeholder for missing static assets
-              if (url.pathname.match(/\.(png|jpg|jpeg|webp)$/)) {
-                return new Response(
-                  new Blob([''], { type: 'image/svg+xml' }),
-                  { status: 200, headers: { 'Content-Type': 'image/svg+xml' } }
-                );
-              }
-              return new Response('', { status: 404 });
-            });
-        });
-      })
-    );
-    return;
-  }
-
-  // Network-first for HTML routes (SPA)
+  // Strategy 2: Cache-first for static assets (JS, CSS, images, fonts)
   event.respondWith(
-    fetch(request)
-      .then(response => {
-        // Cache successful responses for critical routes
-        if (response.ok && CRITICAL_ROUTES.some(route => url.pathname.startsWith(route))) {
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, response.clone());
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // Fallback to cached version or offline fallback
-        return caches.match(request).then(cached => {
-          if (cached) return cached;
-          console.warn('[SW] Network request failed, serving offline fallback:', url.pathname);
-          return caches.match(OFFLINE_FALLBACK).catch(() => {
-            return new Response('Offline - App unavailable', { status: 503 });
-          });
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetch(request)
+        .then((response) => {
+          // Cache successful responses
+          if (response && response.status === 200 && response.type !== 'error') {
+            const clonedResponse = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, clonedResponse);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Fall back to offline page for HTML routes
+          if (request.mode === 'navigate') {
+            return caches.match('/index.html').catch(() => {
+              return new Response('Offline - Page unavailable', { status: 503 });
+            });
+          }
+          return new Response('Offline - Resource unavailable', { status: 503 });
         });
-      })
+    })
   );
 });
 
-// Background sync for chunk precaching
-self.addEventListener('sync', event => {
+// Background sync for precaching lazy-loaded chunks
+self.addEventListener('sync', (event) => {
   if (event.tag === 'precache-chunks') {
+    console.log('[SW] Background sync: precaching lazy-loaded chunks');
     event.waitUntil(
-      caches.open(CHUNK_CACHE).then(cache => {
-        console.log('[SW] Background sync: precaching chunks');
-        // Chunks are cached on-demand during fetch, this triggers a manual precache
+      caches.open(CACHE_NAME).then((cache) => {
+        // This is triggered when app loads to cache additional resources
         return Promise.resolve();
       })
     );
   }
 });
+
+// Message handling for cache clearing and updates
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    console.log('[SW] Clearing all caches on user request');
+    caches.keys().then((cacheNames) => {
+      Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+    });
+  }
+
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] Skipping waiting, activating new version');
+    self.skipWaiting();
+  }
+});
+
+console.log('[SW] Service Worker initialized with robust offline support');
