@@ -14,10 +14,20 @@ export function NavigationProvider({ children }) {
   
   useEffect(() => {
     if (!isInitialized && navigationStackManager.getStack().length === 0) {
+      // Initialize popstate listener for browser back button synchronization
+      navigationStackManager.initializePopstateListener();
+      
       // Perform robust deep-link initialization
       navigationStackManager.initializeFromCurrentLocation(location.pathname);
       setIsInitialized(true);
     }
+
+    return () => {
+      // Cleanup popstate listener on unmount (important for SSR)
+      if (isInitialized) {
+        navigationStackManager.destroyPopstateListener();
+      }
+    };
   }, [isInitialized]);
 
   // Sync location changes with navigation manager (after initialization)
