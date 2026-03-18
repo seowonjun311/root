@@ -227,34 +227,16 @@ class NavigationStackManager {
   /**
    * Robust Android back-button handler with event propagation control
    * Ensures consistent behavior across all Android API versions
-   * Must be called with stopImmediatePropagation for API 14+ compatibility
    */
   handleAndroidBackButton(event) {
-    // Stop immediate propagation to prevent other handlers (API 21+)
-    if (event && typeof event.stopImmediatePropagation === 'function') {
-      event.stopImmediatePropagation();
-    }
-    
-    // Prevent default behavior for all Android versions
-    if (event && typeof event.preventDefault === 'function') {
-      event.preventDefault();
-    }
+    // Prevent default and stop propagation immediately
+    event.preventDefault();
+    event.stopImmediatePropagation();
 
-    // Notify all registered listeners
-    this.backButtonListeners.forEach(callback => {
-      try {
-        callback();
-      } catch (e) {
-        console.warn('[NavigationStackManager] Back button listener error:', e);
-      }
-    });
-
-    // Handle internal navigation stack
+    // Only navigate back if possible, otherwise exit app
     if (this.canGoBack()) {
       this.pop();
-      return true; // Prevent default behavior
     }
-    return false; // Allow default (exit app)
   }
 
   /**
