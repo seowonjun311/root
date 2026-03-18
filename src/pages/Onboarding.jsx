@@ -68,6 +68,20 @@ export default function Onboarding() {
       const finalTitle = isStudyDDay ? examTitle : goalInput;
       const finalDuration = isStudyDDay ? calcDDayDuration() : (customDuration ? (parseInt(customDuration) || 4) * 7 : duration);
 
+      // 기존 데이터 전체 삭제
+      const [existingGoals, existingActionGoals, existingLogs, existingBadges] = await Promise.all([
+        base44.entities.Goal.list('-created_date', 200),
+        base44.entities.ActionGoal.list('-created_date', 200),
+        base44.entities.ActionLog.list('-created_date', 500),
+        base44.entities.Badge.list('-created_date', 200),
+      ]);
+      await Promise.all([
+        ...existingGoals.map(g => base44.entities.Goal.delete(g.id)),
+        ...existingActionGoals.map(ag => base44.entities.ActionGoal.delete(ag.id)),
+        ...existingLogs.map(l => base44.entities.ActionLog.delete(l.id)),
+        ...existingBadges.map(b => base44.entities.Badge.delete(b.id)),
+      ]);
+
       const goal = await base44.entities.Goal.create({
         category,
         goal_type: 'result',
