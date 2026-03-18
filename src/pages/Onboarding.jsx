@@ -1,23 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, CalendarDays } from 'lucide-react';
-
-const CATEGORY_OPTIONS = [
-  { id: 'exercise', label: '운동', emoji: '🏃' },
-  { id: 'study', label: '공부', emoji: '📚' },
-  { id: 'mental', label: '정신', emoji: '🧘' },
-  { id: 'daily', label: '일상', emoji: '🏠' },
-];
-
-const ACTION_TYPE_OPTIONS = [
-  { value: 'timer', label: '시간 기록형', desc: '시간을 기록하며 수행합니다', emoji: '⏱️' },
-  { value: 'confirm', label: '확인형', desc: '했으면 확인을 누릅니다', emoji: '✅' },
-  { value: 'abstain', label: '안하기', desc: '나쁜 습관을 참으며 기록합니다', emoji: '🚫' },
-];
+import OnboardingProgress from '@/components/onboarding/OnboardingProgress';
+import OnboardingNavigation from '@/components/onboarding/OnboardingNavigation';
+import OnboardingWelcome from '@/components/onboarding/OnboardingWelcome';
+import OnboardingGoal from '@/components/onboarding/OnboardingGoal';
+import OnboardingCategory from '@/components/onboarding/OnboardingCategory';
+import OnboardingDDay from '@/components/onboarding/OnboardingDDay';
+import OnboardingDDayDate from '@/components/onboarding/OnboardingDDayDate';
+import OnboardingDuration from '@/components/onboarding/OnboardingDuration';
+import OnboardingAction from '@/components/onboarding/OnboardingAction';
+import OnboardingNickname from '@/components/onboarding/OnboardingNickname';
 
 // 스텝 ID 목록 (동적으로 구성)
 // welcome → goal → category → [study_dday? → study_dday_date?] → duration → action → nickname
@@ -454,14 +448,8 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-      {/* Progress */}
-      <div className="flex gap-1 px-6 pt-6 pb-2">
-        {Array.from({ length: totalSteps }).map((_, i) => (
-          <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-300 ${i < stepIndex ? 'bg-amber-600' : i === stepIndex ? 'bg-amber-400' : 'bg-secondary'}`} />
-        ))}
-      </div>
+      <OnboardingProgress stepIndex={stepIndex} totalSteps={totalSteps} />
 
-      {/* Content */}
       <div className="flex-1 flex flex-col justify-center py-6">
         <AnimatePresence mode="wait">
           <motion.div
@@ -476,25 +464,15 @@ export default function Onboarding() {
         </AnimatePresence>
       </div>
 
-      {/* Navigation - 첫 화면 제외 */}
       {currentStep !== 'welcome' && (
-        <div className="px-6 pb-8 flex gap-3">
-          {stepHistory.length > 1 && (
-             <Button variant="outline" onClick={goBack} className="rounded-xl h-12 px-4" aria-label="이전 단계로 돌아가기">
-               <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-             </Button>
-           )}
-          <Button
-            className="flex-1 h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold text-base"
-            disabled={!canNext() || isSubmitting}
-            onClick={handleNext}
-          >
-            {isLastStep
-              ? (isSubmitting ? '여정을 시작하는 중...' : '여정 시작하기 🦊')
-              : (<>다음 <ChevronRight className="w-4 h-4 ml-1" /></>)
-            }
-          </Button>
-        </div>
+        <OnboardingNavigation
+          showBack={stepHistory.length > 1}
+          isLastStep={isLastStep}
+          isSubmitting={isSubmitting}
+          canContinue={canNext()}
+          onBack={goBack}
+          onNext={handleNext}
+        />
       )}
     </div>
   );
