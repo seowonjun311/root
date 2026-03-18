@@ -27,7 +27,16 @@ export default function Badges() {
   const filtered = filter === 'all' ? badges : badges.filter(b => b.category === filter);
 
   return (
-    <div className="min-h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+    <div className="min-h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }} onTouchStart={handlePullStart}>
+      <motion.div
+        className="fixed top-12 left-0 right-0 flex justify-center pt-2 z-50 pointer-events-none"
+        animate={{ opacity: pullProgress > 0 ? 1 : 0 }}
+      >
+        <motion.div animate={{ rotate: pullProgress * 360 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
+          <RefreshCw className="w-5 h-5 text-amber-600" />
+        </motion.div>
+      </motion.div>
+
       <div className="p-6 pb-3">
         <h1 className="text-xl font-bold text-amber-900 flex items-center gap-2">
           🏆 명예의 전당
