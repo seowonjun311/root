@@ -9,6 +9,7 @@ class NavigationStackManager {
     this.stack = [];
     this.currentIndex = -1;
     this.isNavigating = false;
+    this.isSyncing = false; // Lock to prevent race conditions during sync
     this.listeners = [];
     this.backButtonListeners = [];
   }
@@ -149,12 +150,24 @@ class NavigationStackManager {
    * Force-sync internal navigation stack with browser history state
    * Ensures WebView consistency across all platforms (Android, iOS, Web)
    * Strips all query parameters to keep URL clean and prevent persistent state
+   * Uses atomic locking to prevent race conditions between async operations
    * Critical for deep links and avoiding history desync on back button
    */
   syncBrowserHistory() {
+    // Prevent concurrent syncs causing race conditions
+    if (this.isSyncing) {
+      console.warn('[NavigationStackManager] Sync already in progress, skipping to prevent race condition');
+      return;
+    }
+
     try {
+      this.isSyncing = true;
+
       const currentPath = this.getCurrentPath();
-      if (!currentPath) return;
+      if (!currentPath) {
+        this.isSyncing = false;
+        return;
+      }
 
       // Strip query parameters to prevent persistent state in address bar
       const cleanPath = currentPath.split('?')[0];
@@ -167,9 +180,19 @@ class NavigationStackManager {
       };
 
       // Use replaceState to maintain clean history without creating entries
+      // This is synchronous, so no race condition after this point
       window.history.replaceState(state, '', cleanPath);
+
+      // Verify sync completed successfully
+      if (window.history.state?.stackIndex !== this.currentIndex) {
+        console.warn('[NavigationStackManager] Sync verification failed, attempting retry');
+        // Retry once with a fresh state
+        window.history.replaceState(state, '', cleanPath);
+      }
     } catch (error) {
       console.warn('[NavigationStackManager] Failed to sync browser history:', error);
+    } finally {
+      this.isSyncing = false;
     }
   }
 
