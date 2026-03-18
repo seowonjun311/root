@@ -325,8 +325,8 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     <>
       <div ref={cardRef} className="mx-4 relative">
         <div className="rounded-lg overflow-hidden" style={{
-          background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 50%, #f0e0bc 100%)',
-          border: '2px solid #a07840',
+          background: 'linear-gradient(135deg, var(--wood-bg-light) 0%, var(--wood-bg-medium) 50%, var(--wood-bg-bright) 100%)',
+          border: '2px solid var(--parchment-border)',
           boxShadow: 'inset 0 1px 3px rgba(255,240,180,0.6), 0 3px 8px rgba(80,50,10,0.2)',
         }}>
           <div className="px-4 pt-3 pb-2">
@@ -337,9 +337,9 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
                 aria-label={`${actionGoal.title} 달성 현황 (주 ${weeklyCount}/${targetFreq})`}
               >
                 <span className="text-base">{typeEmoji}</span>
-                <span className="font-bold text-sm truncate" style={{ color: '#4a2c08' }}>{actionGoal.title}</span>
-                {typeLabel && <span className="text-xs ml-1" style={{ color: '#7a5030' }}>{typeLabel}</span>}
-                <span className="text-xs font-bold ml-1 shrink-0" style={{ color: '#8a6020' }}>
+                <span className="font-bold text-sm truncate" style={{ color: 'var(--wood-text-dark)' }}>{actionGoal.title}</span>
+                {typeLabel && <span className="text-xs ml-1" style={{ color: 'var(--wood-primary-dark)' }}>{typeLabel}</span>}
+                <span className="text-xs font-bold ml-1 shrink-0" style={{ color: 'var(--wood-primary-darker)' }}>
                   {weeklyCount}/{targetFreq}
                 </span>
               </button>
@@ -356,16 +356,16 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
                     <button
                       className="h-8 px-3 text-xs font-bold rounded-md transition-all active:scale-95"
                       style={isRunning ? {
-                        background: 'linear-gradient(180deg, #c0392b 0%, #962d22 100%)',
-                        border: '2px solid #7a1f16',
+                        background: 'linear-gradient(180deg, var(--error-bg) 0%, var(--error-dark) 100%)',
+                        border: '2px solid var(--error-border)',
                         boxShadow: 'inset 0 1px 2px rgba(255,150,120,0.3), 0 2px 4px rgba(60,10,5,0.4)',
-                        color: '#ffe8e8',
+                        color: 'var(--error-text)',
                         textShadow: '0 1px 2px rgba(80,10,5,0.5)',
                       } : {
-                        background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 50%, #8a6520 100%)',
-                        border: '2px solid #6b4e15',
+                        background: `linear-gradient(180deg, var(--wood-primary) 0%, var(--wood-primary-dark) 50%, var(--wood-primary-darker) 100%)`,
+                        border: '2px solid var(--wood-border)',
                         boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 2px 4px rgba(60,35,5,0.4)',
-                        color: '#fff8e8',
+                        color: 'var(--wood-text-light)',
                         textShadow: '0 1px 2px rgba(60,30,5,0.5)',
                       }}
                       onClick={handleTimerToggle}
@@ -384,17 +384,17 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
                     color: '#a07840',
                   }}>✓ 완료</span>
                 ) : (
-                  <button
-                    className="h-8 px-3 text-xs font-bold rounded-md transition-all active:scale-95"
-                    style={{
-                      background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 50%, #8a6520 100%)',
-                      border: '2px solid #6b4e15',
-                      boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 2px 4px rgba(60,35,5,0.4)',
-                      color: '#fff8e8',
-                      textShadow: '0 1px 2px rgba(60,30,5,0.5)',
-                    }}
-                    onClick={handleConfirm}
-                  >
+                   <button
+                     className="h-8 px-3 text-xs font-bold rounded-md transition-all active:scale-95"
+                     style={{
+                       background: `linear-gradient(180deg, var(--wood-primary) 0%, var(--wood-primary-dark) 50%, var(--wood-primary-darker) 100%)`,
+                       border: '2px solid var(--wood-border)',
+                       boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 2px 4px rgba(60,35,5,0.4)',
+                       color: 'var(--wood-text-light)',
+                       textShadow: '0 1px 2px rgba(60,30,5,0.5)',
+                     }}
+                     onClick={handleConfirm}
+                   >
                     <span className="flex items-center gap-1">
                       <Check className="w-3 h-3" />
                       {actionGoal.action_type === 'abstain' ? '성공' : '확인'}
@@ -404,7 +404,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
                 <button
                   onClick={() => setShowMenu(true)}
                   className="p-1.5 rounded transition-colors"
-                  style={{ color: '#7a5030' }}
+                  style={{ color: 'var(--wood-primary-dark)' }}
                   aria-label={`${actionGoal.title} 수정`}
                 >
                   <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
@@ -422,7 +422,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
                 className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${progressPercent}%`,
-                  background: 'linear-gradient(90deg, #8a6020 0%, #c49a4a 50%, #e8c060 100%)',
+                  background: `linear-gradient(90deg, var(--wood-primary-darker) 0%, var(--wood-primary) 50%, #e8c060 100%)`,
                   boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.5)',
                 }}
               />
