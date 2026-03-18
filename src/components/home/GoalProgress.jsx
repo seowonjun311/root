@@ -128,8 +128,6 @@ export default function GoalProgress({ goal, logs = [] }) {
   const [editDuration, setEditDuration] = useState(goal?.duration_days || 56);
   const [editCustomWeeks, setEditCustomWeeks] = useState('');
   const [isEditCustom, setIsEditCustom] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   if (!goal) return null;
 
