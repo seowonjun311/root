@@ -420,7 +420,7 @@ export default function Onboarding() {
         <p className="text-sm text-muted-foreground text-center mb-6">루트에서 당신을 어떻게 부르면 될까요?</p>
         <Input value={nickname} onChange={e => setNickname(e.target.value)}
           placeholder="닉네임 입력" maxLength={12}
-          className="h-12 rounded-xl text-center text-lg border-amber-300 bg-white/80 max-w-xs" />
+          className="h-12 rounded-xl text-center text-lg border-amber-300 bg-white/80 max-w-xs text-amber-900 placeholder:text-amber-300" />
         <p className="text-xs text-muted-foreground mt-3">예시: 성장의길 / 턱걸이10 / 루트워커</p>
         <p className="text-xs text-muted-foreground/60 mt-1">나중에 변경할 수 있어요</p>
       </div>
