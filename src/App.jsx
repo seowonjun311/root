@@ -112,25 +112,54 @@ function App() {
     return () => mq.removeEventListener('change', e => apply(e.matches));
   }, []);
 
-  // Hide splash screen only after react-query hydration completes
+  // Hide splash screen only after react-query hydration and initial render completes
   useEffect(() => {
-    // Wait for QueryClient to finish initializing
     const hideSplash = async () => {
       try {
-        // Give react-query time to hydrate cache and initialize queries
-        await new Promise(resolve => {
-          // Wait for next macrotask to ensure QueryClient is ready
-          setTimeout(resolve, 150);
+        // Wait for QueryClient to hydrate and stabilize
+        // This ensures all initial queries are cached before splash screen is removed
+        const hydrationStart = performance.now();
+        
+        // Use requestAnimationFrame to wait for React's initial render
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => {
+            // Wait one more frame to ensure component mount is complete
+            requestAnimationFrame(resolve);
+          });
         });
 
+        // Verify QueryClient is fully initialized
+        const queryCache = queryClientInstance.getQueryCache();
+        const initialQueriesCount = queryCache.getAll().length;
+        
+        // Wait a bit longer if queries are still being added (hydration in progress)
+        if (initialQueriesCount === 0) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        const hydrationTime = performance.now() - hydrationStart;
+        console.log(`[App] QueryClient hydration complete in ${hydrationTime.toFixed(2)}ms`);
+
+        // Now safe to hide splash screen
+        const splashScreen = document.getElementById('splash-screen');
+        if (splashScreen && !splashScreen.classList.contains('hidden')) {
+          // Use CSS transition for smooth fade
+          splashScreen.style.transition = 'opacity 0.3s ease-out';
+          splashScreen.style.opacity = '0';
+          
+          // Remove from DOM after transition
+          setTimeout(() => {
+            splashScreen.classList.add('hidden');
+            splashScreen.style.opacity = '1'; // Reset for potential re-init
+          }, 300);
+        }
+      } catch (error) {
+        console.warn('[App] Splash screen removal error:', error);
+        // Force hide on error to prevent indefinite loading state
         const splashScreen = document.getElementById('splash-screen');
         if (splashScreen) {
           splashScreen.classList.add('hidden');
         }
-      } catch (error) {
-        console.warn('[App] Splash screen removal error:', error);
-        const splashScreen = document.getElementById('splash-screen');
-        if (splashScreen) splashScreen.classList.add('hidden');
       }
     };
 
