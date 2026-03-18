@@ -32,12 +32,36 @@ class NavigationStackManager {
   }
 
   /**
-   * Detect and handle deep link initialization
-   * Called once when the app first loads to check if we're entering via deep link
+   * Robust deep-link initialization with browser history state validation
+   * Syncs internal stack with browser history to prevent route collisions on deep links
    */
   initializeFromCurrentLocation(currentPath) {
     const isDeepLink = currentPath !== '/' && currentPath !== '/Home' && currentPath !== '/Onboarding';
-    this.initialize(currentPath, isDeepLink);
+    
+    if (isDeepLink) {
+      // For deep links: validate browser history state and build stack accordingly
+      const browserState = window.history.state;
+      
+      // If browser state has stackIndex, we're restoring from history
+      if (browserState?.stackIndex !== undefined) {
+        // Restore from saved state
+        this.stack = ['/Home', currentPath];
+        this.currentIndex = browserState.stackIndex;
+      } else {
+        // Fresh deep link: initialize with root + current path
+        this.stack = ['/Home', currentPath];
+        this.currentIndex = 1;
+        
+        // Pre-sync browser history to prevent back-button conflicts
+        this.syncBrowserHistory();
+      }
+    } else {
+      // Standard initialization for root routes
+      this.stack = [currentPath];
+      this.currentIndex = 0;
+    }
+    
+    this.notifyListeners();
   }
 
   /**
@@ -124,20 +148,21 @@ class NavigationStackManager {
   /**
    * Force-sync internal navigation stack with browser history state
    * Ensures WebView consistency across all platforms (Android, iOS, Web)
+   * Critical for deep links and avoiding history desync on back button
    */
   syncBrowserHistory() {
     try {
       const currentPath = this.getCurrentPath();
       if (!currentPath) return;
 
-      // Replace browser history state with current stack index
-      // This ensures browser.back() aligns with our internal stack
       const state = {
         stackIndex: this.currentIndex,
+        stackLength: this.stack.length,
         timestamp: Date.now(),
+        stack: [...this.stack], // Embed full stack for recovery
       };
 
-      // Use replaceState to maintain clean history
+      // Use replaceState to maintain clean history without creating entries
       window.history.replaceState(state, '', currentPath);
     } catch (error) {
       console.warn('[NavigationStackManager] Failed to sync browser history:', error);
