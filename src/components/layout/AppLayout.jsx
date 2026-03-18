@@ -1,6 +1,5 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
 import BottomNav from './BottomNav';
 import Header from './Header';
 import Home from '../../pages/Home';
