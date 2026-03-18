@@ -174,27 +174,17 @@ function App() {
     };
   }, []);
 
-  // Register Android backbutton handler at root layout with stopImmediatePropagation
-  // Ensures robust back-button handling across all Android API versions (14+)
+  // Register Android back button handler
   useEffect(() => {
     const handleAndroidBackButton = (event) => {
       navigationStackManager.handleAndroidBackButton(event);
     };
 
-    // Register listener on document root (useCapture phase for early interception)
-    // This ensures the handler fires before any child components can interfere
+    // Single listener at document level with capture phase
     document.addEventListener('backbutton', handleAndroidBackButton, true);
-    
-    // Fallback: Also listen at body level for API compatibility
-    if (window.device || window.cordova) {
-      document.body.addEventListener('backbutton', handleAndroidBackButton, true);
-    }
 
     return () => {
       document.removeEventListener('backbutton', handleAndroidBackButton, true);
-      if (window.device || window.cordova) {
-        document.body.removeEventListener('backbutton', handleAndroidBackButton, true);
-      }
     };
   }, []);
 
