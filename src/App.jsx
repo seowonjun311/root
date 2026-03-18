@@ -9,10 +9,10 @@ import { NavigationProvider } from '@/lib/NavigationContext';
 import AppLayout from './components/layout/AppLayout.jsx';
 import Header from './components/layout/Header.jsx';
 import PageTransition from './components/layout/PageTransition';
+import Onboarding from './pages/Onboarding';
 
-// Lazy-load all non-critical pages for better initial load performance
+// Lazy-load non-critical pages only
 const PageNotFound  = lazy(() => import('./lib/PageNotFound'));
-const Onboarding    = lazy(() => import('./pages/Onboarding'));
 const CreateGoal    = lazy(() => import('./pages/CreateGoal'));
 const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 
@@ -39,9 +39,7 @@ const AuthenticatedApp = () => {
             <Route path="/" element={<Navigate to="/Onboarding" replace />} />
 
             <Route path="/Onboarding" element={
-              <PageTransition>
-                <Onboarding />
-              </PageTransition>
+              <Onboarding />
             } />
 
             <Route path="/CreateGoal" element={
