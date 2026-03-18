@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 
@@ -9,6 +9,30 @@ export default function Header() {
   const location = useLocation();
   const isRootTab = ROOT_TABS.includes(location.pathname);
 
+  const goBack = () => {
+    // If there's real history to go back to, use it; otherwise fall back to /Home
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/Home', { replace: true });
+    }
+  };
+
+  // Sync Android physical back button with the header back action
+  useEffect(() => {
+    if (isRootTab) return;
+
+    const handlePopState = () => {
+      // If history stack is exhausted, push /Home so the user isn't stranded
+      if (window.history.state?.idx === 0) {
+        navigate('/Home', { replace: true });
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isRootTab, navigate]);
+
   return (
     <header
       className="flex items-center h-12 px-2 bg-background border-b border-border/30 sticky top-0 z-40"
@@ -18,7 +42,7 @@ export default function Header() {
           <h1 className="text-lg font-bold text-amber-900 px-2">🦊 Route</h1>
         ) : (
           <button
-            onClick={() => navigate(-1)}
+            onClick={goBack}
             className="flex items-center gap-1 text-amber-900 hover:opacity-70 transition-opacity active:scale-95 min-w-[44px] min-h-[44px] px-2"
             aria-label="뒤로"
           >
