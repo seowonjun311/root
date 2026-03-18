@@ -1,21 +1,54 @@
 const CACHE_VERSION = 'v1';
 const CACHE_NAME = `root-app-${CACHE_VERSION}`;
 
-// Critical chunks identified from build analysis
+// Lazy-loaded chunks that should be cached for offline access
+const LAZY_LOADED_CHUNKS = [
+  // Core pages (code-split via vite)
+  '/src/pages/Home',
+  '/src/pages/Records',
+  '/src/pages/CreateGoal',
+  '/src/pages/AppSettings',
+  '/src/pages/NotificationSettings',
+  '/src/pages/Badges',
+  '/src/pages/Onboarding',
+  
+  // Layout components
+  '/src/components/layout/AppLayout',
+  '/src/components/layout/Header',
+  '/src/components/layout/BottomNav',
+  '/src/components/layout/PageTransition',
+  
+  // Home page components
+  '/src/components/home/ActionGoalCard',
+  '/src/components/home/CharacterBanner',
+  '/src/components/home/CategoryTabs',
+  '/src/components/home/GoalProgress',
+  '/src/components/home/PhotoConfirmModal',
+  '/src/components/home/CelebrationToast',
+  '/src/components/home/BossVictoryModal',
+  '/src/components/home/WeekDays',
+  '/src/components/home/EmptyGoalState',
+  '/src/components/home/GPSMapPreview',
+  
+  // Onboarding components
+  '/src/components/onboarding/OnboardingWelcome',
+  '/src/components/onboarding/OnboardingGoal',
+  '/src/components/onboarding/OnboardingCategory',
+  '/src/components/onboarding/OnboardingDDay',
+  '/src/components/onboarding/OnboardingDDayDate',
+  '/src/components/onboarding/OnboardingDuration',
+  '/src/components/onboarding/OnboardingAction',
+  '/src/components/onboarding/OnboardingNickname',
+  '/src/components/onboarding/OnboardingProgress',
+  '/src/components/onboarding/OnboardingNavigation',
+];
+
+// Critical chunks for immediate precaching on install
 const CRITICAL_ASSETS = [
   '/index.html',
   '/src/main.jsx',
-  // Core fonts
+  '/manifest.json',
   'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Noto+Serif+KR:wght@400;600;700;900&display=swap',
-  // Critical app routes (lazy-loaded chunks)
-  '/src/pages/Home.jsx',
-  '/src/pages/Records.jsx',
-  '/src/components/layout/AppLayout.jsx',
-  '/src/components/home/ActionGoalCard.jsx',
-  '/src/components/home/CharacterBanner.jsx',
-  '/src/components/home/CategoryTabs.jsx',
-  // Base44 SDK
-  '/node_modules/@base44/sdk/dist/index.js',
 ];
 
 // Assets to precache on install (smaller set for faster install)
@@ -156,7 +189,7 @@ self.addEventListener('fetch', (event) => {
         })
     );
   } else {
-    // Cache-first strategy for static assets
+    // Cache-first strategy for static assets and lazy-loaded chunks
     event.respondWith(
       caches.match(request).then((response) => {
         if (response) {
@@ -184,14 +217,40 @@ self.addEventListener('fetch', (event) => {
 });
 
 /**
- * Background sync for critical chunk caching
- * Pre-cache critical assets in background when online
+ * Background sync for lazy-loaded chunk caching
+ * Pre-cache all lazy-loaded chunks in background when online
+ * Ensures offline access to all routes and components
  */
 self.addEventListener('sync', (event) => {
+  if (event.tag === 'precache-chunks') {
+    event.waitUntil(
+      caches.open(CACHE_NAME).then((cache) => {
+        console.log('[Service Worker] Precaching lazy-loaded chunks...');
+        return Promise.allSettled(
+          LAZY_LOADED_CHUNKS.map((asset) => {
+            // Fetch and cache each chunk
+            return fetch(asset)
+              .then((response) => {
+                if (response.ok) {
+                  cache.put(asset, response.clone());
+                  console.log(`[Service Worker] Cached chunk: ${asset}`);
+                }
+              })
+              .catch((error) => {
+                console.warn(`[Service Worker] Failed to cache chunk ${asset}:`, error);
+              });
+          })
+        ).then(() => {
+          console.log('[Service Worker] Lazy-loaded chunk caching complete');
+        });
+      })
+    );
+  }
+  
   if (event.tag === 'precache-critical') {
     event.waitUntil(
       caches.open(CACHE_NAME).then((cache) => {
-        console.log('[Service Worker] Precaching critical chunks...');
+        console.log('[Service Worker] Precaching critical assets...');
         return Promise.allSettled(
           CRITICAL_ASSETS.map((asset) => {
             return cache.add(asset).catch((error) => {
@@ -204,4 +263,4 @@ self.addEventListener('sync', (event) => {
   }
 });
 
-console.log('[Service Worker] Initialized');
+console.log('[Service Worker] Initialized with lazy-loaded chunk caching');
