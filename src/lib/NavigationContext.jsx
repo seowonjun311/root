@@ -1,24 +1,23 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { navigationStackManager } from './NavigationStackManager';
 
 const NavigationContext = createContext();
 
 export function NavigationProvider({ children }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [, setManagerState] = useState(0);
 
+  // Initialize navigation stack and sync with router
   useEffect(() => {
-    // Initialize on first load
     if (navigationStackManager.getStack().length === 0) {
-      // Detect deep link on initial load
       navigationStackManager.initializeFromCurrentLocation(location.pathname);
     } else {
       const currentPath = navigationStackManager.getCurrentPath();
       const newPath = location.pathname;
 
       if (currentPath !== newPath) {
-        // Check if path exists in stack (going back)
         const stack = navigationStackManager.getStack();
         if (stack.includes(newPath) && stack.indexOf(newPath) < stack.length - 1) {
           navigationStackManager.pop();
@@ -29,13 +28,17 @@ export function NavigationProvider({ children }) {
     }
   }, [location.pathname]);
 
-  // Subscribe to manager updates
+  // Subscribe to manager updates and sync URL when navigation manager changes
   useEffect(() => {
     const unsubscribe = navigationStackManager.subscribe(() => {
+      const managerPath = navigationStackManager.getCurrentPath();
+      if (managerPath && managerPath !== location.pathname) {
+        navigate(managerPath, { replace: true });
+      }
       setManagerState(prev => prev + 1);
     });
     return unsubscribe;
-  }, []);
+  }, [navigate, location.pathname]);
 
   const value = {
     direction: navigationStackManager.getDirection(),
