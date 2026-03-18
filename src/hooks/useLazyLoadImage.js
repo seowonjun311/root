@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
- * Hook for intersection observer-based lazy loading of images
- * Optimizes scroll performance on low-end devices
+ * Hook for intersection observer-based lazy loading of images with aspect-ratio preservation
+ * Prevents layout shifts during image loading on low-end devices
  */
-export function useLazyLoadImage(options = {}) {
-  const ref = useRef(null);
+export function useLazyLoadImage(aspectRatio = '1', options = {}) {
+  const containerRef = useRef(null);
+  const imgRef = useRef(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (!ref.current) return;
+    if (!containerRef.current) return;
 
     // Don't set up observer if image already visible or loaded
     if (isLoaded) return;
@@ -19,7 +20,7 @@ export function useLazyLoadImage(options = {}) {
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          observer.unobserve(ref.current);
+          observer.unobserve(containerRef.current);
         }
       },
       {
@@ -29,11 +30,11 @@ export function useLazyLoadImage(options = {}) {
       }
     );
 
-    observer.observe(ref.current);
+    observer.observe(containerRef.current);
 
     return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
       }
     };
   }, [isLoaded, options]);
@@ -42,10 +43,35 @@ export function useLazyLoadImage(options = {}) {
     setIsLoaded(true);
   };
 
+  // Aspect ratio container to prevent layout shift
+  const AspectRatioContainer = ({ children }) => (
+    <div
+      ref={containerRef}
+      style={{
+        position: 'relative',
+        width: '100%',
+        paddingBottom: `calc(100% / ${aspectRatio})`,
+        background: isLoaded ? 'transparent' : '#f0f0f0',
+        overflow: 'hidden',
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+
   return {
-    ref,
+    containerRef,
+    imgRef,
     isVisible,
     isLoaded,
     onLoad: handleLoad,
+    AspectRatioContainer,
   };
 }
