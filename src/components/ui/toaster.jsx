@@ -13,7 +13,7 @@ export function Toaster() {
 
   return (
     <ToastProvider>
-      <div role="region" aria-live="polite" aria-atomic="true" className="sr-only">
+      <div role="region" aria-live="assertive" aria-atomic="true" className="sr-only">
         {toasts.map(({ id, title, description }) => (
           <div key={id}>
             {title && <span>{title}</span>}
