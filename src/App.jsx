@@ -163,9 +163,9 @@ function App() {
         <Router>
           <NavigationProvider>
             <AuthenticatedApp />
+            <Toaster />
           </NavigationProvider>
         </Router>
-        <Toaster />
       </QueryClientProvider>
     </AuthProvider>
   );
