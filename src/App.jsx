@@ -7,7 +7,6 @@ import { AnimatePresence } from 'framer-motion'
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import AppLayout from './components/layout/AppLayout.jsx';
 import Header from './components/layout/Header.jsx';
-
 import PageTransition from './components/layout/PageTransition';
 
 // Lazy-load all non-critical pages for better initial load performance
