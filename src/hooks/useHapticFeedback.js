@@ -5,55 +5,46 @@ import { hapticFeedback } from '@/lib/HapticFeedback';
  * Hook to integrate haptic feedback into React components
  * 
  * Usage:
- *   const { onPress, onSuccess, onError } = useHapticFeedback();
- *   
- *   <button onClick={() => {
- *     try {
- *       onPress();
- *       // do work
- *       onSuccess();
- *     } catch (e) {
- *       onError();
- *     }
- *   }} />
+ *   const { triggerHaptic } = useHapticFeedback();
+ *   triggerHaptic('impact', 'light');    // Light tap
+ *   triggerHaptic('impact', 'medium');   // Medium vibration
+ *   triggerHaptic('impact', 'heavy');    // Heavy impact
+ *   triggerHaptic('success');             // Success pattern
+ *   triggerHaptic('error');               // Error pattern
  */
 export function useHapticFeedback() {
-  const onPress = useCallback(() => {
-    hapticFeedback.light();
+  const triggerHaptic = useCallback((type, intensity) => {
+    if (intensity === 'light' || type === 'light') {
+      hapticFeedback.light();
+    } else if (intensity === 'medium' || type === 'medium') {
+      hapticFeedback.medium();
+    } else if (intensity === 'heavy' || type === 'heavy') {
+      hapticFeedback.heavy();
+    } else if (type === 'success') {
+      hapticFeedback.success();
+    } else if (type === 'error') {
+      hapticFeedback.error();
+    } else if (type === 'warning') {
+      hapticFeedback.warning();
+    }
   }, []);
 
-  const onSuccess = useCallback(() => {
-    hapticFeedback.success();
-  }, []);
-
-  const onError = useCallback(() => {
-    hapticFeedback.error();
-  }, []);
-
-  const onWarning = useCallback(() => {
-    hapticFeedback.warning();
-  }, []);
-
-  const onMedium = useCallback(() => {
-    hapticFeedback.medium();
-  }, []);
-
-  const onHeavy = useCallback(() => {
-    hapticFeedback.heavy();
-  }, []);
-
-  const onCustom = useCallback((pattern) => {
-    hapticFeedback.custom(pattern);
-  }, []);
+  // Legacy API support
+  const onPress = useCallback(() => triggerHaptic('light'), [triggerHaptic]);
+  const onSuccess = useCallback(() => triggerHaptic('success'), [triggerHaptic]);
+  const onError = useCallback(() => triggerHaptic('error'), [triggerHaptic]);
+  const onWarning = useCallback(() => triggerHaptic('warning'), [triggerHaptic]);
+  const onMedium = useCallback(() => triggerHaptic('medium'), [triggerHaptic]);
+  const onHeavy = useCallback(() => triggerHaptic('heavy'), [triggerHaptic]);
 
   return {
+    triggerHaptic,
     onPress,
     onSuccess,
     onError,
     onWarning,
     onMedium,
     onHeavy,
-    onCustom,
     isSupported: hapticFeedback.isSupported,
   };
 }
