@@ -5,7 +5,7 @@ export default function OnboardingDuration({ duration, customDuration, onDuratio
     <div className="px-6">
       <h2 className="text-xl font-bold text-center text-amber-900 mb-2">얼마 동안 도전하시겠습니까?</h2>
       <p className="text-sm text-muted-foreground text-center mb-6">기간을 선택해 주세요</p>
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-3 gap-3 mb-4" role="group" aria-label="기간 선택">
         {[4, 8, 12, 16, 20, 24].map(weeks => (
           <button
             key={weeks}
@@ -32,7 +32,7 @@ export default function OnboardingDuration({ duration, customDuration, onDuratio
         <span className="text-sm font-semibold text-muted-foreground">주</span>
       </div>
       {(customDuration || duration > 0) && (
-        <p className="text-xs text-amber-700 font-semibold mt-2 text-center">
+        <p className="text-xs text-amber-700 font-semibold mt-2 text-center" role="status" aria-live="polite">
           총 {customDuration ? Number(customDuration) * 7 : duration}일 ({customDuration || Math.round(duration / 7)}주)
         </p>
       )}

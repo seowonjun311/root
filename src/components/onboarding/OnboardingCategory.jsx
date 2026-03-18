@@ -11,7 +11,7 @@ export default function OnboardingCategory({ value, onChange }) {
   return (
     <div className="px-6">
       <h2 className="text-xl font-bold text-center text-amber-900 mb-6">이 목표는 어떤 영역인가요?</h2>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3" role="group" aria-label="목표 카테고리 선택">
         {CATEGORY_OPTIONS.map(opt => (
           <button
             key={opt.id}

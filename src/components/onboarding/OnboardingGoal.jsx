@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 
 export default function OnboardingGoal({ value, onChange }) {
   return (
-    <div className="px-6">
+    <div className="px-6" role="region" aria-label="목표 입력">
       <h2 className="text-xl font-bold text-center text-amber-900 mb-2">어떤 여정을 시작하시겠습니까?</h2>
       <p className="text-sm text-muted-foreground text-center mb-6">자유롭게 입력해 주세요</p>
       <Input

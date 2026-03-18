@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 
 export default function OnboardingNickname({ value, onChange }) {
   return (
-    <div className="flex flex-col items-center px-6">
+    <div className="flex flex-col items-center px-6" role="region" aria-label="닉네임 입력">
       <div className="w-20 h-20 rounded-3xl bg-amber-200/80 border-2 border-amber-400/50 flex items-center justify-center text-4xl mb-6 shadow-lg">
         🦊
       </div>

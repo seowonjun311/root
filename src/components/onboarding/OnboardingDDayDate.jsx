@@ -6,7 +6,7 @@ export default function OnboardingDDayDate({ dDay, onDDayChange, examTitle, onEx
   const daysLeft = dDay ? Math.ceil((new Date(dDay) - new Date()) / (1000 * 60 * 60 * 24)) : null;
 
   return (
-    <div className="px-6 space-y-5">
+    <div className="px-6 space-y-5" role="region" aria-label="시험 정보 입력">
       <div className="text-center">
         <h2 className="text-xl font-bold text-amber-900 mb-1">시험 정보를 입력해 주세요</h2>
       </div>
@@ -22,7 +22,7 @@ export default function OnboardingDDayDate({ dDay, onDDayChange, examTitle, onEx
           className="w-full h-12 rounded-xl border border-input bg-white/80 px-4 text-sm text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
         />
         {daysLeft !== null && daysLeft > 0 && (
-          <p className="text-xs text-amber-700 font-semibold mt-2">🎯 D-{daysLeft} · {daysLeft}일 남았습니다</p>
+          <p className="text-xs text-amber-700 font-semibold mt-2" role="status" aria-live="polite">🎯 D-{daysLeft} · {daysLeft}일 남았습니다</p>
         )}
       </div>
       <div>

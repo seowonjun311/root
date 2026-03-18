@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function OnboardingDDay({ value, onChange }) {
   return (
-    <div className="px-6 space-y-4">
+    <div className="px-6 space-y-4" role="region" aria-label="D-day 유형 선택">
       <div className="text-center pt-4 pb-2">
         <p className="text-4xl mb-3">📚</p>
         <h2 className="text-xl font-bold text-amber-900">시험 D-day가 있나요?</h2>

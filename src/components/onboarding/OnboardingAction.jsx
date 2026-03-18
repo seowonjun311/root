@@ -22,14 +22,18 @@ export default function OnboardingAction({
     <div className="px-6">
       <h2 className="text-lg font-bold text-center text-amber-900 mb-1">이 목표를 위해 어떤 행동을 하시겠습니까?</h2>
       <p className="text-xs text-muted-foreground text-center mb-5">행동 목표를 설정해 주세요</p>
+      <div role="status" aria-live="polite" aria-label="선택된 행동 유형 및 주 횟수" className="sr-only">
+        선택됨: {actionType === 'timer' ? '시간 기록형' : actionType === 'confirm' ? '확인형' : '안하기'}, 주 {frequency}회
+        {actionType === 'timer' && `, 1회 ${actionMinutes}분`}
+      </div>
       <Input
         value={actionTitle}
         onChange={onActionTitleChange}
         placeholder="예: 러닝, LC 공부, 명상..."
         className="h-11 rounded-xl text-center text-sm border-amber-300 bg-white/80 mb-4 text-amber-900 placeholder:text-amber-300"
       />
-      <p className="text-xs font-semibold text-amber-800 mb-2">행동 유형</p>
-      <div className="space-y-2 mb-4">
+      <p className="text-xs font-semibold text-amber-800 mb-2" id="action-type-label">행동 유형</p>
+      <div className="space-y-2 mb-4" role="group" aria-labelledby="action-type-label">
         {ACTION_TYPE_OPTIONS.map(opt => (
           <button
             key={opt.value}
@@ -50,8 +54,8 @@ export default function OnboardingAction({
           </button>
         ))}
       </div>
-      <p className="text-xs font-semibold text-amber-800 mb-2">주 횟수</p>
-      <div className="grid grid-cols-7 gap-1.5 mb-4">
+      <p className="text-xs font-semibold text-amber-800 mb-2" id="frequency-label">주 횟수</p>
+      <div className="grid grid-cols-7 gap-1.5 mb-4" role="group" aria-labelledby="frequency-label">
         {[1, 2, 3, 4, 5, 6, 7].map(f => (
           <button
             key={f}
@@ -65,11 +69,11 @@ export default function OnboardingAction({
           </button>
         ))}
       </div>
-      <p className="text-xs text-muted-foreground mb-4">주 {frequency}회</p>
+      <p className="text-xs text-muted-foreground mb-4" role="status" aria-live="polite">주 {frequency}회</p>
       {actionType === 'timer' && (
         <>
-          <p className="text-xs font-semibold text-amber-800 mb-2">1회 시간</p>
-          <div className="flex gap-2 mb-2">
+          <p className="text-xs font-semibold text-amber-800 mb-2" id="minutes-label">1회 시간</p>
+          <div className="flex gap-2 mb-2" role="group" aria-labelledby="minutes-label">
             {[20, 30, 60].map(m => (
               <button
                 key={m}
