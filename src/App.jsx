@@ -114,6 +114,14 @@ function App() {
     return () => mq.removeEventListener('change', e => apply(e.matches));
   }, []);
 
+  // Initialize background cleanup for guest data persistence
+  useEffect(() => {
+    guestDataPersistence.startBackgroundCleanup();
+    return () => {
+      guestDataPersistence.stopBackgroundCleanup();
+    };
+  }, []);
+
   // Register Android backbutton handler at root layout with stopImmediatePropagation
   // Ensures robust back-button handling across all Android API versions (14+)
   useEffect(() => {
