@@ -7,6 +7,7 @@ import { base44 } from '@/api/base44Client';
 import { getBadgeForGoal } from '../badgeUtils';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import FocusLock from 'react-focus-lock';
 
 // phase: 'battle' → 'confirm' → 'result_input' → 'victory' | 'consolation'
 
@@ -95,13 +96,17 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
 
   return (
     <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        <AnimatePresence mode="wait">
+      <FocusLock>
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="boss-modal-title"
+        >
+          <AnimatePresence mode="wait">
 
           {/* ── 마왕 등장 ── */}
           {phase === 'battle' && (
@@ -121,7 +126,7 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
                 👹
               </motion.div>
               <div className="bg-amber-900/80 rounded-2xl px-6 py-4 border border-amber-600/50">
-                <p className="text-amber-100 font-bold text-lg">도전 기간이 끝났습니다!</p>
+                <p id="boss-modal-title" className="text-amber-100 font-bold text-lg">도전 기간이 끝났습니다!</p>
                 <p className="text-amber-300/80 text-sm mt-1">{goal?.title}</p>
               </div>
               <motion.div
@@ -302,7 +307,8 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
           )}
 
         </AnimatePresence>
-      </motion.div>
+        </motion.div>
+      </FocusLock>
     </AnimatePresence>
   );
 }

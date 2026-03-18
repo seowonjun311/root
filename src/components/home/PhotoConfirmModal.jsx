@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Image, X, Check, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import FocusLock from 'react-focus-lock';
 
 export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip }) {
   const [photo, setPhoto] = useState(null);
@@ -31,22 +32,26 @@ export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip 
 
   return (
     <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
+      <FocusLock>
         <motion.div
-          className="w-full max-w-lg bg-background rounded-t-3xl p-6 pb-28"
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          exit={{ y: '100%' }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="photo-modal-title"
         >
+          <motion.div
+            className="w-full max-w-lg bg-background rounded-t-3xl p-6 pb-28"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          >
           <div className="flex items-center justify-between mb-5">
             <div>
-              <p className="font-bold text-base text-amber-900">🦊 오늘도 해냈네요, 용사님!</p>
+              <p id="photo-modal-title" className="font-bold text-base text-amber-900">🦊 오늘도 해냈네요, 용사님!</p>
               <p className="text-sm text-muted-foreground mt-0.5">
                 이 순간을 사진으로 남길 수 있어요.
               </p>
@@ -117,6 +122,7 @@ export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip 
           </div>
         </motion.div>
       </motion.div>
+      </FocusLock>
     </AnimatePresence>
   );
 }

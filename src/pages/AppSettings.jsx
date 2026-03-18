@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { usePullToRefreshTabbed } from '../hooks/usePullToRefreshTabbed';
 import { motion } from 'framer-motion';
+import FocusLock from 'react-focus-lock';
 
 export default function AppSettings() {
   const queryClient = useQueryClient();
@@ -116,10 +117,11 @@ export default function AppSettings() {
 
       {/* Nickname Drawer */}
       <Drawer open={showNickname} onOpenChange={setShowNickname}>
-        <DrawerContent>
-          <DrawerHeader className="text-center">
-            <DrawerTitle>🦊 닉네임 변경</DrawerTitle>
-          </DrawerHeader>
+        <FocusLock disabled={!showNickname}>
+          <DrawerContent role="dialog" aria-modal="true" aria-labelledby="nickname-title">
+            <DrawerHeader className="text-center">
+              <DrawerTitle id="nickname-title">🦊 닉네임 변경</DrawerTitle>
+            </DrawerHeader>
           <div className="px-4 py-2 space-y-2">
             <Input
               id="nickname-input"
@@ -138,15 +140,17 @@ export default function AppSettings() {
             <Button variant="outline" onClick={() => setShowNickname(false)} className="flex-1 rounded-xl" aria-label="닉네임 변경 취소">취소</Button>
             <Button onClick={handleNicknameChange} disabled={nicknameUpdateMutation.isPending} className="flex-1 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50" aria-label="닉네임 변경 확인">{nicknameUpdateMutation.isPending ? '변경 중...' : '확인'}</Button>
           </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+          </DrawerContent>
+          </FocusLock>
+          </Drawer>
 
-      {/* Logout Drawer */}
-      <Drawer open={showLogout} onOpenChange={setShowLogout}>
-        <DrawerContent>
-          <DrawerHeader className="text-center">
-            <DrawerTitle>로그아웃할까요?</DrawerTitle>
-          </DrawerHeader>
+          {/* Logout Drawer */}
+          <Drawer open={showLogout} onOpenChange={setShowLogout}>
+          <FocusLock disabled={!showLogout}>
+          <DrawerContent role="dialog" aria-modal="true" aria-labelledby="logout-title">
+            <DrawerHeader className="text-center">
+              <DrawerTitle id="logout-title">로그아웃할까요?</DrawerTitle>
+            </DrawerHeader>
           <p className="px-4 text-sm text-muted-foreground text-center">
             이 기기에서는 로그인이 해제됩니다.<br />
             기록은 계정에 안전하게 저장됩니다.
@@ -155,15 +159,17 @@ export default function AppSettings() {
             <Button variant="outline" onClick={() => setShowLogout(false)} className="flex-1 rounded-xl">취소</Button>
             <Button onClick={handleLogout} className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white">로그아웃</Button>
           </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+          </DrawerContent>
+          </FocusLock>
+          </Drawer>
 
-      {/* Delete Account Drawer */}
-      <Drawer open={showDelete} onOpenChange={setShowDelete}>
-        <DrawerContent>
-          <DrawerHeader className="text-center">
-            <DrawerTitle className="text-red-600">⚠️ 계정을 삭제할까요?</DrawerTitle>
-          </DrawerHeader>
+          {/* Delete Account Drawer */}
+          <Drawer open={showDelete} onOpenChange={setShowDelete}>
+          <FocusLock disabled={!showDelete}>
+          <DrawerContent role="dialog" aria-modal="true" aria-labelledby="delete-title">
+            <DrawerHeader className="text-center">
+              <DrawerTitle id="delete-title" className="text-red-600">⚠️ 계정을 삭제할까요?</DrawerTitle>
+            </DrawerHeader>
           <p className="px-4 text-sm text-muted-foreground text-center">
             이 작업은 되돌릴 수 없습니다.<br />
             모든 기록과 데이터가 영구적으로 삭제됩니다.
@@ -172,11 +178,12 @@ export default function AppSettings() {
             <Button variant="outline" onClick={() => setShowDelete(false)} className="flex-1 rounded-xl" aria-label="계정 삭제 취소">취소</Button>
             <Button onClick={handleDeleteAccount} disabled={deleteAccountMutation.isPending} className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white" aria-label="계정 영구 삭제">{deleteAccountMutation.isPending ? '삭제 중...' : '삭제'}</Button>
           </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-    </div>
-  );
-}
+          </DrawerContent>
+          </FocusLock>
+          </Drawer>
+          </div>
+          );
+          }
 
 function SettingItem({ icon, label, desc, onClick }) {
   return (
