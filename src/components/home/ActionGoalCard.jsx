@@ -282,7 +282,6 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
       if (context?.previous) queryClient.setQueryData(['actionGoals'], context.previous);
       toast.error('수정에 실패했습니다.');
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
     onSuccess: () => {
       toast.success('행동 목표가 수정되었습니다.');
       setShowEdit(false);
@@ -303,7 +302,6 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
       if (context?.previous) queryClient.setQueryData(['actionGoals'], context.previous);
       toast.error('삭제에 실패했습니다.');
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
     onSuccess: () => {
       toast.success('행동 목표가 삭제되었습니다.');
       setShowDelete(false);
