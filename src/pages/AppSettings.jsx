@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
@@ -10,13 +11,16 @@ import { toast } from 'sonner';
 import { usePullToRefreshTabbed } from '../hooks/usePullToRefreshTabbed';
 import { motion } from 'framer-motion';
 import FocusLock from 'react-focus-lock';
+import DeleteAccountDialog from '@/components/settings/DeleteAccountDialog';
 
 export default function AppSettings() {
   const queryClient = useQueryClient();
+  const { triggerHaptic } = useHapticFeedback();
   const [showNickname, setShowNickname] = useState(false);
   const [newNickname, setNewNickname] = useState('');
   const [showLogout, setShowLogout] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   const nicknameUpdateMutation = useMutation({
     mutationFn: (nickname) => base44.auth.updateMe({ nickname: nickname.trim(), nickname_changed_at: new Date().toISOString() }),
@@ -31,10 +35,18 @@ export default function AppSettings() {
   const deleteAccountMutation = useMutation({
     mutationFn: () => base44.auth.deleteAccount(),
     onSuccess: () => {
-      toast.success('계정이 삭제되었습니다.');
-      base44.auth.logout('/Onboarding');
+      triggerHaptic('impact', 'heavy');
+      toast.success('계정이 삭제되었습니다. 감사합니다!');
+      setTimeout(() => {
+        setShowDelete(false);
+        base44.auth.logout('/Onboarding');
+      }, 500);
     },
-    onError: () => toast.error('계정 삭제 중 오류가 발생했습니다.'),
+    onError: (error) => {
+      const errorMsg = error?.message || '계정 삭제 중 오류가 발생했습니다.';
+      setDeleteError(errorMsg);
+      toast.error(errorMsg);
+    },
   });
 
   const { pullProgress, onTouchStart: handlePullStart } = usePullToRefreshTabbed(async () => {
@@ -52,11 +64,17 @@ export default function AppSettings() {
   };
 
   const handleLogout = () => {
+    triggerHaptic('impact', 'heavy');
     base44.auth.logout('/Onboarding');
   };
 
-  const handleDeleteAccount = () => {
-    deleteAccountMutation.mutate();
+  const handleDeleteAccount = async () => {
+    return new Promise((resolve, reject) => {
+      deleteAccountMutation.mutate(undefined, {
+        onSuccess: () => resolve(),
+        onError: (err) => reject(err),
+      });
+    });
   };
 
   return (
@@ -105,13 +123,20 @@ export default function AppSettings() {
           icon={<LogOut className="w-5 h-5 text-amber-600" />}
           label="로그아웃"
           desc="이 기기에서 로그인이 해제됩니다"
-          onClick={() => setShowLogout(true)}
+          onClick={() => {
+            triggerHaptic('impact', 'light');
+            setShowLogout(true);
+          }}
         />
         <SettingItem
           icon={<Trash2 className="w-5 h-5 text-red-600" />}
           label="계정 삭제"
           desc="모든 데이터가 영구 삭제됩니다"
-          onClick={() => setShowDelete(true)}
+          onClick={() => {
+            triggerHaptic('impact', 'light');
+            setShowDelete(true);
+            setDeleteError(null);
+          }}
         />
       </div>
 
@@ -163,24 +188,15 @@ export default function AppSettings() {
           </FocusLock>
           </Drawer>
 
-          {/* Delete Account Drawer */}
-          <Drawer open={showDelete} onOpenChange={setShowDelete}>
-          <FocusLock disabled={!showDelete}>
-          <DrawerContent role="dialog" aria-modal="true" aria-labelledby="delete-title">
-            <DrawerHeader className="text-center">
-              <DrawerTitle id="delete-title" className="text-red-600">⚠️ 계정을 삭제할까요?</DrawerTitle>
-            </DrawerHeader>
-          <p className="px-4 text-sm text-muted-foreground text-center">
-            이 작업은 되돌릴 수 없습니다.<br />
-            모든 기록과 데이터가 영구적으로 삭제됩니다.
-          </p>
-          <DrawerFooter className="flex gap-2 pt-6">
-            <Button variant="outline" onClick={() => setShowDelete(false)} className="flex-1 rounded-xl" aria-label="계정 삭제 취소">취소</Button>
-            <Button onClick={handleDeleteAccount} disabled={deleteAccountMutation.isPending} className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white" aria-label="계정 영구 삭제">{deleteAccountMutation.isPending ? '삭제 중...' : '삭제'}</Button>
-          </DrawerFooter>
-          </DrawerContent>
-          </FocusLock>
-          </Drawer>
+          {/* Delete Account Dialog - Multi-step */}
+          <DeleteAccountDialog
+            open={showDelete}
+            onOpenChange={setShowDelete}
+            userEmail={user?.email || ''}
+            onConfirm={handleDeleteAccount}
+            isPending={deleteAccountMutation.isPending}
+            onError={setDeleteError}
+          />
           </div>
           );
           }
