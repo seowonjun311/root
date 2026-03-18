@@ -19,6 +19,77 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Splash screen shown immediately on cold boot -->
+    <style>
+      .splash-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: linear-gradient(to bottom, #fef3c7, #fed7aa);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Noto Sans KR', sans-serif;
+      }
+      .splash-screen.hidden {
+        display: none;
+      }
+      .splash-icon {
+        font-size: 4rem;
+        margin-bottom: 2rem;
+        animation: bounce 0.8s ease-in-out;
+      }
+      .splash-text h1 {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #78350f;
+        margin-bottom: 0.5rem;
+      }
+      .splash-text p {
+        font-size: 0.875rem;
+        color: #b45309;
+      }
+      .splash-loader {
+        margin-top: 3rem;
+        display: flex;
+        gap: 0.25rem;
+      }
+      .splash-loader span {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background-color: #b45309;
+        animation: pulse 1.2s infinite;
+      }
+      .splash-loader span:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+      .splash-loader span:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      @keyframes bounce {
+        0%, 100% { transform: scale(0.8); opacity: 0; }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 0.5; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.5); }
+      }
+    </style>
+    <div id="splash-screen" class="splash-screen">
+      <div class="splash-icon">🦊</div>
+      <div class="splash-text">
+        <h1>Root</h1>
+        <p>여정을 시작하세요</p>
+      </div>
+      <div class="splash-loader">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
