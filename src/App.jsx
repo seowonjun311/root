@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'r
 import { AnimatePresence } from 'framer-motion'
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { NavigationProvider } from '@/lib/NavigationContext';
+import { navigationStackManager } from '@/lib/NavigationStackManager';
 import AppLayout from './components/layout/AppLayout.jsx';
 import Header from './components/layout/Header.jsx';
 import PageTransition from './components/layout/PageTransition';
@@ -79,6 +80,19 @@ function App() {
     apply(mq.matches);
     mq.addEventListener('change', e => apply(e.matches));
     return () => mq.removeEventListener('change', e => apply(e.matches));
+  }, []);
+
+  // Register Android backbutton handler (non-breaking for web)
+  useEffect(() => {
+    const handleAndroidBackButton = () => {
+      navigationStackManager.handleAndroidBackButton();
+    };
+
+    // Check if we're in a Cordova/Capacitor environment
+    if (window.device || window.cordova) {
+      document.addEventListener('backbutton', handleAndroidBackButton);
+      return () => document.removeEventListener('backbutton', handleAndroidBackButton);
+    }
   }, []);
 
   return (
