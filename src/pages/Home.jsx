@@ -13,7 +13,6 @@ import BossVictoryModal from '../components/home/BossVictoryModal';
 import CelebrationToast from '../components/home/CelebrationToast';
 import { computeStreak, getStreakTrigger, getBadgeForGoal } from '../components/badgeUtils';
 import { Plus, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 
@@ -45,15 +44,14 @@ export default function Home() {
   const [shownVictoryIds, setShownVictoryIds] = useState(() => {
     try { return JSON.parse(localStorage.getItem('shownVictory') || '[]'); } catch { return []; }
   });
-  const handleRefresh = async () => {
+
+  const { pullProgress, onTouchStart: handlePullStart } = usePullToRefresh(async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['goals'] }),
       queryClient.invalidateQueries({ queryKey: ['actionLogs'] }),
       queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
     ]);
-  };
-
-  const { pullProgress, isRefreshing, onTouchStart: handlePullStart } = usePullToRefresh(handleRefresh);
+  });
 
   const { data: user } = useQuery({
     queryKey: ['me'],
@@ -70,23 +68,18 @@ export default function Home() {
     queryFn: () => base44.entities.Goal.filter({ status: 'active' }),
   });
 
-  // Optimistic mutations for goal deletion
   const deleteGoalMutation = useMutation({
     mutationFn: (goalId) => base44.entities.Goal.delete(goalId),
     onMutate: async (deletedGoalId) => {
       await queryClient.cancelQueries({ queryKey: ['goals'] });
       const previousGoals = queryClient.getQueryData(['goals']);
       queryClient.setQueryData(['goals'], (old) => old.filter(g => g.id !== deletedGoalId));
-      return { previousGoals, deletedGoalId };
+      return { previousGoals };
     },
     onError: (err, goalId, context) => {
-      if (context?.previousGoals) {
-        queryClient.setQueryData(['goals'], context.previousGoals);
-      }
+      if (context?.previousGoals) queryClient.setQueryData(['goals'], context.previousGoals);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goals'] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['goals'] }),
   });
 
   const { data: actionGoals = [] } = useQuery({
@@ -134,7 +127,6 @@ export default function Home() {
     : [];
 
   const today = new Date();
-  const todayLocalStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const dayOfWeek = today.getDay();
   const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   const weekStartDate = new Date(today);
@@ -168,41 +160,30 @@ export default function Home() {
       duration_minutes: minutes,
       completed: true,
       photo_url: photoUrl || null,
+      gps_enabled: !!(gpsData?.gpsEnabled && gpsData?.distance),
     };
 
-    // GPS 데이터 추가
     if (gpsData?.gpsEnabled && gpsData?.distance) {
-      logData.gps_enabled = true;
       logData.distance_km = gpsData.distance;
       logData.route_coordinates = JSON.stringify(gpsData.coords || []);
-    } else {
-      logData.gps_enabled = false;
     }
 
     createLogMutation.mutate(logData);
 
-    // 경험치 추가 및 레벨 업데이트
     const catKey = actionGoal.category;
     const xpKey = `${catKey}_xp`;
     const levelKey = `${catKey}_level`;
     const currentXp = user?.[xpKey] || 0;
-    const currentLevel = user?.[levelKey] || 1;
-    
     const newXp = currentXp + 1;
     const newLevel = Math.floor(newXp / 30) + 1;
-    
-    await base44.auth.updateMe({
-      [xpKey]: newXp,
-      [levelKey]: newLevel,
-    }).catch(() => {});
 
+    await base44.auth.updateMe({ [xpKey]: newXp, [levelKey]: newLevel }).catch(() => {});
     queryClient.invalidateQueries({ queryKey: ['me'] });
-
     setPendingLog(null);
 
     if (streakTrigger) {
       setCelebration(streakTrigger);
-      const { title, description } = getBadgeForGoal({ title: actionGoal.title });
+      const { title } = getBadgeForGoal({ title: actionGoal.title });
       createBadgeMutation.mutate({
         title: `${title} (${streak}일 연속)`,
         description: `${actionGoal.title} ${streak}일 연속 성공`,
@@ -236,26 +217,21 @@ export default function Home() {
     navigate('/CreateGoal?category=' + cat);
   };
 
-
-
   return (
-    <div className="bg-background min-h-screen" onTouchStart={handlePullStart} style={{ minHeight: '100dvh' }}>
+    <div className="bg-background" style={{ minHeight: '100dvh' }} onTouchStart={handlePullStart}>
       {/* Pull-to-Refresh indicator */}
       <motion.div
-        className="fixed top-0 left-0 right-0 flex justify-center pt-4 z-50"
+        className="fixed top-0 left-0 right-0 flex justify-center pt-4 z-50 pointer-events-none"
         animate={{ opacity: pullProgress > 0 ? 1 : 0 }}
       >
-        <motion.div
-          animate={{ rotate: pullProgress * 360 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        >
+        <motion.div animate={{ rotate: pullProgress * 360 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
           <RefreshCw className="w-6 h-6 text-amber-600" />
         </motion.div>
       </motion.div>
 
-      <CharacterBanner 
-        nickname={user?.nickname} 
-        message={getGreeting()} 
+      <CharacterBanner
+        nickname={user?.nickname}
+        message={getGreeting()}
         category={activeCategory}
         userLevels={{
           exercise_level: user?.exercise_level || 1,
