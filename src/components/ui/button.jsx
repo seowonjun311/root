@@ -3,6 +3,7 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils"
+import { useHapticFeedback } from "@/hooks/useHapticFeedback"
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.98] active:opacity-80",
@@ -34,13 +35,24 @@ const buttonVariants = cva(
   }
 )
 
-const Button = React.forwardRef(({ className, variant, size, asChild = false, ...props }, ref) => {
+const Button = React.forwardRef(({ className, variant, size, asChild = false, onClick, ...props }, ref) => {
   const Comp = asChild ? Slot : "button"
+  const { triggerHaptic } = useHapticFeedback()
+
+  const handleClick = React.useCallback((e) => {
+    // Trigger haptic feedback on primary action buttons
+    if (variant === 'default' || variant === 'destructive') {
+      triggerHaptic('impact', 'medium')
+    }
+    onClick?.(e)
+  }, [onClick, variant, triggerHaptic])
+
   return (
     (<Comp
       className={cn(buttonVariants({ variant, size, className }))}
       style={{ touchAction: 'manipulation', ...props.style }}
       ref={ref}
+      onClick={handleClick}
       {...props} />)
   );
 })
