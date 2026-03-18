@@ -219,7 +219,7 @@ export default function Onboarding() {
         </p>
         <div className="space-y-3 mt-8 w-full">
           <button
-            onClick={() => base44.auth.redirectToLogin('/Onboarding')}
+            onClick={() => base44.auth.redirectToLogin('/Onboarding?from=login')}
             className="w-full py-3 rounded-xl font-semibold text-sm bg-amber-700 text-amber-50 hover:bg-amber-800 transition-colors flex items-center justify-center gap-2"
           >
             로그인하기
