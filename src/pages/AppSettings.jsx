@@ -17,6 +17,10 @@ export default function AppSettings() {
   const [showLogout, setShowLogout] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
 
+  const { pullProgress, onTouchStart: handlePullStart } = usePullToRefreshTabbed(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['me'] });
+  });
+
   const { data: user } = useQuery({
     queryKey: ['me'],
     queryFn: () => base44.auth.me(),
