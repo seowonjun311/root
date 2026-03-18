@@ -55,7 +55,7 @@ export default function Home() {
 
   const { data: user } = useQuery({
     queryKey: ['me'],
-    queryFn: () => base44.auth.me(),
+    queryFn: () => base44.auth.me().catch(() => null),
   });
 
   useEffect(() => {
