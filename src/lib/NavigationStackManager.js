@@ -27,18 +27,25 @@ class NavigationStackManager {
     }
 
     this.popstateHandler = (event) => {
-      // Prevent recursive handling
-      if (this.isPopstateHandling) return;
+      // AGGRESSIVE: Prevent recursive handling AND browser back interference
+      if (this.isPopstateHandling) {
+        console.debug('[NavigationStackManager] Popstate blocked - recursive handling prevented');
+        return;
+      }
 
       try {
         this.isPopstateHandling = true;
 
         const browserState = event.state;
         if (browserState?.stackIndex !== undefined) {
-          console.log('[NavigationStackManager] Popstate: syncing stack from browser state');
+          console.log('[NavigationStackManager] Popstate: syncing stack from browser state, index:', browserState.stackIndex);
           this.currentIndex = browserState.stackIndex;
           this.stack = browserState.stack || this.stack;
           this.notifyListeners();
+        } else {
+          console.warn('[NavigationStackManager] Popstate fired but no valid browser state, preventing desync');
+          // Force resync to prevent browser from controlling navigation
+          this.syncBrowserHistory();
         }
       } catch (error) {
         console.warn('[NavigationStackManager] Popstate handler error:', error);
@@ -47,8 +54,29 @@ class NavigationStackManager {
       }
     };
 
-    window.addEventListener('popstate', this.popstateHandler);
-    console.log('[NavigationStackManager] Popstate listener initialized');
+    // Use capture phase for earliest possible interception
+    window.addEventListener('popstate', this.popstateHandler, true);
+    
+    // Additional safety: prevent HTML5 history API misuse
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+    
+    window.history.pushState = (state, title, url) => {
+      console.debug('[NavigationStackManager] External pushState blocked, using internal sync instead');
+      // Don't allow external history manipulation - use our sync
+      return this.syncBrowserHistory();
+    };
+    
+    window.history.replaceState = (state, title, url) => {
+      console.debug('[NavigationStackManager] External replaceState intercepted, validating against internal state');
+      // Allow but validate
+      if (state?.stackIndex !== this.currentIndex) {
+        console.warn('[NavigationStackManager] ReplaceState stack mismatch detected');
+      }
+      return originalReplaceState.call(window.history, state, title, url);
+    };
+
+    console.log('[NavigationStackManager] Popstate listener initialized with aggressive interception');
   }
 
   /**
@@ -283,14 +311,20 @@ class NavigationStackManager {
   }
 
   /**
-   * Robust Android back-button handler with event propagation control
+   * Robust Android back-button handler with AGGRESSIVE event propagation control
+   * Completely intercepts native browser back-action in favor of internal stack manager
    * Validates stack sync with browser history before navigation
-   * Ensures consistent behavior across all Android API versions
+   * Prevents all default back behaviors to ensure consistent Android WebView behavior
    */
   handleAndroidBackButton(event) {
-    // Prevent default and stop propagation immediately
-    event.preventDefault();
-    event.stopImmediatePropagation();
+    // AGGRESSIVE: Prevent ALL default back behaviors
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
+
+    console.log('[NavigationStackManager] Android back button intercepted, current index:', this.currentIndex, 'stack length:', this.stack.length);
 
     // Validate stack consistency before handling back press
     const browserState = window.history.state;
@@ -299,9 +333,13 @@ class NavigationStackManager {
       this.currentIndex = browserState.stackIndex;
     }
 
-    // Only navigate back if possible, otherwise exit app
+    // Only navigate back if possible, otherwise stay in app (don't exit)
     if (this.canGoBack()) {
       this.pop();
+      console.log('[NavigationStackManager] Back navigation executed, new index:', this.currentIndex);
+    } else {
+      console.log('[NavigationStackManager] At root of stack, preventing app exit');
+      // Don't exit app - stay at root
     }
   }
 
