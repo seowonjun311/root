@@ -6,7 +6,7 @@ import { BrowserRouter as Router, Route, Routes, useLocation, Navigate, useNavig
 import { AnimatePresence } from 'framer-motion'
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { NavigationProvider } from '@/lib/NavigationContext';
-import { AnimationStateProvider } from '@/lib/AnimationStateContext';
+import { AnimationStateProvider, useAnimationState } from '@/lib/AnimationStateContext';
 import { navigationStackManager } from '@/lib/NavigationStackManager';
 import { guestDataPersistence } from '@/lib/GuestDataPersistence';
 import AppLayout from './components/layout/AppLayout.jsx';
