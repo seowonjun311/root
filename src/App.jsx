@@ -14,9 +14,9 @@ import NotificationSettings from './pages/NotificationSettings';
 import PageTransition from './components/layout/PageTransition';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings } = useAuth();
+  const location = useLocation();
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -25,51 +25,45 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
-  // [로그인 시스템 일시 정지] - 필요시 아래 주석 제거
-  /*
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
-    }
-  }
-  */
-
-  // Render the main app with page transitions
   return (
-    <AnimatePresence mode="wait">
-      <Routes>
-        <Route path="/" element={<Navigate to="/Onboarding" replace />} />
-        <Route path="/Onboarding" element={
-          <motion.div key="onboarding" initial={{ x: '100%', opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: '-100%', opacity: 0 }} transition={{ type: 'tween', duration: 0.28, ease: 'easeInOut' }} style={{ willChange: 'transform' }}>
-            <Onboarding />
-          </motion.div>
-        } />
-        <Route path="/CreateGoal" element={
-          <motion.div key="creategoal" initial={{ x: '100%', opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: '-100%', opacity: 0 }} transition={{ type: 'tween', duration: 0.28, ease: 'easeInOut' }} style={{ willChange: 'transform' }}>
-            <Header />
-            <CreateGoal />
-          </motion.div>
-        } />
-        <Route element={<AppLayout />}>
-          <Route path="/Home" element={<div />} />
-          <Route path="/Records" element={<div />} />
-          <Route path="/Badges" element={<div />} />
-          <Route path="/AppSettings" element={<div />} />
-        </Route>
-        <Route path="/NotificationSettings" element={
-          <motion.div key="notificationsettings" initial={{ x: '100%', opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: '-100%', opacity: 0 }} transition={{ type: 'tween', duration: 0.28, ease: 'easeInOut' }} style={{ willChange: 'transform' }}>
-            <Header />
-            <NotificationSettings />
-          </motion.div>
-        } />
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
-    </AnimatePresence>
+    // position:relative container so PageTransition's absolute positioning works
+    <div style={{ position: 'relative', height: '100dvh', overflow: 'hidden' }}>
+      <AnimatePresence mode="wait" initial={false}>
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<Navigate to="/Onboarding" replace />} />
+
+          <Route path="/Onboarding" element={
+            <PageTransition>
+              <Onboarding />
+            </PageTransition>
+          } />
+
+          <Route path="/CreateGoal" element={
+            <PageTransition>
+              <Header />
+              <CreateGoal />
+            </PageTransition>
+          } />
+
+          {/* Tab routes: AppLayout handles its own keep-alive rendering, no slide needed */}
+          <Route element={<AppLayout />}>
+            <Route path="/Home" element={<div />} />
+            <Route path="/Records" element={<div />} />
+            <Route path="/Badges" element={<div />} />
+            <Route path="/AppSettings" element={<div />} />
+          </Route>
+
+          <Route path="/NotificationSettings" element={
+            <PageTransition>
+              <Header />
+              <NotificationSettings />
+            </PageTransition>
+          } />
+
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </AnimatePresence>
+    </div>
   );
 };
 
