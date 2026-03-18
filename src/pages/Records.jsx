@@ -26,6 +26,7 @@ export default function Records() {
       queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
       queryClient.invalidateQueries({ queryKey: ['allGoals'] }),
       queryClient.invalidateQueries({ queryKey: ['badges'] }),
+      queryClient.invalidateQueries({ queryKey: ['actionGoalsAll'] }),
     ]);
   });
 
