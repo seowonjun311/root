@@ -41,7 +41,10 @@ const AppContent = () => {
   const { isLoadingAuth, isLoadingPublicSettings } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAnimating } = useAnimationState();
   const [isNavReady, setIsNavReady] = React.useState(false);
+
+  // useAnimationState import at the top
 
   React.useEffect(() => {
     const validateNavigation = async () => {
@@ -198,15 +201,11 @@ function App() {
   // Register Android back button handler
   useEffect(() => {
     const handleAndroidBackButton = (event) => {
-      // Import here to avoid circular dependency
-      const animationStateModule = require('@/lib/AnimationStateContext');
-      const state = animationStateModule;
-      
       // Prevent back navigation during page transitions
-      if (state && state.isAnimating) {
+      if (isAnimating) {
         event.preventDefault();
         event.stopImmediatePropagation();
-        console.log('[App] Back button blocked during animation');
+        console.debug('[App] Back button blocked during animation');
         return;
       }
 
@@ -219,7 +218,7 @@ function App() {
     return () => {
       document.removeEventListener('backbutton', handleAndroidBackButton, true);
     };
-  }, []);
+  }, [isAnimating]);
 
   return (
     <QueryClientProvider client={queryClientInstance}>
