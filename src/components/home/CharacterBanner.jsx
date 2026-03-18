@@ -288,7 +288,7 @@ export default function CharacterBanner({ nickname, message, category = 'exercis
   return (
     <div className="relative overflow-hidden rounded-b-3xl shadow-md" style={{ background: colors.skyTop }}>
       {/* SVG 씬 */}
-      <svg viewBox="0 0 400 120" className="w-full" style={{ display: 'block', height: '180px' }}>
+      <svg viewBox="0 0 400 120" className="w-full" style={{ display: 'block', height: '180px' }} role="presentation" aria-hidden="true">
         <PathScene colors={colors} />
 
         {/* 마왕성 (원경) */}
