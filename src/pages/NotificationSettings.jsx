@@ -333,8 +333,9 @@ export default function NotificationSettings() {
             <Button
               onClick={() => openDialog(true)}
               className="h-12 px-8 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold text-base gap-2"
+              aria-label="새 알림 추가 설정"
             >
-              <Bell className="w-5 h-5" />
+              <Bell className="w-5 h-5" aria-hidden="true" />
               알림 추가
             </Button>
           </motion.div>
@@ -357,16 +358,34 @@ export default function NotificationSettings() {
                     <p className="font-semibold text-sm">현재 알림 설정</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <button onClick={() => openDialog(false)} className="text-xs font-semibold text-amber-700 hover:underline">수정</button>
-                    <Switch checked={settings.enabled} onCheckedChange={(v) => { if (!v) handleDisable(); }} />
+                    <button 
+                      onClick={() => openDialog(false)} 
+                      className="text-xs font-semibold text-amber-700 hover:underline"
+                      aria-label="알림 설정 수정"
+                    >
+                      수정
+                    </button>
+                    <Switch 
+                      checked={settings.enabled} 
+                      onCheckedChange={(v) => { if (!v) handleDisable(); }}
+                      aria-label="알림 활성화/비활성화 토글"
+                    />
                   </div>
                 </div>
                 <p className="text-2xl font-bold text-amber-900 mb-2">{settings.time}</p>
-                <div className="flex gap-1.5 mb-3">
+                <div className="flex gap-1.5 mb-3" role="group" aria-label="활성화된 요일">
                   {DAY_KEYS.map((key, i) => (
-                    <span key={key} className={`flex-1 text-center py-1.5 rounded-lg text-xs font-bold ${
-                      settings.days[key] ? 'bg-amber-700 text-amber-50' : 'bg-secondary/70 text-muted-foreground'
-                    }`}>{DAYS[i]}</span>
+                    <span 
+                      key={key} 
+                      className={`flex-1 text-center py-1.5 rounded-lg text-xs font-bold ${
+                        settings.days[key] ? 'bg-amber-700 text-amber-50' : 'bg-secondary/70 text-muted-foreground'
+                      }`}
+                      role="img"
+                      aria-label={`${DAYS[i]}${settings.days[key] ? ' 활성화' : ' 비활성화'}`}
+                      aria-hidden={false}
+                    >
+                      {DAYS[i]}
+                    </span>
                   ))}
                 </div>
                 {settings.customMessage && (
@@ -393,6 +412,7 @@ export default function NotificationSettings() {
                 onClick={handleTestNotification}
                 disabled={testLoading}
                 className="w-full h-11 rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50 font-semibold"
+                aria-label={testLoading ? '테스트 알림 전송 중' : '테스트 알림 보내기'}
               >
                 {testLoading ? '전송 중...' : '🔔 테스트 알림 보내기'}
               </Button>
