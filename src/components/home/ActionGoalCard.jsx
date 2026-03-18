@@ -268,23 +268,55 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     setShowDelete(true);
   };
 
-  const handleSave = async () => {
-    setSaving(true);
+  const updateMutation = useMutation({
+    mutationFn: (updateData) => base44.entities.ActionGoal.update(actionGoal.id, updateData),
+    onMutate: async (updateData) => {
+      await queryClient.cancelQueries({ queryKey: ['actionGoals'] });
+      const previous = queryClient.getQueryData(['actionGoals']);
+      queryClient.setQueryData(['actionGoals'], (old = []) =>
+        old.map(ag => ag.id === actionGoal.id ? { ...ag, ...updateData } : ag)
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['actionGoals'], context.previous);
+      toast.error('수정에 실패했습니다.');
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
+    onSuccess: () => {
+      toast.success('행동 목표가 수정되었습니다.');
+      setShowEdit(false);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => base44.entities.ActionGoal.delete(actionGoal.id),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['actionGoals'] });
+      const previous = queryClient.getQueryData(['actionGoals']);
+      queryClient.setQueryData(['actionGoals'], (old = []) =>
+        old.filter(ag => ag.id !== actionGoal.id)
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['actionGoals'], context.previous);
+      toast.error('삭제에 실패했습니다.');
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
+    onSuccess: () => {
+      toast.success('행동 목표가 삭제되었습니다.');
+      setShowDelete(false);
+    },
+  });
+
+  const handleSave = () => {
     const updateData = { title: editTitle, weekly_frequency: editFrequency };
     if (actionGoal.action_type === 'timer') updateData.duration_minutes = editMinutes;
-    await base44.entities.ActionGoal.update(actionGoal.id, updateData);
-    queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
-    toast.success('행동 목표가 수정되었습니다.');
-    setShowEdit(false);
-    setSaving(false);
+    updateMutation.mutate(updateData);
   };
 
-  const handleDelete = async () => {
-    await base44.entities.ActionGoal.delete(actionGoal.id);
-    queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
-    toast.success('행동 목표가 삭제되었습니다.');
-    setShowDelete(false);
-  };
+  const handleDelete = () => deleteMutation.mutate();
 
   const typeEmoji = actionGoal.action_type === 'timer' ? '⏱️' : actionGoal.action_type === 'abstain' ? '🚫' : '✅';
   const typeLabel = actionGoal.action_type === 'timer'
