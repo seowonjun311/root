@@ -7,6 +7,7 @@ import { AnimatePresence } from 'framer-motion'
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { NavigationProvider } from '@/lib/NavigationContext';
 import { AnimationStateProvider, useAnimationState } from '@/lib/AnimationStateContext';
+import { TabNavigationProvider } from '@/lib/TabNavigationContext';
 import { navigationStackManager } from '@/lib/NavigationStackManager';
 import { guestDataPersistence } from '@/lib/GuestDataPersistence';
 import AppLayout from './components/layout/AppLayout.jsx';
@@ -205,8 +206,10 @@ function App() {
         <Router>
           <NavigationProvider>
             <AnimationStateProvider>
-              <AppRoutes />
-              <Toaster />
+              <TabNavigationProvider>
+                <AppRoutes />
+                <Toaster />
+              </TabNavigationProvider>
             </AnimationStateProvider>
           </NavigationProvider>
         </Router>
