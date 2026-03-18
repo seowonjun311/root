@@ -112,15 +112,29 @@ function App() {
     return () => mq.removeEventListener('change', e => apply(e.matches));
   }, []);
 
-  // Hide splash screen on app initialization complete
+  // Hide splash screen only after react-query hydration completes
   useEffect(() => {
-    const splashScreen = document.getElementById('splash-screen');
-    if (splashScreen) {
-      // Small delay to ensure smooth transition
-      setTimeout(() => {
-        splashScreen.classList.add('hidden');
-      }, 100);
-    }
+    // Wait for QueryClient to finish initializing
+    const hideSplash = async () => {
+      try {
+        // Give react-query time to hydrate cache and initialize queries
+        await new Promise(resolve => {
+          // Wait for next macrotask to ensure QueryClient is ready
+          setTimeout(resolve, 150);
+        });
+
+        const splashScreen = document.getElementById('splash-screen');
+        if (splashScreen) {
+          splashScreen.classList.add('hidden');
+        }
+      } catch (error) {
+        console.warn('[App] Splash screen removal error:', error);
+        const splashScreen = document.getElementById('splash-screen');
+        if (splashScreen) splashScreen.classList.add('hidden');
+      }
+    };
+
+    hideSplash();
   }, []);
 
   // Initialize background cleanup for guest data persistence
