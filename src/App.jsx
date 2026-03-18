@@ -2,23 +2,16 @@ import React, { useEffect } from 'react'
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion'
-import { motion } from 'framer-motion'
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import { Navigate } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout.jsx';
 import Header from './components/layout/Header';
-import Home from './pages/Home.jsx';
 import Onboarding from './pages/Onboarding';
 import CreateGoal from './pages/CreateGoal';
-import Records from './pages/Records.jsx';
-
-import Badges from './pages/Badges';
-import AppSettings from './pages/AppSettings';
 import NotificationSettings from './pages/NotificationSettings';
+import PageTransition from './components/layout/PageTransition';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
