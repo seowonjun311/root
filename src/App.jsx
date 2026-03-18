@@ -48,6 +48,16 @@ const AppContent = () => {
           console.warn('[App] Navigation stack validation failed, forcing reset');
           navigationStackManager.resetStack();
         }
+
+        // On Android WebView, validate sync status for diagnostics
+        if (window.device || window.cordova) {
+          const syncReport = navigationStackManager.validateAndroidWebViewSync();
+          if (!syncReport.isInSync) {
+            console.warn('[App] Android WebView desync detected, revalidating stack');
+            navigationStackManager.validateStack();
+          }
+        }
+
         setIsNavReady(true);
       } catch (error) {
         console.error('[App] Navigation validation error:', error);
