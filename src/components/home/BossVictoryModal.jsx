@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import confetti from 'canvas-confetti';
 import { base44 } from '@/api/base44Client';
 import { getBadgeForGoal } from '../badgeUtils';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 // phase: 'battle' → 'confirm' → 'result_input' → 'victory' | 'consolation'
 
 export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
   const [phase, setPhase] = useState('battle');
   const [resultNote, setResultNote] = useState('');
-  const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -36,58 +36,62 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
     queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
   };
 
-  const handleNotAchieved = async () => {
-    setSaving(true);
-    if (!isTest) {
-      await base44.entities.Goal.update(goal.id, {
-        status: 'failed',
-        achievement_confirmed: true,
-        achievement_success: false,
-      });
-      await completeActionGoals();
-      queryClient.invalidateQueries({ queryKey: ['goals'] });
-    }
-    setSaving(false);
-    setPhase('consolation');
-  };
+  const failedMutation = useMutation({
+    mutationFn: async () => {
+      if (!isTest) {
+        await base44.entities.Goal.update(goal.id, {
+          status: 'failed',
+          achievement_confirmed: true,
+          achievement_success: false,
+        });
+        await completeActionGoals();
+        queryClient.invalidateQueries({ queryKey: ['goals'] });
+      }
+    },
+    onSuccess: () => setPhase('consolation'),
+    onError: () => toast.error('목표 상태 저장에 실패했습니다.'),
+  });
 
-  const handleResultSubmit = async () => {
-    setSaving(true);
-    if (!isTest) {
-      await base44.entities.Goal.update(goal.id, {
-        status: 'completed',
-        achievement_confirmed: true,
-        achievement_success: true,
-        result_note: resultNote || '',
-      });
-      // 칭호(Badge) 저장
-      const { title, description } = getBadgeForGoal(goal);
-      await base44.entities.Badge.create({
-        title,
-        description: resultNote ? `${description} - "${resultNote}"` : description,
-        category: goal.category,
-        badge_type: 'result',
-        earned_date: new Date().toISOString().split('T')[0],
-        goal_id: goal.id,
-      });
-      await completeActionGoals();
+  const completedMutation = useMutation({
+    mutationFn: async () => {
+      if (!isTest) {
+        await base44.entities.Goal.update(goal.id, {
+          status: 'completed',
+          achievement_confirmed: true,
+          achievement_success: true,
+          result_note: resultNote || '',
+        });
+        // 칭호(Badge) 저장
+        const { title, description } = getBadgeForGoal(goal);
+        await base44.entities.Badge.create({
+          title,
+          description: resultNote ? `${description} - "${resultNote}"` : description,
+          category: goal.category,
+          badge_type: 'result',
+          earned_date: new Date().toISOString().split('T')[0],
+          goal_id: goal.id,
+        });
+        await completeActionGoals();
 
-      // 카테고리별 XP 부여 및 레벨업
-      const user = await base44.auth.me();
-      const xpReward = Math.max(100, goal.duration_days * 10);
-      const category = goal.category;
-      const xpKey = `${category}_xp`;
-      const levelKey = `${category}_level`;
-      const nextXP = (user[xpKey] || 0) + xpReward;
-      const nextLevel = Math.floor(Math.sqrt(nextXP / 500)) + 1;
-      await base44.auth.updateMe({ [xpKey]: nextXP, [levelKey]: nextLevel });
+        // 카테고리별 XP 부여 및 레벨업
+        const user = await base44.auth.me();
+        const xpReward = Math.max(100, goal.duration_days * 10);
+        const category = goal.category;
+        const xpKey = `${category}_xp`;
+        const levelKey = `${category}_level`;
+        const nextXP = (user[xpKey] || 0) + xpReward;
+        const nextLevel = Math.floor(Math.sqrt(nextXP / 500)) + 1;
+        await base44.auth.updateMe({ [xpKey]: nextXP, [levelKey]: nextLevel });
 
-      queryClient.invalidateQueries({ queryKey: ['goals', 'me'] });
-    }
-    setSaving(false);
-    fireConfetti();
-    setPhase('victory');
-  };
+        queryClient.invalidateQueries({ queryKey: ['goals', 'me'] });
+      }
+    },
+    onSuccess: () => {
+      fireConfetti();
+      setPhase('victory');
+    },
+    onError: () => toast.error('목표 완료 처리에 실패했습니다.'),
+  });
 
   return (
     <AnimatePresence>
@@ -153,16 +157,18 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
 
               <div className="flex gap-3">
                 <Button
-                  onClick={handleNotAchieved}
-                  disabled={saving}
+                  onClick={() => failedMutation.mutate()}
+                  disabled={failedMutation.isPending}
                   variant="outline"
                   className="flex-1 rounded-xl h-12 border-amber-600/50 text-amber-300 hover:bg-amber-700/50 bg-transparent font-semibold"
+                  aria-label="목표 미달성 선택"
                 >
-                  😔 아쉽지만 아니요
+                  😔 {failedMutation.isPending ? '처리 중...' : '아쉽지만 아니요'}
                 </Button>
                 <Button
                   onClick={handleAchieved}
                   className="flex-1 rounded-xl h-12 bg-amber-500 hover:bg-amber-400 text-amber-900 font-bold"
+                  aria-label="목표 달성 선택"
                 >
                   🏆 달성했어요!
                 </Button>
@@ -191,20 +197,23 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
                   onChange={e => setResultNote(e.target.value)}
                   placeholder={goal?.category === 'study' ? '예: 토익 895점 받았어요!' : '예: 목표 체중 도달!'}
                   className="h-12 rounded-xl bg-amber-800/60 border-amber-600/50 text-amber-100 placeholder:text-amber-500/60"
+                  aria-label="달성 결과 메모"
                 />
               </div>
 
               <Button
-                onClick={handleResultSubmit}
-                disabled={saving}
-                className="w-full rounded-xl h-12 bg-amber-500 hover:bg-amber-400 text-amber-900 font-bold"
+                onClick={() => completedMutation.mutate()}
+                disabled={completedMutation.isPending}
+                className="w-full rounded-xl h-12 bg-amber-500 hover:bg-amber-400 text-amber-900 font-bold mb-3"
+                aria-label="목표 완료 처리"
               >
-                {saving ? '저장 중...' : '🎉 완료 처리하기'}
+                {completedMutation.isPending ? '저장 중...' : '🎉 완료 처리하기'}
               </Button>
               <button
-                onClick={handleResultSubmit}
-                disabled={saving}
-                className="mt-3 text-xs text-amber-500/70 underline"
+                onClick={() => completedMutation.mutate()}
+                disabled={completedMutation.isPending}
+                className="text-xs text-amber-500/70 underline hover:text-amber-400/70 transition-colors"
+                aria-label="메모 없이 완료"
               >
                 건너뛰기
               </button>
@@ -249,10 +258,10 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
               )}
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={onClose} className="flex-1 rounded-xl h-11 border-amber-600/50 text-amber-200 hover:bg-amber-700/50 bg-transparent">
+                <Button variant="outline" onClick={onClose} className="flex-1 rounded-xl h-11 border-amber-600/50 text-amber-200 hover:bg-amber-700/50 bg-transparent" aria-label="완료 후 닫기">
                   잠시 쉬기
                 </Button>
-                <Button onClick={onNewGoal} className="flex-1 rounded-xl h-11 bg-amber-500 hover:bg-amber-400 text-amber-900 font-bold">
+                <Button onClick={onNewGoal} className="flex-1 rounded-xl h-11 bg-amber-500 hover:bg-amber-400 text-amber-900 font-bold" aria-label="새로운 목표 만들기">
                   새 목표 만들기
                 </Button>
               </div>
@@ -282,10 +291,10 @@ export default function BossVictoryModal({ goal, badge, onClose, onNewGoal }) {
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={onClose} className="flex-1 rounded-xl h-11 border-slate-500/50 text-slate-300 hover:bg-slate-600/50 bg-transparent">
+                <Button variant="outline" onClick={onClose} className="flex-1 rounded-xl h-11 border-slate-500/50 text-slate-300 hover:bg-slate-600/50 bg-transparent" aria-label="미달성 후 닫기">
                   나중에 하기
                 </Button>
-                <Button onClick={onNewGoal} className="flex-1 rounded-xl h-11 bg-amber-500 hover:bg-amber-400 text-amber-900 font-bold">
+                <Button onClick={onNewGoal} className="flex-1 rounded-xl h-11 bg-amber-500 hover:bg-amber-400 text-amber-900 font-bold" aria-label="다시 도전하기">
                   다시 도전! 🔥
                 </Button>
               </div>
