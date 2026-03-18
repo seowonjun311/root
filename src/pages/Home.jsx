@@ -45,8 +45,15 @@ export default function Home() {
   const [shownVictoryIds, setShownVictoryIds] = useState(() => {
     try { return JSON.parse(localStorage.getItem('shownVictory') || '[]'); } catch { return []; }
   });
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [pullProgress, setPullProgress] = useState(0);
+  const handleRefresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['goals'] }),
+      queryClient.invalidateQueries({ queryKey: ['actionLogs'] }),
+      queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
+    ]);
+  };
+
+  const { pullProgress, isRefreshing, onTouchStart: handlePullStart } = usePullToRefresh(handleRefresh);
 
   const { data: user } = useQuery({
     queryKey: ['me'],
