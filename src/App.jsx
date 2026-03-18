@@ -15,6 +15,7 @@ import Home from './pages/Home.jsx';
 import Onboarding from './pages/Onboarding';
 import CreateGoal from './pages/CreateGoal';
 import Records from './pages/Records.jsx';
+
 import Badges from './pages/Badges';
 import AppSettings from './pages/AppSettings';
 import NotificationSettings from './pages/NotificationSettings';
