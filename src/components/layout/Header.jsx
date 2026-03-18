@@ -44,8 +44,9 @@ export default function Header() {
         <button
           onClick={() => navigate(-1)}
           className="p-1.5 rounded-lg hover:bg-secondary transition-colors -ml-1.5"
+          aria-label="이전 페이지로 돌아가기"
         >
-          <ChevronLeft className="w-5 h-5 text-amber-800" />
+          <ChevronLeft className="w-5 h-5 text-amber-800" aria-hidden="true" />
         </button>
       )}
       {title && <span className="text-sm font-bold text-amber-900">{title}</span>}
