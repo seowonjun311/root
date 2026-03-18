@@ -126,7 +126,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
   const [editTitle, setEditTitle] = useState(actionGoal.title || '');
   const [editFrequency, setEditFrequency] = useState(actionGoal.weekly_frequency || 5);
   const [editMinutes, setEditMinutes] = useState(actionGoal.duration_minutes || 30);
-  const [saving, setSaving] = useState(false);
+  // saving state is now derived from updateMutation.isPending
 
   const intervalRef = useRef(null);
   const cardRef = useRef(null);
