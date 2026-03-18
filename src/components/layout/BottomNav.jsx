@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { BookOpen, Trophy } from 'lucide-react';
 
@@ -14,6 +14,9 @@ const navItems = [
 
 export default function BottomNav() {
   const location = useLocation();
+  const [pressed, setPressed] = useState(null);
+
+  const isActive = (path) => location.pathname === path;
 
   const handleNavClick = (path) => {
     if (location.pathname === path) {
@@ -21,17 +24,14 @@ export default function BottomNav() {
     }
   };
 
-  const isActive = (path) => location.pathname === path;
-
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50"
-      data-fixed-bottom=""
       style={{
         background: 'linear-gradient(180deg, #7a5020 0%, #5a3510 60%, #3d2008 100%)',
         borderTop: '3px solid #a07030',
         boxShadow: '0 -3px 12px rgba(40,20,5,0.5)',
         paddingBottom: 'env(safe-area-inset-bottom)',
+        flexShrink: 0,
       }}
     >
       <div className="h-0.5 w-full" style={{
@@ -39,28 +39,33 @@ export default function BottomNav() {
         opacity: 0.6,
       }} />
       <div className="flex justify-around items-center max-w-lg mx-auto px-2" style={{ height: '64px' }}>
-        {navItems.map(({ path, label, icon: Icon }) => (
-          <Link
-            key={path}
-            to={path}
-            onClick={() => handleNavClick(path)}
-            className="flex flex-col items-center justify-center gap-0.5 rounded-xl transition-all duration-200 select-none"
-            style={{
-              minWidth: '64px',
-              minHeight: '48px',
-              ...(isActive(path) ? {
-                color: '#ffe8a0',
-                textShadow: '0 0 8px rgba(255,200,80,0.6)',
-                transform: 'scale(1.08)',
-              } : {
-                color: 'rgba(220,180,100,0.55)',
-              }),
-            }}
-          >
-            <Icon className="w-5 h-5" />
-            <span className="text-[10px] font-bold">{label}</span>
-          </Link>
-        ))}
+        {navItems.map(({ path, label, icon: Icon }) => {
+          const active = isActive(path);
+          const isPressed = pressed === path;
+          return (
+            <Link
+              key={path}
+              to={path}
+              onClick={() => handleNavClick(path)}
+              onTouchStart={() => setPressed(path)}
+              onTouchEnd={() => setPressed(null)}
+              onMouseDown={() => setPressed(path)}
+              onMouseUp={() => setPressed(null)}
+              className="flex flex-col items-center justify-center gap-0.5 rounded-xl select-none"
+              style={{
+                minWidth: '64px',
+                minHeight: '48px',
+                transition: 'transform 0.1s ease, color 0.15s ease',
+                transform: isPressed ? 'scale(0.88)' : active ? 'scale(1.08)' : 'scale(1)',
+                color: active ? '#ffe8a0' : isPressed ? '#d4b060' : 'rgba(220,180,100,0.55)',
+                textShadow: active ? '0 0 8px rgba(255,200,80,0.6)' : 'none',
+              }}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="text-[10px] font-bold">{label}</span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );
