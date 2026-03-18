@@ -12,10 +12,20 @@ import Header from './components/layout/Header.jsx';
 import PageTransition from './components/layout/PageTransition';
 import Onboarding from './pages/Onboarding';
 
-// Lazy-load non-critical pages only
-const PageNotFound  = lazy(() => import('./lib/PageNotFound'));
-const CreateGoal    = lazy(() => import('./pages/CreateGoal'));
-const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
+// Aggressive code-splitting for non-critical pages (improves Time-to-Interactive)
+const PageNotFound  = lazy(() => import(/* webpackChunkName: "404" */ './lib/PageNotFound'));
+const CreateGoal    = lazy(() => import(/* webpackChunkName: "create-goal" */ './pages/CreateGoal'));
+const NotificationSettings = lazy(() => import(/* webpackChunkName: "notifications" */ './pages/NotificationSettings'));
+
+// Lazy-load onboarding components for faster initial load
+const OnboardingWelcome = lazy(() => import(/* webpackChunkName: "onboarding-welcome" */ '@/components/onboarding/OnboardingWelcome'));
+const OnboardingGoal = lazy(() => import(/* webpackChunkName: "onboarding-goal" */ '@/components/onboarding/OnboardingGoal'));
+const OnboardingCategory = lazy(() => import(/* webpackChunkName: "onboarding-category" */ '@/components/onboarding/OnboardingCategory'));
+const OnboardingDDay = lazy(() => import(/* webpackChunkName: "onboarding-dday" */ '@/components/onboarding/OnboardingDDay'));
+const OnboardingDDayDate = lazy(() => import(/* webpackChunkName: "onboarding-dday-date" */ '@/components/onboarding/OnboardingDDayDate'));
+const OnboardingDuration = lazy(() => import(/* webpackChunkName: "onboarding-duration" */ '@/components/onboarding/OnboardingDuration'));
+const OnboardingAction = lazy(() => import(/* webpackChunkName: "onboarding-action" */ '@/components/onboarding/OnboardingAction'));
+const OnboardingNickname = lazy(() => import(/* webpackChunkName: "onboarding-nickname" */ '@/components/onboarding/OnboardingNickname'));
 
 // Minimal inline fallback — avoids layout shift
 const PageFallback = () => (
