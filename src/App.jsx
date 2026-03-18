@@ -2,7 +2,7 @@ import React, { useEffect, lazy, Suspense } from 'react'
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion'
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { NavigationProvider } from '@/lib/NavigationContext';
@@ -11,6 +11,7 @@ import { guestDataPersistence } from '@/lib/GuestDataPersistence';
 import AppLayout from './components/layout/AppLayout.jsx';
 import Header from './components/layout/Header.jsx';
 import PageTransition from './components/layout/PageTransition';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 const Onboarding = lazy(() => import(/* webpackChunkName: "onboarding" */ './pages/Onboarding'));
 
 // Aggressive code-splitting for non-critical pages (improves Time-to-Interactive)
@@ -38,6 +39,7 @@ const PageFallback = () => (
 const AppContent = () => {
   const { isLoadingAuth, isLoadingPublicSettings } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isNavReady, setIsNavReady] = React.useState(false);
 
   React.useEffect(() => {
@@ -74,41 +76,49 @@ const AppContent = () => {
 
   return (
     <div style={{ position: 'relative', height: '100dvh', overflow: 'hidden' }}>
-      <Suspense fallback={<PageFallback />}>
-        <AnimatePresence mode="wait" initial={false}>
-          <Routes location={location} key={location.pathname}>
-            <Route path="/" element={<Navigate to="/Onboarding" replace />} />
+      <ErrorBoundary onResetToHome={() => navigate('/Home', { replace: true })}>
+        <Suspense fallback={<PageFallback />}>
+          <AnimatePresence mode="wait" initial={false}>
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={<Navigate to="/Onboarding" replace />} />
 
-            <Route path="/Onboarding" element={
-              <Onboarding />
-            } />
+              <Route path="/Onboarding" element={
+                <Suspense fallback={<PageFallback />}>
+                  <Onboarding />
+                </Suspense>
+              } />
 
-            <Route path="/CreateGoal" element={
-              <PageTransition>
-                <Header />
-                <CreateGoal />
-              </PageTransition>
-            } />
+              <Route path="/CreateGoal" element={
+                <Suspense fallback={<PageFallback />}>
+                  <PageTransition>
+                    <Header />
+                    <CreateGoal />
+                  </PageTransition>
+                </Suspense>
+              } />
 
-            {/* Tab routes: AppLayout keeps all tabs mounted for instant switching */}
-            <Route element={<AppLayout />}>
-              <Route path="/Home"        element={<div />} />
-              <Route path="/Records"     element={<div />} />
-              <Route path="/Badges"      element={<div />} />
-              <Route path="/AppSettings" element={<div />} />
-            </Route>
+              {/* Tab routes: AppLayout keeps all tabs mounted for instant switching */}
+              <Route element={<AppLayout />}>
+                <Route path="/Home"        element={<div />} />
+                <Route path="/Records"     element={<div />} />
+                <Route path="/Badges"      element={<div />} />
+                <Route path="/AppSettings" element={<div />} />
+              </Route>
 
-            <Route path="/NotificationSettings" element={
-              <PageTransition>
-                <Header />
-                <NotificationSettings />
-              </PageTransition>
-            } />
+              <Route path="/NotificationSettings" element={
+                <Suspense fallback={<PageFallback />}>
+                  <PageTransition>
+                    <Header />
+                    <NotificationSettings />
+                  </PageTransition>
+                </Suspense>
+              } />
 
-            <Route path="*" element={<PageNotFound />} />
-          </Routes>
-        </AnimatePresence>
-      </Suspense>
+              <Route path="*" element={<PageNotFound />} />
+            </Routes>
+          </AnimatePresence>
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 };
