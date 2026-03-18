@@ -85,6 +85,7 @@ function BadgeCard({ badge, index, onClick }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
+      aria-label={`View badge: ${badge.title}`}
     >
       <div className={`w-14 h-14 mx-auto mb-2 rounded-full ${grade.bg} flex items-center justify-center text-2xl`}>
         {grade.emoji}
