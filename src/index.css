@@ -185,6 +185,36 @@
     color: #ffe8a0;
   }
 
+  /* Component-specific CSS variables */
+  :root {
+    --wood-primary: #c49a4a;
+    --wood-primary-dark: #a07830;
+    --wood-primary-darker: #8a6520;
+    --wood-border: #6b4e15;
+    --wood-text-light: #fff8e8;
+    --wood-text-dark: #4a2c08;
+    --wood-bg-light: #f5e6c8;
+    --wood-bg-medium: #eedcb0;
+    --wood-bg-bright: #f0e0bc;
+    --parchment-border: #a07840;
+    --error-bg: #c0392b;
+    --error-dark: #962d22;
+    --error-border: #7a1f16;
+    --error-text: #ffe8e8;
+  }
+
+  .dark {
+    --wood-primary: #d4aa5a;
+    --wood-primary-dark: #b08840;
+    --wood-primary-darker: #9a7530;
+    --wood-border: #7a5e35;
+    --wood-text-light: #fff8e8;
+    --wood-text-dark: #f0e0bc;
+    --error-bg: #dc2626;
+    --error-dark: #b91c1c;
+    --error-border: #991b1b;
+  }
+
   /* 스크롤 배너 */
   .scroll-banner {
     background: linear-gradient(90deg, #c49a4a 0%, #e8d090 15%, #f5e6c8 50%, #e8d090 85%, #c49a4a 100%);
