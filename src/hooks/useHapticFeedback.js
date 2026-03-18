@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { hapticFeedback } from '@/lib/HapticFeedback';
 
 /**
@@ -14,6 +14,8 @@ import { hapticFeedback } from '@/lib/HapticFeedback';
  */
 export function useHapticFeedback() {
   const triggerHaptic = useCallback((type, intensity) => {
+    if (!hapticFeedback) return;
+    
     if (intensity === 'light' || type === 'light') {
       hapticFeedback.light();
     } else if (intensity === 'medium' || type === 'medium') {
@@ -45,6 +47,6 @@ export function useHapticFeedback() {
     onWarning,
     onMedium,
     onHeavy,
-    isSupported: hapticFeedback.isSupported,
+    isSupported: hapticFeedback?.isSupported || false,
   };
 }
