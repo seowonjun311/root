@@ -94,27 +94,33 @@ export default function DeleteAccountDialog({ open, onOpenChange, userEmail, onC
 
               <div className="px-6 py-4 space-y-4">
                 <div className="bg-red-50/80 dark:bg-red-950/30 rounded-xl p-4 border border-red-200 dark:border-red-900">
-                  <p className="text-sm font-semibold text-red-900 dark:text-red-100 mb-2">
+                  <p className="text-sm font-bold text-red-900 dark:text-red-100 mb-3">
                     ⚠️ 이 작업은 되돌릴 수 없습니다
                   </p>
-                  <p className="text-sm text-red-800 dark:text-red-200 leading-relaxed">
-                    계정을 삭제하면 다음이 영구 삭제됩니다:
+                  <p className="text-sm text-red-800 dark:text-red-200 leading-relaxed font-semibold">
+                    계정을 삭제하면 다음 데이터가 즉시 서버에서 영구 삭제됩니다:
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   {[
-                    '모든 목표 기록 및 진행 상황',
-                    '활동 로그 및 통계 데이터',
-                    '배지 및 성취 기록',
-                    '사진 및 메모',
-                    '저장된 설정 및 환경설정',
+                    { icon: '📊', text: '모든 목표 및 진행 상황' },
+                    { icon: '📝', text: '활동 로그, 통계 데이터, 사진 및 메모' },
+                    { icon: '🏆', text: '배지 및 성취 기록' },
+                    { icon: '⚙️', text: '저장된 설정 및 환경설정' },
+                    { icon: '🔐', text: '인증 토큰 및 세션 정보' },
                   ].map((item, idx) => (
-                    <div key={idx} className="flex items-start gap-3 text-sm text-muted-foreground">
-                      <span className="text-red-600 font-bold mt-0.5">•</span>
-                      <span>{item}</span>
+                    <div key={idx} className="flex items-start gap-3 text-sm">
+                      <span className="text-lg mt-0.5">{item.icon}</span>
+                      <span className="text-red-700 dark:text-red-300 font-medium">{item.text}</span>
                     </div>
                   ))}
+                </div>
+
+                <div className="bg-amber-50/80 dark:bg-amber-950/20 rounded-xl p-3 border border-amber-200 dark:border-amber-900/50">
+                  <p className="text-xs text-amber-900 dark:text-amber-200">
+                    <span className="font-semibold">복구 불가능:</span> 삭제된 데이터는 복구할 수 없으며, 같은 이메일로 재가입해도 이전 데이터는 복원되지 않습니다.
+                  </p>
                 </div>
 
                 <p id="delete-dialog-desc" className="text-xs text-muted-foreground text-center pt-2">
