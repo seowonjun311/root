@@ -59,8 +59,22 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (user && !user.onboarding_complete) navigate('/Onboarding');
+    // 비로그인 게스트는 localStorage로 온보딩 체크
+    const isGuest = !user;
+    const guestOnboardingComplete = localStorage.getItem('guest_onboarding_complete') === 'true';
+    if (isGuest && !guestOnboardingComplete) {
+      navigate('/Onboarding');
+      return;
+    }
+    if (user && !user.onboarding_complete) {
+      navigate('/Onboarding');
+      return;
+    }
     if (user?.active_category) setActiveCategory(user.active_category);
+    else {
+      const guestCat = localStorage.getItem('guest_active_category');
+      if (guestCat) setActiveCategory(guestCat);
+    }
   }, [user, navigate]);
 
   const { data: goals = [] } = useQuery({
