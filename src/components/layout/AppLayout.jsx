@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import BottomNav from './BottomNav.jsx';
-import Header from './Header';
+import Header from './Header.jsx';
 import Home from '../../pages/Home.jsx';
 import Records from '../../pages/Records.jsx';
 import Badges from '../../pages/Badges';
