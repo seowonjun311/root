@@ -293,8 +293,8 @@ export default function Home() {
             <button
               onClick={() => navigate(`/CreateGoal?category=${activeCategory}&goalId=${activeGoal.id}`)}
               className="w-full rounded-lg font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
-              style={{ minHeight: '44px' }}
               style={{
+                minHeight: '44px',
                 background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 60%, #f0e0bc 100%)',
                 border: '2px dashed #a07840',
                 color: '#7a5020',
