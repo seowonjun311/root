@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 
@@ -9,34 +9,21 @@ export default function Header() {
   const location = useLocation();
   const isRootTab = ROOT_TABS.includes(location.pathname);
 
+  // Use React Router's own history stack (location.key changes on every push).
+  // 'default' is the key React Router assigns to the very first entry — meaning
+  // we arrived here directly (no history to go back to).
+  const canGoBack = location.key !== 'default';
+
   const goBack = () => {
-    // If there's real history to go back to, use it; otherwise fall back to /Home
-    if (window.history.state?.idx > 0) {
+    if (canGoBack) {
       navigate(-1);
     } else {
       navigate('/Home', { replace: true });
     }
   };
 
-  // Sync Android physical back button with the header back action
-  useEffect(() => {
-    if (isRootTab) return;
-
-    const handlePopState = () => {
-      // If history stack is exhausted, push /Home so the user isn't stranded
-      if (window.history.state?.idx === 0) {
-        navigate('/Home', { replace: true });
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [isRootTab, navigate]);
-
   return (
-    <header
-      className="flex items-center h-12 px-2 bg-background border-b border-border/30 sticky top-0 z-40"
-    >
+    <header className="flex items-center h-12 px-2 bg-background border-b border-border/30 sticky top-0 z-40">
       <div className="flex items-center flex-1 min-h-[44px]">
         {isRootTab ? (
           <h1 className="text-lg font-bold text-amber-900 px-2">🦊 Route</h1>
