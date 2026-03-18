@@ -6,6 +6,7 @@ import { BarChart3, Clock, Target, Flame, RefreshCw } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import GPSMapPreview from '@/components/home/GPSMapPreview';
+import ImageWithBlurUp from '@/components/ImageWithBlurUp';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { useLazyLoadImage } from '../hooks/useLazyLoadImage';
 import { motion } from 'framer-motion';
@@ -126,7 +127,16 @@ export default function Records() {
                       <p className="text-sm font-semibold text-amber-900">{ag?.title || '기록'}</p>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 font-semibold">{log.date}</span>
                     </div>
-                    {log.photo_url && <div className="mb-2 rounded-lg overflow-hidden"><img src={log.photo_url} alt="수련 사진" className="w-full h-24 object-cover rounded-lg" /></div>}
+                    {log.photo_url && (
+                      <div className="mb-2 rounded-lg overflow-hidden">
+                        <ImageWithBlurUp
+                          src={log.photo_url}
+                          alt="수련 사진"
+                          containerClassName="w-full"
+                          className="w-full h-24 object-cover rounded-lg"
+                        />
+                      </div>
+                    )}
                     {log.gps_enabled && log.route_coordinates && (
                       <div className="mb-2 rounded-lg overflow-hidden bg-blue-50 border border-blue-200 h-20">
                         <GPSMapPreview coords={JSON.parse(log.route_coordinates)} />
@@ -229,7 +239,14 @@ export default function Records() {
           <DrawerHeader><DrawerTitle className="text-center text-sm">{CAT_EMOJIS[selectedPhoto?.category]} {selectedPhoto?.date}</DrawerTitle></DrawerHeader>
           {selectedPhoto && (
             <div className="space-y-3 px-4 pb-6">
-              {selectedPhoto.photo_url && <img src={selectedPhoto.photo_url} alt={selectedPhoto.date} className="w-full rounded-xl object-cover max-h-80" loading="lazy" decoding="async" />}
+              {selectedPhoto.photo_url && (
+                <ImageWithBlurUp
+                  src={selectedPhoto.photo_url}
+                  alt={selectedPhoto.date}
+                  containerClassName="w-full rounded-xl overflow-hidden"
+                  className="w-full rounded-xl object-cover max-h-80"
+                />
+              )}
               {selectedPhoto.gps_enabled && selectedPhoto.route_coordinates && (
                 <div className="rounded-xl overflow-hidden bg-blue-50 border-2 border-blue-200 h-32">
                   <GPSMapPreview coords={JSON.parse(selectedPhoto.route_coordinates)} />
@@ -377,15 +394,14 @@ function TimelineLogItem({ log, ag, onSelectPhoto }) {
         <button 
           ref={ref}
           onClick={() => onSelectPhoto(log)} 
-          className="shrink-0 active:opacity-70 bg-secondary rounded-lg w-12 h-12 flex items-center justify-center"
+          className="shrink-0 active:opacity-70 rounded-lg w-12 h-12 flex items-center justify-center overflow-hidden"
         >
           {isVisible && (
-            <img 
-              src={log.photo_url} 
-              alt="수련 사진" 
-              className="w-12 h-12 rounded-lg object-cover" 
-              loading="lazy"
-              decoding="async"
+            <ImageWithBlurUp
+              src={log.photo_url}
+              alt="수련 사진"
+              containerClassName="w-12 h-12"
+              className="w-12 h-12 rounded-lg object-cover"
               onLoad={onLoad}
             />
           )}
@@ -404,17 +420,16 @@ function AlbumPhotoItem({ log, onSelectPhoto }) {
     <button 
       ref={ref}
       onClick={() => onSelectPhoto(log)}
-      className="aspect-square rounded-xl overflow-hidden relative group active:opacity-80 transition-opacity bg-secondary flex items-center justify-center"
+      className="aspect-square rounded-xl overflow-hidden relative group active:opacity-80 transition-opacity flex items-center justify-center"
       aria-label={`${log.date} 사진 보기`}
     >
       {isVisible && (
         <>
-          <img 
-            src={log.photo_url} 
-            alt={log.date} 
-            className="w-full h-full object-cover" 
-            loading="lazy"
-            decoding="async"
+          <ImageWithBlurUp
+            src={log.photo_url}
+            alt={log.date}
+            containerClassName="w-full h-full"
+            className="w-full h-full object-cover"
             onLoad={onLoad}
           />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
@@ -485,7 +500,12 @@ function AlbumTab({ logs, goals, catFilter, onCatFilterChange, badges }) {
               </DialogHeader>
               {selectedPhoto && (
                 <div className="space-y-3">
-                  <img src={selectedPhoto.photo_url} alt={selectedPhoto.date} className="w-full rounded-xl object-cover max-h-72" loading="lazy" decoding="async" />
+                  <ImageWithBlurUp
+                    src={selectedPhoto.photo_url}
+                    alt={selectedPhoto.date}
+                    containerClassName="w-full rounded-xl overflow-hidden"
+                    className="w-full rounded-xl object-cover max-h-72"
+                  />
                   <div className="flex items-center gap-2">
                     <span className="text-xs px-2 py-1 rounded-lg bg-amber-100 text-amber-700 font-semibold">{CAT_LABELS[selectedPhoto.category] || '기타'}</span>
                     {selectedPhoto.duration_minutes > 0 && <span className="text-xs text-muted-foreground">{selectedPhoto.duration_minutes}분 수련</span>}
