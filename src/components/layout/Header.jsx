@@ -20,7 +20,11 @@ export default function Header() {
     return (
       <div
         className="flex items-center justify-center px-4 shrink-0"
-        style={{ height: '52px', borderBottom: '1px solid hsl(var(--border) / 0.4)' }}
+        style={{
+          height: '52px',
+          paddingTop: 'env(safe-area-inset-top)',
+          borderBottom: '1px solid hsl(var(--border) / 0.4)',
+        }}
       >
         <span className="text-base font-bold text-amber-900">루트</span>
       </div>
@@ -30,7 +34,11 @@ export default function Header() {
   return (
     <div
       className="flex items-center px-4 gap-3 shrink-0"
-      style={{ height: '52px', borderBottom: '1px solid hsl(var(--border) / 0.4)' }}
+      style={{
+        height: '52px',
+        paddingTop: 'env(safe-area-inset-top)',
+        borderBottom: '1px solid hsl(var(--border) / 0.4)',
+      }}
     >
       {canGoBack && (
         <button
