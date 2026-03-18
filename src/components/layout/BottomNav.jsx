@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { BookOpen, Trophy } from 'lucide-react';
 
 const RouteIcon = () => <span className="text-lg leading-none">🛤️</span>;
@@ -14,11 +15,13 @@ const navItems = [
 
 export default function BottomNav() {
   const location = useLocation();
+  const { triggerHaptic } = useHapticFeedback();
   const [pressed, setPressed] = useState(null);
 
   const isActive = (path) => location.pathname === path;
 
   const handleNavClick = (path) => {
+    triggerHaptic('impact', 'light');
     if (location.pathname === path) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
