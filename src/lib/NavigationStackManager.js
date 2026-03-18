@@ -10,8 +10,56 @@ class NavigationStackManager {
     this.currentIndex = -1;
     this.isNavigating = false;
     this.isSyncing = false; // Lock to prevent race conditions during sync
+    this.isPopstateHandling = false; // Prevent recursive popstate handling
     this.listeners = [];
     this.backButtonListeners = [];
+    this.popstateHandler = null;
+  }
+
+  /**
+   * Initialize popstate event listener for browser back button synchronization
+   * Runs once on app startup to ensure history navigation is properly tracked
+   */
+  initializePopstateListener() {
+    if (this.popstateHandler) {
+      console.warn('[NavigationStackManager] Popstate listener already initialized');
+      return;
+    }
+
+    this.popstateHandler = (event) => {
+      // Prevent recursive handling
+      if (this.isPopstateHandling) return;
+
+      try {
+        this.isPopstateHandling = true;
+
+        const browserState = event.state;
+        if (!browserState?.stackIndex !== undefined) {
+          console.log('[NavigationStackManager] Popstate: syncing stack from browser state');
+          this.currentIndex = browserState.stackIndex;
+          this.stack = browserState.stack || this.stack;
+          this.notifyListeners();
+        }
+      } catch (error) {
+        console.warn('[NavigationStackManager] Popstate handler error:', error);
+      } finally {
+        this.isPopstateHandling = false;
+      }
+    };
+
+    window.addEventListener('popstate', this.popstateHandler);
+    console.log('[NavigationStackManager] Popstate listener initialized');
+  }
+
+  /**
+   * Clean up popstate listener
+   */
+  destroyPopstateListener() {
+    if (this.popstateHandler) {
+      window.removeEventListener('popstate', this.popstateHandler);
+      this.popstateHandler = null;
+      console.log('[NavigationStackManager] Popstate listener destroyed');
+    }
   }
 
   /**
@@ -226,12 +274,20 @@ class NavigationStackManager {
 
   /**
    * Robust Android back-button handler with event propagation control
+   * Validates stack sync with browser history before navigation
    * Ensures consistent behavior across all Android API versions
    */
   handleAndroidBackButton(event) {
     // Prevent default and stop propagation immediately
     event.preventDefault();
     event.stopImmediatePropagation();
+
+    // Validate stack consistency before handling back press
+    const browserState = window.history.state;
+    if (browserState?.stackIndex !== undefined && browserState.stackIndex !== this.currentIndex) {
+      console.warn('[NavigationStackManager] Android back: detected stack desync, synchronizing...');
+      this.currentIndex = browserState.stackIndex;
+    }
 
     // Only navigate back if possible, otherwise exit app
     if (this.canGoBack()) {
@@ -273,6 +329,7 @@ class NavigationStackManager {
   /**
    * Validate internal navigation stack against browser history state
    * Ensures consistency on cold boots and restores from stored state if needed
+   * Critical for Android WebView: confirms history index matches internal stack during back navigations
    */
   validateStack() {
     try {
@@ -301,10 +358,17 @@ class NavigationStackManager {
         return true;
       }
 
-      // Verify current indices match
+      // Verify current indices match (critical for Android WebView)
       if (this.currentIndex !== storedStackIndex) {
-        console.warn('[NavigationStackManager] Stack index mismatch, synchronizing...');
+        console.warn('[NavigationStackManager] Stack index mismatch detected (internal:', this.currentIndex, 'browser:', storedStackIndex, ') - synchronizing...');
         this.currentIndex = storedStackIndex;
+        this.notifyListeners();
+      }
+
+      // Final validation: ensure stack length is consistent
+      if (this.stack.length !== storedStack.length) {
+        console.warn('[NavigationStackManager] Stack length mismatch (internal:', this.stack.length, 'browser:', storedStack.length, ') - resyncing...');
+        this.stack = storedStack;
       }
 
       return true;
@@ -312,6 +376,33 @@ class NavigationStackManager {
       console.error('[NavigationStackManager] Validation error:', error);
       return false;
     }
+  }
+
+  /**
+   * Android WebView validation: confirms history sync during back navigations
+   * Used to debug and validate navigation consistency on mobile platforms
+   */
+  validateAndroidWebViewSync() {
+    const browserState = window.history.state;
+    const isInSync = browserState?.stackIndex === this.currentIndex;
+    const stackDepth = this.stack.length;
+    const historyIndex = browserState?.stackIndex ?? -1;
+
+    const report = {
+      isInSync,
+      internalIndex: this.currentIndex,
+      browserIndex: historyIndex,
+      stackDepth,
+      currentPath: this.getCurrentPath(),
+      stack: this.getStack(),
+    };
+
+    console.log('[NavigationStackManager] Android WebView Sync Report:', {
+      ...report,
+      status: isInSync ? '✅ IN_SYNC' : '⚠️ DESYNCHRONIZED',
+    });
+
+    return report;
   }
 
   /**
