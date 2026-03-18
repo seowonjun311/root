@@ -149,7 +149,10 @@ export default function CreateGoal() {
               {ACTION_TYPES.map(t => (
                 <button key={t.value} onClick={() => { setActionType(t.value); if (t.value === 'abstain') setFrequency(7); }}
                   className={`w-full p-3 rounded-xl border text-left transition-all ${
-                    actionType === t.value ? 'border-amber-600 bg-amber-50/80' : 'border-border bg-card'}`}>
+                    actionType === t.value ? 'border-amber-600 bg-amber-50/80' : 'border-border bg-card'}`}
+                  aria-label={`${t.label} 선택: ${t.desc}`}
+                  aria-pressed={actionType === t.value}
+                >
                   <p className="text-sm font-semibold">{t.label}</p>
                   <p className="text-xs text-muted-foreground">{t.desc}</p>
                 </button>
@@ -160,9 +163,12 @@ export default function CreateGoal() {
               <label className="text-sm font-semibold text-amber-800 mb-2 block">주 횟수</label>
               <div className="grid grid-cols-7 gap-1.5">
                 {[1, 2, 3, 4, 5, 6, 7].map(f => (
-                  <button key={f} onClick={() => setFrequency(f)}
+                 <button key={f} onClick={() => setFrequency(f)}
                     className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                      frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                      frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                    aria-label={`주 ${f}회 선택`}
+                    aria-pressed={frequency === f}
+                  >
                     {f}
                   </button>
                 ))}
@@ -174,9 +180,12 @@ export default function CreateGoal() {
               <label className="text-sm font-semibold text-amber-800 mb-2 block">1회 시간</label>
               <div className="flex gap-2 mb-2">
                 {[20, 30, 60].map(m => (
-                  <button key={m} onClick={() => setMinutes(m)}
+                 <button key={m} onClick={() => setMinutes(m)}
                     className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
-                      minutes === m ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                      minutes === m ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                    aria-label={`${m}분 선택`}
+                    aria-pressed={minutes === m}
+                  >
                     {m}분
                   </button>
                 ))}
@@ -350,7 +359,10 @@ export default function CreateGoal() {
               {ACTION_TYPES.map(t => (
                 <button key={t.value} onClick={() => { setActionType(t.value); if (t.value === 'abstain') setFrequency(7); }}
                   className={`w-full p-3 rounded-xl border text-left transition-all ${
-                    actionType === t.value ? 'border-amber-600 bg-amber-50/80' : 'border-border bg-card'}`}>
+                    actionType === t.value ? 'border-amber-600 bg-amber-50/80' : 'border-border bg-card'}`}
+                  aria-label={`${t.label} 선택: ${t.desc}`}
+                  aria-pressed={actionType === t.value}
+                >
                   <p className="text-sm font-semibold">{t.label}</p>
                   <p className="text-xs text-muted-foreground">{t.desc}</p>
                 </button>
@@ -361,9 +373,12 @@ export default function CreateGoal() {
               <label className="text-sm font-semibold text-amber-800 mb-2 block">주 횟수</label>
               <div className="grid grid-cols-7 gap-1.5">
                 {[1, 2, 3, 4, 5, 6, 7].map(f => (
-                  <button key={f} onClick={() => setFrequency(f)}
+                 <button key={f} onClick={() => setFrequency(f)}
                     className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                      frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                      frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                    aria-label={`주 ${f}회 선택`}
+                    aria-pressed={frequency === f}
+                  >
                     {f}
                   </button>
                 ))}
@@ -375,9 +390,12 @@ export default function CreateGoal() {
               <label className="text-sm font-semibold text-amber-800 mb-2 block">1회 시간</label>
               <div className="flex gap-2 mb-2">
                 {[20, 30, 60].map(m => (
-                  <button key={m} onClick={() => setMinutes(m)}
+                 <button key={m} onClick={() => setMinutes(m)}
                     className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
-                      minutes === m ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                      minutes === m ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                    aria-label={`${m}분 선택`}
+                    aria-pressed={minutes === m}
+                  >
                     {m}분
                   </button>
                 ))}
