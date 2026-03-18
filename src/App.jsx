@@ -35,16 +35,14 @@ const PageFallback = () => (
   </div>
 );
 
-const AuthenticatedAppContent = () => {
+const AppContent = () => {
   const { isLoadingAuth, isLoadingPublicSettings } = useAuth();
   const location = useLocation();
   const [isNavReady, setIsNavReady] = React.useState(false);
 
-  // Validate NavigationStackManager state against browser history on mount
   React.useEffect(() => {
     const validateNavigation = async () => {
       try {
-        // Ensure navigation stack is synced with browser history
         const isValid = navigationStackManager.validateStack();
         if (!isValid) {
           console.warn('[App] Navigation stack validation failed, forcing reset');
@@ -53,7 +51,7 @@ const AuthenticatedAppContent = () => {
         setIsNavReady(true);
       } catch (error) {
         console.error('[App] Navigation validation error:', error);
-        setIsNavReady(true); // Fail gracefully
+        setIsNavReady(true);
       }
     };
 
@@ -104,13 +102,6 @@ const AuthenticatedAppContent = () => {
     </div>
   );
 };
-
-const AuthenticatedApp = () => (
-  <NavigationProvider>
-    <AuthenticatedAppContent />
-    <Toaster />
-  </NavigationProvider>
-);
 
 function App() {
   useEffect(() => {
