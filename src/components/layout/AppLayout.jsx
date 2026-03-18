@@ -41,7 +41,8 @@ export default function AppLayout() {
     <div
       className="bg-background max-w-lg mx-auto flex flex-col"
       style={{
-        height: '100dvh',
+        position: 'absolute',
+        inset: 0,
         paddingTop: 'env(safe-area-inset-top)',
         overflow: 'hidden',
       }}
