@@ -83,34 +83,44 @@ class NavigationStackManager {
   /**
    * Robust deep-link initialization with browser history state validation
    * Syncs internal stack with browser history to prevent route collisions on deep links
+   * Handles network interruptions by falling back to home page on error
    */
   initializeFromCurrentLocation(currentPath) {
-    const isDeepLink = currentPath !== '/' && currentPath !== '/Home' && currentPath !== '/Onboarding';
-    
-    if (isDeepLink) {
-      // For deep links: validate browser history state and build stack accordingly
-      const browserState = window.history.state;
+    try {
+      const isDeepLink = currentPath !== '/' && currentPath !== '/Home' && currentPath !== '/Onboarding';
       
-      // If browser state has stackIndex, we're restoring from history
-      if (browserState?.stackIndex !== undefined) {
-        // Restore from saved state
-        this.stack = ['/Home', currentPath];
-        this.currentIndex = browserState.stackIndex;
-      } else {
-        // Fresh deep link: initialize with root + current path
-        this.stack = ['/Home', currentPath];
-        this.currentIndex = 1;
+      if (isDeepLink) {
+        // For deep links: validate browser history state and build stack accordingly
+        const browserState = window.history.state;
         
-        // Pre-sync browser history to prevent back-button conflicts
-        this.syncBrowserHistory();
+        // If browser state has stackIndex, we're restoring from history
+        if (browserState?.stackIndex !== undefined) {
+          // Restore from saved state
+          this.stack = ['/Home', currentPath];
+          this.currentIndex = browserState.stackIndex;
+        } else {
+          // Fresh deep link: initialize with root + current path
+          this.stack = ['/Home', currentPath];
+          this.currentIndex = 1;
+          
+          // Pre-sync browser history to prevent back-button conflicts
+          this.syncBrowserHistory();
+        }
+      } else {
+        // Standard initialization for root routes
+        this.stack = [currentPath];
+        this.currentIndex = 0;
       }
-    } else {
-      // Standard initialization for root routes
-      this.stack = [currentPath];
+      
+      this.notifyListeners();
+    } catch (error) {
+      // Network or initialization error: fallback to home page
+      console.warn('[NavigationStackManager] Deep-link initialization error, falling back to home:', error);
+      this.stack = ['/Home'];
       this.currentIndex = 0;
+      this.syncBrowserHistory();
+      this.notifyListeners();
     }
-    
-    this.notifyListeners();
   }
 
   /**
