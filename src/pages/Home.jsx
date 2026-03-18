@@ -236,49 +236,7 @@ export default function Home() {
     navigate('/CreateGoal?category=' + cat);
   };
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await queryClient.invalidateQueries({ queryKey: ['goals'] });
-    await queryClient.invalidateQueries({ queryKey: ['actionLogs'] });
-    await queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
-    setIsRefreshing(false);
-    setPullProgress(0);
-  };
 
-  const handlePullStart = (e) => {
-    // Only trigger pull-to-refresh if scrolling at top and not on a scrollable element
-    if (e.touches && window.scrollY === 0 && !e.target.closest('[data-scrollable]')) {
-      const startY = e.touches[0].clientY;
-      let lastY = startY;
-      let triggered = false;
-
-      const handleMove = (moveE) => {
-        if (moveE.touches) {
-          const currentY = moveE.touches[0].clientY;
-          const distance = currentY - startY;
-          if (distance > 0) {
-            moveE.preventDefault?.();
-            const progress = Math.min(distance / 80, 1);
-            setPullProgress(progress);
-            if (progress >= 1 && !isRefreshing && !triggered) {
-              triggered = true;
-              handleRefresh();
-            }
-          }
-        }
-      };
-
-      const handleEnd = () => {
-        document.removeEventListener('touchmove', handleMove);
-        document.removeEventListener('touchend', handleEnd);
-        setPullProgress(0);
-        triggered = false;
-      };
-
-      document.addEventListener('touchmove', handleMove, { passive: false });
-      document.addEventListener('touchend', handleEnd);
-    }
-  };
 
   return (
     <div className="bg-background min-h-screen" onTouchStart={handlePullStart} style={{ minHeight: '100dvh' }}>
