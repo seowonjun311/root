@@ -14,17 +14,9 @@ const pages = [
   { path: '/AppSettings', component: AppSettings },
 ];
 
-const TAB_ORDER = ['/Home', '/Records', '/Badges', '/AppSettings'];
-
 export default function AppLayout() {
   const location = useLocation();
   const currentPath = location.pathname;
-  const prevIndexRef = useRef(TAB_ORDER.indexOf(currentPath));
-
-  const currentIndex = TAB_ORDER.indexOf(currentPath);
-  const prevIndex = prevIndexRef.current;
-  const direction = currentIndex >= prevIndex ? 1 : -1;
-  prevIndexRef.current = currentIndex;
 
   return (
     <div
