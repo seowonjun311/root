@@ -96,6 +96,35 @@
     touch-action: manipulation;
   }
 
+  /* ── Mobile accessibility ── */
+  /* Minimum font size 14px for readability */
+  body {
+    font-size: max(14px, 1em);
+  }
+
+  /* Minimum 44px tap targets for all interactive elements */
+  button:not(.no-tap-expand),
+  a:not(.no-tap-expand),
+  [role="button"]:not(.no-tap-expand) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Safe-area bottom padding for ALL fixed/sticky bottom elements */
+  .fixed-bottom,
+  nav[class*="fixed bottom"],
+  [data-fixed-bottom] {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Global safe-area-aware bottom padding utility */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pb-safe-nav {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 64px);
+  }
+
   /* 양피지 카드 스타일 */
   .parchment-card {
     background: linear-gradient(135deg, #f5e6c8 0%, #eedcb0 40%, #e8d4a0 70%, #f0e0bc 100%);
