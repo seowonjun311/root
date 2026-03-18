@@ -60,8 +60,10 @@ export default function BottomNav() {
                 color: active ? '#ffe8a0' : isPressed ? '#d4b060' : 'rgba(220,180,100,0.55)',
                 textShadow: active ? '0 0 8px rgba(255,200,80,0.6)' : 'none',
               }}
+              aria-label={`${label} 탭으로 이동`}
+              aria-current={active ? 'page' : undefined}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-5 h-5" aria-hidden="true" />
               <span className="text-[10px] font-bold">{label}</span>
             </Link>
           );
