@@ -35,7 +35,7 @@ const PageFallback = () => (
   </div>
 );
 
-const AuthenticatedApp = () => {
+const AuthenticatedAppContent = () => {
   const { isLoadingAuth, isLoadingPublicSettings } = useAuth();
   const location = useLocation();
   const [isNavReady, setIsNavReady] = React.useState(false);
