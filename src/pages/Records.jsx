@@ -7,6 +7,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/u
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import GPSMapPreview from '@/components/home/GPSMapPreview';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
+import { useLazyLoadImage } from '../hooks/useLazyLoadImage';
 import { motion } from 'framer-motion';
 
 const CAT_LABELS = { exercise: '운동', study: '공부', mental: '정신', daily: '일상' };
@@ -313,20 +314,7 @@ export default function Records() {
           ) : filteredLogs.map(log => {
             const ag = actionGoals.find(a => a.id === log.action_goal_id);
             return (
-              <div key={log.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
-                <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate">{ag?.title || log.date}</p>
-                  <p className="text-xs text-muted-foreground">{log.date}{log.duration_minutes > 0 ? ` · ${log.duration_minutes}분` : ''}</p>
-                  {log.memo && <p className="text-xs text-muted-foreground italic">"{log.memo}"</p>}
-                </div>
-                {log.photo_url && (
-                  <button onClick={() => setSelectedPhoto(log)} className="shrink-0 active:opacity-70">
-                    <img src={log.photo_url} alt="수련 사진" className="w-12 h-12 rounded-lg object-cover" loading="lazy" decoding="async" />
-                  </button>
-                )}
-                <span className="text-xs px-2 py-1 rounded-lg bg-amber-100/80 text-amber-700 shrink-0">{CAT_LABELS[log.category] || '기타'}</span>
-              </div>
+              <TimelineLogItem key={log.id} log={log} ag={ag} onSelectPhoto={setSelectedPhoto} />
             );
           })}
         </TabsContent>
@@ -418,23 +406,8 @@ function AlbumTab({ logs, goals, catFilter, onCatFilterChange, badges }) {
               <p className="text-xs font-bold text-amber-800 mb-2">📸 수련 사진 ({photoLogs.length}장)</p>
               <div className="grid grid-cols-3 gap-1.5">
                 {photoLogs.map(log => (
-                        <button key={log.id} onClick={() => setSelectedPhoto(log)}
-                          className="aspect-square rounded-xl overflow-hidden relative group active:opacity-80 transition-opacity"
-                          aria-label={`${log.date} 사진 보기`}
-                        >
-                          <img 
-                            src={log.photo_url} 
-                            alt={log.date} 
-                            className="w-full h-full object-cover" 
-                            loading="lazy"
-                            decoding="async"
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
-                            <span className="text-[10px] text-white font-semibold">{log.date}</span>
-                          </div>
-                          <span className="absolute top-1 right-1 text-xs" aria-hidden="true">{CAT_EMOJIS[log.category] || '📝'}</span>
-                        </button>
-                      ))}
+                  <AlbumPhotoItem key={log.id} log={log} onSelectPhoto={setSelectedPhoto} />
+                ))}
               </div>
             </div>
           )}
