@@ -105,6 +105,13 @@ const AuthenticatedAppContent = () => {
   );
 };
 
+const AuthenticatedApp = () => (
+  <NavigationProvider>
+    <AuthenticatedAppContent />
+    <Toaster />
+  </NavigationProvider>
+);
+
 function App() {
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
