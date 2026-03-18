@@ -92,17 +92,28 @@ function App() {
     return () => mq.removeEventListener('change', e => apply(e.matches));
   }, []);
 
-  // Register Android backbutton handler (non-breaking for web)
+  // Register Android backbutton handler at root layout with stopImmediatePropagation
+  // Ensures robust back-button handling across all Android API versions (14+)
   useEffect(() => {
-    const handleAndroidBackButton = () => {
-      navigationStackManager.handleAndroidBackButton();
+    const handleAndroidBackButton = (event) => {
+      navigationStackManager.handleAndroidBackButton(event);
     };
 
-    // Check if we're in a Cordova/Capacitor environment
+    // Register listener on document root (useCapture phase for early interception)
+    // This ensures the handler fires before any child components can interfere
+    document.addEventListener('backbutton', handleAndroidBackButton, true);
+    
+    // Fallback: Also listen at body level for API compatibility
     if (window.device || window.cordova) {
-      document.addEventListener('backbutton', handleAndroidBackButton);
-      return () => document.removeEventListener('backbutton', handleAndroidBackButton);
+      document.body.addEventListener('backbutton', handleAndroidBackButton, true);
     }
+
+    return () => {
+      document.removeEventListener('backbutton', handleAndroidBackButton, true);
+      if (window.device || window.cordova) {
+        document.body.removeEventListener('backbutton', handleAndroidBackButton, true);
+      }
+    };
   }, []);
 
   return (
