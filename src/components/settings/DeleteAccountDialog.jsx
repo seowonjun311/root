@@ -223,21 +223,35 @@ export default function DeleteAccountDialog({ open, onOpenChange, userEmail, onC
               </DrawerHeader>
 
               <div className="px-6 py-4 space-y-4">
-                <div className="bg-red-50/80 dark:bg-red-950/30 rounded-xl p-4 border border-red-200 dark:border-red-900">
+                <div className="bg-red-50/80 dark:bg-red-950/30 rounded-xl p-4 border-2 border-red-400 dark:border-red-700">
                   <p className="text-sm font-bold text-red-900 dark:text-red-100 text-center">
                     정말로 계정을 삭제하시겠습니까?
                   </p>
+                  <p className="text-xs text-red-800 dark:text-red-200 text-center mt-2">
+                    이 작업은 즉시 실행되며 되돌릴 수 없습니다.
+                  </p>
                 </div>
 
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    ✓ 모든 데이터가 즉시 삭제됩니다
+                <div className="space-y-2 bg-red-50/50 dark:bg-red-950/20 rounded-lg p-3">
+                  <p className="text-sm font-semibold text-red-900 dark:text-red-100 mb-2">
+                    다음 데이터가 즉시 영구 삭제됩니다:
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    ✓ 이 작업은 되돌릴 수 없습니다
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    ✓ 같은 이메일로 재가입할 수 있습니다
+                  <div className="space-y-1.5">
+                    <p className="text-sm text-red-800 dark:text-red-200">
+                      • 모든 목표, 활동 기록, 통계 데이터
+                    </p>
+                    <p className="text-sm text-red-800 dark:text-red-200">
+                      • 배지, 성취 기록, 사진 및 메모
+                    </p>
+                    <p className="text-sm text-red-800 dark:text-red-200">
+                      • 개인 설정 및 환경설정
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50/80 dark:bg-blue-950/20 rounded-xl p-3 border border-blue-200 dark:border-blue-900/50">
+                  <p className="text-xs text-blue-900 dark:text-blue-200">
+                    ℹ️ 재가입 시에도 이전 데이터는 복원되지 않습니다. 계속 진행하려면 아래 '삭제' 버튼을 누르세요.
                   </p>
                 </div>
 
