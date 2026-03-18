@@ -63,10 +63,10 @@ const AuthenticatedApp = () => {
           </motion.div>
         } />
         <Route element={<AppLayout />}>
-          <Route path="/Home" element={<Home />} />
-          <Route path="/Records" element={<Records />} />
-          <Route path="/Badges" element={<Badges />} />
-          <Route path="/AppSettings" element={<AppSettings />} />
+          <Route path="/Home" element={<div />} />
+          <Route path="/Records" element={<div />} />
+          <Route path="/Badges" element={<div />} />
+          <Route path="/AppSettings" element={<div />} />
         </Route>
         <Route path="/NotificationSettings" element={
           <motion.div key="notificationsettings" initial={{ x: '100%', opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: '-100%', opacity: 0 }} transition={{ type: 'tween', duration: 0.28, ease: 'easeInOut' }} style={{ willChange: 'transform' }}>
