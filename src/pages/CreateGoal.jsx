@@ -257,6 +257,7 @@ export default function CreateGoal() {
               min={new Date().toISOString().split('T')[0]}
               onChange={e => setDDay(e.target.value)}
               className="w-full h-12 rounded-xl border border-input bg-white/80 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+              aria-label="시험 D-day 날짜 선택"
             />
             {daysLeft !== null && daysLeft > 0 && (
               <p className="text-xs text-amber-700 font-semibold mt-2">
@@ -323,6 +324,7 @@ export default function CreateGoal() {
                   onChange={e => { setCustomWeeks(e.target.value); setDuration(Number(e.target.value) * 7); }}
                   placeholder="주 수 입력"
                   className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                  aria-label="기간(주 수) 입력"
                 />
                 <span className="text-sm font-semibold text-muted-foreground">주</span>
               </div>
