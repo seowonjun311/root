@@ -210,6 +210,82 @@ class GuestDataPersistence {
   }
 
   /**
+   * Calculate localStorage usage ratio
+   */
+  getStorageUsageRatio() {
+    try {
+      let totalSize = 0;
+      for (const key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          totalSize += localStorage[key].length + key.length;
+        }
+      }
+      // Rough estimate: typical localStorage limit is ~5-10MB
+      const estimatedLimit = 5 * 1024 * 1024;
+      return totalSize / estimatedLimit;
+    } catch (e) {
+      console.warn('[GuestDataPersistence] Failed to calculate storage usage:', e.message);
+      return 0;
+    }
+  }
+
+  /**
+   * Cleanup old action logs if storage exceeds 80% capacity
+   */
+  cleanupOldLogs() {
+    if (!this.isAvailable) return false;
+
+    try {
+      const usageRatio = this.getStorageUsageRatio();
+      if (usageRatio < 0.8) {
+        return true; // No cleanup needed
+      }
+
+      const actionLogs = this.loadData(STORAGE_KEYS.actionLogs, []);
+      if (!Array.isArray(actionLogs) || actionLogs.length === 0) {
+        return true;
+      }
+
+      // Remove oldest 25% of logs
+      const cutoff = Math.floor(actionLogs.length * 0.25);
+      const trimmed = actionLogs.slice(cutoff);
+      const saved = this.saveData(STORAGE_KEYS.actionLogs, trimmed);
+
+      if (saved) {
+        console.warn(`[GuestDataPersistence] Cleaned up ${cutoff} old action logs (usage: ${(usageRatio * 100).toFixed(1)}%)`);
+      }
+      return saved;
+    } catch (error) {
+      console.error('[GuestDataPersistence] Cleanup failed:', error.message);
+      return false;
+    }
+  }
+
+  /**
+   * Start periodic background cleanup (runs every 5 minutes)
+   */
+  startBackgroundCleanup() {
+    if (this._cleanupInterval) return; // Already running
+
+    this._cleanupInterval = setInterval(() => {
+      this.cleanupOldLogs();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    console.log('[GuestDataPersistence] Background cleanup started (interval: 5 min)');
+  }
+
+  /**
+   * Stop periodic background cleanup
+   */
+  stopBackgroundCleanup() {
+    if (this._cleanupInterval) {
+      clearInterval(this._cleanupInterval);
+      this._cleanupInterval = null;
+      console.log('[GuestDataPersistence] Background cleanup stopped');
+    }
+  }
+
+  /**
    * Get default onboarding state
    */
   getDefaultOnboardingState() {

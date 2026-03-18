@@ -13,6 +13,14 @@ export function Toaster() {
 
   return (
     <ToastProvider>
+      <div role="region" aria-live="polite" aria-atomic="true" className="sr-only">
+        {toasts.map(({ id, title, description }) => (
+          <div key={id}>
+            {title && <span>{title}</span>}
+            {description && <span>{description}</span>}
+          </div>
+        ))}
+      </div>
       {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
           <Toast key={id} {...props}>
@@ -30,4 +38,4 @@ export function Toaster() {
       <ToastViewport />
     </ToastProvider>
   );
-} 
+}
