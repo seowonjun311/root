@@ -16,6 +16,25 @@ import OnboardingNickname from '@/components/onboarding/OnboardingNickname';
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const formContainerRef = React.useRef(null);
+
+  // Auto scroll form inputs into view when focused on mobile
+  React.useEffect(() => {
+    const container = formContainerRef.current;
+    if (!container) return;
+
+    const handleFocus = (e) => {
+      const target = e.target;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+        requestAnimationFrame(() => {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      }
+    };
+
+    container.addEventListener('focus', handleFocus, true);
+    return () => container.removeEventListener('focus', handleFocus, true);
+  }, []);
 
   const [stepHistory, setStepHistory] = useState(['welcome']);
   const currentStep = stepHistory[stepHistory.length - 1];
@@ -210,7 +229,11 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-background max-w-lg mx-auto flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+    <div
+      ref={formContainerRef}
+      className="min-h-screen bg-background max-w-lg mx-auto flex flex-col"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <OnboardingProgress stepIndex={stepIndex} totalSteps={totalSteps} />
 
       <div className="flex-1 flex flex-col justify-center py-6">
