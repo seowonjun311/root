@@ -10,6 +10,7 @@ class NavigationStackManager {
     this.currentIndex = -1;
     this.isNavigating = false;
     this.listeners = [];
+    this.backButtonListeners = [];
   }
 
   /**
@@ -132,6 +133,28 @@ class NavigationStackManager {
    */
   notifyListeners() {
     this.listeners.forEach(listener => listener(this));
+  }
+
+  /**
+   * Register native Android backbutton listener
+   * Handles device.ready backbutton events and prevents default browser back
+   */
+  onAndroidBackButton(callback) {
+    this.backButtonListeners.push(callback);
+    return () => {
+      this.backButtonListeners = this.backButtonListeners.filter(cb => cb !== callback);
+    };
+  }
+
+  /**
+   * Notify backbutton listeners (called by native Android layer)
+   */
+  handleAndroidBackButton() {
+    if (this.canGoBack()) {
+      this.pop();
+      return true; // Prevent default
+    }
+    return false; // Allow default (exit app)
   }
 }
 
