@@ -41,10 +41,7 @@ const AppContent = () => {
   const { isLoadingAuth, isLoadingPublicSettings } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAnimating } = useAnimationState();
   const [isNavReady, setIsNavReady] = React.useState(false);
-
-  // useAnimationState import at the top
 
   React.useEffect(() => {
     const validateNavigation = async () => {
@@ -78,53 +75,7 @@ const AppContent = () => {
     return <PageFallback />;
   }
 
-  return (
-    <div style={{ position: 'relative', height: '100dvh', overflow: 'hidden' }}>
-      <ErrorBoundary onResetToHome={() => navigate('/Home', { replace: true })}>
-        <Suspense fallback={<PageFallback />}>
-          <AnimatePresence mode="wait" initial={false}>
-            <Routes location={location} key={location.pathname}>
-              <Route path="/" element={<Navigate to="/Onboarding" replace />} />
-
-              <Route path="/Onboarding" element={
-                <Suspense fallback={<PageFallback />}>
-                  <Onboarding />
-                </Suspense>
-              } />
-
-              <Route path="/CreateGoal" element={
-                <Suspense fallback={<PageFallback />}>
-                  <PageTransition>
-                    <Header />
-                    <CreateGoal />
-                  </PageTransition>
-                </Suspense>
-              } />
-
-              {/* Tab routes: AppLayout keeps all tabs mounted for instant switching */}
-              <Route element={<AppLayout />}>
-                <Route path="/Home"        element={<div />} />
-                <Route path="/Records"     element={<div />} />
-                <Route path="/Badges"      element={<div />} />
-                <Route path="/AppSettings" element={<div />} />
-              </Route>
-
-              <Route path="/NotificationSettings" element={
-                <Suspense fallback={<PageFallback />}>
-                  <PageTransition>
-                    <Header />
-                    <NotificationSettings />
-                  </PageTransition>
-                </Suspense>
-              } />
-
-              <Route path="*" element={<PageNotFound />} />
-            </Routes>
-          </AnimatePresence>
-        </Suspense>
-      </ErrorBoundary>
-    </div>
-  );
+  return <BackButtonHandler />;
 };
 
 function App() {
@@ -198,6 +149,59 @@ function App() {
     };
   }, []);
 
+  // Wrap in a separate component to use animation state context
+  return (
+    <div style={{ position: 'relative', height: '100dvh', overflow: 'hidden' }}>
+      <ErrorBoundary onResetToHome={() => navigate('/Home', { replace: true })}>
+        <Suspense fallback={<PageFallback />}>
+          <AnimatePresence mode="wait" initial={false}>
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={<Navigate to="/Onboarding" replace />} />
+
+              <Route path="/Onboarding" element={
+                <Suspense fallback={<PageFallback />}>
+                  <Onboarding />
+                </Suspense>
+              } />
+
+              <Route path="/CreateGoal" element={
+                <Suspense fallback={<PageFallback />}>
+                  <PageTransition>
+                    <Header />
+                    <CreateGoal />
+                  </PageTransition>
+                </Suspense>
+              } />
+
+              {/* Tab routes: AppLayout keeps all tabs mounted for instant switching */}
+              <Route element={<AppLayout />}>
+                <Route path="/Home"        element={<div />} />
+                <Route path="/Records"     element={<div />} />
+                <Route path="/Badges"      element={<div />} />
+                <Route path="/AppSettings" element={<div />} />
+              </Route>
+
+              <Route path="/NotificationSettings" element={
+                <Suspense fallback={<PageFallback />}>
+                  <PageTransition>
+                    <Header />
+                    <NotificationSettings />
+                  </PageTransition>
+                </Suspense>
+              } />
+
+              <Route path="*" element={<PageNotFound />} />
+            </Routes>
+          </AnimatePresence>
+        </Suspense>
+      </ErrorBoundary>
+    </div>
+  );
+};
+
+const BackButtonHandler = () => {
+  const { isAnimating } = useAnimationState();
+
   // Register Android back button handler
   useEffect(() => {
     const handleAndroidBackButton = (event) => {
@@ -220,13 +224,15 @@ function App() {
     };
   }, [isAnimating]);
 
+  return <AppContent />;
+
   return (
     <QueryClientProvider client={queryClientInstance}>
       <AuthProvider>
         <Router>
           <NavigationProvider>
             <AnimationStateProvider>
-              <AppContent />
+              <BackButtonHandler />
               <Toaster />
             </AnimationStateProvider>
           </NavigationProvider>
