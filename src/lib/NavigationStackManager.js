@@ -231,6 +231,37 @@ class NavigationStackManager {
   }
 
   /**
+   * Enforce internal stack-based navigation
+   * Prevents external route changes from bypassing stack management
+   * Returns true if navigation is valid within stack context
+   */
+  enforceStackNavigation(targetPath) {
+    const currentPath = this.getCurrentPath();
+    
+    // Allow navigation if moving to adjacent or new routes
+    if (targetPath === currentPath) {
+      return true; // Same path, no action needed
+    }
+    
+    // Check if target exists in history (back navigation)
+    const existingIndex = this.stack.indexOf(targetPath);
+    if (existingIndex !== -1 && existingIndex < this.currentIndex) {
+      this.currentIndex = existingIndex;
+      this.syncBrowserHistory();
+      this.notifyListeners();
+      return true;
+    }
+    
+    // New forward navigation
+    if (existingIndex === -1) {
+      this.push(targetPath);
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
    * Validate internal navigation stack against browser history state
    * Ensures consistency on cold boots and restores from stored state if needed
    */
