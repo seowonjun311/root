@@ -405,7 +405,7 @@ export default function Onboarding() {
               <input type="number" min="1" max="300"
                 placeholder="직접 입력"
                 onChange={e => setActionMinutes(Number(e.target.value))}
-                className="flex-1 h-10 rounded-xl border border-input bg-white/80 px-3 text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-400/50" />
+                className="flex-1 h-10 rounded-xl border border-input bg-white/80 px-3 text-sm text-center text-amber-900 placeholder:text-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400/50" />
               <span className="text-sm font-semibold text-muted-foreground">분</span>
             </div>
           </>
