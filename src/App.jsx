@@ -51,12 +51,12 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/" element={<Navigate to="/Onboarding" replace />} />
         <Route path="/Onboarding" element={
-          <motion.div key="onboarding" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
+          <motion.div key="onboarding" initial={{ x: '100%', opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: '-100%', opacity: 0 }} transition={{ type: 'tween', duration: 0.28, ease: 'easeInOut' }} style={{ willChange: 'transform' }}>
             <Onboarding />
           </motion.div>
         } />
         <Route path="/CreateGoal" element={
-          <motion.div key="creategoal" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
+          <motion.div key="creategoal" initial={{ x: '100%', opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: '-100%', opacity: 0 }} transition={{ type: 'tween', duration: 0.28, ease: 'easeInOut' }} style={{ willChange: 'transform' }}>
             <Header />
             <CreateGoal />
           </motion.div>
@@ -68,7 +68,7 @@ const AuthenticatedApp = () => {
           <Route path="/AppSettings" element={<div />} />
         </Route>
         <Route path="/NotificationSettings" element={
-          <motion.div key="notificationsettings" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.3 }}>
+          <motion.div key="notificationsettings" initial={{ x: '100%', opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: '-100%', opacity: 0 }} transition={{ type: 'tween', duration: 0.28, ease: 'easeInOut' }} style={{ willChange: 'transform' }}>
             <Header />
             <NotificationSettings />
           </motion.div>
