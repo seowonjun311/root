@@ -41,7 +41,7 @@ class NavigationStackManager {
   }
 
   /**
-   * Push a new path onto the stack
+   * Push a new path onto the stack and force-sync browser history
    */
   push(path) {
     if (this.isNavigating) return;
@@ -55,19 +55,21 @@ class NavigationStackManager {
     if (this.stack[this.currentIndex] !== path) {
       this.stack.push(path);
       this.currentIndex++;
+      this.syncBrowserHistory();
     }
 
     this.notifyListeners();
   }
 
   /**
-   * Pop back to previous path
+   * Pop back to previous path and force-sync browser history
    */
   pop() {
     if (this.isNavigating || this.currentIndex <= 0) return false;
 
     this.isNavigating = true;
     this.currentIndex--;
+    this.syncBrowserHistory();
     
     setTimeout(() => {
       this.isNavigating = false;
@@ -109,13 +111,37 @@ class NavigationStackManager {
   }
 
   /**
-   * Reset stack (for logout, etc.)
+   * Reset stack (for logout, etc.) and force-sync browser history
    */
   reset(initialPath) {
     this.stack = [initialPath];
     this.currentIndex = 0;
     this.isNavigating = false;
+    this.syncBrowserHistory();
     this.notifyListeners();
+  }
+
+  /**
+   * Force-sync internal navigation stack with browser history state
+   * Ensures WebView consistency across all platforms (Android, iOS, Web)
+   */
+  syncBrowserHistory() {
+    try {
+      const currentPath = this.getCurrentPath();
+      if (!currentPath) return;
+
+      // Replace browser history state with current stack index
+      // This ensures browser.back() aligns with our internal stack
+      const state = {
+        stackIndex: this.currentIndex,
+        timestamp: Date.now(),
+      };
+
+      // Use replaceState to maintain clean history
+      window.history.replaceState(state, '', currentPath);
+    } catch (error) {
+      console.warn('[NavigationStackManager] Failed to sync browser history:', error);
+    }
   }
 
   /**
