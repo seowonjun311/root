@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import { navigationStackManager } from '../../lib/NavigationStackManager';
+import { useTabNavigation } from '../../lib/TabNavigationContext';
+import { tabScrollManager } from '../../lib/TabScrollManager';
 import BottomNav from './BottomNav.jsx';
 import Header from './Header.jsx';
 import Home from '../../pages/Home.jsx';
@@ -15,19 +17,15 @@ const TAB_PAGES = [
   { path: '/AppSettings', component: AppSettings },
 ];
 
-// Per-tab scroll position memory
-const scrollPositions = {};
-
 export default function AppLayout() {
   const location = useLocation();
   const currentPath = location.pathname;
   const scrollRefs = useRef({});
+  const { updateTabState, getTabState } = useTabNavigation();
   const [visibleTabs, setVisibleTabs] = useState(() => {
-    // Initialize with only the current tab to prevent root mount flashing
     const currentIndex = TAB_PAGES.findIndex(t => t.path === currentPath);
     const initial = new Set([currentPath]);
     
-    // Pre-add adjacent tabs so they're ready for smooth transitions
     if (currentIndex > 0) initial.add(TAB_PAGES[currentIndex - 1].path);
     if (currentIndex < TAB_PAGES.length - 1) initial.add(TAB_PAGES[currentIndex + 1].path);
     
@@ -47,22 +45,23 @@ export default function AppLayout() {
     TAB_PAGES.forEach(({ path }) => {
       const el = scrollRefs.current[path];
       if (!el) return;
+      
       if (path === currentPath) {
-        // Restore saved scroll position
-        el.scrollTop = scrollPositions[path] ?? 0;
+        // Restore saved scroll position using TabScrollManager
+        tabScrollManager.restoreScrollPosition(path, el);
       } else {
         // Save current scroll position before hiding
-        scrollPositions[path] = el.scrollTop;
+        tabScrollManager.saveScrollPosition(path, el);
+        updateTabState(path, { scrollPosition: el.scrollTop });
       }
     });
-  }, [currentPath]);
+  }, [currentPath, updateTabState]);
 
   // Dynamic tab visibility: mount current + adjacent tabs, unmount others
   useEffect(() => {
     const currentIndex = TAB_PAGES.findIndex(t => t.path === currentPath);
     const newVisible = new Set([currentPath]);
     
-    // Keep adjacent tabs mounted for smoother transitions
     if (currentIndex > 0) newVisible.add(TAB_PAGES[currentIndex - 1].path);
     if (currentIndex < TAB_PAGES.length - 1) newVisible.add(TAB_PAGES[currentIndex + 1].path);
     
