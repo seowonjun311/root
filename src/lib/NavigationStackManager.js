@@ -229,6 +229,63 @@ class NavigationStackManager {
     }
     return false; // Allow default (exit app)
   }
+
+  /**
+   * Validate internal navigation stack against browser history state
+   * Ensures consistency on cold boots and restores from stored state if needed
+   */
+  validateStack() {
+    try {
+      const browserState = window.history.state;
+      
+      // If no browser state, fresh initialization
+      if (!browserState?.stackIndex === undefined) {
+        return true;
+      }
+
+      // Validate stack consistency
+      const storedStackIndex = browserState.stackIndex;
+      const storedStack = browserState.stack;
+
+      // Check if stored state is valid
+      if (!Array.isArray(storedStack) || typeof storedStackIndex !== 'number') {
+        console.warn('[NavigationStackManager] Invalid browser state structure');
+        return false;
+      }
+
+      // Restore from browser state if internal stack is empty
+      if (this.stack.length === 0 || this.currentIndex === -1) {
+        this.stack = storedStack;
+        this.currentIndex = storedStackIndex;
+        console.log('[NavigationStackManager] Restored stack from browser state');
+        return true;
+      }
+
+      // Verify current indices match
+      if (this.currentIndex !== storedStackIndex) {
+        console.warn('[NavigationStackManager] Stack index mismatch, synchronizing...');
+        this.currentIndex = storedStackIndex;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('[NavigationStackManager] Validation error:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Force-reset navigation stack and clear all history
+   * Used when validation fails or recovery is needed
+   */
+  resetStack() {
+    this.stack = ['/Home'];
+    this.currentIndex = 0;
+    this.isNavigating = false;
+    this.syncBrowserHistory();
+    this.notifyListeners();
+    console.log('[NavigationStackManager] Stack reset to default');
+  }
 }
 
 export const navigationStackManager = new NavigationStackManager();
