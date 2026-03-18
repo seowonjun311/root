@@ -43,7 +43,7 @@ export default function AppSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+    <div className="min-h-screen bg-background">
       <div className="p-6 pb-3">
         <h1 className="text-xl font-bold text-amber-900 flex items-center gap-2">
           🏠 홈

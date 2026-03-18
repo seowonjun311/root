@@ -61,7 +61,7 @@ export default function Records() {
   const CAT_EMOJIS = { exercise: '🏃', study: '📚', mental: '🧘', daily: '🏠' };
 
   return (
-    <div className="min-h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+    <div className="min-h-screen bg-background">
       {/* 획득한 칭호 드로워 */}
       <Drawer open={showBadges} onOpenChange={setShowBadges}>
         <DrawerContent className="max-h-[80vh] overflow-y-auto">
