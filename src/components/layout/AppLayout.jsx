@@ -21,7 +21,17 @@ export default function AppLayout() {
   const location = useLocation();
   const currentPath = location.pathname;
   const scrollRefs = useRef({});
-  const [visibleTabs, setVisibleTabs] = useState(new Set([currentPath]));
+  const [visibleTabs, setVisibleTabs] = useState(() => {
+    // Initialize with only the current tab to prevent root mount flashing
+    const currentIndex = TAB_PAGES.findIndex(t => t.path === currentPath);
+    const initial = new Set([currentPath]);
+    
+    // Pre-add adjacent tabs so they're ready for smooth transitions
+    if (currentIndex > 0) initial.add(TAB_PAGES[currentIndex - 1].path);
+    if (currentIndex < TAB_PAGES.length - 1) initial.add(TAB_PAGES[currentIndex + 1].path);
+    
+    return initial;
+  });
 
   // Save scroll position when leaving a tab, restore when entering
   useEffect(() => {
