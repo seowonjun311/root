@@ -207,6 +207,15 @@ export default function GoalProgress({ goal, logs = [] }) {
             boxShadow: 'inset 0 1px 3px rgba(255,240,180,0.6), 0 3px 8px rgba(80,50,10,0.25)',
           }}
           onClick={() => setShowCalendar(v => !v)}
+          aria-label={`${goal.title} 진행 현황 (${elapsedDays}/${totalDays}일)`}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setShowCalendar(v => !v);
+            }
+          }}
         >
           {/* 상단 배너 */}
           <div className="py-2 px-4 flex items-center justify-between" style={{
@@ -221,8 +230,9 @@ export default function GoalProgress({ goal, logs = [] }) {
               onClick={e => { e.stopPropagation(); setShowMenu(true); }}
               className="p-1.5 rounded transition-colors"
               style={{ color: '#fff8e8' }}
+              aria-label={`${goal.title} 목표 수정`}
             >
-              <Pencil className="w-3.5 h-3.5" />
+              <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           </div>
 
@@ -276,15 +286,17 @@ export default function GoalProgress({ goal, logs = [] }) {
             <button
               onClick={handleEditOpen}
               className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left"
+              aria-label="목표 정보 수정"
             >
-              <Pencil className="w-4 h-4 text-amber-600" />
+              <Pencil className="w-4 h-4 text-amber-600" aria-hidden="true" />
               <span className="text-sm font-semibold">목표 수정</span>
             </button>
             <button
               onClick={handleDeleteOpen}
               className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 transition-colors text-left"
+              aria-label="목표 영구 삭제"
             >
-              <Trash2 className="w-4 h-4 text-red-500" />
+              <Trash2 className="w-4 h-4 text-red-500" aria-hidden="true" />
               <span className="text-sm font-semibold text-red-500">목표 삭제</span>
             </button>
           </div>
