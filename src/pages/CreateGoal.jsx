@@ -226,6 +226,8 @@ export default function CreateGoal() {
             <button
               onClick={() => { setHasDDay(true); setStep(1); }}
               className="w-full p-5 rounded-2xl border-2 border-amber-300 bg-amber-50/80 text-left hover:bg-amber-100/80 transition-all"
+              aria-label="D-day 있음 선택"
+              aria-pressed={hasDDay === true}
             >
               <p className="font-bold text-amber-900 text-base">📅 D-day 있음</p>
               <p className="text-sm text-amber-700/70 mt-1">시험이나 마감일이 정해져 있어요</p>
@@ -233,6 +235,8 @@ export default function CreateGoal() {
             <button
               onClick={() => { setHasDDay(false); setStep(1); }}
               className="w-full p-5 rounded-2xl border-2 border-border bg-card text-left hover:bg-secondary/50 transition-all"
+              aria-label="D-day 없음 선택"
+              aria-pressed={hasDDay === false}
             >
               <p className="font-bold text-foreground text-base">📖 D-day 없음</p>
               <p className="text-sm text-muted-foreground mt-1">꾸준히 공부 습관을 만들고 싶어요</p>
@@ -302,15 +306,24 @@ export default function CreateGoal() {
             <label className="text-sm font-semibold text-amber-800 mb-2 block">기간</label>
             <div className="flex gap-2 mb-2">
               {[{ label: '4주', weeks: 4 }, { label: '8주', weeks: 8 }, { label: '12주', weeks: 12 }].map(({ label, weeks }) => (
-                <button key={weeks} onClick={() => { setDuration(weeks * 7); setIsCustomDuration(false); setCustomWeeks(''); }}
-                  className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
-                    !isCustomDuration && duration === weeks * 7 ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
-                  {label}
-                </button>
-              ))}
-              <button onClick={() => setIsCustomDuration(true)}
+                  <button 
+                    key={weeks} 
+                    onClick={() => { setDuration(weeks * 7); setIsCustomDuration(false); setCustomWeeks(''); }}
+                    className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
+                      !isCustomDuration && duration === weeks * 7 ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                    aria-label={`${label} 선택`}
+                    aria-pressed={!isCustomDuration && duration === weeks * 7}
+                  >
+                    {label}
+                  </button>
+                ))}
+              <button 
+                onClick={() => setIsCustomDuration(true)}
                 className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
-                  isCustomDuration ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
+                  isCustomDuration ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                aria-label="기간 직접 입력"
+                aria-pressed={isCustomDuration}
+              >
                 직접입력
               </button>
             </div>
