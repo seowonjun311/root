@@ -1,36 +1,46 @@
-import React, { createContext, useContext, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { navigationStackManager } from './NavigationStackManager';
 
 const NavigationContext = createContext();
 
 export function NavigationProvider({ children }) {
   const location = useLocation();
-  const historyStackRef = useRef([location.pathname]);
-  const directionRef = useRef('push');
+  const [, setManagerState] = useState(0);
 
   useEffect(() => {
-    const currentPath = location.pathname;
-    const stack = historyStackRef.current;
-    const lastPath = stack[stack.length - 1];
-
-    if (currentPath === lastPath) return;
-
-    // Check if we're going back
-    if (stack.includes(currentPath) && stack.indexOf(currentPath) < stack.length - 1) {
-      directionRef.current = 'pop';
-      // Remove everything after this path
-      const index = stack.indexOf(currentPath);
-      historyStackRef.current = stack.slice(0, index + 1);
+    // Initialize on first load
+    if (navigationStackManager.getStack().length === 0) {
+      navigationStackManager.initialize(location.pathname);
     } else {
-      // Going forward
-      directionRef.current = 'push';
-      historyStackRef.current = [...stack, currentPath];
+      const currentPath = navigationStackManager.getCurrentPath();
+      const newPath = location.pathname;
+
+      if (currentPath !== newPath) {
+        // Check if path exists in stack (going back)
+        const stack = navigationStackManager.getStack();
+        if (stack.includes(newPath) && stack.indexOf(newPath) < stack.length - 1) {
+          navigationStackManager.pop();
+        } else {
+          navigationStackManager.push(newPath);
+        }
+      }
     }
   }, [location.pathname]);
 
+  // Subscribe to manager updates
+  useEffect(() => {
+    const unsubscribe = navigationStackManager.subscribe(() => {
+      setManagerState(prev => prev + 1);
+    });
+    return unsubscribe;
+  }, []);
+
   const value = {
-    direction: directionRef.current,
-    stack: historyStackRef.current,
+    direction: navigationStackManager.getDirection(),
+    stack: navigationStackManager.getStack(),
+    canGoBack: navigationStackManager.canGoBack(),
+    manager: navigationStackManager,
   };
 
   return (
@@ -42,16 +52,15 @@ export function NavigationProvider({ children }) {
 
 export function useNavigationDirection() {
   const context = useContext(NavigationContext);
-  if (!context) {
-    return 'push';
-  }
-  return context.direction;
+  return context?.direction || 'push';
 }
 
 export function useNavigationStack() {
   const context = useContext(NavigationContext);
-  if (!context) {
-    return [];
-  }
-  return context.stack;
+  return context?.stack || [];
+}
+
+export function useCanGoBack() {
+  const context = useContext(NavigationContext);
+  return context?.canGoBack || false;
 }
