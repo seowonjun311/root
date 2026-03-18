@@ -53,29 +53,33 @@ export default function Home() {
     ]);
   });
 
-  const { data: user } = useQuery({
+  const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: ['me'],
     queryFn: () => base44.auth.me().catch(() => null),
   });
 
   useEffect(() => {
-    // 비로그인 게스트는 localStorage로 온보딩 체크
-    const isGuest = !user;
-    const guestOnboardingComplete = localStorage.getItem('guest_onboarding_complete') === 'true';
-    if (isGuest && !guestOnboardingComplete) {
-      navigate('/Onboarding');
-      return;
-    }
-    if (user && !user.onboarding_complete) {
-      navigate('/Onboarding');
-      return;
-    }
-    if (user?.active_category) setActiveCategory(user.active_category);
-    else {
+    // 로딩 중엔 아무것도 하지 않음
+    if (isUserLoading) return;
+
+    if (user) {
+      // 로그인 사용자: onboarding_complete 체크
+      if (!user.onboarding_complete) {
+        navigate('/Onboarding');
+        return;
+      }
+      if (user.active_category) setActiveCategory(user.active_category);
+    } else {
+      // 비로그인 게스트: localStorage 체크
+      const guestOnboardingComplete = localStorage.getItem('guest_onboarding_complete') === 'true';
+      if (!guestOnboardingComplete) {
+        navigate('/Onboarding');
+        return;
+      }
       const guestCat = localStorage.getItem('guest_active_category');
       if (guestCat) setActiveCategory(guestCat);
     }
-  }, [user, navigate]);
+  }, [user, isUserLoading, navigate]);
 
   const { data: goals = [] } = useQuery({
     queryKey: ['goals'],
