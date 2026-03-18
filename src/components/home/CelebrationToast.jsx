@@ -34,6 +34,9 @@ export default function CelebrationToast({ trigger, onDone }) {
         animate={{ y: 0, opacity: 1, scale: 1 }}
         exit={{ y: -80, opacity: 0, scale: 0.9 }}
         transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
       >
         <div className="bg-gradient-to-r from-amber-800 to-amber-600 rounded-2xl px-5 py-4 shadow-2xl flex items-center gap-4 border border-amber-400/40">
           <motion.span
