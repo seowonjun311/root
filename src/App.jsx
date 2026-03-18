@@ -11,7 +11,7 @@ import { guestDataPersistence } from '@/lib/GuestDataPersistence';
 import AppLayout from './components/layout/AppLayout.jsx';
 import Header from './components/layout/Header.jsx';
 import PageTransition from './components/layout/PageTransition';
-import Onboarding from './pages/Onboarding';
+const Onboarding = lazy(() => import(/* webpackChunkName: "onboarding" */ './pages/Onboarding'));
 
 // Aggressive code-splitting for non-critical pages (improves Time-to-Interactive)
 const PageNotFound  = lazy(() => import(/* webpackChunkName: "404" */ './lib/PageNotFound'));
