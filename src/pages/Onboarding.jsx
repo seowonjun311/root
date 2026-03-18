@@ -219,17 +219,19 @@ export default function Onboarding() {
         </p>
         <div className="space-y-3 mt-8 w-full">
           <button
-            onClick={() => base44.auth.redirectToLogin('/Onboarding?from=login')}
-            className="w-full py-3 rounded-xl font-semibold text-sm bg-amber-700 text-amber-50 hover:bg-amber-800 transition-colors flex items-center justify-center gap-2"
-          >
-            로그인하기
-          </button>
+             onClick={() => base44.auth.redirectToLogin('/Onboarding?from=login')}
+             className="w-full py-3 rounded-xl font-semibold text-sm bg-amber-700 text-amber-50 hover:bg-amber-800 transition-colors flex items-center justify-center gap-2"
+             aria-label="로그인"
+           >
+             로그인하기
+           </button>
           <button
-            onClick={() => goNext('goal')}
-            className="w-full py-3 rounded-xl font-semibold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors border-2 border-dashed border-amber-300"
-          >
-            <span className="mr-2">🦊</span>가입없이 시작
-          </button>
+             onClick={() => goNext('goal')}
+             className="w-full py-3 rounded-xl font-semibold text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors border-2 border-dashed border-amber-300"
+             aria-label="가입없이 시작"
+           >
+             <span className="mr-2" aria-hidden="true">🦊</span>가입없이 시작
+           </button>
         </div>
       </div>
     );
@@ -260,13 +262,16 @@ export default function Onboarding() {
         <h2 className="text-xl font-bold text-center text-amber-900 mb-6">이 목표는 어떤 영역인가요?</h2>
         <div className="grid grid-cols-2 gap-3">
           {CATEGORY_OPTIONS.map(opt => (
-            <button key={opt.id} onClick={() => setCategory(opt.id)}
-              className={`p-4 rounded-2xl border-2 transition-all duration-200 text-center
-                ${category === opt.id ? 'border-amber-600 bg-amber-100/80 shadow-md scale-[1.02]' : 'border-border bg-card hover:border-amber-400/50'}`}>
-              <span className="text-3xl block mb-2">{opt.emoji}</span>
-              <span className="font-semibold text-sm">{opt.label}</span>
-            </button>
-          ))}
+             <button key={opt.id} onClick={() => setCategory(opt.id)}
+               className={`p-4 rounded-2xl border-2 transition-all duration-200 text-center
+                 ${category === opt.id ? 'border-amber-600 bg-amber-100/80 shadow-md scale-[1.02]' : 'border-border bg-card hover:border-amber-400/50'}`}
+               aria-label={`${opt.label} 선택`}
+               aria-pressed={category === opt.id}
+             >
+               <span className="text-3xl block mb-2" aria-hidden="true">{opt.emoji}</span>
+               <span className="font-semibold text-sm">{opt.label}</span>
+             </button>
+           ))}
         </div>
       </div>
     );
@@ -279,19 +284,25 @@ export default function Onboarding() {
           <p className="text-sm text-muted-foreground mt-1">목표 유형에 따라 다르게 설정돼요</p>
         </div>
         <button
-          onClick={() => { setHasDDay(true); }}
-          className={`w-full p-5 rounded-2xl border-2 text-left transition-all ${
-            hasDDay === true ? 'border-amber-600 bg-amber-100/80' : 'border-border bg-card hover:border-amber-400/50'}`}>
-          <p className="font-bold text-amber-900 text-base">📅 D-day 있음</p>
-          <p className="text-sm text-amber-700/70 mt-1">시험이나 마감일이 정해져 있어요</p>
-        </button>
-        <button
-          onClick={() => { setHasDDay(false); }}
-          className={`w-full p-5 rounded-2xl border-2 text-left transition-all ${
-            hasDDay === false ? 'border-amber-600 bg-amber-100/80' : 'border-border bg-card hover:border-amber-400/50'}`}>
-          <p className="font-bold text-foreground text-base">📖 D-day 없음</p>
-          <p className="text-sm text-muted-foreground mt-1">꾸준히 공부 습관을 만들고 싶어요</p>
-        </button>
+           onClick={() => { setHasDDay(true); }}
+           className={`w-full p-5 rounded-2xl border-2 text-left transition-all ${
+             hasDDay === true ? 'border-amber-600 bg-amber-100/80' : 'border-border bg-card hover:border-amber-400/50'}`}
+           aria-label="D-day 있음 선택"
+           aria-pressed={hasDDay === true}
+         >
+           <p className="font-bold text-amber-900 text-base">📅 D-day 있음</p>
+           <p className="text-sm text-amber-700/70 mt-1">시험이나 마감일이 정해져 있어요</p>
+         </button>
+         <button
+           onClick={() => { setHasDDay(false); }}
+           className={`w-full p-5 rounded-2xl border-2 text-left transition-all ${
+             hasDDay === false ? 'border-amber-600 bg-amber-100/80' : 'border-border bg-card hover:border-amber-400/50'}`}
+           aria-label="D-day 없음 선택"
+           aria-pressed={hasDDay === false}
+         >
+           <p className="font-bold text-foreground text-base">📖 D-day 없음</p>
+           <p className="text-sm text-muted-foreground mt-1">꾸준히 공부 습관을 만들고 싶어요</p>
+         </button>
       </div>
     );
 
@@ -332,14 +343,17 @@ export default function Onboarding() {
         <h2 className="text-xl font-bold text-center text-amber-900 mb-2">얼마 동안 도전하시겠습니까?</h2>
         <p className="text-sm text-muted-foreground text-center mb-6">기간을 선택해 주세요</p>
         <div className="grid grid-cols-3 gap-3 mb-4">
-          {[4, 8, 12, 16, 20, 24].map(weeks => (
-            <button key={weeks} onClick={() => { setDuration(weeks * 7); setCustomDuration(''); }}
-              className={`py-3 rounded-xl font-semibold text-sm transition-all ${
-                duration === weeks * 7 && !customDuration ? 'bg-amber-700 text-amber-50 shadow-md' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}>
-              {weeks}주
-            </button>
-          ))}
-        </div>
+           {[4, 8, 12, 16, 20, 24].map(weeks => (
+             <button key={weeks} onClick={() => { setDuration(weeks * 7); setCustomDuration(''); }}
+               className={`py-3 rounded-xl font-semibold text-sm transition-all ${
+                 duration === weeks * 7 && !customDuration ? 'bg-amber-700 text-amber-50 shadow-md' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+               aria-label={`${weeks}주 선택`}
+               aria-pressed={duration === weeks * 7 && !customDuration}
+             >
+               {weeks}주
+             </button>
+           ))}
+         </div>
         <div className="flex items-center gap-3 mt-2">
           <input type="number" min="1" max="52" value={customDuration}
             onChange={e => { setCustomDuration(e.target.value); setDuration(0); }}
@@ -363,44 +377,53 @@ export default function Onboarding() {
           placeholder="예: 러닝, LC 공부, 명상..." className="h-11 rounded-xl text-center text-sm border-amber-300 bg-white/80 mb-4 text-amber-900 placeholder:text-amber-300" />
         <p className="text-xs font-semibold text-amber-800 mb-2">행동 유형</p>
         <div className="space-y-2 mb-4">
-          {ACTION_TYPE_OPTIONS.map(opt => (
-            <button key={opt.value} onClick={() => setActionType(opt.value)}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-                actionType === opt.value ? 'border-amber-600 bg-amber-50/80' : 'border-border bg-card hover:border-amber-300'}`}>
-              <span className="text-xl">{opt.emoji}</span>
-              <div>
-                <p className="text-sm font-semibold">
-                  {opt.label}
-                  {category === 'exercise' && opt.value === 'timer' && ' (GPS 측정 가능)'}
-                </p>
-                <p className="text-xs text-muted-foreground">{opt.desc}</p>
-              </div>
-            </button>
-          ))}
+           {ACTION_TYPE_OPTIONS.map(opt => (
+             <button key={opt.value} onClick={() => setActionType(opt.value)}
+               className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                 actionType === opt.value ? 'border-amber-600 bg-amber-50/80' : 'border-border bg-card hover:border-amber-300'}`}
+               aria-label={`${opt.label}: ${opt.desc} 선택`}
+               aria-pressed={actionType === opt.value}
+             >
+               <span className="text-xl" aria-hidden="true">{opt.emoji}</span>
+               <div>
+                 <p className="text-sm font-semibold">
+                   {opt.label}
+                   {category === 'exercise' && opt.value === 'timer' && ' (GPS 측정 가능)'}
+                 </p>
+                 <p className="text-xs text-muted-foreground">{opt.desc}</p>
+               </div>
+             </button>
+           ))}
         </div>
         <p className="text-xs font-semibold text-amber-800 mb-2">주 횟수</p>
         <div className="grid grid-cols-7 gap-1.5 mb-4">
-          {[1, 2, 3, 4, 5, 6, 7].map(f => (
-            <button key={f} onClick={() => setFrequency(f)}
-              className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
-              {f}
-            </button>
-          ))}
-        </div>
+           {[1, 2, 3, 4, 5, 6, 7].map(f => (
+             <button key={f} onClick={() => setFrequency(f)}
+               className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                 frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+               aria-label={`주 ${f}회 선택`}
+               aria-pressed={frequency === f}
+             >
+               {f}
+             </button>
+           ))}
+         </div>
         <p className="text-xs text-muted-foreground mb-4">주 {frequency}회</p>
         {actionType === 'timer' && (
           <>
             <p className="text-xs font-semibold text-amber-800 mb-2">1회 시간</p>
             <div className="flex gap-2 mb-2">
-              {[20, 30, 60].map(m => (
-                <button key={m} onClick={() => setActionMinutes(m)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                    actionMinutes === m ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}>
-                  {m}분
-                </button>
-              ))}
-            </div>
+               {[20, 30, 60].map(m => (
+                 <button key={m} onClick={() => setActionMinutes(m)}
+                   className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                     actionMinutes === m ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                   aria-label={`${m}분 선택`}
+                   aria-pressed={actionMinutes === m}
+                 >
+                   {m}분
+                 </button>
+               ))}
+             </div>
             <div className="flex items-center gap-2">
               <input type="number" min="1" max="300"
                 placeholder="직접 입력"
@@ -457,10 +480,10 @@ export default function Onboarding() {
       {currentStep !== 'welcome' && (
         <div className="px-6 pb-8 flex gap-3">
           {stepHistory.length > 1 && (
-            <Button variant="outline" onClick={goBack} className="rounded-xl h-12 px-4">
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-          )}
+             <Button variant="outline" onClick={goBack} className="rounded-xl h-12 px-4" aria-label="이전 단계로 돌아가기">
+               <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+             </Button>
+           )}
           <Button
             className="flex-1 h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold text-base"
             disabled={!canNext() || isSubmitting}
