@@ -32,13 +32,18 @@ export default function Onboarding() {
   const [stepHistory, setStepHistory] = useState(['welcome']);
   const currentStep = stepHistory[stepHistory.length - 1];
 
-  // 로그인 후 리다이렉트 감지: 로그인 상태면 자동으로 goal 스텝으로 이동
+  // 로그인 후 리다이렉트 감지: URL에 ?from=login 파라미터가 있을 때만 자동으로 goal 스텝으로 이동
   React.useEffect(() => {
-    base44.auth.isAuthenticated().then(isLoggedIn => {
-      if (isLoggedIn && currentStep === 'welcome') {
-        setStepHistory(['welcome', 'goal']);
-      }
-    });
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('from') === 'login') {
+      base44.auth.isAuthenticated().then(isLoggedIn => {
+        if (isLoggedIn) {
+          setStepHistory(['welcome', 'goal']);
+          // URL 파라미터 제거
+          window.history.replaceState({}, '', '/Onboarding');
+        }
+      });
+    }
   }, []);
 
   const [goalInput, setGoalInput] = useState('');
