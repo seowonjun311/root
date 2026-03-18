@@ -114,6 +114,17 @@ function App() {
     return () => mq.removeEventListener('change', e => apply(e.matches));
   }, []);
 
+  // Hide splash screen on app initialization complete
+  useEffect(() => {
+    const splashScreen = document.getElementById('splash-screen');
+    if (splashScreen) {
+      // Small delay to ensure smooth transition
+      setTimeout(() => {
+        splashScreen.classList.add('hidden');
+      }, 100);
+    }
+  }, []);
+
   // Initialize background cleanup for guest data persistence
   useEffect(() => {
     guestDataPersistence.startBackgroundCleanup();
