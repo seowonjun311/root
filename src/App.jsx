@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Route, Routes, useLocation, Navigate, useNavig
 import { AnimatePresence } from 'framer-motion'
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { NavigationProvider } from '@/lib/NavigationContext';
+import { AnimationStateProvider } from '@/lib/AnimationStateContext';
 import { navigationStackManager } from '@/lib/NavigationStackManager';
 import { guestDataPersistence } from '@/lib/GuestDataPersistence';
 import AppLayout from './components/layout/AppLayout.jsx';
@@ -197,6 +198,18 @@ function App() {
   // Register Android back button handler
   useEffect(() => {
     const handleAndroidBackButton = (event) => {
+      // Import here to avoid circular dependency
+      const animationStateModule = require('@/lib/AnimationStateContext');
+      const state = animationStateModule;
+      
+      // Prevent back navigation during page transitions
+      if (state && state.isAnimating) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        console.log('[App] Back button blocked during animation');
+        return;
+      }
+
       navigationStackManager.handleAndroidBackButton(event);
     };
 
@@ -213,8 +226,10 @@ function App() {
       <AuthProvider>
         <Router>
           <NavigationProvider>
-            <AppContent />
-            <Toaster />
+            <AnimationStateProvider>
+              <AppContent />
+              <Toaster />
+            </AnimationStateProvider>
           </NavigationProvider>
         </Router>
       </AuthProvider>
