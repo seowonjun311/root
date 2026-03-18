@@ -309,7 +309,7 @@ export default function Onboarding() {
             value={dDay}
             min={new Date().toISOString().split('T')[0]}
             onChange={e => setDDay(e.target.value)}
-            className="w-full h-12 rounded-xl border border-input bg-white/80 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+            className="w-full h-12 rounded-xl border border-input bg-white/80 px-4 text-sm text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
           />
           {daysLeft !== null && daysLeft > 0 && (
             <p className="text-xs text-amber-700 font-semibold mt-2">🎯 D-{daysLeft} · {daysLeft}일 남았습니다</p>
