@@ -273,7 +273,7 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-background min-h-screen" onTouchStart={handlePullStart}>
+    <div className="bg-background min-h-screen" onTouchStart={handlePullStart} style={{ minHeight: '100dvh' }}>
       {/* Pull-to-Refresh indicator */}
       <motion.div
         className="fixed top-0 left-0 right-0 flex justify-center pt-4 z-50"
@@ -326,7 +326,8 @@ export default function Home() {
           <div className="px-4 pb-4">
             <button
               onClick={() => navigate(`/CreateGoal?category=${activeCategory}&goalId=${activeGoal.id}`)}
-              className="w-full h-11 rounded-lg font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="w-full rounded-lg font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
+              style={{ minHeight: '44px' }}
               style={{
                 background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 60%, #f0e0bc 100%)',
                 border: '2px dashed #a07840',
