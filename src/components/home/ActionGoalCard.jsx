@@ -523,10 +523,10 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
             <Button variant="outline" onClick={() => setShowEdit(false)} className="flex-1 rounded-xl">취소</Button>
             <Button
               onClick={handleSave}
-              disabled={!editTitle.trim() || saving}
+              disabled={!editTitle.trim() || updateMutation.isPending}
               className="flex-1 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50"
             >
-              {saving ? '저장 중...' : '저장'}
+              {updateMutation.isPending ? '저장 중...' : '저장'}
             </Button>
           </DrawerFooter>
         </DrawerContent>
