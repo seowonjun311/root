@@ -13,12 +13,30 @@ class NavigationStackManager {
   }
 
   /**
-   * Initialize with a starting path
+   * Initialize with a starting path or deep link
+   * For deep links, initializes the stack with proper history
    */
-  initialize(initialPath) {
-    this.stack = [initialPath];
-    this.currentIndex = 0;
+  initialize(initialPath, isDeepLink = false) {
+    if (isDeepLink) {
+      // For deep links, build a minimal history stack
+      // e.g., /Home -> /CreateGoal?category=exercise becomes [/Home, /CreateGoal?category=exercise]
+      const rootPath = '/Home'; // Default root
+      this.stack = [rootPath, initialPath];
+      this.currentIndex = 1;
+    } else {
+      this.stack = [initialPath];
+      this.currentIndex = 0;
+    }
     this.notifyListeners();
+  }
+
+  /**
+   * Detect and handle deep link initialization
+   * Called once when the app first loads to check if we're entering via deep link
+   */
+  initializeFromCurrentLocation(currentPath) {
+    const isDeepLink = currentPath !== '/' && currentPath !== '/Home' && currentPath !== '/Onboarding';
+    this.initialize(currentPath, isDeepLink);
   }
 
   /**
