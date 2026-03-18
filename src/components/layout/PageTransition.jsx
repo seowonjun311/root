@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useNavigationDirection } from '@/hooks/useNavigationDirection';
+import { useNavigationDirection } from '@/lib/NavigationContext';
 
 // Push: slide in from right / out to left (native iOS/Android forward)
 // Pop:  slide in from left  / out to right (native back)
