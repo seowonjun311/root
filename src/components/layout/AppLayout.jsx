@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
+import { navigationStackManager } from '../../lib/NavigationStackManager';
 import BottomNav from './BottomNav.jsx';
 import Header from './Header.jsx';
 import Home from '../../pages/Home.jsx';
@@ -32,6 +33,14 @@ export default function AppLayout() {
     
     return initial;
   });
+
+  // Enforce stack-based navigation on all tab route changes
+  useEffect(() => {
+    const isTabRoute = TAB_PAGES.some(t => t.path === currentPath);
+    if (isTabRoute) {
+      navigationStackManager.enforceStackNavigation(currentPath);
+    }
+  }, [currentPath]);
 
   // Save scroll position when leaving a tab, restore when entering
   useEffect(() => {
