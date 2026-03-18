@@ -3,9 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="https://base44.com/logo_v2.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#fef3c7" />
     <link rel="manifest" href="/manifest.json" />
     <title>Base44 APP</title>
+    
+    <!-- Critical Font Preloads for FCP optimization -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" as="style" />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600&display=swap" as="style" crossorigin />
+    
+    <!-- Font-display swap for instant text rendering -->
+    <style>
+      @font-face {
+        font-family: 'Noto Serif KR';
+        src: local('Noto Serif KR');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Noto Sans KR';
+        src: local('Noto Sans KR');
+        font-display: swap;
+      }
+      /* System font fallback stack (iOS: San Francisco, Android: Roboto) */
+      body {
+        font-family: 'Noto Serif KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+      }
+    </style>
     
     <!-- Prevent light-mode flash on startup by applying dark class immediately -->
     <script>
