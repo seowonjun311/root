@@ -9,24 +9,33 @@ export function NavigationProvider({ children }) {
   const navigate = useNavigate();
   const [, setManagerState] = useState(0);
 
-  // Initialize navigation stack and sync with router
+  // Initialize navigation stack and sync with router (run once on mount)
+  const [isInitialized, setIsInitialized] = useState(false);
+  
   useEffect(() => {
-    if (navigationStackManager.getStack().length === 0) {
+    if (!isInitialized && navigationStackManager.getStack().length === 0) {
+      // Perform robust deep-link initialization
       navigationStackManager.initializeFromCurrentLocation(location.pathname);
-    } else {
-      const currentPath = navigationStackManager.getCurrentPath();
-      const newPath = location.pathname;
+      setIsInitialized(true);
+    }
+  }, [isInitialized]);
 
-      if (currentPath !== newPath) {
-        const stack = navigationStackManager.getStack();
-        if (stack.includes(newPath) && stack.indexOf(newPath) < stack.length - 1) {
-          navigationStackManager.pop();
-        } else {
-          navigationStackManager.push(newPath);
-        }
+  // Sync location changes with navigation manager (after initialization)
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const currentPath = navigationStackManager.getCurrentPath();
+    const newPath = location.pathname;
+
+    if (currentPath !== newPath) {
+      const stack = navigationStackManager.getStack();
+      if (stack.includes(newPath) && stack.indexOf(newPath) < stack.length - 1) {
+        navigationStackManager.pop();
+      } else {
+        navigationStackManager.push(newPath);
       }
     }
-  }, [location.pathname]);
+  }, [location.pathname, isInitialized]);
 
   // Subscribe to manager updates and sync URL when navigation manager changes
   useEffect(() => {
