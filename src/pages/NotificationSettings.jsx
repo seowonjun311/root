@@ -228,22 +228,22 @@ export default function NotificationSettings() {
           <div className="space-y-5 py-1">
             {/* 시간 설정 */}
             <div>
-              <p className="text-xs font-bold text-amber-800 mb-2">⏰ 시간 설정</p>
-              <div className="flex items-center justify-center gap-2 bg-secondary/40 rounded-2xl px-4 py-1">
+              <p id="time-label" className="text-xs font-bold text-amber-800 mb-2">⏰ 시간 설정</p>
+              <div className="flex items-center justify-center gap-2 bg-secondary/40 rounded-2xl px-4 py-1" aria-labelledby="time-label">
                 <div className="w-16">
-                  <DrumPicker items={HOURS} value={pendingHour} onChange={setPendingHour} />
+                  <DrumPicker items={HOURS} value={pendingHour} onChange={setPendingHour} aria-label="시간" />
                 </div>
-                <span className="text-2xl font-bold text-amber-900 pb-1">:</span>
+                <span className="text-2xl font-bold text-amber-900 pb-1" aria-hidden="true">:</span>
                 <div className="w-16">
-                  <DrumPicker items={MINUTES} value={pendingMinute} onChange={setPendingMinute} />
+                  <DrumPicker items={MINUTES} value={pendingMinute} onChange={setPendingMinute} aria-label="분" />
                 </div>
               </div>
             </div>
 
             {/* 요일 설정 */}
             <div>
-              <p className="text-xs font-bold text-amber-800 mb-2">📅 요일 설정</p>
-              <div className="flex gap-1.5">
+              <p id="days-label" className="text-xs font-bold text-amber-800 mb-2">📅 요일 설정</p>
+              <div className="flex gap-1.5" role="group" aria-labelledby="days-label" aria-describedby="days-helper">
                 {DAY_KEYS.map((key, i) => (
                   <button
                     key={key}
@@ -251,29 +251,33 @@ export default function NotificationSettings() {
                     className={`flex-1 flex flex-col items-center py-2 rounded-xl text-xs font-bold transition-all gap-1 ${
                       pendingDays[key] ? 'bg-amber-700 text-amber-50' : 'bg-secondary/70 text-muted-foreground'
                     }`}
+                    aria-pressed={pendingDays[key]}
                   >
                     <span>{DAYS[i]}</span>
-                    <span className="text-[10px]">{pendingDays[key] ? '✓' : ''}</span>
+                    <span className="text-[10px]" aria-hidden="true">{pendingDays[key] ? '✓' : ''}</span>
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-muted-foreground text-center mt-1.5">
+              <p id="days-helper" className="text-[10px] text-muted-foreground text-center mt-1.5">
                 {pendingActiveCount === 0 ? '최소 하루는 선택해주세요' : `주 ${pendingActiveCount}회 알림`}
               </p>
             </div>
 
             {/* 메시지 */}
             <div>
-              <p className="text-xs font-bold text-amber-800 mb-2">💬 메시지</p>
+              <p id="message-label" className="text-xs font-bold text-amber-800 mb-2">💬 메시지</p>
               <div className="relative">
                 <textarea
+                  id="message-input"
                   value={pendingMessage}
                   onChange={e => setPendingMessage(e.target.value.slice(0, 20))}
                   placeholder="20자 이내 알림 메시지 (비우면 기본 문구)"
                   className="w-full h-16 rounded-xl border border-input bg-secondary/40 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-amber-400/50 placeholder:text-muted-foreground/50"
                   maxLength={20}
+                  aria-labelledby="message-label"
+                  aria-describedby="message-counter"
                 />
-                <span className="absolute bottom-2 right-3 text-[10px] text-muted-foreground">
+                <span id="message-counter" className="absolute bottom-2 right-3 text-[10px] text-muted-foreground" aria-live="polite">
                   {pendingMessage.length} / 20
                 </span>
               </div>
