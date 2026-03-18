@@ -34,7 +34,7 @@ class NavigationStackManager {
         this.isPopstateHandling = true;
 
         const browserState = event.state;
-        if (!browserState?.stackIndex !== undefined) {
+        if (browserState?.stackIndex !== undefined) {
           console.log('[NavigationStackManager] Popstate: syncing stack from browser state');
           this.currentIndex = browserState.stackIndex;
           this.stack = browserState.stack || this.stack;
@@ -346,7 +346,7 @@ class NavigationStackManager {
       const browserState = window.history.state;
       
       // If no browser state, fresh initialization
-      if (!browserState?.stackIndex === undefined) {
+      if (browserState?.stackIndex === undefined) {
         return true;
       }
 
