@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
@@ -17,6 +17,25 @@ export default function AppSettings() {
   const [showLogout, setShowLogout] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
 
+  const nicknameUpdateMutation = useMutation({
+    mutationFn: (nickname) => base44.auth.updateMe({ nickname: nickname.trim(), nickname_changed_at: new Date().toISOString() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+      setShowNickname(false);
+      toast.success('닉네임이 변경되었습니다.');
+    },
+    onError: () => toast.error('닉네임 변경에 실패했습니다.'),
+  });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: () => base44.auth.deleteAccount(),
+    onSuccess: () => {
+      toast.success('계정이 삭제되었습니다.');
+      base44.auth.logout('/Onboarding');
+    },
+    onError: () => toast.error('계정 삭제 중 오류가 발생했습니다.'),
+  });
+
   const { pullProgress, onTouchStart: handlePullStart } = usePullToRefreshTabbed(async () => {
     await queryClient.invalidateQueries({ queryKey: ['me'] });
   });
@@ -26,26 +45,17 @@ export default function AppSettings() {
     queryFn: () => base44.auth.me(),
   });
 
-  const handleNicknameChange = async () => {
+  const handleNicknameChange = () => {
     if (!newNickname.trim()) return;
-    await base44.auth.updateMe({ nickname: newNickname.trim(), nickname_changed_at: new Date().toISOString() });
-    queryClient.invalidateQueries({ queryKey: ['me'] });
-    setShowNickname(false);
-    toast.success('닉네임이 변경되었습니다.');
+    nicknameUpdateMutation.mutate(newNickname);
   };
 
   const handleLogout = () => {
     base44.auth.logout('/Onboarding');
   };
 
-  const handleDeleteAccount = async () => {
-    try {
-      await base44.auth.deleteAccount();
-      toast.success('계정이 삭제되었습니다.');
-      base44.auth.logout('/Onboarding');
-    } catch (error) {
-      toast.error('계정 삭제 중 오류가 발생했습니다.');
-    }
+  const handleDeleteAccount = () => {
+    deleteAccountMutation.mutate();
   };
 
   return (
@@ -123,8 +133,8 @@ export default function AppSettings() {
             </p>
           </div>
           <DrawerFooter className="flex gap-2 pt-4">
-            <Button variant="outline" onClick={() => setShowNickname(false)} className="flex-1 rounded-xl">취소</Button>
-            <Button onClick={handleNicknameChange} className="flex-1 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50">확인</Button>
+            <Button variant="outline" onClick={() => setShowNickname(false)} className="flex-1 rounded-xl" aria-label="닉네임 변경 취소">취소</Button>
+            <Button onClick={handleNicknameChange} disabled={nicknameUpdateMutation.isPending} className="flex-1 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50" aria-label="닉네임 변경 확인">{nicknameUpdateMutation.isPending ? '변경 중...' : '확인'}</Button>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -157,8 +167,8 @@ export default function AppSettings() {
             모든 기록과 데이터가 영구적으로 삭제됩니다.
           </p>
           <DrawerFooter className="flex gap-2 pt-6">
-            <Button variant="outline" onClick={() => setShowDelete(false)} className="flex-1 rounded-xl">취소</Button>
-            <Button onClick={handleDeleteAccount} className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white">삭제</Button>
+            <Button variant="outline" onClick={() => setShowDelete(false)} className="flex-1 rounded-xl" aria-label="계정 삭제 취소">취소</Button>
+            <Button onClick={handleDeleteAccount} disabled={deleteAccountMutation.isPending} className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white" aria-label="계정 영구 삭제">{deleteAccountMutation.isPending ? '삭제 중...' : '삭제'}</Button>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -171,13 +181,14 @@ function SettingItem({ icon, label, desc, onClick }) {
     <button
       onClick={onClick}
       className="w-full flex items-center gap-3 p-4 rounded-2xl bg-card border border-border/60 hover:bg-secondary/50 transition-colors text-left"
+      aria-label={`${label}: ${desc}`}
     >
       {icon}
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm">{label}</p>
         <p className="text-xs text-muted-foreground truncate">{desc}</p>
       </div>
-      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+      <ChevronRight className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
     </button>
   );
 }
