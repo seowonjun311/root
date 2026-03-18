@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ChevronLeft, CalendarDays } from 'lucide-react';
@@ -18,6 +19,7 @@ const categoryNames = { exercise: '운동', study: '공부', mental: '정신', d
 export default function CreateGoal() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { triggerHaptic } = useHapticFeedback();
   const params = new URLSearchParams(window.location.search);
   const category = params.get('category') || 'exercise';
   const existingGoalId = params.get('goalId'); // 기존 결과 목표에 행동 목표 추가
@@ -74,6 +76,7 @@ export default function CreateGoal() {
   };
 
   const handleBack = () => {
+    triggerHaptic('impact', 'light');
     if (step === 0) { navigate(-1); return; }
     if (isStudy) {
       if (step === 2) { setStep(hasDDay ? 1 : 1); return; } // step 2 → 1
@@ -83,6 +86,7 @@ export default function CreateGoal() {
   };
 
   const handleSubmit = async () => {
+    triggerHaptic('impact', 'heavy');
     if (isAddingActionOnly) {
       const actionGoal = await base44.entities.ActionGoal.create({
         goal_id: existingGoalId,
