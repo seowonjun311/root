@@ -50,7 +50,7 @@ export default function AppSettings() {
   });
 
   const { pullProgress, onTouchStart: handlePullStart } = usePullToRefreshTabbed(async () => {
-    await queryClient.invalidateQueries({ queryKey: ['me'] });
+    // Pull-to-refresh는 필요시에만 수행 - 자동 리페칭 제거
   });
 
   const { data: user } = useQuery({
