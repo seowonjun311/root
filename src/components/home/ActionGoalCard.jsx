@@ -388,20 +388,6 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
                          <span className="flex items-center gap-1"><Play className="w-3 h-3" />시작</span>
                        )}
                      </button>
-                     {/* 타이머 완료(다음) 버튼 */}
-                     <button
-                       className="h-8 px-3 text-xs font-bold rounded-md transition-all active:scale-95"
-                       style={{
-                         background: 'linear-gradient(180deg, #5a8a40 0%, #3d6a28 50%, #2e5018 100%)',
-                         border: '2px solid #244010',
-                         boxShadow: 'inset 0 1px 2px rgba(180,255,120,0.3), 0 2px 4px rgba(20,40,5,0.4)',
-                         color: '#efffdc',
-                         textShadow: '0 1px 2px rgba(10,30,5,0.5)',
-                       }}
-                       onClick={handleConfirm}
-                     >
-                       <span className="flex items-center gap-1"><Check className="w-3 h-3" />다음</span>
-                     </button>
                    </div>
                  )
                ) : doneToday ? (
