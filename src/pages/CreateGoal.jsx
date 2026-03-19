@@ -21,6 +21,7 @@ export default function CreateGoal() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { triggerHaptic } = useHapticFeedback();
+  const formContainerRef = useScrollIntoViewOnFocus();
   const params = new URLSearchParams(window.location.search);
   const category = params.get('category') || 'exercise';
   const existingGoalId = params.get('goalId'); // 기존 결과 목표에 행동 목표 추가
