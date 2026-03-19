@@ -156,7 +156,15 @@ export default function GoalProgress({ goal, logs = [] }) {
   };
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.entities.Goal.update(goal.id, data),
+    mutationFn: (data) => {
+      if (isGuest) {
+        const guestData = guestDataPersistence.loadOnboardingData();
+        const updatedGoalData = { ...guestData.goalData, ...data };
+        guestDataPersistence.saveData('local_goal_data', updatedGoalData);
+        return Promise.resolve(updatedGoalData);
+      }
+      return base44.entities.Goal.update(goal.id, data);
+    },
     onMutate: async (updateData) => {
       await queryClient.cancelQueries({ queryKey: ['goals'] });
       const previous = queryClient.getQueryData(['goals']);
@@ -176,7 +184,13 @@ export default function GoalProgress({ goal, logs = [] }) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: () => base44.entities.Goal.delete(goal.id),
+    mutationFn: () => {
+      if (isGuest) {
+        guestDataPersistence.saveData('local_goal_data', null);
+        return Promise.resolve();
+      }
+      return base44.entities.Goal.delete(goal.id);
+    },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ['goals'] });
       const previous = queryClient.getQueryData(['goals']);
