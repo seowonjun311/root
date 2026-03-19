@@ -62,10 +62,9 @@ export default function PrivacyPolicy() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="fixed inset-0 bg-background flex flex-col" style={{ top: 'env(safe-area-inset-top)' }}>
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 bg-background/95 backdrop-blur border-b border-border/40"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)' }}>
+      <div className="flex items-center gap-3 px-4 py-3 bg-background/95 backdrop-blur border-b border-border/40 shrink-0">
         <button
           onClick={() => navigate(-1)}
           className="p-2 rounded-xl hover:bg-secondary transition-colors"
@@ -76,7 +75,7 @@ export default function PrivacyPolicy() {
         <h1 className="font-bold text-base text-amber-900">개인정보처리방침</h1>
       </div>
 
-      <div className="p-5 space-y-6 pb-12">
+      <div className="flex-1 overflow-y-auto p-5 space-y-6 pb-12">
         <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/60">
           <p className="text-xs text-amber-800 leading-relaxed">
             퀘스트로그(QuestLog) 앱(이하 "앱")은 사용자의 개인정보를 소중히 여기며, 
