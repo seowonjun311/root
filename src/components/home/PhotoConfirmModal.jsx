@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Image, X, Check, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import FocusLock from 'react-focus-lock';
+import { MapContainer, TileLayer, Polyline, CircleMarker } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip }) {
   const [photo, setPhoto] = useState(null);
