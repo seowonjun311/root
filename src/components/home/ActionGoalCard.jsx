@@ -162,6 +162,17 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     localStorage.setItem(GPS_KEY(actionGoal.id), JSON.stringify(gpsEnabled));
   }, [gpsEnabled, actionGoal.id]);
 
+  // Cleanup GPS watch and timer interval on unmount
+  useEffect(() => {
+    return () => {
+      clearInterval(intervalRef.current);
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (!showCalendar) return;
     const handler = (e) => {
