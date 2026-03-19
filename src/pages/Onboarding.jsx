@@ -18,6 +18,7 @@ import OnboardingNickname from '@/components/onboarding/OnboardingNickname';
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { triggerHaptic } = useHapticFeedback();
   const formContainerRef = React.useRef(null);
 
