@@ -423,20 +423,8 @@ export default function CreateGoalForm({ category }) {
   };
 
   return (
-    <div ref={formContainerRef} className="min-h-screen bg-background max-w-lg mx-auto flex flex-col" style={{ height: '100dvh' }}>
-      <div className="flex items-center px-4 gap-3 shrink-0 border-b border-border/40" style={{
-        height: 'calc(52px + env(safe-area-inset-top))',
-        paddingTop: 'env(safe-area-inset-top)',
-      }}>
-        <button
-          onClick={() => navigate(-1)}
-          className="p-1.5 rounded-lg hover:bg-secondary transition-colors -ml-1.5"
-          aria-label="이전 페이지로 돌아가기"
-        >
-          <ChevronLeft className="w-5 h-5 text-amber-800" aria-hidden="true" />
-        </button>
-      </div>
-      <div className="flex-1 overflow-y-auto p-6">
+    <div ref={formContainerRef} className="min-h-screen bg-background max-w-lg mx-auto" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="p-6">
         {renderStep()}
       </div>
     </div>
