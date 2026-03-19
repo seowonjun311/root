@@ -105,47 +105,47 @@ export default function AppSettings() {
         </div>
       </div>
 
-      <div className="mx-4 space-y-2">
-        <Link to="/NotificationSettings" className="block">
-          <SettingItem
-            icon={<Bell className="w-5 h-5 text-amber-600" />}
-            label="알림 설정"
-            desc="알림 시간과 요일을 설정합니다"
-          />
-        </Link>
-        <SettingItem
-          icon={<User className="w-5 h-5 text-amber-600" />}
-          label="닉네임 변경"
-          desc={`현재: ${user?.nickname || '용사'}님`}
-          onClick={() => { setNewNickname(user?.nickname || ''); setShowNickname(true); }}
-        />
-        <SettingItem
-          icon={<LogOut className="w-5 h-5 text-amber-600" />}
-          label="로그아웃"
-          desc="이 기기에서 로그인이 해제됩니다"
-          onClick={() => {
-            triggerHaptic('impact', 'light');
-            setShowLogout(true);
-          }}
-        />
-        <SettingItem
-          icon={<Trash2 className="w-5 h-5 text-red-600" />}
-          label="계정 삭제"
-          desc="모든 데이터가 영구 삭제됩니다"
-          onClick={() => {
-            triggerHaptic('impact', 'light');
-            setShowDelete(true);
-            setDeleteError(null);
-          }}
-        />
-        <Link to="/PrivacyPolicy" className="block">
-          <SettingItem
-            icon={<Shield className="w-5 h-5 text-amber-600" />}
-            label="개인정보처리방침"
-            desc="개인정보 수집 및 이용 안내"
-          />
-        </Link>
-      </div>
+      <div className="mx-4 space-y-1.5">
+         <Link to="/NotificationSettings" className="block">
+           <SettingItem
+             icon={<Bell className="w-5 h-5 text-amber-600" />}
+             label="알림 설정"
+             desc="알림 시간과 요일을 설정합니다"
+           />
+         </Link>
+         <SettingItem
+           icon={<User className="w-5 h-5 text-amber-600" />}
+           label="닉네임 변경"
+           desc={`현재: ${user?.nickname || '용사'}님`}
+           onClick={() => { setNewNickname(user?.nickname || ''); setShowNickname(true); }}
+         />
+         <SettingItem
+           icon={<LogOut className="w-5 h-5 text-amber-600" />}
+           label="로그아웃"
+           desc="이 기기에서 로그인이 해제됩니다"
+           onClick={() => {
+             triggerHaptic('impact', 'light');
+             setShowLogout(true);
+           }}
+         />
+         <SettingItem
+           icon={<Trash2 className="w-5 h-5 text-red-600" />}
+           label="계정 삭제"
+           desc="모든 데이터가 영구 삭제됩니다"
+           onClick={() => {
+             triggerHaptic('impact', 'light');
+             setShowDelete(true);
+             setDeleteError(null);
+           }}
+         />
+         <Link to="/PrivacyPolicy" className="block">
+           <SettingItem
+             icon={<Shield className="w-5 h-5 text-amber-600" />}
+             label="개인정보처리방침"
+             desc="개인정보 수집 및 이용 안내"
+           />
+         </Link>
+       </div>
 
       {/* Nickname Drawer */}
       <Drawer open={showNickname} onOpenChange={setShowNickname}>
