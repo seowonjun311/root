@@ -57,24 +57,7 @@ class NavigationStackManager {
     // Use capture phase for earliest possible interception
     window.addEventListener('popstate', this.popstateHandler, true);
     
-    // Additional safety: prevent HTML5 history API misuse
-    const originalPushState = window.history.pushState;
-    const originalReplaceState = window.history.replaceState;
-    
-    window.history.pushState = (state, title, url) => {
-      console.debug('[NavigationStackManager] External pushState blocked, using internal sync instead');
-      // Don't allow external history manipulation - use our sync
-      return this.syncBrowserHistory();
-    };
-    
-    window.history.replaceState = (state, title, url) => {
-      console.debug('[NavigationStackManager] External replaceState intercepted, validating against internal state');
-      // Allow but validate
-      if (state?.stackIndex !== this.currentIndex) {
-        console.warn('[NavigationStackManager] ReplaceState stack mismatch detected');
-      }
-      return originalReplaceState.call(window.history, state, title, url);
-    };
+    // Do not intercept pushState/replaceState — React Router needs them for tab navigation.
 
     console.log('[NavigationStackManager] Popstate listener initialized with aggressive interception');
   }
