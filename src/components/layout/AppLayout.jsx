@@ -29,7 +29,9 @@ const TAB_PAGES = [
   { path: '/AppSettings', component: AppSettings },
 ];
 
-// BottomNav 높이 (safe area 제외)
+// Header 높이 (px)
+const HEADER_HEIGHT = 48;
+// BottomNav 높이 (px, safe-area 제외)
 const NAV_HEIGHT = 64;
 
 export default function AppLayout() {
@@ -76,55 +78,55 @@ export default function AppLayout() {
   return (
     <div
       className="bg-background max-w-lg mx-auto"
-      style={{
-        position: 'absolute',
-        inset: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}
+      style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
     >
-      {/* Header: shrinks to its natural size */}
+      {/* Header: fixed top */}
       <Header />
 
-      {/* Tab content area: fills remaining space */}
-      <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
-        {TAB_PAGES.map(({ path, component: Component }) => {
-          const isActive = currentPath === path;
-          const isMounted = visibleTabs.has(path);
+      {/* Tab panels: top=HEADER_HEIGHT, bottom=NAV_HEIGHT+safe-area, never covers BottomNav */}
+      {TAB_PAGES.map(({ path, component: Component }) => {
+        const isActive = currentPath === path;
+        const isMounted = visibleTabs.has(path);
 
-          return (
-            <div
-              key={path}
-              ref={el => { scrollRefs.current[path] = el; }}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                overflowY: isActive ? 'auto' : 'hidden',
-                overflowX: 'hidden',
-                WebkitOverflowScrolling: 'touch',
-                visibility: isActive ? 'visible' : 'hidden',
-                pointerEvents: isActive ? 'auto' : 'none',
-                display: isMounted ? 'block' : 'none',
-                zIndex: 1,
-              }}
-            >
-              {isMounted && (
-                <Suspense fallback={<TabSkeleton />}>
-                  <Component />
-                  <div style={{ height: '16px' }} />
-                </Suspense>
-              )}
-            </div>
-          );
-        })}
-      </div>
+        return (
+          <div
+            key={path}
+            ref={el => { scrollRefs.current[path] = el; }}
+            style={{
+              position: 'absolute',
+              top: HEADER_HEIGHT,
+              left: 0,
+              right: 0,
+              // BottomNav 높이 + safe-area-inset-bottom 만큼 bottom 확보
+              bottom: `calc(${NAV_HEIGHT}px + env(safe-area-inset-bottom))`,
+              overflowY: isActive ? 'auto' : 'hidden',
+              overflowX: 'hidden',
+              WebkitOverflowScrolling: 'touch',
+              visibility: isActive ? 'visible' : 'hidden',
+              pointerEvents: isActive ? 'auto' : 'none',
+              display: isMounted ? 'block' : 'none',
+              zIndex: 1,
+            }}
+          >
+            {isMounted && (
+              <Suspense fallback={<TabSkeleton />}>
+                <Component />
+              </Suspense>
+            )}
+          </div>
+        );
+      })}
 
-      {/* BottomNav: flex child, z-index above tab panels */}
-      <div style={{ flexShrink: 0, position: 'relative', zIndex: 10 }}>
+      {/* BottomNav: fixed to bottom, always above tab panels */}
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 100,
+        }}
+      >
         <BottomNav />
       </div>
     </div>
