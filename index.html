@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#fef3c7" />
     <link rel="manifest" href="/manifest.json" />
-    <title>Base44 APP</title>
+    <title>퀘스트로그</title>
     
-    <!-- Critical Font Preloads for FCP optimization -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" as="style" />
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600&display=swap" as="style" crossorigin />
+    <!-- Critical Font Preload: Noto Serif KR only (used in index.css) -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&display=swap" as="style" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&display=swap" />
     
     <!-- Font-display swap for instant text rendering -->
     <style>
@@ -19,14 +19,9 @@
         src: local('Noto Serif KR');
         font-display: swap;
       }
-      @font-face {
-        font-family: 'Noto Sans KR';
-        src: local('Noto Sans KR');
-        font-display: swap;
-      }
       /* System font fallback stack (iOS: San Francisco, Android: Roboto) */
       body {
-        font-family: 'Noto Serif KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+        font-family: 'Noto Serif KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', serif;
       }
     </style>
     
@@ -111,7 +106,7 @@
     <div id="splash-screen" class="splash-screen">
       <div class="splash-icon">🦊</div>
       <div class="splash-text">
-        <h1>Root</h1>
+        <h1>퀘스트로그</h1>
         <p>여정을 시작하세요</p>
       </div>
       <div class="splash-loader">
