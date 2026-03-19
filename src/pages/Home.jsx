@@ -125,7 +125,7 @@ export default function Home() {
   });
 
   const { data: allLogs = [] } = useQuery({
-    queryKey: ['actionLogs', isGuest],
+    queryKey: ['allLogs', isGuest],
     queryFn: () => {
       if (isGuest) {
         const data = guestDataPersistence.loadOnboardingData();
