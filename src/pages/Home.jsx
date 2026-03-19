@@ -227,7 +227,7 @@ export default function Home() {
     const newXp = currentXp + 1;
     const newLevel = Math.floor(newXp / 30) + 1;
 
-    await base44.auth.updateMe({ [xpKey]: newXp, [levelKey]: newLevel }).catch(() => {});
+    if (!isGuest) await base44.auth.updateMe({ [xpKey]: newXp, [levelKey]: newLevel }).catch(() => {});
     queryClient.invalidateQueries({ queryKey: ['me'] });
     setPendingLog(null);
 
