@@ -82,9 +82,18 @@ export default function Home() {
     }
   }, [user, isUserLoading, navigate]);
 
+  const isGuest = !isUserLoading && !user;
+
   const { data: goals = [] } = useQuery({
-    queryKey: ['goals'],
-    queryFn: () => base44.entities.Goal.filter({ status: 'active' }),
+    queryKey: ['goals', isGuest],
+    queryFn: () => {
+      if (isGuest) {
+        const data = guestDataPersistence.loadOnboardingData();
+        return (data.goals || []).filter(g => g.status === 'active');
+      }
+      return base44.entities.Goal.filter({ status: 'active' });
+    },
+    enabled: !isUserLoading,
   });
 
   const deleteGoalMutation = useMutation({
