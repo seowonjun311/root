@@ -91,14 +91,11 @@ export default function AppLayout() {
               style={{
                 position: 'absolute',
                 inset: 0,
-                overflowY: 'auto',
+                overflowY: isActive ? 'auto' : 'hidden',
                 overflowX: 'hidden',
                 WebkitOverflowScrolling: 'touch',
                 visibility: isActive ? 'visible' : 'hidden',
                 pointerEvents: isActive ? 'auto' : 'none',
-                // Content visibility + dynamic unmounting for memory efficiency
-                contentVisibility: isActive ? 'visible' : 'auto',
-                contain: isMounted ? 'layout style paint' : 'layout',
                 display: isMounted ? 'block' : 'none',
               }}
             >
