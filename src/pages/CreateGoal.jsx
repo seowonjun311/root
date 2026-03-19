@@ -487,6 +487,15 @@ export default function CreateGoal() {
 
   return (
     <div ref={formContainerRef} className="min-h-screen bg-background max-w-lg mx-auto" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border/40">
+        <button
+          onClick={handleBack}
+          className="p-2 rounded-xl hover:bg-secondary transition-colors"
+          aria-label="뒤로 가기"
+        >
+          <ChevronLeft className="w-5 h-5 text-amber-800" />
+        </button>
+      </div>
       <div className="p-6">
         {renderStep()}
       </div>
