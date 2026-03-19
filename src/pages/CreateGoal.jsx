@@ -490,7 +490,7 @@ export default function CreateGoal() {
   };
 
   return (
-    <div className="min-h-screen bg-background max-w-lg mx-auto" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+    <div ref={formContainerRef} className="min-h-screen bg-background max-w-lg mx-auto" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="p-6">
         {renderStep()}
       </div>
