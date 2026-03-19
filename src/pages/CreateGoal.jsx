@@ -75,7 +75,7 @@ export default function CreateGoal() {
 
   const handleBack = () => {
     triggerHaptic('impact', 'light');
-    if (step === 0) { navigate(-1); return; }
+    if (step === 0) { navigate('/Home'); return; }
     if (isStudy) {
       if (step === 2) { setStep(hasDDay ? 1 : 1); return; } // step 2 → 1
       if (step === 1) { setStep(0); return; }
