@@ -29,29 +29,16 @@ const TAB_PAGES = [
   { path: '/AppSettings', component: AppSettings },
 ];
 
-// Header 높이 (px)
-const HEADER_HEIGHT = 48;
-// BottomNav 높이 (px, safe-area 제외)
-const NAV_HEIGHT = 64;
-
 export default function AppLayout() {
   const location = useLocation();
   const currentPath = location.pathname;
   const scrollRefs = useRef({});
   const { updateTabState } = useTabNavigation();
-  const [visibleTabs, setVisibleTabs] = useState(() => {
-    const currentIndex = TAB_PAGES.findIndex(t => t.path === currentPath);
-    const initial = new Set([currentPath]);
-    if (currentIndex > 0) initial.add(TAB_PAGES[currentIndex - 1].path);
-    if (currentIndex < TAB_PAGES.length - 1) initial.add(TAB_PAGES[currentIndex + 1].path);
-    return initial;
-  });
+  const [visibleTabs, setVisibleTabs] = useState(() => new Set([currentPath]));
 
   useEffect(() => {
     const isTabRoute = TAB_PAGES.some(t => t.path === currentPath);
-    if (isTabRoute) {
-      navigationStackManager.enforceStackNavigation(currentPath);
-    }
+    if (isTabRoute) navigationStackManager.enforceStackNavigation(currentPath);
   }, [currentPath]);
 
   useEffect(() => {
@@ -68,67 +55,55 @@ export default function AppLayout() {
   }, [currentPath, updateTabState]);
 
   useEffect(() => {
-    const currentIndex = TAB_PAGES.findIndex(t => t.path === currentPath);
-    const newVisible = new Set([currentPath]);
-    if (currentIndex > 0) newVisible.add(TAB_PAGES[currentIndex - 1].path);
-    if (currentIndex < TAB_PAGES.length - 1) newVisible.add(TAB_PAGES[currentIndex + 1].path);
-    setVisibleTabs(newVisible);
+    setVisibleTabs(prev => new Set([...prev, currentPath]));
   }, [currentPath]);
 
   return (
-    <div
-      className="bg-background max-w-lg mx-auto"
-      style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
-    >
-      {/* Header: fixed top */}
+    // 최상위: flex column, 전체 화면 고정
+    <div style={{
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      backgroundColor: 'hsl(var(--background))',
+    }}>
+      {/* 헤더 - flex child */}
       <Header />
 
-      {/* Tab panels: top=HEADER_HEIGHT, bottom=NAV_HEIGHT+safe-area, never covers BottomNav */}
-      {TAB_PAGES.map(({ path, component: Component }) => {
-        const isActive = currentPath === path;
-        const isMounted = visibleTabs.has(path);
+      {/* 탭 콘텐츠 - flex grow */}
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        {TAB_PAGES.map(({ path, component: Component }) => {
+          const isActive = currentPath === path;
+          const isMounted = visibleTabs.has(path);
+          if (!isMounted) return null;
 
-        return (
-          <div
-            key={path}
-            ref={el => { scrollRefs.current[path] = el; }}
-            style={{
-              position: 'absolute',
-              top: HEADER_HEIGHT,
-              left: 0,
-              right: 0,
-              // BottomNav 높이 + safe-area-inset-bottom 만큼 bottom 확보
-              bottom: `calc(${NAV_HEIGHT}px + env(safe-area-inset-bottom))`,
-              overflowY: isActive ? 'auto' : 'hidden',
-              overflowX: 'hidden',
-              WebkitOverflowScrolling: 'touch',
-              visibility: isActive ? 'visible' : 'hidden',
-              pointerEvents: isActive ? 'auto' : 'none',
-              display: isMounted ? 'block' : 'none',
-              zIndex: 1,
-            }}
-          >
-            {isMounted && (
+          return (
+            <div
+              key={path}
+              ref={el => { scrollRefs.current[path] = el; }}
+              style={{
+                position: 'absolute',
+                top: 0, left: 0, right: 0, bottom: 0,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                WebkitOverflowScrolling: 'touch',
+                // 비활성 탭: 완전히 뒤로 숨김 + 클릭 차단
+                opacity: isActive ? 1 : 0,
+                pointerEvents: isActive ? 'auto' : 'none',
+                zIndex: isActive ? 1 : 0,
+              }}
+            >
               <Suspense fallback={<TabSkeleton />}>
                 <Component />
               </Suspense>
-            )}
-          </div>
-        );
-      })}
-
-      {/* BottomNav: fixed to bottom, always above tab panels */}
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 100,
-        }}
-      >
-        <BottomNav />
+            </div>
+          );
+        })}
       </div>
+
+      {/* BottomNav - flex child, 항상 맨 아래 */}
+      <BottomNav />
     </div>
   );
 }
