@@ -129,6 +129,9 @@ export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip 
 }
 
 function SimpleMap({ coords }) {
+  const { MapContainer, TileLayer, Polyline, CircleMarker } = require('react-leaflet');
+  const L = require('leaflet');
+
   if (!coords || coords.length < 2) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-2">
@@ -138,40 +141,35 @@ function SimpleMap({ coords }) {
     );
   }
 
-  // 좌표의 범위 계산
+  // 좌표의 범위 계산 (Leaflet은 [lat, lng] 형식)
   const lats = coords.map(c => c[0]);
   const lngs = coords.map(c => c[1]);
   const minLat = Math.min(...lats);
   const maxLat = Math.max(...lats);
   const minLng = Math.min(...lngs);
   const maxLng = Math.max(...lngs);
-  const latRange = maxLat - minLat || 0.001;
-  const lngRange = maxLng - minLng || 0.001;
 
-  // SVG 좌표 변환
-  const toSvgX = (lng) => ((lng - minLng) / lngRange) * 100;
-  const toSvgY = (lat) => 100 - ((lat - minLat) / latRange) * 100;
+  // 전체 경로를 포함하는 중심점
+  const centerLat = (minLat + maxLat) / 2;
+  const centerLng = (minLng + maxLng) / 2;
 
   return (
-    <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-      {/* 배경 */}
-      <rect width="100" height="100" fill="#e0f2fe" />
-      
-      {/* 경로 선 */}
-      <polyline
-        points={coords.map((c) => `${toSvgX(c[1])},${toSvgY(c[0])}`).join(' ')}
-        fill="none"
-        stroke="#0ea5e9"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+    <MapContainer
+      center={[centerLat, centerLng]}
+      zoom={15}
+      style={{ height: '100%', width: '100%' }}
+      className="rounded-xl"
+    >
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; OpenStreetMap contributors'
       />
-      
+      {/* 경로 선 */}
+      <Polyline positions={coords} color="#0ea5e9" weight={3} opacity={0.8} />
       {/* 시작점 */}
-      <circle cx={toSvgX(coords[0][1])} cy={toSvgY(coords[0][0])} r="2" fill="#10b981" />
-      
+      <CircleMarker center={coords[0]} radius={6} fillColor="#10b981" color="#10b981" weight={2} opacity={1} fillOpacity={0.8} />
       {/* 끝점 */}
-      <circle cx={toSvgX(coords[coords.length - 1][1])} cy={toSvgY(coords[coords.length - 1][0])} r="2" fill="#ef4444" />
-    </svg>
+      <CircleMarker center={coords[coords.length - 1]} radius={6} fillColor="#ef4444" color="#ef4444" weight={2} opacity={1} fillOpacity={0.8} />
+    </MapContainer>
   );
 }
