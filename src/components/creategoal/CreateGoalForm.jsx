@@ -424,7 +424,6 @@ export default function CreateGoalForm({ category }) {
 
   return (
     <div ref={formContainerRef} className="min-h-screen bg-background max-w-lg mx-auto" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-      <Header />
       <div className="p-6">
         {renderStep()}
       </div>
