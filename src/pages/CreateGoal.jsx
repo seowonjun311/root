@@ -61,7 +61,7 @@ export default function CreateGoal() {
       queryClient.invalidateQueries({ queryKey: ['allGoals'] });
       queryClient.invalidateQueries({ queryKey: ['actionGoalsAll'] });
       toast.success(data.message);
-      setTimeout(() => navigate('/Home'), 300);
+      setTimeout(() => navigate(`/Home?category=${category}`), 300);
     },
     onError: () => toast.error('목표 생성에 실패했습니다.'),
   });
