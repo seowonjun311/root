@@ -131,9 +131,6 @@ export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip 
 }
 
 function SimpleMap({ coords }) {
-  const { MapContainer, TileLayer, Polyline, CircleMarker } = require('react-leaflet');
-  const L = require('leaflet');
-
   if (!coords || coords.length < 2) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-2">
