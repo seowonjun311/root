@@ -283,13 +283,6 @@ export default function Home() {
       <CharacterBanner
         nickname={user?.nickname}
         message={getGreeting()}
-        category={activeCategory}
-        userLevels={{
-          exercise_level: user?.exercise_level || 1,
-          study_level: user?.study_level || 1,
-          mental_level: user?.mental_level || 1,
-          daily_level: user?.daily_level || 1,
-        }}
       />
       <CategoryTabs active={activeCategory} onChange={handleCategoryChange} userLevels={{
         exercise_level: user?.exercise_level || 1,
