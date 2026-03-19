@@ -245,7 +245,7 @@ export default function Onboarding() {
     >
       <OnboardingProgress stepIndex={stepIndex} totalSteps={totalSteps} />
 
-      <div className="flex-1 flex flex-col justify-center py-6">
+      <div className="flex-1 overflow-y-auto py-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
