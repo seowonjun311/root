@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { AnimatePresence, motion } from 'framer-motion';
 import { guestDataPersistence } from '@/lib/GuestDataPersistence';
+import { useQueryClient } from '@tanstack/react-query';
 import OnboardingProgress from '@/components/onboarding/OnboardingProgress';
 import OnboardingNavigation from '@/components/onboarding/OnboardingNavigation';
 import OnboardingWelcome from '@/components/onboarding/OnboardingWelcome';
