@@ -40,48 +40,21 @@ function FoxCharacter() {
   );
 }
 
-export default function CharacterBanner({ nickname, message, category = 'exercise', userLevels = {} }) {
-  const season = getSeason();
-  const colors = seasonConfig[season];
-  const levelKey = `${category}_level`;
-  const xpKey = `${category}_xp`;
-  const level = userLevels[levelKey] || 1;
-  const xp = userLevels[xpKey] || 0;
-  const currentXp = xp % 30;
-  const nextLevelXp = 30;
-
+export default function CharacterBanner({ nickname, message }) {
   return (
-    <div className="relative overflow-hidden rounded-b-3xl shadow-md" style={{ background: colors.skyTop }}>
-      {/* SVG 씬 */}
-      <svg viewBox="0 0 400 120" className="w-full" style={{ display: 'block', height: '180px' }} role="presentation" aria-hidden="true">
-        <PathScene colors={colors} />
-
-        {/* 마왕성 (원경) */}
-        <g transform="scale(0.55) translate(210, -4)">
-          <DemonCastle x={0} />
+    <div className="relative overflow-hidden rounded-b-3xl shadow-md" style={{ background: '#fff8e7' }}>
+      {/* 여우 SVG */}
+      <svg viewBox="0 0 100 80" className="w-full" style={{ display: 'block', height: '140px' }} role="presentation" aria-hidden="true">
+        <g transform="translate(35, 8)">
+          <FoxCharacter />
         </g>
-
-        {/* 여우 캐릭터 - 숨쉬기 idle 애니메이션 */}
-        <motion.g
-          animate={{
-            y: [0, -2.5, 0, -2.5, 0],
-          }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <g transform="translate(60, 30) scale(0.9)">
-            <FoxCharacter level={level} />
-          </g>
-        </motion.g>
       </svg>
 
-
-
-      {/* 텍스트 오버레이 - 스크롤 배너 스타일 */}
+      {/* 텍스트 오버레이 */}
       <div className="absolute bottom-0 left-0 right-0 py-2.5 px-5" style={{
         background: 'linear-gradient(90deg, rgba(160,120,48,0.92) 0%, rgba(210,170,80,0.92) 30%, rgba(235,195,100,0.95) 50%, rgba(210,170,80,0.92) 70%, rgba(160,120,48,0.92) 100%)',
         borderTop: '2px solid rgba(180,130,40,0.8)',
         boxShadow: '0 -2px 8px rgba(60,30,5,0.3)',
-        paddingTop: 'env(safe-area-inset-top)',
       }}>
         <p className="font-bold text-base drop-shadow" style={{ color: '#3a1f05', textShadow: '0 1px 2px rgba(255,220,120,0.4)' }}>
           {nickname || '용사님'}
