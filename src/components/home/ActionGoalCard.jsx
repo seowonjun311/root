@@ -264,7 +264,13 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     }
   };
 
-  const handleConfirm = () => onComplete(actionGoal, actionGoal.duration_minutes || 0, { gpsEnabled: false });
+  const handleConfirm = () => {
+    if (doneToday) {
+      toast.error('오늘 이미 완료했어요. 내일 다시 도전해 주세요! 💪');
+      return;
+    }
+    onComplete(actionGoal, actionGoal.duration_minutes || 0, { gpsEnabled: false });
+  };
 
   const handleEditOpen = () => {
     setEditTitle(actionGoal.title);
