@@ -20,6 +20,7 @@ const Onboarding = lazy(() => import(/* webpackChunkName: "onboarding" */ './pag
 const PageNotFound  = lazy(() => import(/* webpackChunkName: "404" */ './lib/PageNotFound'));
 const CreateGoal    = lazy(() => import(/* webpackChunkName: "create-goal" */ './pages/CreateGoal'));
 const NotificationSettings = lazy(() => import(/* webpackChunkName: "notifications" */ './pages/NotificationSettings'));
+const PrivacyPolicy = lazy(() => import(/* webpackChunkName: "privacy" */ './pages/PrivacyPolicy'));
 
 // Lazy-load onboarding components for faster initial load
 const OnboardingWelcome = lazy(() => import(/* webpackChunkName: "onboarding-welcome" */ '@/components/onboarding/OnboardingWelcome'));
