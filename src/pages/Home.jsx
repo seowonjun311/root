@@ -149,15 +149,15 @@ export default function Home() {
   const createLogMutation = useMutation({
     mutationFn: (data) => base44.entities.ActionLog.create(data),
     onMutate: async (newLog) => {
-      await queryClient.cancelQueries({ queryKey: ['actionLogs'] });
-      const previousLogs = queryClient.getQueryData(['actionLogs']);
-      queryClient.setQueryData(['actionLogs'], (old) => [newLog, ...old]);
+      await queryClient.cancelQueries({ queryKey: ['allLogs'] });
+      const previousLogs = queryClient.getQueryData(['allLogs']);
+      queryClient.setQueryData(['allLogs'], (old) => [newLog, ...old]);
       return { previousLogs };
     },
     onError: (err, newLog, context) => {
-      if (context?.previousLogs) queryClient.setQueryData(['actionLogs'], context.previousLogs);
+      if (context?.previousLogs) queryClient.setQueryData(['allLogs'], context.previousLogs);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['actionLogs'] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
   });
 
   const createBadgeMutation = useMutation({
