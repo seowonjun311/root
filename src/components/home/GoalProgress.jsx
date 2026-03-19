@@ -198,8 +198,12 @@ export default function GoalProgress({ goal, logs = [] }) {
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ['goals'] });
-      const previous = queryClient.getQueryData(['goals']);
+      await queryClient.cancelQueries({ queryKey: ['goals', false] });
+      const previous = queryClient.getQueryData(['goals']) || queryClient.getQueryData(['goals', false]);
       queryClient.setQueryData(['goals'], (old = []) =>
+        old.filter(g => g.id !== goal.id)
+      );
+      queryClient.setQueryData(['goals', false], (old = []) =>
         old.filter(g => g.id !== goal.id)
       );
       return { previous };
@@ -210,6 +214,7 @@ export default function GoalProgress({ goal, logs = [] }) {
     },
     onSuccess: () => {
       toast.success('목표가 삭제되었습니다.');
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
       setShowDelete(false);
     },
   });
