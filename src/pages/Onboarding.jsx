@@ -240,8 +240,13 @@ export default function Onboarding() {
   return (
     <div
       ref={formContainerRef}
-      className="min-h-screen bg-background max-w-lg mx-auto flex flex-col"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      className="bg-background max-w-lg mx-auto flex flex-col"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
     >
       <OnboardingProgress stepIndex={stepIndex} totalSteps={totalSteps} />
 
