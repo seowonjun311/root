@@ -220,6 +220,10 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ['actionLogs', true] });
     } else {
       createLogMutation.mutate(logData);
+      // 로그 생성 후 쿼리 무효화
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['actionLogs', false] });
+      }, 100);
     }
 
     const catKey = actionGoal.category;
