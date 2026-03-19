@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
