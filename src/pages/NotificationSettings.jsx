@@ -155,12 +155,7 @@ export default function NotificationSettings() {
     else toast.error('알림 권한이 거부되었습니다. 브라우저 설정에서 허용해주세요.');
   };
 
-  const openDialog = async (isNew = false) => {
-    if (permission !== 'granted') {
-      await requestPermission();
-      if (Notification.permission !== 'granted') return;
-      setPermission('granted');
-    }
+  const openDialog = (isNew = false) => {
     if (isNew) setSwitchPending(true);
     setPendingHour(settings.time.split(':')[0]);
     setPendingMinute(settings.time.split(':')[1]);
