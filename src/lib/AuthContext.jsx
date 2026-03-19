@@ -13,6 +13,17 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     checkAppState();
+    
+    // 앱이 백그라운드에서 복귀할 때 세션 재확인
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('[AuthContext] App resumed from background, rechecking auth');
+        checkAppState();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const checkAppState = async () => {
@@ -20,23 +31,22 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingPublicSettings(true);
       setAuthError(null);
       
-      // Simply try to authenticate the user with base44 SDK
-      // If token is available, this will work; otherwise, we'll get auth error
+      // Try to authenticate the user with base44 SDK
       try {
         const currentUser = await base44.auth.me();
+        console.log('[AuthContext] User authenticated, redirecting to home');
         setUser(currentUser);
         setIsAuthenticated(true);
-        setAppPublicSettings({ id: 'app' }); // Mark as initialized
+        setAppPublicSettings({ id: 'app' });
         setIsLoadingAuth(false);
       } catch (authError) {
-        // Auth failed - check if it's due to missing auth or user not registered
-        console.error('Auth check failed:', authError);
+        // Auth failed
+        console.log('[AuthContext] Auth check failed, showing onboarding');
         setUser(null);
         setIsAuthenticated(false);
         setAppPublicSettings({ id: 'app' });
         setIsLoadingAuth(false);
         
-        // Classify the error
         if (authError?.status === 401 || authError?.status === 403) {
           setAuthError({
             type: 'auth_required',
@@ -51,7 +61,7 @@ export const AuthProvider = ({ children }) => {
       }
       setIsLoadingPublicSettings(false);
     } catch (error) {
-      console.error('Unexpected error in checkAppState:', error);
+      console.error('[AuthContext] Unexpected error in checkAppState:', error);
       setAuthError({
         type: 'unknown',
         message: error.message || 'An unexpected error occurred'
