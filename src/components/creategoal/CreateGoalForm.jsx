@@ -21,8 +21,9 @@ export default function CreateGoalForm({ category }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { triggerHaptic } = useHapticFeedback();
-  const formContainerRef = useScrollIntoViewOnFocus();
   const paramGoalId = new URLSearchParams(window.location.search).get('goalId');
+  const isAddingActionOnlyEarly = !!paramGoalId;
+  const formContainerRef = isAddingActionOnlyEarly ? null : useScrollIntoViewOnFocus();
   
   // 해당 카테고리의 활성 결과목표 확인
   const { data: existingGoal } = useQuery({
