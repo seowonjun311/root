@@ -82,7 +82,14 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+    /* 모바일 앱: 마우스/키보드 포커스 링은 키보드 접근 시에만 표시 */
+    outline: none;
+  }
+
+  /* 키보드 접근성: focus-visible일 때만 링 표시 */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-1;
   }
   body {
     @apply bg-background text-foreground font-main;
