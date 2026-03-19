@@ -21,12 +21,12 @@ export default function Header() {
       <div
         className="flex items-center justify-center px-4 shrink-0"
         style={{
-          height: '52px',
+          height: 'calc(52px + env(safe-area-inset-top))',
           paddingTop: 'env(safe-area-inset-top)',
           borderBottom: '1px solid hsl(var(--border) / 0.4)',
         }}
       >
-        <span className="text-base font-bold text-amber-900">루트</span>
+        <span className="text-base font-bold text-amber-900">퀘스트로그</span>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export default function Header() {
     <div
       className="flex items-center px-4 gap-3 shrink-0"
       style={{
-        height: '52px',
+        height: 'calc(52px + env(safe-area-inset-top))',
         paddingTop: 'env(safe-area-inset-top)',
         borderBottom: '1px solid hsl(var(--border) / 0.4)',
       }}
