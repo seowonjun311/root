@@ -24,7 +24,18 @@ export default function CreateGoal() {
   const formContainerRef = useScrollIntoViewOnFocus();
   const params = new URLSearchParams(window.location.search);
   const category = params.get('category') || 'exercise';
-  const existingGoalId = params.get('goalId'); // 기존 결과 목표에 행동 목표 추가
+  const paramGoalId = params.get('goalId');
+  
+  // 해당 카테고리의 활성 결과목표 확인
+  const { data: existingGoal } = useQuery({
+    queryKey: ['existingGoal', category],
+    queryFn: async () => {
+      const goals = await base44.entities.Goal.filter({ category, status: 'active', goal_type: 'result' });
+      return goals[0] || null;
+    },
+  });
+  
+  const existingGoalId = paramGoalId || existingGoal?.id;
   const isStudy = category === 'study';
   const isAddingActionOnly = !!existingGoalId;
 
