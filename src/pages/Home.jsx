@@ -210,7 +210,15 @@ export default function Home() {
       logData.route_coordinates = JSON.stringify(gpsData.coords || []);
     }
 
-    createLogMutation.mutate(logData);
+    if (isGuest) {
+      // 게스트: localStorage에 저장
+      const guestData = guestDataPersistence.loadOnboardingData();
+      const existingLogs = guestData.actionLogs || [];
+      guestDataPersistence.saveData('local_action_logs', [...existingLogs, { ...logData, id: `local_log_${Date.now()}`, created_date: new Date().toISOString() }]);
+      queryClient.invalidateQueries({ queryKey: ['actionLogs', true] });
+    } else {
+      createLogMutation.mutate(logData);
+    }
 
     const catKey = actionGoal.category;
     const xpKey = `${catKey}_xp`;
