@@ -66,6 +66,8 @@ export default function Home() {
     if (user) {
       // 로그인 사용자: onboarding_complete 체크
       if (!user.onboarding_complete) {
+        // 캐시된 데이터일 수 있으므로 재조회 후 판단
+        queryClient.invalidateQueries({ queryKey: ['me'] });
         navigate('/Onboarding');
         return;
       }
