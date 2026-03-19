@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { hapticFeedback } from '@/lib/HapticFeedback';
 
 export function useHapticFeedback() {
-  const triggerHaptic = React.useCallback((type, intensity) => {
+  const triggerHaptic = useCallback((type, intensity) => {
     if (!hapticFeedback) return;
 
     if (intensity === 'light' || type === 'light') {
