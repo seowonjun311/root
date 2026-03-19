@@ -36,7 +36,7 @@ export default function BottomNav() {
         paddingBottom: 'env(safe-area-inset-bottom)',
         flexShrink: 0,
         position: 'relative',
-        zIndex: 50,
+        zIndex: 100,
       }}
     >
       <div className="h-0.5 w-full" style={{
