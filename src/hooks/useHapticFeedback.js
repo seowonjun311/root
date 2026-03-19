@@ -20,12 +20,12 @@ export function useHapticFeedback() {
     }
   }, []);
 
-  const onPress   = React.useCallback(() => triggerHaptic('light'),   [triggerHaptic]);
-  const onSuccess = React.useCallback(() => triggerHaptic('success'), [triggerHaptic]);
-  const onError   = React.useCallback(() => triggerHaptic('error'),   [triggerHaptic]);
-  const onWarning = React.useCallback(() => triggerHaptic('warning'), [triggerHaptic]);
-  const onMedium  = React.useCallback(() => triggerHaptic('medium'),  [triggerHaptic]);
-  const onHeavy   = React.useCallback(() => triggerHaptic('heavy'),   [triggerHaptic]);
+  const onPress   = useCallback(() => triggerHaptic('light'),   [triggerHaptic]);
+  const onSuccess = useCallback(() => triggerHaptic('success'), [triggerHaptic]);
+  const onError   = useCallback(() => triggerHaptic('error'),   [triggerHaptic]);
+  const onWarning = useCallback(() => triggerHaptic('warning'), [triggerHaptic]);
+  const onMedium  = useCallback(() => triggerHaptic('medium'),  [triggerHaptic]);
+  const onHeavy   = useCallback(() => triggerHaptic('heavy'),   [triggerHaptic]);
 
   return {
     triggerHaptic,
