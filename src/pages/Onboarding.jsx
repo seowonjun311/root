@@ -136,6 +136,11 @@ export default function Onboarding() {
           active_category: category,
         });
 
+        // 캐시 무효화 후 이동 (Home에서 user 재조회 시 onboarding_complete: true 보장)
+        // navigate 전에 queryClient 무효화 불가 (Onboarding 페이지에서는 queryClient 미사용)
+        // 따라서 약간의 딜레이를 주어 updateMe가 서버에 반영되도록 함
+        await new Promise(resolve => setTimeout(resolve, 300));
+
       } else {
         // Guest mode: use robust data persistence with error handling
         const startDate = new Date().toISOString().split('T')[0];
