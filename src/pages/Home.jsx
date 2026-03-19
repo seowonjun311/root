@@ -111,13 +111,27 @@ export default function Home() {
   });
 
   const { data: actionGoals = [] } = useQuery({
-    queryKey: ['actionGoals'],
-    queryFn: () => base44.entities.ActionGoal.filter({ status: 'active' }),
+    queryKey: ['actionGoals', isGuest],
+    queryFn: () => {
+      if (isGuest) {
+        const data = guestDataPersistence.loadOnboardingData();
+        return (data.actionGoals || []).filter(ag => ag.status === 'active');
+      }
+      return base44.entities.ActionGoal.filter({ status: 'active' });
+    },
+    enabled: !isUserLoading,
   });
 
   const { data: allLogs = [] } = useQuery({
-    queryKey: ['actionLogs'],
-    queryFn: () => base44.entities.ActionLog.list('-created_date', 200),
+    queryKey: ['actionLogs', isGuest],
+    queryFn: () => {
+      if (isGuest) {
+        const data = guestDataPersistence.loadOnboardingData();
+        return data.actionLogs || [];
+      }
+      return base44.entities.ActionLog.list('-created_date', 200);
+    },
+    enabled: !isUserLoading,
   });
 
   useEffect(() => {
