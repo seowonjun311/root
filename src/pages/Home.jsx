@@ -97,6 +97,7 @@ export default function Home() {
       return base44.entities.Goal.filter({ status: 'active', goal_type: 'result' });
     },
     enabled: !isUserLoading,
+    staleTime: 1000 * 60 * 5, // 5분 동안 fresh 상태 유지
   });
 
   const deleteGoalMutation = useMutation({
