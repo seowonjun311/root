@@ -212,7 +212,7 @@ function SettingItem({ icon, label, desc, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 p-4 rounded-2xl bg-card border border-border/60 hover:bg-secondary/50 transition-colors text-left"
+      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/60 hover:bg-secondary/50 transition-colors text-left"
       aria-label={`${label}: ${desc}`}
     >
       {icon}
