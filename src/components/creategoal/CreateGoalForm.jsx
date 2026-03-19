@@ -75,6 +75,7 @@ export default function CreateGoalForm({ category }) {
 
   const handleBack = () => {
     triggerHaptic('impact', 'light');
+    if (isAddingActionOnly) { navigate('/Home'); return; }
     if (step === 0) { navigate('/Home'); return; }
     if (isStudy) {
       if (step === 2) { setStep(hasDDay ? 1 : 1); return; }
