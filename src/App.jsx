@@ -18,7 +18,10 @@ const Onboarding = lazy(() => import(/* webpackChunkName: "onboarding" */ './pag
 
 // Aggressive code-splitting for non-critical pages (improves Time-to-Interactive)
 const PageNotFound  = lazy(() => import(/* webpackChunkName: "404" */ './lib/PageNotFound'));
-const CreateGoal    = lazy(() => import(/* webpackChunkName: "create-goal" */ './pages/CreateGoal'));
+const CreateGoalExercise = lazy(() => import(/* webpackChunkName: "create-goal-exercise" */ './pages/CreateGoalExercise'));
+const CreateGoalStudy = lazy(() => import(/* webpackChunkName: "create-goal-study" */ './pages/CreateGoalStudy'));
+const CreateGoalMental = lazy(() => import(/* webpackChunkName: "create-goal-mental" */ './pages/CreateGoalMental'));
+const CreateGoalDaily = lazy(() => import(/* webpackChunkName: "create-goal-daily" */ './pages/CreateGoalDaily'));
 const NotificationSettings = lazy(() => import(/* webpackChunkName: "notifications" */ './pages/NotificationSettings'));
 const PrivacyPolicy = lazy(() => import(/* webpackChunkName: "privacy" */ './pages/PrivacyPolicy'));
 
@@ -108,11 +111,35 @@ const AppRoutes = () => {
                 </Suspense>
               } />
 
-              <Route path="/CreateGoal" element={
+              <Route path="/CreateGoalExercise" element={
                 <Suspense fallback={<PageFallback />}>
                   <PageTransition>
                     <Header />
-                    <CreateGoal />
+                    <CreateGoalExercise />
+                  </PageTransition>
+                </Suspense>
+              } />
+              <Route path="/CreateGoalStudy" element={
+                <Suspense fallback={<PageFallback />}>
+                  <PageTransition>
+                    <Header />
+                    <CreateGoalStudy />
+                  </PageTransition>
+                </Suspense>
+              } />
+              <Route path="/CreateGoalMental" element={
+                <Suspense fallback={<PageFallback />}>
+                  <PageTransition>
+                    <Header />
+                    <CreateGoalMental />
+                  </PageTransition>
+                </Suspense>
+              } />
+              <Route path="/CreateGoalDaily" element={
+                <Suspense fallback={<PageFallback />}>
+                  <PageTransition>
+                    <Header />
+                    <CreateGoalDaily />
                   </PageTransition>
                 </Suspense>
               } />
