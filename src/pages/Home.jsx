@@ -311,25 +311,6 @@ export default function Home() {
               onComplete={handleComplete}
             />
           ))}
-
-          <div className="px-4 pb-4">
-            <button
-              onClick={() => {
-                const pageMap = { exercise: 'CreateGoalExercise', study: 'CreateGoalStudy', mental: 'CreateGoalMental', daily: 'CreateGoalDaily' };
-                navigate(`/${pageMap[activeCategory]}?goalId=${activeGoal.id}`);
-              }}
-              className="w-full rounded-lg font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
-              style={{
-                minHeight: '44px',
-                background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 60%, #f0e0bc 100%)',
-                border: '2px dashed #a07840',
-                color: '#7a5020',
-              }}
-            >
-              <Plus className="w-4 h-4" />
-              행동 목표 직접 추가하기
-            </button>
-          </div>
         </div>
       ) : (
         <EmptyGoalState
