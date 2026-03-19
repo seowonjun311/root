@@ -9,6 +9,13 @@ const PAGE_TITLES = {
   '/NotificationSettings': '알림 설정',
 };
 
+const GO_HOME_DIRECTLY = [
+  '/CreateGoalExercise',
+  '/CreateGoalStudy',
+  '/CreateGoalMental',
+  '/CreateGoalDaily',
+];
+
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
