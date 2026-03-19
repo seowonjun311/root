@@ -164,7 +164,12 @@ export default function NotificationSettings() {
     setShowDialog(true);
   };
 
-  const handleDialogConfirm = () => {
+  const handleDialogConfirm = async () => {
+    if (permission !== 'granted') {
+      await requestPermission();
+      if (Notification.permission !== 'granted') return;
+      setPermission('granted');
+    }
     const next = {
       ...settings,
       enabled: true,
