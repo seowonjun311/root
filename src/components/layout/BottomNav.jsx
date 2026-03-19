@@ -34,6 +34,8 @@ export default function BottomNav() {
         borderTop: '3px solid #a07030',
         boxShadow: '0 -3px 12px rgba(40,20,5,0.5)',
         paddingBottom: 'env(safe-area-inset-bottom)',
+        position: 'relative',
+        zIndex: 100,
       }}
     >
       <div className="h-0.5 w-full" style={{
