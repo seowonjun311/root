@@ -249,7 +249,7 @@ export default function Home() {
 
   const handleCategoryChange = (cat) => {
     setActiveCategory(cat);
-    base44.auth.updateMe({ active_category: cat }).catch(() => {});
+    if (!isGuest) base44.auth.updateMe({ active_category: cat }).catch(() => {});
   };
 
   const handleVictoryClose = () => {
