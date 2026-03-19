@@ -6,7 +6,7 @@ import { Play, Square, Check, X, Pencil, Trash2, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { base44 } from '@/api/base44Client';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
