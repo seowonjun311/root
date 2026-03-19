@@ -98,18 +98,20 @@ export default function Onboarding() {
       const isLoggedIn = await base44.auth.isAuthenticated();
 
       if (isLoggedIn) {
-        const [existingGoals, existingActionGoals, existingLogs, existingBadges] = await Promise.all([
+        // 기존 데이터 삭제는 백그라운드에서 처리 (완료를 기다리지 않음)
+        Promise.all([
           base44.entities.Goal.list('-created_date', 200),
           base44.entities.ActionGoal.list('-created_date', 200),
           base44.entities.ActionLog.list('-created_date', 500),
           base44.entities.Badge.list('-created_date', 200),
-        ]);
-        await Promise.all([
-          ...existingGoals.map(g => base44.entities.Goal.delete(g.id)),
-          ...existingActionGoals.map(ag => base44.entities.ActionGoal.delete(ag.id)),
-          ...existingLogs.map(l => base44.entities.ActionLog.delete(l.id)),
-          ...existingBadges.map(b => base44.entities.Badge.delete(b.id)),
-        ]);
+        ]).then(([existingGoals, existingActionGoals, existingLogs, existingBadges]) => {
+          return Promise.all([
+            ...existingGoals.map(g => base44.entities.Goal.delete(g.id)),
+            ...existingActionGoals.map(ag => base44.entities.ActionGoal.delete(ag.id)),
+            ...existingLogs.map(l => base44.entities.ActionLog.delete(l.id)),
+            ...existingBadges.map(b => base44.entities.Badge.delete(b.id)),
+          ]);
+        }).catch(err => console.warn('기존 데이터 삭제 중 오류 (무시):', err));
 
         const goal = await base44.entities.Goal.create({
           category,
