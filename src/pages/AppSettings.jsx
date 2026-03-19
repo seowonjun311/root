@@ -138,6 +138,13 @@ export default function AppSettings() {
             setDeleteError(null);
           }}
         />
+        <Link to="/PrivacyPolicy" className="block">
+          <SettingItem
+            icon={<Shield className="w-5 h-5 text-amber-600" />}
+            label="개인정보처리방침"
+            desc="개인정보 수집 및 이용 안내"
+          />
+        </Link>
       </div>
 
       {/* Nickname Drawer */}
