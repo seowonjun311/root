@@ -217,13 +217,9 @@ export default function Home() {
       const guestData = guestDataPersistence.loadOnboardingData();
       const existingLogs = guestData.actionLogs || [];
       guestDataPersistence.saveData('local_action_logs', [...existingLogs, { ...logData, id: `local_log_${Date.now()}`, created_date: new Date().toISOString() }]);
-      queryClient.invalidateQueries({ queryKey: ['actionLogs', true] });
+      queryClient.invalidateQueries({ queryKey: ['allLogs', true] });
     } else {
       createLogMutation.mutate(logData);
-      // 로그 생성 후 쿼리 무효화
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['actionLogs', false] });
-      }, 100);
     }
 
     const catKey = actionGoal.category;
