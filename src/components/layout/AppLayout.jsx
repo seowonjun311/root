@@ -13,13 +13,10 @@ import AppSettings from '../../pages/AppSettings';
 function TabSkeleton() {
   return (
     <div className="p-4 space-y-4 animate-pulse" aria-hidden="true">
-      {/* Banner */}
       <div className="h-28 rounded-2xl bg-secondary/60" />
-      {/* Category tabs */}
       <div className="flex gap-2">
         {[1,2,3,4].map(i => <div key={i} className="flex-1 h-9 rounded-xl bg-secondary/60" />)}
       </div>
-      {/* Cards */}
       {[1,2].map(i => <div key={i} className="h-20 rounded-xl bg-secondary/60" />)}
     </div>
   );
@@ -32,22 +29,22 @@ const TAB_PAGES = [
   { path: '/AppSettings', component: AppSettings },
 ];
 
+// BottomNav 높이 (safe area 제외)
+const NAV_HEIGHT = 64;
+
 export default function AppLayout() {
   const location = useLocation();
   const currentPath = location.pathname;
   const scrollRefs = useRef({});
-  const { updateTabState, getTabState } = useTabNavigation();
+  const { updateTabState } = useTabNavigation();
   const [visibleTabs, setVisibleTabs] = useState(() => {
     const currentIndex = TAB_PAGES.findIndex(t => t.path === currentPath);
     const initial = new Set([currentPath]);
-    
     if (currentIndex > 0) initial.add(TAB_PAGES[currentIndex - 1].path);
     if (currentIndex < TAB_PAGES.length - 1) initial.add(TAB_PAGES[currentIndex + 1].path);
-    
     return initial;
   });
 
-  // Enforce stack-based navigation on all tab route changes
   useEffect(() => {
     const isTabRoute = TAB_PAGES.some(t => t.path === currentPath);
     if (isTabRoute) {
@@ -55,46 +52,43 @@ export default function AppLayout() {
     }
   }, [currentPath]);
 
-  // Save scroll position when leaving a tab, restore when entering
   useEffect(() => {
     TAB_PAGES.forEach(({ path }) => {
       const el = scrollRefs.current[path];
       if (!el) return;
-      
       if (path === currentPath) {
-        // Restore saved scroll position using TabScrollManager
         tabScrollManager.restoreScrollPosition(path, el);
       } else {
-        // Save current scroll position before hiding
         tabScrollManager.saveScrollPosition(path, el);
         updateTabState(path, { scrollPosition: el.scrollTop });
       }
     });
   }, [currentPath, updateTabState]);
 
-  // Dynamic tab visibility: mount current + adjacent tabs, unmount others
   useEffect(() => {
     const currentIndex = TAB_PAGES.findIndex(t => t.path === currentPath);
     const newVisible = new Set([currentPath]);
-    
     if (currentIndex > 0) newVisible.add(TAB_PAGES[currentIndex - 1].path);
     if (currentIndex < TAB_PAGES.length - 1) newVisible.add(TAB_PAGES[currentIndex + 1].path);
-    
     setVisibleTabs(newVisible);
   }, [currentPath]);
 
   return (
     <div
-      className="bg-background max-w-lg mx-auto flex flex-col"
+      className="bg-background max-w-lg mx-auto"
       style={{
         position: 'absolute',
         inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
         overflow: 'hidden',
       }}
     >
+      {/* Header: shrinks to its natural size */}
       <Header />
 
-      <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
+      {/* Tab content area: fills remaining space above BottomNav */}
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         {TAB_PAGES.map(({ path, component: Component }) => {
           const isActive = currentPath === path;
           const isMounted = visibleTabs.has(path);
@@ -105,18 +99,14 @@ export default function AppLayout() {
               ref={el => { scrollRefs.current[path] = el; }}
               style={{
                 position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
+                inset: 0,
                 overflowY: isActive ? 'auto' : 'hidden',
-                pointerEvents: isActive ? 'auto' : 'none',
                 overflowX: 'hidden',
                 WebkitOverflowScrolling: 'touch',
                 visibility: isActive ? 'visible' : 'hidden',
+                // 비활성 탭은 포인터 이벤트 완전 차단
                 pointerEvents: isActive ? 'auto' : 'none',
                 display: isMounted ? 'block' : 'none',
-                zIndex: isActive ? 1 : 0,
               }}
             >
               {isMounted && (
@@ -130,6 +120,7 @@ export default function AppLayout() {
         })}
       </div>
 
+      {/* BottomNav: always rendered as flex child, never covered */}
       <BottomNav />
     </div>
   );
