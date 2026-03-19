@@ -101,25 +101,26 @@ export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip 
             </div>
           )}
 
-          <div className="flex gap-3">
-            <Button
-              onClick={handleSave}
-              disabled={uploading}
-              className="flex-1 h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-            >
-              {uploading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-amber-200/50 border-t-amber-50 rounded-full animate-spin" />
-                  업로드 중...
-                </span>
-              ) : (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  저장
-                </>
-              )}
-            </Button>
-          </div>
+          <div className="flex gap-3 flex-col">
+             <Button
+               onClick={handleSave}
+               disabled={uploading}
+               className="flex-1 h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
+             >
+               {uploading ? (
+                 <span className="flex items-center gap-2">
+                   <span className="w-4 h-4 border-2 border-amber-200/50 border-t-amber-50 rounded-full animate-spin" />
+                   업로드 중...
+                 </span>
+               ) : (
+                 <>
+                   <Check className="w-4 h-4 mr-2" />
+                   저장
+                 </>
+               )}
+             </Button>
+             <p className="text-xs text-muted-foreground text-center">사진없이 저장할 수 있어요</p>
+           </div>
         </motion.div>
       </motion.div>
       </FocusLock>
