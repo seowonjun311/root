@@ -32,7 +32,7 @@ export default function CreateGoalForm({ category }) {
       const goals = await base44.entities.Goal.filter({ category, status: 'active', goal_type: 'result' });
       return goals[0] || null;
     },
-    enabled: !isAddingActionOnly, // 행동목표 추가 모드에서는 쿼리 실행 안 함
+    enabled: !isAddingActionOnlyEarly, // 행동목표 추가 모드에서는 쿼리 실행 안 함
   });
   
   const existingGoalId = paramGoalId || existingGoal?.id;
