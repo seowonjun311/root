@@ -220,8 +220,9 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ['allLogs', true] });
     } else {
       await base44.entities.ActionLog.create(logData);
-      // 로그 생성 후 즉시 쿼리 무효화
-      queryClient.invalidateQueries({ queryKey: ['allLogs'] });
+      // 로그 생성 후 즉시 쿼리 무효화 및 리페칭
+      await queryClient.invalidateQueries({ queryKey: ['allLogs', isGuest] });
+      queryClient.refetchQueries({ queryKey: ['allLogs', isGuest] });
     }
 
     const catKey = actionGoal.category;
