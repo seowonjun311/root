@@ -51,19 +51,12 @@ export default function CreateGoal() {
 
   const createGoalMutation = useMutation({
     mutationFn: async (payload) => {
-      // Clean up existing goals if creating new result goal
-      if (!isAddingActionOnly && !payload.addingActionOnly) {
-        const existingGoals = await base44.entities.Goal.filter({ category, goal_type: 'result' });
-        for (const oldGoal of existingGoals) {
-          const actionGoals = await base44.entities.ActionGoal.filter({ goal_id: oldGoal.id });
-          for (const ag of actionGoals) await base44.entities.ActionGoal.delete(ag.id);
-          await base44.entities.Goal.delete(oldGoal.id);
-        }
-      }
+      // payload는 이미 생성됨 (handleSubmit에서 먼저 생성)
       return payload.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['goals', 'actionGoals'] });
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
       toast.success(data.message);
       navigate('/Home');
     },
