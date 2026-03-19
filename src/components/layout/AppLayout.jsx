@@ -110,6 +110,7 @@ export default function AppLayout() {
                 right: 0,
                 bottom: 0,
                 overflowY: isActive ? 'auto' : 'hidden',
+                pointerEvents: isActive ? 'auto' : 'none',
                 overflowX: 'hidden',
                 WebkitOverflowScrolling: 'touch',
                 visibility: isActive ? 'visible' : 'hidden',
