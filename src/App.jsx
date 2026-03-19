@@ -133,6 +133,12 @@ const AppRoutes = () => {
                 </Suspense>
               } />
 
+              <Route path="/PrivacyPolicy" element={
+                <Suspense fallback={<PageFallback />}>
+                  <PrivacyPolicy />
+                </Suspense>
+              } />
+
               <Route path="*" element={<PageNotFound />} />
             </Routes>
           </AnimatePresence>
