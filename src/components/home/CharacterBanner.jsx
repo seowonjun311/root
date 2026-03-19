@@ -1,20 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-
-function getSeason() {
-  const month = new Date().getMonth() + 1;
-  if (month >= 3 && month <= 5) return 'spring';
-  if (month >= 6 && month <= 8) return 'summer';
-  if (month >= 9 && month <= 11) return 'autumn';
-  return 'winter';
-}
-
-const seasonConfig = {
-  spring: { skyTop: '#fce4ec', skyBot: '#fff8e7', ground: '#a5d6a7', groundDark: '#81c784', accent: '#f48fb1' },
-  summer: { skyTop: '#b3e5fc', skyBot: '#e0f7fa', ground: '#66bb6a', groundDark: '#43a047', accent: '#fff176' },
-  autumn: { skyTop: '#ffe0b2', skyBot: '#fff8e1', ground: '#d4a256', groundDark: '#b8860b', accent: '#ef9a9a' },
-  winter: { skyTop: '#e3f2fd', skyBot: '#f8fbff', ground: '#e0e0e0', groundDark: '#bdbdbd', accent: '#b3c6e0' },
-};
 
 // 여우 SVG 캐릭터 - 레벨별 업그레이드
 function FoxCharacter({ level = 1 }) {
