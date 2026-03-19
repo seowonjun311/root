@@ -91,7 +91,8 @@ export default function Home() {
     queryFn: () => {
       if (isGuest) {
         const data = guestDataPersistence.loadOnboardingData();
-        return (data.goals || []).filter(g => g.status === 'active');
+        const goalData = data.goalData || data.goals?.[0];
+        return goalData ? [goalData] : [];
       }
       return base44.entities.Goal.filter({ status: 'active', goal_type: 'result' });
     },
