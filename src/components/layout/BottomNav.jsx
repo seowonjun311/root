@@ -35,8 +35,7 @@ export default function BottomNav() {
         boxShadow: '0 -3px 12px rgba(40,20,5,0.5)',
         paddingBottom: 'env(safe-area-inset-bottom)',
         flexShrink: 0,
-        position: 'relative',
-        zIndex: 100,
+
       }}
     >
       <div className="h-0.5 w-full" style={{
