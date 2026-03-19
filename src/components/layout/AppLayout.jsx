@@ -10,6 +10,21 @@ import Records from '../../pages/Records.jsx';
 import Badges from '../../pages/Badges';
 import AppSettings from '../../pages/AppSettings';
 
+function TabSkeleton() {
+  return (
+    <div className="p-4 space-y-4 animate-pulse" aria-hidden="true">
+      {/* Banner */}
+      <div className="h-28 rounded-2xl bg-secondary/60" />
+      {/* Category tabs */}
+      <div className="flex gap-2">
+        {[1,2,3,4].map(i => <div key={i} className="flex-1 h-9 rounded-xl bg-secondary/60" />)}
+      </div>
+      {/* Cards */}
+      {[1,2].map(i => <div key={i} className="h-20 rounded-xl bg-secondary/60" />)}
+    </div>
+  );
+}
+
 const TAB_PAGES = [
   { path: '/Home', component: Home },
   { path: '/Records', component: Records },
