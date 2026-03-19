@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ChevronLeft, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
-import Header from '@/components/layout/Header';
 
 const ACTION_TYPES = [
   { value: 'timer', label: '⏱️ 시간 기록형', desc: '시간을 기록하며 수행' },
