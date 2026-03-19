@@ -311,7 +311,10 @@ export default function Home() {
 
           <div className="px-4 pb-4">
             <button
-              onClick={() => navigate(`/CreateGoal?category=${activeCategory}&goalId=${activeGoal.id}`)}
+              onClick={() => {
+                const pageMap = { exercise: 'CreateGoalExercise', study: 'CreateGoalStudy', mental: 'CreateGoalMental', daily: 'CreateGoalDaily' };
+                navigate(`/${pageMap[activeCategory]}?goalId=${activeGoal.id}`);
+              }}
               className="w-full rounded-lg font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
               style={{
                 minHeight: '44px',
@@ -328,7 +331,10 @@ export default function Home() {
       ) : (
         <EmptyGoalState
           category={activeCategory}
-          onCreateGoal={() => navigate('/CreateGoal?category=' + activeCategory)}
+          onCreateGoal={() => {
+            const pageMap = { exercise: 'CreateGoalExercise', study: 'CreateGoalStudy', mental: 'CreateGoalMental', daily: 'CreateGoalDaily' };
+            navigate(`/${pageMap[activeCategory]}`);
+          }}
         />
       )}
 
