@@ -285,12 +285,22 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     setShowDelete(true);
   };
 
+  const { data: user } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => base44.auth.me().catch(() => null),
+  });
+  const isGuest = !user;
+
   const updateMutation = useMutation({
     mutationFn: (updateData) => base44.entities.ActionGoal.update(actionGoal.id, updateData),
     onMutate: async (updateData) => {
       await queryClient.cancelQueries({ queryKey: ['actionGoals'] });
-      const previous = queryClient.getQueryData(['actionGoals']);
+      await queryClient.cancelQueries({ queryKey: ['actionGoals', false] });
+      const previous = queryClient.getQueryData(['actionGoals']) || queryClient.getQueryData(['actionGoals', false]);
       queryClient.setQueryData(['actionGoals'], (old = []) =>
+        old.map(ag => ag.id === actionGoal.id ? { ...ag, ...updateData } : ag)
+      );
+      queryClient.setQueryData(['actionGoals', false], (old = []) =>
         old.map(ag => ag.id === actionGoal.id ? { ...ag, ...updateData } : ag)
       );
       return { previous };
@@ -301,6 +311,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     },
     onSuccess: () => {
       toast.success('행동 목표가 수정되었습니다.');
+      queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
       setShowEdit(false);
     },
   });
@@ -309,8 +320,12 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     mutationFn: () => base44.entities.ActionGoal.delete(actionGoal.id),
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ['actionGoals'] });
-      const previous = queryClient.getQueryData(['actionGoals']);
+      await queryClient.cancelQueries({ queryKey: ['actionGoals', false] });
+      const previous = queryClient.getQueryData(['actionGoals']) || queryClient.getQueryData(['actionGoals', false]);
       queryClient.setQueryData(['actionGoals'], (old = []) =>
+        old.filter(ag => ag.id !== actionGoal.id)
+      );
+      queryClient.setQueryData(['actionGoals', false], (old = []) =>
         old.filter(ag => ag.id !== actionGoal.id)
       );
       return { previous };
@@ -321,6 +336,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     },
     onSuccess: () => {
       toast.success('행동 목표가 삭제되었습니다.');
+      queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
       setShowDelete(false);
     },
   });
