@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useCallback } from 'react';
 import { hapticFeedback } from '@/lib/HapticFeedback';
 
 export function useHapticFeedback() {
