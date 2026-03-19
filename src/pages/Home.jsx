@@ -46,12 +46,17 @@ export default function Home() {
     try { return JSON.parse(localStorage.getItem('shownVictory') || '[]'); } catch { return []; }
   });
 
+  const [isPulling, setIsPulling] = React.useState(false);
+  
   const { pullProgress, onTouchStart: handlePullStart } = usePullToRefresh(async () => {
+    if (isPulling) return;
+    setIsPulling(true);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['goals'] }),
       queryClient.invalidateQueries({ queryKey: ['actionLogs'] }),
       queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
     ]);
+    setIsPulling(false);
   });
 
   const { data: user, isLoading: isUserLoading } = useQuery({
