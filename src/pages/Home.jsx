@@ -138,6 +138,7 @@ export default function Home() {
       return base44.entities.ActionLog.list('-created_date', 200);
     },
     enabled: !isUserLoading,
+    staleTime: 1000 * 30, // 30초 동안 fresh 상태 유지
   });
 
   useEffect(() => {
