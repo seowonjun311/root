@@ -219,7 +219,9 @@ export default function Home() {
       guestDataPersistence.saveData('local_action_logs', [...existingLogs, { ...logData, id: `local_log_${Date.now()}`, created_date: new Date().toISOString() }]);
       queryClient.invalidateQueries({ queryKey: ['allLogs', true] });
     } else {
-      createLogMutation.mutate(logData);
+      await base44.entities.ActionLog.create(logData);
+      // 로그 생성 후 즉시 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: ['allLogs'] });
     }
 
     const catKey = actionGoal.category;
