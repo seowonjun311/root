@@ -93,7 +93,7 @@ export default function Home() {
         const data = guestDataPersistence.loadOnboardingData();
         return (data.goals || []).filter(g => g.status === 'active');
       }
-      return base44.entities.Goal.filter({ status: 'active' });
+      return base44.entities.Goal.filter({ status: 'active', goal_type: 'result' });
     },
     enabled: !isUserLoading,
   });
