@@ -46,10 +46,27 @@ export default function Onboarding() {
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('from') === 'login') {
-      base44.auth.isAuthenticated().then(isLoggedIn => {
-        if (isLoggedIn) {
+      window.history.replaceState({}, '', '/Onboarding');
+      base44.auth.isAuthenticated().then(async (isLoggedIn) => {
+        if (!isLoggedIn) return;
+        // 기존 목표가 있으면 바로 홈으로
+        try {
+          const existingGoals = await base44.entities.Goal.filter({ status: 'active' });
+          if (existingGoals && existingGoals.length > 0) {
+            // 기존 사용자 - 온보딩 완료 표시 후 홈으로
+            await base44.auth.updateMe({ onboarding_complete: true });
+            queryClient.setQueryData(['me'], (old) => ({
+              ...(old || {}),
+              onboarding_complete: true,
+            }));
+            navigate('/Home', { replace: true });
+          } else {
+            // 신규 사용자 - 온보딩 진행
+            setStepHistory(['welcome', 'goal']);
+          }
+        } catch {
+          // 오류 시 온보딩 진행
           setStepHistory(['welcome', 'goal']);
-          window.history.replaceState({}, '', '/Onboarding');
         }
       });
     }
