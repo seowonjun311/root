@@ -100,7 +100,7 @@ export default function AppLayout() {
               }}
             >
               {isMounted && (
-                <Suspense fallback={<div />}>
+                <Suspense fallback={<TabSkeleton />}>
                   <Component />
                   <div style={{ height: 'calc(64px + env(safe-area-inset-bottom))' }} />
                 </Suspense>
