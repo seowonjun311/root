@@ -1,21 +1,10 @@
-import { useCallback } from 'react';
+import * as React from 'react';
 import { hapticFeedback } from '@/lib/HapticFeedback';
 
-/**
- * Hook to integrate haptic feedback into React components
- * 
- * Usage:
- *   const { triggerHaptic } = useHapticFeedback();
- *   triggerHaptic('impact', 'light');    // Light tap
- *   triggerHaptic('impact', 'medium');   // Medium vibration
- *   triggerHaptic('impact', 'heavy');    // Heavy impact
- *   triggerHaptic('success');             // Success pattern
- *   triggerHaptic('error');               // Error pattern
- */
 export function useHapticFeedback() {
-  const triggerHaptic = useCallback((type, intensity) => {
+  const triggerHaptic = React.useCallback((type, intensity) => {
     if (!hapticFeedback) return;
-    
+
     if (intensity === 'light' || type === 'light') {
       hapticFeedback.light();
     } else if (intensity === 'medium' || type === 'medium') {
@@ -31,13 +20,12 @@ export function useHapticFeedback() {
     }
   }, []);
 
-  // Legacy API support
-  const onPress = useCallback(() => triggerHaptic('light'), [triggerHaptic]);
-  const onSuccess = useCallback(() => triggerHaptic('success'), [triggerHaptic]);
-  const onError = useCallback(() => triggerHaptic('error'), [triggerHaptic]);
-  const onWarning = useCallback(() => triggerHaptic('warning'), [triggerHaptic]);
-  const onMedium = useCallback(() => triggerHaptic('medium'), [triggerHaptic]);
-  const onHeavy = useCallback(() => triggerHaptic('heavy'), [triggerHaptic]);
+  const onPress   = React.useCallback(() => triggerHaptic('light'),   [triggerHaptic]);
+  const onSuccess = React.useCallback(() => triggerHaptic('success'), [triggerHaptic]);
+  const onError   = React.useCallback(() => triggerHaptic('error'),   [triggerHaptic]);
+  const onWarning = React.useCallback(() => triggerHaptic('warning'), [triggerHaptic]);
+  const onMedium  = React.useCallback(() => triggerHaptic('medium'),  [triggerHaptic]);
+  const onHeavy   = React.useCallback(() => triggerHaptic('heavy'),   [triggerHaptic]);
 
   return {
     triggerHaptic,
