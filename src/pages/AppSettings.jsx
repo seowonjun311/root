@@ -5,7 +5,7 @@ import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
-import { ChevronRight, Bell, User, LogOut, Trash2, RefreshCw } from 'lucide-react';
+import { ChevronRight, Bell, User, LogOut, Trash2, RefreshCw, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { usePullToRefreshTabbed } from '../hooks/usePullToRefreshTabbed';
