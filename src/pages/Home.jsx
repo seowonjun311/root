@@ -76,7 +76,10 @@ export default function Home() {
         navigate('/Onboarding');
         return;
       }
-      if (user.active_category) setActiveCategory(user.active_category);
+      // 초기 로드 시에만 user.active_category로 설정
+      if (user.active_category && activeCategory === 'exercise') {
+        setActiveCategory(user.active_category);
+      }
     } else {
       // 비로그인 게스트: localStorage 체크
       const guestOnboardingComplete = localStorage.getItem('guest_onboarding_complete') === 'true';
@@ -85,9 +88,9 @@ export default function Home() {
         return;
       }
       const guestCat = localStorage.getItem('guest_active_category');
-      if (guestCat) setActiveCategory(guestCat);
+      if (guestCat && activeCategory === 'exercise') setActiveCategory(guestCat);
     }
-  }, [user, isUserLoading, navigate]);
+  }, [isUserLoading, navigate]);
 
   const isGuest = !isUserLoading && !user;
 
