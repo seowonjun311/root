@@ -87,8 +87,8 @@ export default function AppLayout() {
       {/* Header: shrinks to its natural size */}
       <Header />
 
-      {/* Tab content area: fills remaining space above BottomNav */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+      {/* Tab content area: fills remaining space */}
+      <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
         {TAB_PAGES.map(({ path, component: Component }) => {
           const isActive = currentPath === path;
           const isMounted = visibleTabs.has(path);
@@ -99,14 +99,17 @@ export default function AppLayout() {
               ref={el => { scrollRefs.current[path] = el; }}
               style={{
                 position: 'absolute',
-                inset: 0,
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
                 overflowY: isActive ? 'auto' : 'hidden',
                 overflowX: 'hidden',
                 WebkitOverflowScrolling: 'touch',
                 visibility: isActive ? 'visible' : 'hidden',
-                // 비활성 탭은 포인터 이벤트 완전 차단
                 pointerEvents: isActive ? 'auto' : 'none',
                 display: isMounted ? 'block' : 'none',
+                zIndex: 1,
               }}
             >
               {isMounted && (
@@ -120,8 +123,10 @@ export default function AppLayout() {
         })}
       </div>
 
-      {/* BottomNav: always rendered as flex child, never covered */}
-      <BottomNav />
+      {/* BottomNav: flex child, z-index above tab panels */}
+      <div style={{ flexShrink: 0, position: 'relative', zIndex: 10 }}>
+        <BottomNav />
+      </div>
     </div>
   );
 }
