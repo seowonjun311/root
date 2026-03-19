@@ -345,39 +345,55 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
               </button>
 
               <div className="flex items-center gap-1.5 ml-2">
-                {actionGoal.action_type === 'timer' ? (
-                  doneToday && !isRunning ? (
-                    <span className="h-8 px-3 text-xs font-bold rounded-md flex items-center gap-1" style={{
-                      background: 'rgba(120,80,20,0.15)',
-                      border: '2px solid rgba(120,80,20,0.25)',
-                      color: '#a07840',
-                    }}>✓ 완료</span>
-                  ) : (
-                    <button
-                      className="h-8 px-3 text-xs font-bold rounded-md transition-all active:scale-95"
-                      style={isRunning ? {
-                        background: 'linear-gradient(180deg, var(--error-bg) 0%, var(--error-dark) 100%)',
-                        border: '2px solid var(--error-border)',
-                        boxShadow: 'inset 0 1px 2px rgba(255,150,120,0.3), 0 2px 4px rgba(60,10,5,0.4)',
-                        color: 'var(--error-text)',
-                        textShadow: '0 1px 2px rgba(80,10,5,0.5)',
-                      } : {
-                        background: `linear-gradient(180deg, var(--wood-primary) 0%, var(--wood-primary-dark) 50%, var(--wood-primary-darker) 100%)`,
-                        border: '2px solid var(--wood-border)',
-                        boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 2px 4px rgba(60,35,5,0.4)',
-                        color: 'var(--wood-text-light)',
-                        textShadow: '0 1px 2px rgba(60,30,5,0.5)',
-                      }}
-                      onClick={handleTimerToggle}
-                    >
-                      {isRunning ? (
-                        <span className="flex items-center gap-1"><Square className="w-3 h-3" />{formatTime(elapsed)}</span>
-                      ) : (
-                        <span className="flex items-center gap-1"><Play className="w-3 h-3" />시작</span>
-                      )}
-                    </button>
-                  )
-                ) : doneToday ? (
+               {actionGoal.action_type === 'timer' ? (
+                 doneToday && !isRunning ? (
+                   <span className="h-8 px-3 text-xs font-bold rounded-md flex items-center gap-1" style={{
+                     background: 'rgba(120,80,20,0.15)',
+                     border: '2px solid rgba(120,80,20,0.25)',
+                     color: '#a07840',
+                   }}>✓ 완료</span>
+                 ) : (
+                   <div className="flex items-center gap-1.5">
+                     <button
+                       className="h-8 px-3 text-xs font-bold rounded-md transition-all active:scale-95"
+                       style={isRunning ? {
+                         background: 'linear-gradient(180deg, var(--error-bg) 0%, var(--error-dark) 100%)',
+                         border: '2px solid var(--error-border)',
+                         boxShadow: 'inset 0 1px 2px rgba(255,150,120,0.3), 0 2px 4px rgba(60,10,5,0.4)',
+                         color: 'var(--error-text)',
+                         textShadow: '0 1px 2px rgba(80,10,5,0.5)',
+                       } : {
+                         background: `linear-gradient(180deg, var(--wood-primary) 0%, var(--wood-primary-dark) 50%, var(--wood-primary-darker) 100%)`,
+                         border: '2px solid var(--wood-border)',
+                         boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 2px 4px rgba(60,35,5,0.4)',
+                         color: 'var(--wood-text-light)',
+                         textShadow: '0 1px 2px rgba(60,30,5,0.5)',
+                       }}
+                       onClick={handleTimerToggle}
+                     >
+                       {isRunning ? (
+                         <span className="flex items-center gap-1"><Square className="w-3 h-3" />{formatTime(elapsed)}</span>
+                       ) : (
+                         <span className="flex items-center gap-1"><Play className="w-3 h-3" />시작</span>
+                       )}
+                     </button>
+                     {/* 타이머 완료(다음) 버튼 */}
+                     <button
+                       className="h-8 px-3 text-xs font-bold rounded-md transition-all active:scale-95"
+                       style={{
+                         background: 'linear-gradient(180deg, #5a8a40 0%, #3d6a28 50%, #2e5018 100%)',
+                         border: '2px solid #244010',
+                         boxShadow: 'inset 0 1px 2px rgba(180,255,120,0.3), 0 2px 4px rgba(20,40,5,0.4)',
+                         color: '#efffdc',
+                         textShadow: '0 1px 2px rgba(10,30,5,0.5)',
+                       }}
+                       onClick={handleConfirm}
+                     >
+                       <span className="flex items-center gap-1"><Check className="w-3 h-3" />다음</span>
+                     </button>
+                   </div>
+                 )
+               ) : doneToday ? (
                   <span className="h-8 px-3 text-xs font-bold rounded-md flex items-center gap-1" style={{
                     background: 'rgba(120,80,20,0.15)',
                     border: '2px solid rgba(120,80,20,0.25)',
