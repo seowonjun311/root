@@ -49,7 +49,7 @@ export default function Header() {
     >
       {canGoBack && (
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => GO_HOME_DIRECTLY.includes(location.pathname) ? navigate('/Home') : navigate(-1)}
           className="p-1.5 rounded-lg hover:bg-secondary transition-colors -ml-1.5"
           aria-label="이전 페이지로 돌아가기"
         >
