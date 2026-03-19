@@ -114,6 +114,12 @@ export default function GoalProgress({ goal, logs = [] }) {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const cardRef = useRef(null);
+  
+  const { data: user } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => base44.auth.me().catch(() => null),
+  });
+  const isGuest = !user;
 
   useEffect(() => {
     if (!showCalendar) return;
