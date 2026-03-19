@@ -94,7 +94,7 @@ export default function AppLayout() {
     >
       <Header />
 
-      <div className="flex-1 relative overflow-hidden">
+      <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
         {TAB_PAGES.map(({ path, component: Component }) => {
           const isActive = currentPath === path;
           const isMounted = visibleTabs.has(path);
@@ -115,12 +115,13 @@ export default function AppLayout() {
                 visibility: isActive ? 'visible' : 'hidden',
                 pointerEvents: isActive ? 'auto' : 'none',
                 display: isMounted ? 'block' : 'none',
+                zIndex: isActive ? 1 : 0,
               }}
             >
               {isMounted && (
                 <Suspense fallback={<TabSkeleton />}>
                   <Component />
-                  <div style={{ height: 'calc(64px + env(safe-area-inset-bottom))' }} />
+                  <div style={{ height: '16px' }} />
                 </Suspense>
               )}
             </div>
