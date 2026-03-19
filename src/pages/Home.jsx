@@ -125,6 +125,7 @@ export default function Home() {
       return base44.entities.ActionGoal.filter({ status: 'active' });
     },
     enabled: !isUserLoading,
+    staleTime: 1000 * 60 * 5, // 5분 동안 fresh 상태 유지
   });
 
   const { data: allLogs = [] } = useQuery({
