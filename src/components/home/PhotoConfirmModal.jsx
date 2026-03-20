@@ -121,6 +121,14 @@ export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip,
                  </>
                )}
              </Button>
+             <Button
+               variant="outline"
+               onClick={onCancel}
+               disabled={uploading}
+               className="flex-1 h-11 rounded-xl font-semibold"
+             >
+               취소 (기록 안함)
+             </Button>
              <p className="text-xs text-muted-foreground text-center">사진없이 저장할 수 있어요</p>
            </div>
         </motion.div>
