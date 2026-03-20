@@ -370,7 +370,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
                 aria-label={`${actionGoal.title} 달성 현황 (주 ${weeklyCount}/${targetFreq})`}
               >
                 <span className="text-base">{typeEmoji}</span>
-                <span className="font-bold text-sm truncate" style={{ color: 'var(--wood-text-dark)' }}>{actionGoal.title}</span>
+                <span className="font-bold text-sm truncate" style={{ color: '#3a1f04' }}>{actionGoal.title}</span>
                 {typeLabel && <span className="text-xs ml-1" style={{ color: 'var(--wood-primary-dark)' }}>{typeLabel}</span>}
                 <span className="text-xs font-bold ml-1 shrink-0" style={{ color: 'var(--wood-primary-darker)' }}>
                   {weeklyCount}/{targetFreq}
