@@ -15,29 +15,33 @@ const ACTION_TYPES = [
   { value: 'abstain', label: '🚫 안하기', desc: '나쁜 습관 참기' },
 ];
 
-const categoryNames = { exercise: '운동', study: '공부', mental: '정신', daily: '일상' };
-
 export default function CreateGoalForm({ category }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { triggerHaptic } = useHapticFeedback();
-  const paramGoalId = new URLSearchParams(window.location.search).get('goalId');
-  const isAddingActionOnlyEarly = !!paramGoalId;
-  const formContainerRef = isAddingActionOnlyEarly ? null : useScrollIntoViewOnFocus();
-  
-  // 해당 카테고리의 활성 결과목표 확인
+
+  const parentGoalId = new URLSearchParams(window.location.search).get('goalId');
+  const isAddingActionOnlyEarly = !!parentGoalId;
+
+  const scrollRef = useScrollIntoViewOnFocus();
+  const formContainerRef = isAddingActionOnlyEarly ? null : scrollRef;
+
   const { data: existingGoal } = useQuery({
     queryKey: ['existingGoal', category],
     queryFn: async () => {
-      const goals = await base44.entities.Goal.filter({ category, status: 'active', goal_type: 'result' });
+      const goals = await base44.entities.Goal.filter({
+        category,
+        status: 'active',
+        goal_type: 'result',
+      });
       return goals[0] || null;
     },
-    enabled: !isAddingActionOnlyEarly, // 행동목표 추가 모드에서는 쿼리 실행 안 함
+    enabled: !isAddingActionOnlyEarly,
   });
-  
-  const existingGoalId = paramGoalId || existingGoal?.id;
+
+  const existingGoalId = parentGoalId || existingGoal?.id;
   const isStudy = category === 'study';
-  const isAddingActionOnly = !!existingGoalId;
+  const isAddingActionOnly = !!parentGoalId;
 
   const [step, setStep] = useState(0);
   const [hasDDay, setHasDDay] = useState(null);
@@ -51,7 +55,6 @@ export default function CreateGoalForm({ category }) {
   const [actionType, setActionType] = useState('confirm');
   const [frequency, setFrequency] = useState(7);
   const [minutes, setMinutes] = useState(60);
-  const [formErrors, setFormErrors] = useState({});
 
   const createGoalMutation = useMutation({
     mutationFn: async (payload) => {
@@ -63,6 +66,7 @@ export default function CreateGoalForm({ category }) {
       queryClient.invalidateQueries({ queryKey: ['allLogs'] });
       queryClient.invalidateQueries({ queryKey: ['allGoals'] });
       queryClient.invalidateQueries({ queryKey: ['actionGoalsAll'] });
+
       toast.success(data.message);
       setTimeout(() => navigate(`/Home?category=${category}`), 300);
     },
@@ -77,62 +81,86 @@ export default function CreateGoalForm({ category }) {
 
   const handleBack = () => {
     triggerHaptic('impact', 'light');
-    if (isAddingActionOnly) { navigate('/Home'); return; }
-    if (step === 0) { navigate('/Home'); return; }
-    if (isStudy) {
-      if (step === 2) { setStep(hasDDay ? 1 : 1); return; }
-      if (step === 1) { setStep(0); return; }
+
+    if (isAddingActionOnly) {
+      navigate('/Home');
+      return;
     }
+
+    if (step === 0) {
+      navigate('/Home');
+      return;
+    }
+
+    if (isStudy) {
+      if (step === 2) {
+        setStep(1);
+        return;
+      }
+
+      if (step === 1) {
+        setStep(0);
+        return;
+      }
+    }
+
     setStep(step - 1);
   };
 
   const handleSubmit = async () => {
     triggerHaptic('impact', 'heavy');
-    if (isAddingActionOnly) {
-      await base44.entities.ActionGoal.create({
-        goal_id: existingGoalId,
+
+    try {
+      if (isAddingActionOnly) {
+        await base44.entities.ActionGoal.create({
+          goal_id: existingGoalId,
+          category,
+          title: actionTitle,
+          action_type: actionType,
+          weekly_frequency: frequency,
+          duration_minutes: actionType === 'timer' ? minutes : 0,
+          status: 'active',
+        });
+
+        createGoalMutation.mutate({
+          addingActionOnly: true,
+          data: { message: '행동 목표가 추가되었습니다! 🦊' },
+        });
+        return;
+      }
+
+      const finalDuration = isStudy && hasDDay ? calcDuration() : duration;
+      const finalTitle = isStudy && hasDDay ? examTitle : goalTitle;
+      const finalDDay = isStudy && hasDDay ? dDay : undefined;
+
+      const goal = await base44.entities.Goal.create({
         category,
-        title: actionTitle,
+        goal_type: 'result',
+        title: finalTitle,
+        duration_days: finalDuration,
+        start_date: new Date().toISOString().split('T')[0],
+        ...(finalDDay ? { d_day: finalDDay, has_d_day: true } : {}),
+        status: 'active',
+      });
+
+      await base44.entities.ActionGoal.create({
+        goal_id: goal.id,
+        category,
+        title: actionTitle || finalTitle,
         action_type: actionType,
         weekly_frequency: frequency,
         duration_minutes: actionType === 'timer' ? minutes : 0,
+        duration_days: finalDuration,
         status: 'active',
       });
+
       createGoalMutation.mutate({
-        addingActionOnly: true,
-        data: { message: '행동 목표가 추가되었습니다! 🦊' },
+        data: { message: '새로운 여정이 시작되었습니다! 🦊' },
       });
-      return;
+    } catch (error) {
+      console.error(error);
+      toast.error('저장 중 오류가 발생했습니다.');
     }
-
-    const finalDuration = isStudy && hasDDay ? calcDuration() : duration;
-    const finalTitle = isStudy && hasDDay ? examTitle : goalTitle;
-    const finalDDay = isStudy && hasDDay ? dDay : undefined;
-
-    const goal = await base44.entities.Goal.create({
-      category,
-      goal_type: 'result',
-      title: finalTitle,
-      duration_days: finalDuration,
-      start_date: new Date().toISOString().split('T')[0],
-      ...(finalDDay ? { d_day: finalDDay, has_d_day: true } : {}),
-      status: 'active',
-    });
-
-    await base44.entities.ActionGoal.create({
-      goal_id: goal.id,
-      category,
-      title: actionTitle || finalTitle,
-      action_type: actionType,
-      weekly_frequency: frequency,
-      duration_minutes: actionType === 'timer' ? minutes : 0,
-      duration_days: finalDuration,
-      status: 'active',
-    });
-
-    createGoalMutation.mutate({
-      data: { message: '새로운 여정이 시작되었습니다! 🦊' },
-    });
   };
 
   const renderStep = () => {
@@ -140,22 +168,43 @@ export default function CreateGoalForm({ category }) {
       return (
         <div className="space-y-5">
           <div>
-            <label className="text-sm font-semibold text-amber-800 mb-2 block">행동 목표 이름</label>
+            <label className="text-sm font-semibold text-amber-800 mb-2 block">
+              행동 목표 이름
+            </label>
             <Input
               id="action-title-input"
               value={actionTitle}
-              onChange={e => setActionTitle(e.target.value)}
-              placeholder={category === 'daily' ? "예: 팩하기, 집청소, 설거지, 부모님 연락" : category === 'mental' ? "예: 7시기상, 일기쓰기, 부모님연락하기, 금연, ..." : category === 'study' ? "예: 독해, 듣기, 회화, 전공서, 수학, ..." : "예: 러닝, 등산, 헬스, 야식참기, ..."}
+              onChange={(e) => setActionTitle(e.target.value)}
+              placeholder={
+                category === 'daily'
+                  ? '예: 팩하기, 집청소, 설거지, 부모님 연락'
+                  : category === 'mental'
+                  ? '예: 7시기상, 일기쓰기, 부모님연락하기, 금연, ...'
+                  : category === 'study'
+                  ? '예: 독해, 듣기, 회화, 전공서, 수학, ...'
+                  : '예: 러닝, 등산, 헬스, 야식참기, ...'
+              }
               className="h-12 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
             />
           </div>
+
           <div>
-            <label className="text-sm font-semibold text-amber-800 mb-2 block">행동 유형</label>
+            <label className="text-sm font-semibold text-amber-800 mb-2 block">
+              행동 유형
+            </label>
             <div className="space-y-2">
-              {ACTION_TYPES.map(t => (
-                <button key={t.value} onClick={() => { setActionType(t.value); if (t.value === 'abstain') setFrequency(7); }}
+              {ACTION_TYPES.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => {
+                    setActionType(t.value);
+                    if (t.value === 'abstain') setFrequency(7);
+                  }}
                   className={`w-full p-3 rounded-xl border text-left transition-all ${
-                    actionType === t.value ? 'border-amber-600 bg-amber-50/80' : 'border-border bg-card'}`}
+                    actionType === t.value
+                      ? 'border-amber-600 bg-amber-50/80'
+                      : 'border-border bg-card'
+                  }`}
                 >
                   <p className="text-sm font-semibold">{t.label}</p>
                   <p className="text-xs text-muted-foreground">{t.desc}</p>
@@ -163,27 +212,43 @@ export default function CreateGoalForm({ category }) {
               ))}
             </div>
           </div>
+
           <div>
-            <label className="text-sm font-semibold text-amber-800 mb-2 block">주 횟수</label>
+            <label className="text-sm font-semibold text-amber-800 mb-2 block">
+              주 횟수
+            </label>
             <div className="grid grid-cols-7 gap-1.5">
-              {[1, 2, 3, 4, 5, 6, 7].map(f => (
-                <button key={f} onClick={() => setFrequency(f)}
+              {[1, 2, 3, 4, 5, 6, 7].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFrequency(f)}
                   className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                    frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                    frequency === f
+                      ? 'bg-amber-700 text-amber-50'
+                      : 'bg-secondary text-secondary-foreground'
+                  }`}
                 >
                   {f}
                 </button>
               ))}
             </div>
           </div>
+
           {actionType === 'timer' && (
             <div>
-              <label className="text-sm font-semibold text-amber-800 mb-2 block">1회 시간</label>
+              <label className="text-sm font-semibold text-amber-800 mb-2 block">
+                1회 시간
+              </label>
               <div className="flex gap-2 mb-2">
-                {[20, 30, 60].map(m => (
-                  <button key={m} onClick={() => setMinutes(m)}
+                {[20, 30, 60].map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setMinutes(m)}
                     className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
-                      minutes === m ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                      minutes === m
+                        ? 'bg-amber-700 text-amber-50'
+                        : 'bg-secondary text-secondary-foreground'
+                    }`}
                   >
                     {m}분
                   </button>
@@ -191,17 +256,18 @@ export default function CreateGoalForm({ category }) {
               </div>
               <div className="flex items-center gap-2">
                 <input
-                  type="number" 
-                  min="1" 
+                  type="number"
+                  min="1"
                   max="300"
                   value={minutes}
-                  onChange={e => setMinutes(Number(e.target.value))}
+                  onChange={(e) => setMinutes(Number(e.target.value))}
                   className="flex-1 h-11 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
                 />
                 <span className="text-sm font-semibold text-muted-foreground">분</span>
               </div>
             </div>
           )}
+
           <Button
             className="w-full h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
             disabled={!actionTitle.trim() || createGoalMutation.isPending}
@@ -219,22 +285,36 @@ export default function CreateGoalForm({ category }) {
           <div className="text-center pt-4 pb-2">
             <p className="text-4xl mb-3">📚</p>
             <h2 className="text-lg font-bold text-amber-900">시험 D-day가 있나요?</h2>
-            <p className="text-sm text-muted-foreground mt-1">목표 유형에 따라 다르게 설정돼요</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              목표 유형에 따라 다르게 설정돼요
+            </p>
           </div>
+
           <div className="space-y-3">
             <button
-              onClick={() => { setHasDDay(true); setStep(1); }}
+              onClick={() => {
+                setHasDDay(true);
+                setStep(1);
+              }}
               className="w-full p-5 rounded-2xl border-2 border-amber-300 bg-amber-50/80 text-left hover:bg-amber-100/80 transition-all"
             >
               <p className="font-bold text-amber-900 text-base">📅 D-day 있음</p>
-              <p className="text-sm text-amber-700/70 mt-1">시험이나 마감일이 정해져 있어요</p>
+              <p className="text-sm text-amber-700/70 mt-1">
+                시험이나 마감일이 정해져 있어요
+              </p>
             </button>
+
             <button
-              onClick={() => { setHasDDay(false); setStep(1); }}
+              onClick={() => {
+                setHasDDay(false);
+                setStep(1);
+              }}
               className="w-full p-5 rounded-2xl border-2 border-border bg-card text-left hover:bg-secondary/50 transition-all"
             >
               <p className="font-bold text-foreground text-base">📖 D-day 없음</p>
-              <p className="text-sm text-muted-foreground mt-1">꾸준히 공부 습관을 만들고 싶어요</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                꾸준히 공부 습관을 만들고 싶어요
+              </p>
             </button>
           </div>
         </div>
@@ -242,7 +322,10 @@ export default function CreateGoalForm({ category }) {
     }
 
     if (isStudy && step === 1 && hasDDay) {
-      const daysLeft = dDay ? Math.ceil((new Date(dDay) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+      const daysLeft = dDay
+        ? Math.ceil((new Date(dDay) - new Date()) / (1000 * 60 * 60 * 24))
+        : null;
+
       return (
         <div className="space-y-6">
           <div>
@@ -254,7 +337,7 @@ export default function CreateGoalForm({ category }) {
               type="date"
               value={dDay}
               min={new Date().toISOString().split('T')[0]}
-              onChange={e => setDDay(e.target.value)}
+              onChange={(e) => setDDay(e.target.value)}
               className="w-full h-12 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
             />
             {daysLeft !== null && daysLeft > 0 && (
@@ -263,16 +346,20 @@ export default function CreateGoalForm({ category }) {
               </p>
             )}
           </div>
+
           <div>
-            <label className="text-sm font-semibold text-amber-800 mb-2 block">어떤 시험인가요?</label>
+            <label className="text-sm font-semibold text-amber-800 mb-2 block">
+              어떤 시험인가요?
+            </label>
             <Input
               id="exam-title-input"
               value={examTitle}
-              onChange={e => setExamTitle(e.target.value)}
+              onChange={(e) => setExamTitle(e.target.value)}
               placeholder="예: 토익 900점, 수능, 정보처리기사..."
               className="h-12 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
             />
           </div>
+
           <Button
             className="w-full h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
             disabled={!dDay || !examTitle.trim()}
@@ -288,36 +375,63 @@ export default function CreateGoalForm({ category }) {
       return (
         <div className="space-y-6">
           <div>
-            <label className="text-sm font-semibold text-amber-800 mb-2 block">결과 목표</label>
+            <label className="text-sm font-semibold text-amber-800 mb-2 block">
+              결과 목표
+            </label>
             <Input
               id="goal-title-input"
               value={goalTitle}
-              onChange={e => setGoalTitle(e.target.value)}
-              placeholder={category === 'mental' ? "예: 자기관리, 생활규칙만들기, 절제, 나 챙기기" : category === 'daily' ? "예: 갓생살기, 일찍일어나기, 루틴찾기" : category === 'exercise' ? "예: 살빼기, 턱걸이 30개, 등산 100회..." : "어떤 결과를 이루고 싶으신가요?"}
+              onChange={(e) => setGoalTitle(e.target.value)}
+              placeholder={
+                category === 'mental'
+                  ? '예: 자기관리, 생활규칙만들기, 절제, 나 챙기기'
+                  : category === 'daily'
+                  ? '예: 갓생살기, 일찍일어나기, 루틴찾기'
+                  : category === 'exercise'
+                  ? '예: 살빼기, 턱걸이 30개, 등산 100회...'
+                  : '어떤 결과를 이루고 싶으신가요?'
+              }
               className="h-12 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
             />
           </div>
+
           <div>
-            <label className="text-sm font-semibold text-amber-800 mb-2 block">기간</label>
+            <label className="text-sm font-semibold text-amber-800 mb-2 block">
+              기간
+            </label>
             <div className="flex gap-2 mb-2">
-              {[{ label: '4주', weeks: 4 }, { label: '8주', weeks: 8 }, { label: '12주', weeks: 12 }].map(({ label, weeks }) => (
-                <button 
-                  key={weeks} 
-                  onClick={() => { setDuration(weeks * 7); setIsCustomDuration(false); setCustomWeeks(''); }}
-                  className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
-                    !isCustomDuration && duration === weeks * 7 ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
-                >
-                  {label}
-                </button>
-              ))}
-              <button 
+              {[{ label: '4주', weeks: 4 }, { label: '8주', weeks: 8 }, { label: '12주', weeks: 12 }].map(
+                ({ label, weeks }) => (
+                  <button
+                    key={weeks}
+                    onClick={() => {
+                      setDuration(weeks * 7);
+                      setIsCustomDuration(false);
+                      setCustomWeeks('');
+                    }}
+                    className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
+                      !isCustomDuration && duration === weeks * 7
+                        ? 'bg-amber-700 text-amber-50'
+                        : 'bg-secondary text-secondary-foreground'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                )
+              )}
+
+              <button
                 onClick={() => setIsCustomDuration(true)}
                 className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
-                  isCustomDuration ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                  isCustomDuration
+                    ? 'bg-amber-700 text-amber-50'
+                    : 'bg-secondary text-secondary-foreground'
+                }`}
               >
                 직접입력
               </button>
             </div>
+
             {isCustomDuration && (
               <div className="flex items-center gap-2 mt-2">
                 <input
@@ -326,7 +440,10 @@ export default function CreateGoalForm({ category }) {
                   min="1"
                   max="52"
                   value={customWeeks}
-                  onChange={e => { setCustomWeeks(e.target.value); setDuration(Number(e.target.value) * 7); }}
+                  onChange={(e) => {
+                    setCustomWeeks(e.target.value);
+                    setDuration(Number(e.target.value) * 7);
+                  }}
                   placeholder="주 수 입력"
                   className="flex-1 h-11 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
                 />
@@ -334,10 +451,11 @@ export default function CreateGoalForm({ category }) {
               </div>
             )}
           </div>
+
           <Button
             className="w-full h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
             disabled={!goalTitle.trim()}
-            onClick={() => isStudy ? setStep(2) : setStep(1)}
+            onClick={() => (isStudy ? setStep(2) : setStep(1))}
           >
             다음
           </Button>
@@ -346,25 +464,47 @@ export default function CreateGoalForm({ category }) {
     }
 
     const isLastStep = (isStudy && step === 2) || (!isStudy && step === 1);
+
     if (isLastStep) {
       return (
         <div className="space-y-5">
           <div>
-            <label className="text-sm font-semibold text-amber-800 mb-2 block">행동 목표 이름</label>
+            <label className="text-sm font-semibold text-amber-800 mb-2 block">
+              행동 목표 이름
+            </label>
             <Input
               value={actionTitle}
-              onChange={e => setActionTitle(e.target.value)}
-              placeholder={category === 'daily' ? "예: 팩하기, 집청소, 빨래, 부모님연락" : category === 'mental' ? "예: 7시기상, 일기쓰기, 부모님연락하기, 금연, ..." : category === 'study' ? "예: 독해, 듣기, 회화, 전공서, 수학, ..." : "예: 러닝, 등산, 헬스, 야식참기, ..."}
+              onChange={(e) => setActionTitle(e.target.value)}
+              placeholder={
+                category === 'daily'
+                  ? '예: 팩하기, 집청소, 빨래, 부모님연락'
+                  : category === 'mental'
+                  ? '예: 7시기상, 일기쓰기, 부모님연락하기, 금연, ...'
+                  : category === 'study'
+                  ? '예: 독해, 듣기, 회화, 전공서, 수학, ...'
+                  : '예: 러닝, 등산, 헬스, 야식참기, ...'
+              }
               className="h-12 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
             />
           </div>
+
           <div>
-            <label className="text-sm font-semibold text-amber-800 mb-2 block">행동 유형</label>
+            <label className="text-sm font-semibold text-amber-800 mb-2 block">
+              행동 유형
+            </label>
             <div className="space-y-2">
-              {ACTION_TYPES.map(t => (
-                <button key={t.value} onClick={() => { setActionType(t.value); if (t.value === 'abstain') setFrequency(7); }}
+              {ACTION_TYPES.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => {
+                    setActionType(t.value);
+                    if (t.value === 'abstain') setFrequency(7);
+                  }}
                   className={`w-full p-3 rounded-xl border text-left transition-all ${
-                    actionType === t.value ? 'border-amber-600 bg-amber-50/80' : 'border-border bg-card'}`}
+                    actionType === t.value
+                      ? 'border-amber-600 bg-amber-50/80'
+                      : 'border-border bg-card'
+                  }`}
                 >
                   <p className="text-sm font-semibold">{t.label}</p>
                   <p className="text-xs text-muted-foreground">{t.desc}</p>
@@ -372,45 +512,63 @@ export default function CreateGoalForm({ category }) {
               ))}
             </div>
           </div>
+
           <div>
-            <label className="text-sm font-semibold text-amber-800 mb-2 block">주 횟수</label>
+            <label className="text-sm font-semibold text-amber-800 mb-2 block">
+              주 횟수
+            </label>
             <div className="grid grid-cols-7 gap-1.5">
-              {[1, 2, 3, 4, 5, 6, 7].map(f => (
-                <button key={f} onClick={() => setFrequency(f)}
+              {[1, 2, 3, 4, 5, 6, 7].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFrequency(f)}
                   className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                    frequency === f ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                    frequency === f
+                      ? 'bg-amber-700 text-amber-50'
+                      : 'bg-secondary text-secondary-foreground'
+                  }`}
                 >
                   {f}
                 </button>
               ))}
             </div>
           </div>
+
           {actionType === 'timer' && (
             <div>
-              <label className="text-sm font-semibold text-amber-800 mb-2 block">1회 시간</label>
+              <label className="text-sm font-semibold text-amber-800 mb-2 block">
+                1회 시간
+              </label>
               <div className="flex gap-2 mb-2">
-                {[20, 30, 60].map(m => (
-                  <button key={m} onClick={() => setMinutes(m)}
+                {[20, 30, 60].map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setMinutes(m)}
                     className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
-                      minutes === m ? 'bg-amber-700 text-amber-50' : 'bg-secondary text-secondary-foreground'}`}
+                      minutes === m
+                        ? 'bg-amber-700 text-amber-50'
+                        : 'bg-secondary text-secondary-foreground'
+                    }`}
                   >
                     {m}분
                   </button>
                 ))}
               </div>
+
               <div className="flex items-center gap-2">
                 <input
-                  type="number" 
-                  min="1" 
+                  type="number"
+                  min="1"
                   max="300"
                   value={minutes}
-                  onChange={e => setMinutes(Number(e.target.value))}
+                  onChange={(e) => setMinutes(Number(e.target.value))}
                   className="flex-1 h-11 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
                 />
                 <span className="text-sm font-semibold text-muted-foreground">분</span>
               </div>
             </div>
           )}
+
           <Button
             className="w-full h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
             disabled={!actionTitle.trim() || createGoalMutation.isPending}
@@ -426,8 +584,20 @@ export default function CreateGoalForm({ category }) {
   };
 
   return (
-    <div ref={formContainerRef || null} className="min-h-screen bg-background max-w-lg mx-auto overflow-y-auto" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+    <div
+      ref={formContainerRef || null}
+      className="min-h-screen bg-background max-w-lg mx-auto overflow-y-auto"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <div className="p-6">
+        <button
+          onClick={handleBack}
+          className="mb-4 p-2 rounded-lg hover:bg-secondary transition-colors"
+          aria-label="뒤로가기"
+        >
+          <ChevronLeft className="w-5 h-5 text-amber-800" />
+        </button>
+
         {renderStep()}
       </div>
     </div>
