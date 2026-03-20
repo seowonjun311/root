@@ -77,7 +77,7 @@ export default function Onboarding() {
   const [hasDDay, setHasDDay] = useState(null);
   const [dDay, setDDay] = useState('');
   const [examTitle, setExamTitle] = useState('');
-  const [duration, setDuration] = useState(90);
+  const [duration, setDuration] = useState(0);
   const [customDuration, setCustomDuration] = useState('');
   const [actionTitle, setActionTitle] = useState('');
   const [actionType, setActionType] = useState('confirm');
