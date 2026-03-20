@@ -10,17 +10,17 @@
     /* System font stack: Noto Serif KR → iOS San Francisco → Android Roboto → fallback */
     --font-main: 'Noto Serif KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', serif;
     --background: 36 28% 88%;
-    --foreground: 28 35% 18%;
+    --foreground: 28 45% 10%;
     --card: 38 40% 90%;
-    --card-foreground: 28 35% 18%;
+    --card-foreground: 28 45% 10%;
     --popover: 38 40% 90%;
-    --popover-foreground: 28 35% 18%;
-    --primary: 28 50% 32%;
-    --primary-foreground: 38 40% 94%;
-    --secondary: 36 30% 82%;
-    --secondary-foreground: 28 30% 28%;
-    --muted: 36 22% 84%;
-    --muted-foreground: 28 15% 48%;
+    --popover-foreground: 28 45% 10%;
+    --primary: 28 55% 28%;
+    --primary-foreground: 38 40% 96%;
+    --secondary: 36 30% 78%;
+    --secondary-foreground: 28 40% 15%;
+    --muted: 36 22% 82%;
+    --muted-foreground: 28 25% 35%;
     --accent: 34 55% 45%;
     --accent-foreground: 38 40% 94%;
     --destructive: 0 65% 50%;
