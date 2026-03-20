@@ -360,6 +360,7 @@ export default function Home() {
           gpsData={pendingLog.gpsData}
           onSave={handlePhotoSave}
           onSkip={() => handlePhotoSave(null, pendingLog.gpsData)}
+          onCancel={() => setPendingLog(null)}
         />
       )}
 
