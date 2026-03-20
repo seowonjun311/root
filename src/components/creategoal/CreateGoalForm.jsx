@@ -328,7 +328,7 @@ export default function CreateGoalForm({ category }) {
                   value={customWeeks}
                   onChange={e => { setCustomWeeks(e.target.value); setDuration(Number(e.target.value) * 7); }}
                   placeholder="주 수 입력"
-                  className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm"
+                  className="flex-1 h-11 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
                 />
                 <span className="text-sm font-semibold text-muted-foreground">주</span>
               </div>
