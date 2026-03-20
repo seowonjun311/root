@@ -146,7 +146,7 @@ export default function CreateGoalForm({ category }) {
               value={actionTitle}
               onChange={e => setActionTitle(e.target.value)}
               placeholder={category === 'daily' ? "예: 팩하기, 집청소, 설거지, 부모님 연락" : category === 'mental' ? "예: 7시기상, 일기쓰기, 부모님연락하기, 금연, ..." : category === 'study' ? "예: 독해, 듣기, 회화, 전공서, 수학, ..." : "예: 러닝, 등산, 헬스, 야식참기, ..."}
-              className="h-12 rounded-xl bg-white/80"
+              className="h-12 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
             />
           </div>
           <div>
@@ -196,7 +196,7 @@ export default function CreateGoalForm({ category }) {
                   max="300"
                   value={minutes}
                   onChange={e => setMinutes(Number(e.target.value))}
-                  className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm"
+                  className="flex-1 h-11 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
                 />
                 <span className="text-sm font-semibold text-muted-foreground">분</span>
               </div>
