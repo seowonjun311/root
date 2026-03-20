@@ -255,7 +255,7 @@ export default function CreateGoalForm({ category }) {
               value={dDay}
               min={new Date().toISOString().split('T')[0]}
               onChange={e => setDDay(e.target.value)}
-              className="w-full h-12 rounded-xl border border-input bg-white/80 px-4 text-sm"
+              className="w-full h-12 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
             />
             {daysLeft !== null && daysLeft > 0 && (
               <p className="text-xs text-amber-700 font-semibold mt-2">
