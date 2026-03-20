@@ -165,10 +165,18 @@ export default function NotificationSettings() {
   };
 
   const handleDialogConfirm = async () => {
-    if (permission !== 'granted') {
-      await requestPermission();
-      if (Notification.permission !== 'granted') return;
-      setPermission('granted');
+    if (!isNotificationSupported()) {
+      toast.error('이 브라우저는 알림을 지원하지 않습니다.');
+      return;
+    }
+    let currentPermission = Notification.permission;
+    if (currentPermission !== 'granted') {
+      currentPermission = await Notification.requestPermission();
+      setPermission(currentPermission);
+      if (currentPermission !== 'granted') {
+        toast.error('알림 권한이 거부되었습니다. 브라우저 설정에서 허용해주세요.');
+        return;
+      }
     }
     const next = {
       ...settings,
