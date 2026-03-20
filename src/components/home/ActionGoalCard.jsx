@@ -188,8 +188,8 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  const startGpsTracking = () => {
-    if (actionGoal.category !== 'exercise' || !gpsEnabled) return;
+  const startGpsTracking = (enableGps = true) => {
+    if (actionGoal.category !== 'exercise' || !enableGps) return;
     if ('geolocation' in navigator) {
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
