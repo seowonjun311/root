@@ -5,7 +5,10 @@ import { ChevronLeft } from 'lucide-react';
 const TAB_PATHS = ['/Home', '/Records', '/Badges', '/AppSettings'];
 
 const PAGE_TITLES = {
-  '/CreateGoal': '목표 만들기',
+  '/CreateGoalExercise': '목표 만들기',
+  '/CreateGoalStudy': '목표 만들기',
+  '/CreateGoalMental': '목표 만들기',
+  '/CreateGoalDaily': '목표 만들기',
   '/NotificationSettings': '알림 설정',
 };
 
@@ -16,12 +19,21 @@ const GO_HOME_DIRECTLY = [
   '/CreateGoalDaily',
 ];
 
+const HIDE_BACK_PATHS = [
+  '/CreateGoalExercise',
+  '/CreateGoalStudy',
+  '/CreateGoalMental',
+  '/CreateGoalDaily',
+];
+
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
+
   const isTabPage = TAB_PATHS.includes(location.pathname);
   const title = PAGE_TITLES[location.pathname] || '';
   const canGoBack = !isTabPage && location.key !== 'default';
+  const shouldHideBack = HIDE_BACK_PATHS.includes(location.pathname);
 
   if (isTabPage) {
     return (
@@ -47,15 +59,20 @@ export default function Header() {
         borderBottom: '1px solid hsl(var(--border) / 0.4)',
       }}
     >
-      {canGoBack && (
+      {canGoBack && !shouldHideBack && (
         <button
-          onClick={() => GO_HOME_DIRECTLY.includes(location.pathname) ? navigate('/Home') : navigate(-1)}
+          onClick={() =>
+            GO_HOME_DIRECTLY.includes(location.pathname)
+              ? navigate('/Home')
+              : navigate(-1)
+          }
           className="p-1.5 rounded-lg hover:bg-secondary transition-colors -ml-1.5"
           aria-label="이전 페이지로 돌아가기"
         >
           <ChevronLeft className="w-5 h-5 text-amber-800" aria-hidden="true" />
         </button>
       )}
+
       {title && <span className="text-sm font-bold text-amber-900">{title}</span>}
     </div>
   );
