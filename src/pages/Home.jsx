@@ -17,6 +17,12 @@ import { motion } from 'framer-motion';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { guestDataPersistence } from '../lib/GuestDataPersistence';
 
+function toLocalDateString(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+    date.getDate()
+  ).padStart(2, '0')}`;
+}
+
 function isGoalComplete(goal) {
   if (!goal || !goal.start_date || !goal.duration_days) return false;
   const start = new Date(goal.start_date);
@@ -35,109 +41,110 @@ function getGreeting() {
   return '오늘 하루도 수고했어요, 용사님.';
 }
 
+const pageMap = {
+  exercise: 'CreateGoalExercise',
+  study: 'CreateGoalStudy',
+  mental: 'CreateGoalMental',
+  daily: 'CreateGoalDaily',
+};
+
 export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
   const [activeCategory, setActiveCategory] = useState('exercise');
   const [pendingLog, setPendingLog] = useState(null);
   const [celebration, setCelebration] = useState(null);
   const [victoryGoal, setVictoryGoal] = useState(null);
   const [shownVictoryIds, setShownVictoryIds] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('shownVictory') || '[]'); } catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem('shownVictory') || '[]');
+    } catch {
+      return [];
+    }
   });
 
   const [isPulling, setIsPulling] = React.useState(false);
-  
-  const { pullProgress, onTouchStart: handlePullStart } = usePullToRefresh(async () => {
-    if (isPulling) return;
-    setIsPulling(true);
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['goals'] }),
-      queryClient.invalidateQueries({ queryKey: ['actionLogs'] }),
-      queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
-    ]);
-    setIsPulling(false);
-  });
 
   const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: ['me'],
     queryFn: () => base44.auth.me().catch(() => null),
   });
 
+  const isGuest = !isUserLoading && !user;
+
+  const goalsKey = ['goals', isGuest];
+  const actionGoalsKey = ['actionGoals', isGuest];
+  const allLogsKey = ['allLogs', isGuest];
+
+  const { pullProgress, onTouchStart: handlePullStart } = usePullToRefresh(async () => {
+    if (isPulling) return;
+    setIsPulling(true);
+
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: goalsKey }),
+      queryClient.invalidateQueries({ queryKey: allLogsKey }),
+      queryClient.invalidateQueries({ queryKey: actionGoalsKey }),
+    ]);
+
+    setIsPulling(false);
+  });
+
   useEffect(() => {
-    // 로딩 중엔 아무것도 하지 않음
     if (isUserLoading) return;
 
     if (user) {
-      // 로그인 사용자: onboarding_complete 체크
       if (!user.onboarding_complete) {
-        // 캐시된 데이터일 수 있으므로 재조회 후 판단
         queryClient.invalidateQueries({ queryKey: ['me'] });
         navigate('/Onboarding');
         return;
       }
-      // 초기 로드 시에만 user.active_category로 설정
+
       if (user.active_category && activeCategory === 'exercise') {
         setActiveCategory(user.active_category);
       }
     } else {
-      // 비로그인 게스트: localStorage 체크
       const guestOnboardingComplete = localStorage.getItem('guest_onboarding_complete') === 'true';
       if (!guestOnboardingComplete) {
         navigate('/Onboarding');
         return;
       }
-      const guestCat = localStorage.getItem('guest_active_category');
-      if (guestCat && activeCategory === 'exercise') setActiveCategory(guestCat);
-    }
-  }, [isUserLoading, navigate]);
 
-  const isGuest = !isUserLoading && !user;
+      const guestCat = localStorage.getItem('guest_active_category');
+      if (guestCat && activeCategory === 'exercise') {
+        setActiveCategory(guestCat);
+      }
+    }
+  }, [isUserLoading, user, activeCategory, navigate, queryClient]);
 
   const { data: goals = [] } = useQuery({
-    queryKey: ['goals', isGuest],
+    queryKey: goalsKey,
     queryFn: () => {
       if (isGuest) {
         const data = guestDataPersistence.loadOnboardingData();
-        const goalData = data.goalData || data.goals?.[0];
-        return goalData ? [goalData] : [];
+        return data.goals || [];
       }
       return base44.entities.Goal.filter({ status: 'active', goal_type: 'result' });
     },
     enabled: !isUserLoading,
-    staleTime: 1000 * 60 * 5, // 5분 동안 fresh 상태 유지
-  });
-
-  const deleteGoalMutation = useMutation({
-    mutationFn: (goalId) => base44.entities.Goal.delete(goalId),
-    onMutate: async (deletedGoalId) => {
-      await queryClient.cancelQueries({ queryKey: ['goals'] });
-      const previousGoals = queryClient.getQueryData(['goals']);
-      queryClient.setQueryData(['goals'], (old) => old.filter(g => g.id !== deletedGoalId));
-      return { previousGoals };
-    },
-    onError: (err, goalId, context) => {
-      if (context?.previousGoals) queryClient.setQueryData(['goals'], context.previousGoals);
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['goals'] }),
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: actionGoals = [] } = useQuery({
-    queryKey: ['actionGoals', isGuest],
+    queryKey: actionGoalsKey,
     queryFn: () => {
       if (isGuest) {
         const data = guestDataPersistence.loadOnboardingData();
-        const actionGoalData = data.actionGoalData || data.actionGoals?.[0];
-        return actionGoalData ? [actionGoalData] : [];
+        return data.actionGoals || [];
       }
       return base44.entities.ActionGoal.filter({ status: 'active' });
     },
     enabled: !isUserLoading,
-    staleTime: 1000 * 60 * 5, // 5분 동안 fresh 상태 유지
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: allLogs = [] } = useQuery({
-    queryKey: ['allLogs', isGuest],
+    queryKey: allLogsKey,
     queryFn: () => {
       if (isGuest) {
         const data = guestDataPersistence.loadOnboardingData();
@@ -146,11 +153,12 @@ export default function Home() {
       return base44.entities.ActionLog.list('-created_date', 200);
     },
     enabled: !isUserLoading,
-    staleTime: 1000 * 30, // 30초 동안 fresh 상태 유지
+    staleTime: 1000 * 30,
   });
 
   useEffect(() => {
     if (!goals.length) return;
+
     for (const goal of goals) {
       if (isGoalComplete(goal) && !shownVictoryIds.includes(goal.id)) {
         setVictoryGoal(goal);
@@ -159,28 +167,15 @@ export default function Home() {
     }
   }, [goals, shownVictoryIds]);
 
-  const createLogMutation = useMutation({
-    mutationFn: (data) => base44.entities.ActionLog.create(data),
-    onMutate: async (newLog) => {
-      await queryClient.cancelQueries({ queryKey: ['allLogs'] });
-      const previousLogs = queryClient.getQueryData(['allLogs']);
-      queryClient.setQueryData(['allLogs'], (old) => [newLog, ...old]);
-      return { previousLogs };
-    },
-    onError: (err, newLog, context) => {
-      if (context?.previousLogs) queryClient.setQueryData(['allLogs'], context.previousLogs);
-    },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
-  });
-
   const createBadgeMutation = useMutation({
     mutationFn: (data) => base44.entities.Badge.create(data),
   });
 
-  const categoryGoals = goals.filter(g => g.category === activeCategory);
+  const categoryGoals = goals.filter((g) => g.category === activeCategory);
   const activeGoal = categoryGoals[0];
+
   const categoryActionGoals = activeGoal
-    ? actionGoals.filter(ag => ag.goal_id === activeGoal.id)
+    ? actionGoals.filter((ag) => ag.goal_id === activeGoal.id)
     : [];
 
   const today = new Date();
@@ -188,24 +183,28 @@ export default function Home() {
   const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   const weekStartDate = new Date(today);
   weekStartDate.setDate(today.getDate() + mondayOffset);
-  const weekStartStr = `${weekStartDate.getFullYear()}-${String(weekStartDate.getMonth() + 1).padStart(2, '0')}-${String(weekStartDate.getDate()).padStart(2, '0')}`;
+  const weekStartStr = toLocalDateString(weekStartDate);
 
   const getWeeklyLogs = (actionGoalId) =>
-    allLogs.filter(l => l.action_goal_id === actionGoalId && l.date >= weekStartStr);
+    allLogs.filter((l) => l.action_goal_id === actionGoalId && l.date >= weekStartStr);
 
   const handleComplete = (actionGoal, minutes, gpsData = {}) => {
     setPendingLog({ actionGoal, minutes, gpsData });
   };
 
-  const handlePhotoSave = async (photoUrl, receivedGpsData) => {
+  const handlePhotoSave = async (photoUrl) => {
+    if (!pendingLog) return;
+
     const { actionGoal, minutes, gpsData } = pendingLog;
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = toLocalDateString(new Date());
 
     const newLogs = [...allLogs, { action_goal_id: actionGoal.id, date: todayStr, completed: true }];
     const streak = computeStreak(actionGoal.id, newLogs);
     const streakTrigger = getStreakTrigger(streak);
 
-    const thisWeekLogs = newLogs.filter(l => l.action_goal_id === actionGoal.id && l.date >= weekStartStr);
+    const thisWeekLogs = newLogs.filter(
+      (l) => l.action_goal_id === actionGoal.id && l.date >= weekStartStr
+    );
     const target = actionGoal.weekly_frequency || 7;
     const weeklyComplete = thisWeekLogs.length >= target && thisWeekLogs.length - 1 < target;
 
@@ -217,25 +216,32 @@ export default function Home() {
       duration_minutes: minutes,
       completed: true,
       photo_url: photoUrl || null,
-      gps_enabled: !!(gpsData?.gpsEnabled && gpsData?.distance),
+      gps_enabled: !!gpsData?.gpsEnabled,
     };
 
-    if (gpsData?.gpsEnabled && gpsData?.distance) {
-      logData.distance_km = gpsData.distance;
+    if (gpsData?.gpsEnabled) {
+      logData.distance_km = gpsData.distance || 0;
       logData.route_coordinates = JSON.stringify(gpsData.coords || []);
     }
 
     if (isGuest) {
-      // 게스트: localStorage에 저장
       const guestData = guestDataPersistence.loadOnboardingData();
       const existingLogs = guestData.actionLogs || [];
-      guestDataPersistence.saveData('local_action_logs', [...existingLogs, { ...logData, id: `local_log_${Date.now()}`, created_date: new Date().toISOString() }]);
-      queryClient.invalidateQueries({ queryKey: ['allLogs', true] });
+
+      guestDataPersistence.saveData('local_action_logs', [
+        ...existingLogs,
+        {
+          ...logData,
+          id: `local_log_${Date.now()}`,
+          created_date: new Date().toISOString(),
+        },
+      ]);
+
+      queryClient.invalidateQueries({ queryKey: allLogsKey });
     } else {
       await base44.entities.ActionLog.create(logData);
-      // 로그 생성 후 즉시 쿼리 무효화 및 리페칭
-      await queryClient.invalidateQueries({ queryKey: ['allLogs', isGuest] });
-      queryClient.refetchQueries({ queryKey: ['allLogs', isGuest] });
+      await queryClient.invalidateQueries({ queryKey: allLogsKey });
+      queryClient.refetchQueries({ queryKey: allLogsKey });
     }
 
     const catKey = actionGoal.category;
@@ -245,13 +251,17 @@ export default function Home() {
     const newXp = currentXp + 1;
     const newLevel = Math.floor(newXp / 30) + 1;
 
-    if (!isGuest) await base44.auth.updateMe({ [xpKey]: newXp, [levelKey]: newLevel }).catch(() => {});
+    if (!isGuest) {
+      await base44.auth.updateMe({ [xpKey]: newXp, [levelKey]: newLevel }).catch(() => {});
+    }
+
     queryClient.invalidateQueries({ queryKey: ['me'] });
     setPendingLog(null);
 
     if (streakTrigger) {
       setCelebration(streakTrigger);
       const { title } = getBadgeForGoal({ title: actionGoal.title });
+
       createBadgeMutation.mutate({
         title: `${title} (${streak}일 연속)`,
         description: `${actionGoal.title} ${streak}일 연속 성공`,
@@ -267,22 +277,29 @@ export default function Home() {
 
   const handleCategoryChange = (cat) => {
     setActiveCategory(cat);
-    if (!isGuest) base44.auth.updateMe({ active_category: cat }).catch(() => {});
+
+    if (isGuest) {
+      localStorage.setItem('guest_active_category', cat);
+      return;
+    }
+
+    base44.auth.updateMe({ active_category: cat }).catch(() => {});
   };
 
   const handleVictoryClose = () => {
     if (!victoryGoal) return;
+
     const newShown = [...shownVictoryIds, victoryGoal.id];
     setShownVictoryIds(newShown);
     localStorage.setItem('shownVictory', JSON.stringify(newShown));
-    queryClient.invalidateQueries({ queryKey: ['goals'] });
+    queryClient.invalidateQueries({ queryKey: goalsKey });
     setVictoryGoal(null);
   };
 
   const handleVictoryNewGoal = () => {
     const cat = victoryGoal?.category || activeCategory;
     handleVictoryClose();
-    navigate('/CreateGoal?category=' + cat);
+    navigate(`/${pageMap[cat]}`);
   };
 
   return (
@@ -291,32 +308,38 @@ export default function Home() {
         className="fixed top-12 left-0 right-0 flex justify-center pt-2 z-50 pointer-events-none"
         animate={{ opacity: pullProgress > 0 ? 1 : 0 }}
       >
-        <motion.div animate={{ rotate: pullProgress * 360 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
+        <motion.div
+          animate={{ rotate: pullProgress * 360 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
           <RefreshCw className="w-6 h-6 text-amber-600" />
         </motion.div>
       </motion.div>
 
-      <CharacterBanner
-        nickname={user?.nickname}
-        message={getGreeting()}
+      <CharacterBanner nickname={user?.nickname} message={getGreeting()} />
+
+      <CategoryTabs
+        active={activeCategory}
+        onChange={handleCategoryChange}
+        userLevels={{
+          exercise_level: user?.exercise_level || 1,
+          exercise_xp: user?.exercise_xp || 0,
+          study_level: user?.study_level || 1,
+          study_xp: user?.study_xp || 0,
+          mental_level: user?.mental_level || 1,
+          mental_xp: user?.mental_xp || 0,
+          daily_level: user?.daily_level || 1,
+          daily_xp: user?.daily_xp || 0,
+        }}
       />
-      <CategoryTabs active={activeCategory} onChange={handleCategoryChange} userLevels={{
-        exercise_level: user?.exercise_level || 1,
-        exercise_xp: user?.exercise_xp || 0,
-        study_level: user?.study_level || 1,
-        study_xp: user?.study_xp || 0,
-        mental_level: user?.mental_level || 1,
-        mental_xp: user?.mental_xp || 0,
-        daily_level: user?.daily_level || 1,
-        daily_xp: user?.daily_xp || 0,
-      }} />
 
       {activeGoal ? (
         <div className="space-y-3">
-          <GoalProgress goal={activeGoal} logs={allLogs.filter(l => l.goal_id === activeGoal.id)} />
-          <WeekDays logs={allLogs.filter(l => l.category === activeCategory)} />
+          <GoalProgress goal={activeGoal} logs={allLogs.filter((l) => l.goal_id === activeGoal.id)} />
 
-          {categoryActionGoals.map(ag => (
+          <WeekDays logs={allLogs.filter((l) => l.category === activeCategory)} />
+
+          {categoryActionGoals.map((ag) => (
             <ActionGoalCard
               key={ag.id}
               actionGoal={ag}
@@ -328,7 +351,6 @@ export default function Home() {
           <div className="px-4 pb-4">
             <button
               onClick={() => {
-                const pageMap = { exercise: 'CreateGoalExercise', study: 'CreateGoalStudy', mental: 'CreateGoalMental', daily: 'CreateGoalDaily' };
                 navigate(`/${pageMap[activeCategory]}?goalId=${activeGoal.id}`);
               }}
               className="w-full rounded-lg font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
@@ -348,7 +370,6 @@ export default function Home() {
         <EmptyGoalState
           category={activeCategory}
           onCreateGoal={() => {
-            const pageMap = { exercise: 'CreateGoalExercise', study: 'CreateGoalStudy', mental: 'CreateGoalMental', daily: 'CreateGoalDaily' };
             navigate(`/${pageMap[activeCategory]}`);
           }}
         />
@@ -359,7 +380,7 @@ export default function Home() {
           actionGoal={pendingLog.actionGoal}
           gpsData={pendingLog.gpsData}
           onSave={handlePhotoSave}
-          onSkip={() => handlePhotoSave(null, pendingLog.gpsData)}
+          onSkip={() => handlePhotoSave(null)}
           onCancel={() => setPendingLog(null)}
         />
       )}
