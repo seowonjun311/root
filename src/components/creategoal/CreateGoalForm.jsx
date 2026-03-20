@@ -355,7 +355,7 @@ export default function CreateGoalForm({ category }) {
               value={actionTitle}
               onChange={e => setActionTitle(e.target.value)}
               placeholder={category === 'daily' ? "예: 팩하기, 집청소, 빨래, 부모님연락" : category === 'mental' ? "예: 7시기상, 일기쓰기, 부모님연락하기, 금연, ..." : category === 'study' ? "예: 독해, 듣기, 회화, 전공서, 수학, ..." : "예: 러닝, 등산, 헬스, 야식참기, ..."}
-              className="h-12 rounded-xl bg-white/80"
+              className="h-12 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
             />
           </div>
           <div>
