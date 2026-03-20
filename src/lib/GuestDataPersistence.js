@@ -121,6 +121,8 @@ class GuestDataPersistence {
         this.saveData(STORAGE_KEYS.nickname, nickname || '용사'),
         this.saveData(STORAGE_KEYS.activeCategory, category),
         this.saveData(STORAGE_KEYS.onboardingComplete, 'true'),
+        // Also save as raw value for direct localStorage.getItem checks in Home
+        (() => { try { localStorage.setItem('guest_onboarding_complete', 'true'); return true; } catch { return false; } })(),
       ];
 
       // All or nothing: if any save failed, return false

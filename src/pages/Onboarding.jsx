@@ -220,7 +220,7 @@ export default function Onboarding() {
     if (currentStep === 'study_dday_date') return dDay !== '' && examTitle.trim().length > 0;
     if (currentStep === 'duration') return duration > 0 || (customDuration && parseInt(customDuration) > 0);
     if (currentStep === 'action') return actionTitle.trim().length > 0;
-    if (currentStep === 'nickname') return true;
+    if (currentStep === 'nickname') return nickname.trim().length > 0;
     return true;
   };
 
