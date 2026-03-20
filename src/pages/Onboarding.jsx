@@ -218,7 +218,7 @@ export default function Onboarding() {
     if (currentStep === 'category') return category !== '';
     if (currentStep === 'study_dday') return hasDDay !== null;
     if (currentStep === 'study_dday_date') return dDay !== '' && examTitle.trim().length > 0;
-    if (currentStep === 'duration') return (duration > 0 && !customDuration) || (customDuration && parseInt(customDuration) > 0);
+    if (currentStep === 'duration') return duration > 0 || (customDuration && parseInt(customDuration) > 0);
     if (currentStep === 'action') return actionTitle.trim().length > 0;
     if (currentStep === 'nickname') return nickname.trim().length > 0;
     return true;
