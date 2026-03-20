@@ -234,7 +234,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     localStorage.setItem(TIMER_KEY(actionGoal.id), String(Date.now()));
     setIsRunning(true);
     setGpsEnabled(enableGps);
-    if (enableGps) startGpsTracking();
+    if (enableGps) startGpsTracking(true); // state 업데이트 전이므로 직접 인자로 전달
     setShowGpsDialog(false);
   };
 
