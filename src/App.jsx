@@ -103,7 +103,7 @@ const AppRoutes = () => {
         <Suspense fallback={<PageFallback />}>
           <AnimatePresence mode="wait" initial={false}>
             <Routes location={location} key={location.pathname}>
-              <Route path="/" element={<Navigate to="/Onboarding" replace />} />
+              <Route path="/" element={<RootRedirect />} />
 
               <Route path="/Onboarding" element={
                 <Suspense fallback={<PageFallback />}>
