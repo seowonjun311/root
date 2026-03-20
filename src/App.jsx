@@ -42,6 +42,13 @@ const PageFallback = () => (
   </div>
 );
 
+const RootRedirect = () => {
+  const { isAuthenticated, user, isLoadingAuth } = useAuth();
+  if (isLoadingAuth) return null;
+  if (isAuthenticated && user?.onboarding_complete) return <Navigate to="/Home" replace />;
+  return <Navigate to="/Onboarding" replace />;
+};
+
 const AppRoutes = () => {
   const { isLoadingAuth, isLoadingPublicSettings } = useAuth();
   const location = useLocation();
