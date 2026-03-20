@@ -270,7 +270,7 @@ export default function CreateGoalForm({ category }) {
               value={examTitle}
               onChange={e => setExamTitle(e.target.value)}
               placeholder="예: 토익 900점, 수능, 정보처리기사..."
-              className="h-12 rounded-xl bg-white/80"
+              className="h-12 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
             />
           </div>
           <Button
