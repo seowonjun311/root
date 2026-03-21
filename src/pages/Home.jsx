@@ -2,33 +2,136 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Header from '../components/layout/Header';
 import ActionGoalCard from '../components/home/ActionGoalCard';
 
-const STORAGE_KEY = 'root-home-data-v2';
+const STORAGE_KEY = 'root-home-data-v3';
 const CATEGORIES = ['운동', '공부', '정신', '일상'];
 
 function createInitialData() {
   return {
-    actionGoals: [],
+    resultGoals: [
+      {
+        id: 1001,
+        category: '운동',
+        title: '체력 만들기',
+        description: '꾸준히 몸을 움직이며 기초 체력을 올리기',
+        targetValue: 30,
+        currentValue: 8,
+        unit: '회',
+      },
+      {
+        id: 1002,
+        category: '공부',
+        title: '영어 공부 루틴 만들기',
+        description: '매일 꾸준히 영어 학습 습관 만들기',
+        targetValue: 20,
+        currentValue: 5,
+        unit: '일',
+      },
+      {
+        id: 1003,
+        category: '정신',
+        title: '마음 안정 루틴 만들기',
+        description: '명상과 기록으로 마음 정리하기',
+        targetValue: 14,
+        currentValue: 3,
+        unit: '회',
+      },
+      {
+        id: 1004,
+        category: '일상',
+        title: '생활 리듬 안정화',
+        description: '정리정돈과 규칙적인 일상 만들기',
+        targetValue: 21,
+        currentValue: 6,
+        unit: '일',
+      },
+    ],
+    actionGoals: [
+      {
+        id: 2001,
+        category: '운동',
+        title: '팔굽혀펴기 20회',
+        createdAt: new Date().toISOString(),
+        logs: [],
+      },
+      {
+        id: 2002,
+        category: '운동',
+        title: '30분 걷기',
+        createdAt: new Date().toISOString(),
+        logs: [],
+      },
+      {
+        id: 2003,
+        category: '공부',
+        title: '영단어 30개 외우기',
+        createdAt: new Date().toISOString(),
+        logs: [],
+      },
+      {
+        id: 2004,
+        category: '정신',
+        title: '10분 명상하기',
+        createdAt: new Date().toISOString(),
+        logs: [],
+      },
+    ],
   };
 }
 
-function getCategoryDescription(category) {
+function getCategoryTheme(category) {
   switch (category) {
     case '운동':
-      return '몸을 움직이며 체력과 습관을 쌓아보세요.';
+      return {
+        emoji: '🏃',
+        title: '운동 루트',
+        desc: '몸을 움직이며 성장하는 길',
+      };
     case '공부':
-      return '꾸준한 학습으로 실력을 쌓아보세요.';
+      return {
+        emoji: '📘',
+        title: '공부 루트',
+        desc: '지식을 쌓아 앞으로 나아가는 길',
+      };
     case '정신':
-      return '마음과 집중력을 단단하게 만들어보세요.';
+      return {
+        emoji: '🧠',
+        title: '정신 루트',
+        desc: '마음과 집중력을 단단하게 만드는 길',
+      };
     case '일상':
-      return '생활 루틴을 정리하며 하루를 안정적으로 만들어보세요.';
+      return {
+        emoji: '🌿',
+        title: '일상 루트',
+        desc: '생활을 정돈하고 균형을 만드는 길',
+      };
     default:
-      return '오늘의 목표를 차근차근 진행해보세요.';
+      return {
+        emoji: '✨',
+        title: '루트',
+        desc: '오늘의 행동을 쌓아가는 길',
+      };
   }
+}
+
+function clampPercent(value) {
+  if (value < 0) return 0;
+  if (value > 100) return 100;
+  return value;
+}
+
+function getProgressPercent(currentValue = 0, targetValue = 0) {
+  if (!targetValue || targetValue <= 0) return 0;
+  return clampPercent(Math.round((currentValue / targetValue) * 100));
 }
 
 export default function Home() {
   const [data, setData] = useState(createInitialData());
   const [activeCategory, setActiveCategory] = useState('운동');
+
+  const [newResultTitle, setNewResultTitle] = useState('');
+  const [newResultDescription, setNewResultDescription] = useState('');
+  const [newResultTargetValue, setNewResultTargetValue] = useState('');
+  const [newResultUnit, setNewResultUnit] = useState('회');
 
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newGoalCategory, setNewGoalCategory] = useState('운동');
@@ -54,27 +157,101 @@ export default function Home() {
     window.dispatchEvent(new Event('root-home-data-updated'));
   }, [data]);
 
-  const filteredGoals = useMemo(() => {
+  const activeTheme = useMemo(() => {
+    return getCategoryTheme(activeCategory);
+  }, [activeCategory]);
+
+  const filteredActionGoals = useMemo(() => {
     return (data.actionGoals || []).filter(
       (goal) => goal.category === activeCategory
     );
   }, [data.actionGoals, activeCategory]);
 
-  const activeCategoryStats = useMemo(() => {
-    const goals = (data.actionGoals || []).filter(
+  const filteredResultGoals = useMemo(() => {
+    return (data.resultGoals || []).filter(
       (goal) => goal.category === activeCategory
     );
+  }, [data.resultGoals, activeCategory]);
 
-    const totalGoals = goals.length;
-    const totalLogs = goals.reduce((sum, goal) => {
+  const activeStats = useMemo(() => {
+    const totalActionGoals = filteredActionGoals.length;
+    const totalActionLogs = filteredActionGoals.reduce((sum, goal) => {
       return sum + (goal.logs?.length || 0);
     }, 0);
 
+    const totalResultGoals = filteredResultGoals.length;
+
+    const avgProgress =
+      totalResultGoals === 0
+        ? 0
+        : Math.round(
+            filteredResultGoals.reduce((sum, goal) => {
+              return sum + getProgressPercent(goal.currentValue, goal.targetValue);
+            }, 0) / totalResultGoals
+          );
+
     return {
-      totalGoals,
-      totalLogs,
+      totalActionGoals,
+      totalActionLogs,
+      totalResultGoals,
+      avgProgress,
     };
-  }, [data.actionGoals, activeCategory]);
+  }, [filteredActionGoals, filteredResultGoals]);
+
+  const handleAddResultGoal = () => {
+    const title = newResultTitle.trim();
+    const description = newResultDescription.trim();
+    const targetValue = Number(newResultTargetValue);
+
+    if (!title) return;
+    if (!targetValue || targetValue <= 0) return;
+
+    const newResultGoal = {
+      id: Date.now(),
+      category: activeCategory,
+      title,
+      description,
+      targetValue,
+      currentValue: 0,
+      unit: newResultUnit.trim() || '회',
+    };
+
+    setData((prev) => ({
+      ...prev,
+      resultGoals: [newResultGoal, ...(prev.resultGoals || [])],
+    }));
+
+    setNewResultTitle('');
+    setNewResultDescription('');
+    setNewResultTargetValue('');
+    setNewResultUnit('회');
+  };
+
+  const handleDeleteResultGoal = (resultGoalId) => {
+    const ok = window.confirm('이 결과목표를 삭제할까요?');
+    if (!ok) return;
+
+    setData((prev) => ({
+      ...prev,
+      resultGoals: (prev.resultGoals || []).filter(
+        (goal) => goal.id !== resultGoalId
+      ),
+    }));
+  };
+
+  const handleIncreaseResultGoal = (resultGoalId) => {
+    setData((prev) => ({
+      ...prev,
+      resultGoals: (prev.resultGoals || []).map((goal) =>
+        goal.id === resultGoalId
+          ? {
+              ...goal,
+              currentValue: Math.min(goal.currentValue + 1, goal.targetValue),
+            }
+          : goal
+      ),
+    }));
+  };
 
   const handleAddGoal = () => {
     const title = newGoalTitle.trim();
@@ -175,116 +352,116 @@ export default function Home() {
         style={{
           maxWidth: 760,
           margin: '0 auto',
-          padding: '14px 12px 28px',
+          padding: '14px 12px 32px',
           boxSizing: 'border-box',
         }}
       >
-        {/* 상단 소개 */}
+        {/* 성장 카드 */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-            border: '1px solid #e8edf5',
-            borderRadius: 20,
-            padding: 16,
-            marginBottom: 12,
-            boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05)',
+            background: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)',
+            borderRadius: 24,
+            padding: 18,
+            color: '#fff',
+            marginBottom: 14,
+            boxShadow: '0 12px 30px rgba(17, 24, 39, 0.18)',
           }}
         >
           <div
             style={{
-              fontSize: 20,
-              fontWeight: 900,
-              color: '#111827',
-              marginBottom: 6,
+              fontSize: 13,
+              opacity: 0.85,
+              marginBottom: 8,
             }}
           >
-            오늘의 루트
+            {activeTheme.emoji} {activeTheme.title}
+          </div>
+
+          <div
+            style={{
+              fontSize: 24,
+              fontWeight: 900,
+              lineHeight: 1.25,
+              marginBottom: 8,
+            }}
+          >
+            오늘도 한 걸음
+            <br />
+            루트를 쌓아보세요
           </div>
 
           <div
             style={{
               fontSize: 13,
-              color: '#6b7280',
-              lineHeight: 1.55,
+              opacity: 0.9,
+              lineHeight: 1.6,
               marginBottom: 14,
             }}
           >
-            카테고리를 고르고 행동목표를 추가한 뒤,
-            완료 버튼으로 기록을 남겨보세요.
+            {activeTheme.desc}
           </div>
 
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
+              gridTemplateColumns: 'repeat(3, 1fr)',
               gap: 8,
             }}
           >
             <div
               style={{
-                background: '#ffffff',
-                border: '1px solid #e5e7eb',
-                borderRadius: 14,
+                background: 'rgba(255,255,255,0.10)',
+                borderRadius: 16,
                 padding: '12px 10px',
               }}
             >
-              <div
-                style={{
-                  fontSize: 12,
-                  color: '#6b7280',
-                  marginBottom: 4,
-                }}
-              >
-                현재 카테고리 목표 수
+              <div style={{ fontSize: 11, opacity: 0.8, marginBottom: 4 }}>
+                결과목표
               </div>
-              <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: 900,
-                  color: '#111827',
-                }}
-              >
-                {activeCategoryStats.totalGoals}개
+              <div style={{ fontSize: 18, fontWeight: 900 }}>
+                {activeStats.totalResultGoals}
               </div>
             </div>
 
             <div
               style={{
-                background: '#ffffff',
-                border: '1px solid #e5e7eb',
-                borderRadius: 14,
+                background: 'rgba(255,255,255,0.10)',
+                borderRadius: 16,
                 padding: '12px 10px',
               }}
             >
-              <div
-                style={{
-                  fontSize: 12,
-                  color: '#6b7280',
-                  marginBottom: 4,
-                }}
-              >
-                현재 카테고리 완료 기록
+              <div style={{ fontSize: 11, opacity: 0.8, marginBottom: 4 }}>
+                행동목표
               </div>
-              <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: 900,
-                  color: '#111827',
-                }}
-              >
-                {activeCategoryStats.totalLogs}회
+              <div style={{ fontSize: 18, fontWeight: 900 }}>
+                {activeStats.totalActionGoals}
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.10)',
+                borderRadius: 16,
+                padding: '12px 10px',
+              }}
+            >
+              <div style={{ fontSize: 11, opacity: 0.8, marginBottom: 4 }}>
+                평균 진행률
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 900 }}>
+                {activeStats.avgProgress}%
               </div>
             </div>
           </div>
         </div>
 
-        {/* 카테고리 버튼 */}
+        {/* 카테고리 탭 */}
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: 6,
-            marginBottom: 12,
+            marginBottom: 14,
           }}
         >
           {CATEGORIES.map((category) => {
@@ -299,11 +476,9 @@ export default function Home() {
                   setNewGoalCategory(category);
                 }}
                 style={{
-                  border: isActive
-                    ? '1px solid #111827'
-                    : '1px solid #d7dbe4',
-                  background: isActive ? '#111827' : '#ffffff',
-                  color: isActive ? '#ffffff' : '#4b5563',
+                  border: isActive ? '1px solid #111827' : '1px solid #d7dbe4',
+                  background: isActive ? '#111827' : '#fff',
+                  color: isActive ? '#fff' : '#4b5563',
                   borderRadius: 999,
                   padding: '9px 8px',
                   fontSize: 12,
@@ -317,15 +492,221 @@ export default function Home() {
           })}
         </div>
 
-        {/* 현재 카테고리 안내 */}
+        {/* 요약 카드 */}
         <div
           style={{
-            background: '#ffffff',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 10,
+            marginBottom: 14,
+          }}
+        >
+          <div
+            style={{
+              background: '#fff',
+              border: '1px solid #e9e9ef',
+              borderRadius: 18,
+              padding: 14,
+              boxShadow: '0 6px 20px rgba(20,20,43,0.04)',
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                color: '#6b7280',
+                marginBottom: 6,
+              }}
+            >
+              현재 카테고리
+            </div>
+            <div
+              style={{
+                fontSize: 18,
+                fontWeight: 900,
+                color: '#111827',
+                marginBottom: 4,
+              }}
+            >
+              {activeTheme.emoji} {activeCategory}
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                color: '#6b7280',
+                lineHeight: 1.5,
+              }}
+            >
+              {activeTheme.desc}
+            </div>
+          </div>
+
+          <div
+            style={{
+              background: '#fff',
+              border: '1px solid #e9e9ef',
+              borderRadius: 18,
+              padding: 14,
+              boxShadow: '0 6px 20px rgba(20,20,43,0.04)',
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                color: '#6b7280',
+                marginBottom: 6,
+              }}
+            >
+              완료 기록
+            </div>
+            <div
+              style={{
+                fontSize: 18,
+                fontWeight: 900,
+                color: '#111827',
+                marginBottom: 4,
+              }}
+            >
+              총 {activeStats.totalActionLogs}회
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                color: '#6b7280',
+                lineHeight: 1.5,
+              }}
+            >
+              행동목표 완료를 쌓아 결과목표까지 나아가세요.
+            </div>
+          </div>
+        </div>
+
+        {/* 결과목표 추가 */}
+        <div
+          style={{
+            background: '#fff',
             border: '1px solid #e9e9ef',
-            borderRadius: 18,
+            borderRadius: 20,
             padding: 14,
-            marginBottom: 12,
-            boxShadow: '0 6px 20px rgba(20,20,43,0.04)',
+            marginBottom: 14,
+            boxShadow: '0 6px 20px rgba(20,20,43,0.05)',
+          }}
+        >
+          <div
+            style={{
+              fontSize: 17,
+              fontWeight: 900,
+              color: '#111827',
+              marginBottom: 6,
+            }}
+          >
+            결과목표 추가
+          </div>
+
+          <div
+            style={{
+              fontSize: 13,
+              color: '#6b7280',
+              lineHeight: 1.5,
+              marginBottom: 12,
+            }}
+          >
+            {activeCategory} 카테고리에서 이루고 싶은 큰 목표를 설정하세요.
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: 10,
+            }}
+          >
+            <input
+              value={newResultTitle}
+              onChange={(e) => setNewResultTitle(e.target.value)}
+              placeholder={`${activeCategory} 결과목표 제목`}
+              style={{
+                width: '100%',
+                border: '1px solid #dbe1ea',
+                borderRadius: 12,
+                padding: '12px 13px',
+                fontSize: 14,
+                boxSizing: 'border-box',
+              }}
+            />
+
+            <input
+              value={newResultDescription}
+              onChange={(e) => setNewResultDescription(e.target.value)}
+              placeholder="결과목표 설명"
+              style={{
+                width: '100%',
+                border: '1px solid #dbe1ea',
+                borderRadius: 12,
+                padding: '12px 13px',
+                fontSize: 14,
+                boxSizing: 'border-box',
+              }}
+            />
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 8,
+              }}
+            >
+              <input
+                type="number"
+                value={newResultTargetValue}
+                onChange={(e) => setNewResultTargetValue(e.target.value)}
+                placeholder="목표 수치"
+                style={{
+                  width: '100%',
+                  border: '1px solid #dbe1ea',
+                  borderRadius: 12,
+                  padding: '12px 13px',
+                  fontSize: 14,
+                  boxSizing: 'border-box',
+                }}
+              />
+
+              <input
+                value={newResultUnit}
+                onChange={(e) => setNewResultUnit(e.target.value)}
+                placeholder="단위 (회, 일, 점)"
+                style={{
+                  width: '100%',
+                  border: '1px solid #dbe1ea',
+                  borderRadius: 12,
+                  padding: '12px 13px',
+                  fontSize: 14,
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleAddResultGoal}
+              style={{
+                border: 'none',
+                background: '#111827',
+                color: '#fff',
+                borderRadius: 12,
+                padding: '12px 14px',
+                fontSize: 14,
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              결과목표 추가
+            </button>
+          </div>
+        </div>
+
+        {/* 결과목표 목록 */}
+        <div
+          style={{
+            marginBottom: 16,
           }}
         >
           <div
@@ -333,78 +714,231 @@ export default function Home() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: 12,
+              gap: 10,
+              marginBottom: 10,
               flexWrap: 'wrap',
             }}
           >
-            <div>
-              <div
-                style={{
-                  fontSize: 16,
-                  fontWeight: 900,
-                  color: '#111827',
-                  marginBottom: 4,
-                }}
-              >
-                {activeCategory} 카테고리
-              </div>
-              <div
-                style={{
-                  fontSize: 13,
-                  color: '#6b7280',
-                  lineHeight: 1.5,
-                }}
-              >
-                {getCategoryDescription(activeCategory)}
-              </div>
+            <div
+              style={{
+                fontSize: 17,
+                fontWeight: 900,
+                color: '#111827',
+              }}
+            >
+              {activeCategory} 결과목표
             </div>
 
             <div
               style={{
-                background: '#f3f4f6',
-                color: '#111827',
-                borderRadius: 999,
-                padding: '7px 10px',
                 fontSize: 12,
-                fontWeight: 800,
+                color: '#6b7280',
+                background: '#eef2f7',
+                borderRadius: 999,
+                padding: '6px 10px',
+                fontWeight: 700,
               }}
             >
-              목표 {activeCategoryStats.totalGoals}개
+              총 {filteredResultGoals.length}개
             </div>
           </div>
+
+          {filteredResultGoals.length === 0 ? (
+            <div
+              style={{
+                background: '#fff',
+                border: '1px dashed #d8dee9',
+                borderRadius: 16,
+                padding: '20px 16px',
+                color: '#6b7280',
+                fontSize: 14,
+                textAlign: 'center',
+                lineHeight: 1.6,
+                marginBottom: 14,
+              }}
+            >
+              아직 {activeCategory} 결과목표가 없어요.
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gap: 10,
+                marginBottom: 14,
+              }}
+            >
+              {filteredResultGoals.map((goal) => {
+                const percent = getProgressPercent(
+                  goal.currentValue,
+                  goal.targetValue
+                );
+
+                return (
+                  <div
+                    key={goal.id}
+                    style={{
+                      background: '#fff',
+                      border: '1px solid #e9e9ef',
+                      borderRadius: 18,
+                      padding: 14,
+                      boxShadow: '0 6px 20px rgba(20,20,43,0.04)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                        marginBottom: 8,
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div
+                          style={{
+                            fontSize: 16,
+                            fontWeight: 900,
+                            color: '#111827',
+                            marginBottom: 4,
+                          }}
+                        >
+                          {goal.title}
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: '#6b7280',
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {goal.description || '설명 없음'}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteResultGoal(goal.id)}
+                        style={{
+                          border: 'none',
+                          background: '#fef2f2',
+                          color: '#dc2626',
+                          borderRadius: 10,
+                          padding: '8px 10px',
+                          fontSize: 12,
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          flexShrink: 0,
+                        }}
+                      >
+                        삭제
+                      </button>
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: '#374151',
+                        marginBottom: 8,
+                      }}
+                    >
+                      {goal.currentValue} / {goal.targetValue} {goal.unit}
+                    </div>
+
+                    <div
+                      style={{
+                        height: 10,
+                        background: '#edf2f7',
+                        borderRadius: 999,
+                        overflow: 'hidden',
+                        marginBottom: 10,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${percent}%`,
+                          height: '100%',
+                          background: '#111827',
+                          borderRadius: 999,
+                        }}
+                      />
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 8,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: '#6b7280',
+                          fontWeight: 700,
+                        }}
+                      >
+                        진행률 {percent}%
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleIncreaseResultGoal(goal.id)}
+                        style={{
+                          border: 'none',
+                          background: '#111827',
+                          color: '#fff',
+                          borderRadius: 10,
+                          padding: '9px 12px',
+                          fontSize: 13,
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        +1 진행
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* 새 행동목표 추가 */}
+        {/* 행동목표 추가 */}
         <div
           style={{
-            background: '#ffffff',
+            background: '#fff',
             border: '1px solid #e9e9ef',
-            borderRadius: 18,
+            borderRadius: 20,
             padding: 14,
-            marginBottom: 12,
+            marginBottom: 14,
             boxShadow: '0 6px 20px rgba(20,20,43,0.05)',
           }}
         >
           <div
             style={{
-              fontSize: 16,
+              fontSize: 17,
               fontWeight: 900,
               color: '#111827',
               marginBottom: 6,
             }}
           >
-            새 행동목표 추가
+            행동목표 추가
           </div>
 
           <div
             style={{
               fontSize: 13,
               color: '#6b7280',
-              marginBottom: 12,
               lineHeight: 1.5,
+              marginBottom: 12,
             }}
           >
-            지금 선택한 카테고리에 맞는 행동목표를 추가해보세요.
+            결과목표를 향해 가는 작은 행동들을 추가해보세요.
           </div>
 
           <div
@@ -416,16 +950,14 @@ export default function Home() {
             <input
               value={newGoalTitle}
               onChange={(e) => setNewGoalTitle(e.target.value)}
-              placeholder={`${activeCategory} 목표를 입력하세요`}
+              placeholder={`${activeCategory} 행동목표를 입력하세요`}
               style={{
                 width: '100%',
                 border: '1px solid #dbe1ea',
                 borderRadius: 12,
                 padding: '12px 13px',
                 fontSize: 14,
-                outline: 'none',
                 boxSizing: 'border-box',
-                background: '#fff',
               }}
             />
 
@@ -439,7 +971,6 @@ export default function Home() {
                 padding: '12px 13px',
                 fontSize: 14,
                 background: '#fff',
-                outline: 'none',
                 boxSizing: 'border-box',
               }}
             >
@@ -456,7 +987,7 @@ export default function Home() {
               style={{
                 border: 'none',
                 background: '#111827',
-                color: '#ffffff',
+                color: '#fff',
                 borderRadius: 12,
                 padding: '12px 14px',
                 fontSize: 14,
@@ -469,15 +1000,15 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 수정 영역 */}
+        {/* 행동목표 수정 */}
         {editingGoalId !== null && (
           <div
             style={{
-              background: '#ffffff',
+              background: '#fff',
               border: '1px solid #e9e9ef',
               borderRadius: 18,
               padding: 14,
-              marginBottom: 12,
+              marginBottom: 14,
               boxShadow: '0 6px 20px rgba(20,20,43,0.05)',
             }}
           >
@@ -508,7 +1039,6 @@ export default function Home() {
                   borderRadius: 12,
                   padding: '12px 13px',
                   fontSize: 14,
-                  outline: 'none',
                   boxSizing: 'border-box',
                 }}
               />
@@ -523,7 +1053,6 @@ export default function Home() {
                   padding: '12px 13px',
                   fontSize: 14,
                   background: '#fff',
-                  outline: 'none',
                   boxSizing: 'border-box',
                 }}
               >
@@ -579,47 +1108,46 @@ export default function Home() {
           </div>
         )}
 
-        {/* 목록 타이틀 */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 10,
-            marginBottom: 10,
-            flexWrap: 'wrap',
-          }}
-        >
-          <div
-            style={{
-              fontSize: 17,
-              fontWeight: 900,
-              color: '#111827',
-            }}
-          >
-            {activeCategory} 행동목표
-          </div>
-
-          <div
-            style={{
-              fontSize: 12,
-              color: '#6b7280',
-              background: '#eef2f7',
-              borderRadius: 999,
-              padding: '6px 10px',
-              fontWeight: 700,
-            }}
-          >
-            총 {filteredGoals.length}개
-          </div>
-        </div>
-
-        {/* 목록 */}
+        {/* 행동목표 목록 */}
         <div>
-          {filteredGoals.length === 0 ? (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
+              marginBottom: 10,
+              flexWrap: 'wrap',
+            }}
+          >
             <div
               style={{
-                background: '#ffffff',
+                fontSize: 17,
+                fontWeight: 900,
+                color: '#111827',
+              }}
+            >
+              {activeCategory} 행동목표
+            </div>
+
+            <div
+              style={{
+                fontSize: 12,
+                color: '#6b7280',
+                background: '#eef2f7',
+                borderRadius: 999,
+                padding: '6px 10px',
+                fontWeight: 700,
+              }}
+            >
+              총 {filteredActionGoals.length}개
+            </div>
+          </div>
+
+          {filteredActionGoals.length === 0 ? (
+            <div
+              style={{
+                background: '#fff',
                 border: '1px dashed #d8dee9',
                 borderRadius: 16,
                 padding: '24px 16px',
@@ -631,10 +1159,10 @@ export default function Home() {
             >
               아직 {activeCategory} 행동목표가 없어요.
               <br />
-              위에서 첫 목표를 추가해보세요.
+              위에서 새로운 행동목표를 추가해보세요.
             </div>
           ) : (
-            filteredGoals.map((goal) => (
+            filteredActionGoals.map((goal) => (
               <ActionGoalCard
                 key={goal.id}
                 goal={goal}
