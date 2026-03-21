@@ -188,8 +188,8 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  const startGpsTracking = () => {
-    if (actionGoal.category !== 'exercise' || !gpsEnabled) return;
+  const startGpsTracking = (enableGps = true) => {
+    if (actionGoal.category !== 'exercise' || !enableGps) return;
     if ('geolocation' in navigator) {
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
@@ -234,7 +234,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
     localStorage.setItem(TIMER_KEY(actionGoal.id), String(Date.now()));
     setIsRunning(true);
     setGpsEnabled(enableGps);
-    if (enableGps) startGpsTracking();
+    if (enableGps) startGpsTracking(true); // state 업데이트 전이므로 직접 인자로 전달
     setShowGpsDialog(false);
   };
 

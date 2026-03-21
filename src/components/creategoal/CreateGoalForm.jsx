@@ -146,7 +146,7 @@ export default function CreateGoalForm({ category }) {
               value={actionTitle}
               onChange={e => setActionTitle(e.target.value)}
               placeholder={category === 'daily' ? "예: 팩하기, 집청소, 설거지, 부모님 연락" : category === 'mental' ? "예: 7시기상, 일기쓰기, 부모님연락하기, 금연, ..." : category === 'study' ? "예: 독해, 듣기, 회화, 전공서, 수학, ..." : "예: 러닝, 등산, 헬스, 야식참기, ..."}
-              className="h-12 rounded-xl bg-white/80"
+              className="h-12 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
             />
           </div>
           <div>
@@ -196,7 +196,7 @@ export default function CreateGoalForm({ category }) {
                   max="300"
                   value={minutes}
                   onChange={e => setMinutes(Number(e.target.value))}
-                  className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm"
+                  className="flex-1 h-11 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
                 />
                 <span className="text-sm font-semibold text-muted-foreground">분</span>
               </div>
@@ -255,7 +255,7 @@ export default function CreateGoalForm({ category }) {
               value={dDay}
               min={new Date().toISOString().split('T')[0]}
               onChange={e => setDDay(e.target.value)}
-              className="w-full h-12 rounded-xl border border-input bg-white/80 px-4 text-sm"
+              className="w-full h-12 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
             />
             {daysLeft !== null && daysLeft > 0 && (
               <p className="text-xs text-amber-700 font-semibold mt-2">
@@ -270,7 +270,7 @@ export default function CreateGoalForm({ category }) {
               value={examTitle}
               onChange={e => setExamTitle(e.target.value)}
               placeholder="예: 토익 900점, 수능, 정보처리기사..."
-              className="h-12 rounded-xl bg-white/80"
+              className="h-12 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
             />
           </div>
           <Button
@@ -294,7 +294,7 @@ export default function CreateGoalForm({ category }) {
               value={goalTitle}
               onChange={e => setGoalTitle(e.target.value)}
               placeholder={category === 'mental' ? "예: 자기관리, 생활규칙만들기, 절제, 나 챙기기" : category === 'daily' ? "예: 갓생살기, 일찍일어나기, 루틴찾기" : category === 'exercise' ? "예: 살빼기, 턱걸이 30개, 등산 100회..." : "어떤 결과를 이루고 싶으신가요?"}
-              className="h-12 rounded-xl bg-white/80"
+              className="h-12 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
             />
           </div>
           <div>
@@ -328,7 +328,7 @@ export default function CreateGoalForm({ category }) {
                   value={customWeeks}
                   onChange={e => { setCustomWeeks(e.target.value); setDuration(Number(e.target.value) * 7); }}
                   placeholder="주 수 입력"
-                  className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm"
+                  className="flex-1 h-11 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
                 />
                 <span className="text-sm font-semibold text-muted-foreground">주</span>
               </div>
@@ -355,7 +355,7 @@ export default function CreateGoalForm({ category }) {
               value={actionTitle}
               onChange={e => setActionTitle(e.target.value)}
               placeholder={category === 'daily' ? "예: 팩하기, 집청소, 빨래, 부모님연락" : category === 'mental' ? "예: 7시기상, 일기쓰기, 부모님연락하기, 금연, ..." : category === 'study' ? "예: 독해, 듣기, 회화, 전공서, 수학, ..." : "예: 러닝, 등산, 헬스, 야식참기, ..."}
-              className="h-12 rounded-xl bg-white/80"
+              className="h-12 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
             />
           </div>
           <div>
@@ -405,7 +405,7 @@ export default function CreateGoalForm({ category }) {
                   max="300"
                   value={minutes}
                   onChange={e => setMinutes(Number(e.target.value))}
-                  className="flex-1 h-11 rounded-xl border border-input bg-white/80 px-4 text-sm"
+                  className="flex-1 h-11 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
                 />
                 <span className="text-sm font-semibold text-muted-foreground">분</span>
               </div>
