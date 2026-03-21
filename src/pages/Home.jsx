@@ -449,6 +449,7 @@ export default function Home() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ goals, records }));
+      window.dispatchEvent(new Event('root-home-data-updated'));
     } catch (error) {
       console.error('localStorage 저장 실패:', error);
     }
@@ -903,36 +904,13 @@ export default function Home() {
 
     handleCancelEdit();
     localStorage.removeItem(STORAGE_KEY);
+    window.dispatchEvent(new Event('root-home-data-updated'));
   };
 
   return (
     <div style={styles.page}>
       <div style={styles.container}>
         <div style={styles.stickyTopWrap}>
-          <div style={styles.topStatusCard}>
-            <div style={styles.topStatusRow}>
-              <div style={styles.characterCircle}>🦊</div>
-
-              <div style={styles.topStatusTextWrap}>
-                <div style={styles.totalLevelText}>
-                  전체 Lv.{levelSummary.total.level} · 총 {xpSummary.total} XP
-                </div>
-                <div style={styles.totalSubText}>
-                  다음 레벨까지 {levelSummary.total.remainXp} XP
-                </div>
-
-                <div style={styles.levelBarBackground}>
-                  <div
-                    style={{
-                      ...styles.levelBarFill,
-                      width: `${levelSummary.total.progressPercent}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div style={styles.categoryTabs}>
             {CATEGORY_OPTIONS.map((category) => {
               const active = activeCategory === category;
@@ -1496,105 +1474,54 @@ const styles = {
     position: 'sticky',
     top: 0,
     zIndex: 1000,
-    paddingTop: '10px',
-    paddingBottom: '10px',
+    paddingTop: '6px',
+    paddingBottom: '8px',
     background: 'linear-gradient(180deg, rgba(20,15,29,0.96) 0%, rgba(27,20,48,0.96) 100%)',
     backdropFilter: 'blur(12px)',
     borderBottom: '1px solid rgba(255,255,255,0.06)',
-  },
-  topStatusCard: {
-    background: 'linear-gradient(180deg, #2a1b41 0%, #201632 100%)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: '20px',
-    padding: '14px',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.18)',
-  },
-  topStatusRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-  },
-  characterCircle: {
-    width: '52px',
-    height: '52px',
-    borderRadius: '16px',
-    background: 'linear-gradient(135deg, rgba(139,92,246,0.34), rgba(236,72,153,0.26))',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '26px',
-    border: '1px solid rgba(255,255,255,0.08)',
-    flexShrink: 0,
-  },
-  topStatusTextWrap: {
-    flex: 1,
-    minWidth: 0,
-  },
-  totalLevelText: {
-    color: '#ffffff',
-    fontSize: '18px',
-    fontWeight: 800,
-    lineHeight: 1.3,
-  },
-  totalSubText: {
-    color: '#d1d5db',
-    fontSize: '12px',
-    marginTop: '4px',
-    lineHeight: 1.4,
-  },
-  levelBarBackground: {
-    width: '100%',
-    height: '8px',
-    borderRadius: '999px',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    overflow: 'hidden',
-    marginTop: '10px',
-  },
-  levelBarFill: {
-    height: '100%',
-    borderRadius: '999px',
-    background: 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)',
   },
   categoryTabs: {
     display: 'grid',
     gridTemplateColumns: 'repeat(4, 1fr)',
     gap: '8px',
-    marginTop: '10px',
+    marginTop: '0px',
   },
   categoryTabButton: {
-    minHeight: '64px',
-    borderRadius: '16px',
+    minHeight: '48px',
+    borderRadius: '14px',
     border: '1px solid rgba(255,255,255,0.08)',
     backgroundColor: 'rgba(255,255,255,0.04)',
     color: '#cbd5e1',
-    padding: '8px 6px',
+    padding: '6px 4px',
     cursor: 'pointer',
   },
   categoryTabButtonActive: {
     background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
     color: '#ffffff',
     border: 'none',
-    boxShadow: '0 8px 18px rgba(139,92,246,0.24)',
+    boxShadow: '0 6px 14px rgba(139,92,246,0.22)',
   },
   categoryMainLabel: {
-    fontSize: '14px',
+    fontSize: '13px',
     fontWeight: 800,
     color: '#ffffff',
     textAlign: 'center',
+    lineHeight: 1.2,
   },
   categoryMainLabelActive: {
     color: '#ffffff',
   },
   categoryMetaRow: {
-    marginTop: '8px',
+    marginTop: '5px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '6px',
+    gap: '5px',
     flexWrap: 'wrap',
-    fontSize: '11px',
+    fontSize: '10px',
     fontWeight: 700,
     color: '#d8b4fe',
+    lineHeight: 1.2,
   },
   categoryMetaRowActive: {
     color: '#ffffff',
