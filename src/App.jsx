@@ -152,11 +152,16 @@ const AppRoutes = () => {
               } />
 
               <Route element={<AppLayout />}>
-                <Route path="/Home"        element={<div />} />
-                <Route path="/Records"     element={<div />} />
-                <Route path="/Badges"      element={<div />} />
-                <Route path="/AppSettings" element={<div />} />
-              </Route>
+  <Route path="/Home" element={<div />} />
+  <Route path="/Records" element={<div />} />
+  <Route path="/Badges" element={<div />} />
+  <Route path="/AppSettings" element={<div />} />
+
+  {/* 예전/잘못된 경로 호환용 */}
+  <Route path="/Record" element={<Navigate to="/Records" replace />} />
+  <Route path="/Badge" element={<Navigate to="/Badges" replace />} />
+  <Route path="/Settings" element={<Navigate to="/AppSettings" replace />} />
+</Route>
 
               <Route path="/NotificationSettings" element={
                 <Suspense fallback={<PageFallback />}>
