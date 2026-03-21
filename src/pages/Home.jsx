@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Header from '../components/layout/Header';
-import ActionGoalCard from '../components/layout/ActionGoalCard';
+import ActionGoalCard from '../components/home/ActionGoalCard';
 
 const STORAGE_KEY = 'root-home-data-v2';
 
