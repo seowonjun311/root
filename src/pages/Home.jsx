@@ -4,7 +4,8 @@ import GoalProgress from '../components/home/GoalProgress';
 import ActionGoalCard from '../components/home/ActionGoalCard';
 import PhotoConfirmModal from '../components/home/PhotoConfirmModal';
 
-const STORAGE_KEY = 'root_home_goals_v9';
+const STORAGE_KEY = 'root_home_goals_v10';
+const CATEGORY_OPTIONS = ['운동', '공부', '정신', '일상'];
 
 const XP_BY_CATEGORY = {
   운동: 12,
@@ -466,13 +467,13 @@ export default function Home() {
 
   const [goals, setGoals] = useState(initialData.goals);
   const [records, setRecords] = useState(initialData.records);
+  const [activeCategory, setActiveCategory] = useState('운동');
 
   const [selectedDateKey, setSelectedDateKey] = useState(todayKey);
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState(null);
 
   const [newGoalTitle, setNewGoalTitle] = useState('');
-  const [newGoalCategory, setNewGoalCategory] = useState('일상');
   const [newGoalDateKey, setNewGoalDateKey] = useState(todayKey);
   const [newGoalEndDateKey, setNewGoalEndDateKey] = useState(todayKey);
   const [newRepeatType, setNewRepeatType] = useState('once');
@@ -481,7 +482,7 @@ export default function Home() {
 
   const [editingGoalId, setEditingGoalId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
-  const [editCategory, setEditCategory] = useState('일상');
+  const [editCategory, setEditCategory] = useState('운동');
   const [editDateKey, setEditDateKey] = useState(todayKey);
   const [editEndDateKey, setEditEndDateKey] = useState(todayKey);
   const [editRepeatType, setEditRepeatType] = useState('once');
@@ -520,11 +521,24 @@ export default function Home() {
     }
   }, [editDateKey, editEndDateKey]);
 
+  useEffect(() => {
+    setEditingGoalId(null);
+    setNewGoalTitle('');
+    setNewGoalDateKey(todayKey);
+    setNewGoalEndDateKey(todayKey);
+    setNewRepeatType('once');
+    setNewWeeklyTarget(3);
+    setNewRepeatDays([]);
+  }, [activeCategory, todayKey]);
+
   const availableDateTabs = useMemo(() => {
     const keys = new Set([todayKey, tomorrowKey]);
 
     goals.forEach((goalInput) => {
       const goal = normalizeGoal(goalInput);
+
+      if (goal.category !== activeCategory) return;
+
       const startKey = goal.startDateKey < todayKey ? todayKey : goal.startDateKey;
       const endKey = goal.endDateKey;
 
@@ -544,7 +558,7 @@ export default function Home() {
       label: getDateTabLabel(dateKey),
       subLabel: formatDateLabel(parseDateKey(dateKey)),
     }));
-  }, [goals, todayKey, tomorrowKey]);
+  }, [goals, todayKey, tomorrowKey, activeCategory]);
 
   useEffect(() => {
     const exists = availableDateTabs.some((tab) => tab.key === selectedDateKey);
@@ -556,6 +570,7 @@ export default function Home() {
   const filteredGoals = useMemo(() => {
     return goals
       .map((goal) => normalizeGoal(goal))
+      .filter((goal) => goal.category === activeCategory)
       .filter((goal) => isGoalActiveOnDate(goal, selectedDateKey))
       .map((goal) => {
         const record = records[makeRecordKey(goal.id, selectedDateKey)];
@@ -568,7 +583,7 @@ export default function Home() {
           periodMeta,
         };
       });
-  }, [goals, records, selectedDateKey]);
+  }, [goals, records, selectedDateKey, activeCategory]);
 
   const endedGoals = useMemo(() => {
     return goals
@@ -579,13 +594,14 @@ export default function Home() {
           periodMeta: getGoalPeriodMeta(normalized, records),
         };
       })
+      .filter((goal) => goal.category === activeCategory)
       .filter(
         (goal) =>
           goal.periodMeta.status === 'success' ||
           goal.periodMeta.status === 'fail'
       )
       .sort((a, b) => (b.endDateKey || '').localeCompare(a.endDateKey || ''));
-  }, [goals, records]);
+  }, [goals, records, activeCategory]);
 
   const selectedGoal = useMemo(() => {
     return filteredGoals.find((goal) => goal.id === selectedGoalId) || null;
@@ -815,7 +831,7 @@ export default function Home() {
     const newGoal = {
       id: Date.now(),
       title: trimmedTitle,
-      category: newGoalCategory,
+      category: activeCategory,
       startDateKey: newGoalDateKey,
       endDateKey: newGoalEndDateKey,
       repeatType: newRepeatType,
@@ -825,7 +841,6 @@ export default function Home() {
 
     setGoals((prevGoals) => [newGoal, ...prevGoals]);
     setNewGoalTitle('');
-    setNewGoalCategory('일상');
     setNewGoalDateKey(todayKey);
     setNewGoalEndDateKey(todayKey);
     setNewRepeatType('once');
@@ -870,7 +885,7 @@ export default function Home() {
   const handleCancelEdit = () => {
     setEditingGoalId(null);
     setEditTitle('');
-    setEditCategory('일상');
+    setEditCategory(activeCategory);
     setEditDateKey(todayKey);
     setEditEndDateKey(todayKey);
     setEditRepeatType('once');
@@ -941,9 +956,9 @@ export default function Home() {
     setGoals(defaults.goals);
     setRecords(defaults.records);
     setSelectedDateKey(todayKey);
+    setActiveCategory('운동');
 
     setNewGoalTitle('');
-    setNewGoalCategory('일상');
     setNewGoalDateKey(todayKey);
     setNewGoalEndDateKey(todayKey);
     setNewRepeatType('once');
@@ -960,8 +975,29 @@ export default function Home() {
       <div style={styles.container}>
         <Header
           title="루트"
-          subtitle="날짜를 고르고 반복 목표를 만들며 경험치와 레벨을 쌓아보세요"
+          subtitle="카테고리를 고르고 목표를 만들며 경험치와 레벨을 쌓아보세요"
         />
+
+        <div style={styles.section}>
+          <div style={styles.categoryTabs}>
+            {CATEGORY_OPTIONS.map((category) => {
+              const active = activeCategory === category;
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setActiveCategory(category)}
+                  style={{
+                    ...styles.categoryTabButton,
+                    ...(active ? styles.categoryTabButtonActive : {}),
+                  }}
+                >
+                  {category}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <div style={styles.section}>
           <div style={styles.dateTabsScroll}>
@@ -1038,68 +1074,70 @@ export default function Home() {
               다음 레벨까지 {levelSummary.total.remainXp} XP 남았어요
             </div>
 
-            <div style={styles.xpGrid}>
-              <div style={styles.xpItem}>
-                <div style={styles.xpItemTop}>
-                  <div style={styles.xpItemLabel}>운동</div>
-                  <div style={styles.xpItemLevel}>Lv.{levelSummary.운동.level}</div>
+            <div style={styles.xpGridScroll}>
+              <div style={styles.xpGrid}>
+                <div style={styles.xpItem}>
+                  <div style={styles.xpItemTop}>
+                    <div style={styles.xpItemLabel}>운동</div>
+                    <div style={styles.xpItemLevel}>Lv.{levelSummary.운동.level}</div>
+                  </div>
+                  <div style={styles.xpItemValue}>{xpSummary.운동} XP</div>
+                  <div style={styles.smallBarBackground}>
+                    <div
+                      style={{
+                        ...styles.smallBarFill,
+                        width: `${levelSummary.운동.progressPercent}%`,
+                      }}
+                    />
+                  </div>
                 </div>
-                <div style={styles.xpItemValue}>{xpSummary.운동} XP</div>
-                <div style={styles.smallBarBackground}>
-                  <div
-                    style={{
-                      ...styles.smallBarFill,
-                      width: `${levelSummary.운동.progressPercent}%`,
-                    }}
-                  />
-                </div>
-              </div>
 
-              <div style={styles.xpItem}>
-                <div style={styles.xpItemTop}>
-                  <div style={styles.xpItemLabel}>공부</div>
-                  <div style={styles.xpItemLevel}>Lv.{levelSummary.공부.level}</div>
+                <div style={styles.xpItem}>
+                  <div style={styles.xpItemTop}>
+                    <div style={styles.xpItemLabel}>공부</div>
+                    <div style={styles.xpItemLevel}>Lv.{levelSummary.공부.level}</div>
+                  </div>
+                  <div style={styles.xpItemValue}>{xpSummary.공부} XP</div>
+                  <div style={styles.smallBarBackground}>
+                    <div
+                      style={{
+                        ...styles.smallBarFill,
+                        width: `${levelSummary.공부.progressPercent}%`,
+                      }}
+                    />
+                  </div>
                 </div>
-                <div style={styles.xpItemValue}>{xpSummary.공부} XP</div>
-                <div style={styles.smallBarBackground}>
-                  <div
-                    style={{
-                      ...styles.smallBarFill,
-                      width: `${levelSummary.공부.progressPercent}%`,
-                    }}
-                  />
-                </div>
-              </div>
 
-              <div style={styles.xpItem}>
-                <div style={styles.xpItemTop}>
-                  <div style={styles.xpItemLabel}>정신</div>
-                  <div style={styles.xpItemLevel}>Lv.{levelSummary.정신.level}</div>
+                <div style={styles.xpItem}>
+                  <div style={styles.xpItemTop}>
+                    <div style={styles.xpItemLabel}>정신</div>
+                    <div style={styles.xpItemLevel}>Lv.{levelSummary.정신.level}</div>
+                  </div>
+                  <div style={styles.xpItemValue}>{xpSummary.정신} XP</div>
+                  <div style={styles.smallBarBackground}>
+                    <div
+                      style={{
+                        ...styles.smallBarFill,
+                        width: `${levelSummary.정신.progressPercent}%`,
+                      }}
+                    />
+                  </div>
                 </div>
-                <div style={styles.xpItemValue}>{xpSummary.정신} XP</div>
-                <div style={styles.smallBarBackground}>
-                  <div
-                    style={{
-                      ...styles.smallBarFill,
-                      width: `${levelSummary.정신.progressPercent}%`,
-                    }}
-                  />
-                </div>
-              </div>
 
-              <div style={styles.xpItem}>
-                <div style={styles.xpItemTop}>
-                  <div style={styles.xpItemLabel}>일상</div>
-                  <div style={styles.xpItemLevel}>Lv.{levelSummary.일상.level}</div>
-                </div>
-                <div style={styles.xpItemValue}>{xpSummary.일상} XP</div>
-                <div style={styles.smallBarBackground}>
-                  <div
-                    style={{
-                      ...styles.smallBarFill,
-                      width: `${levelSummary.일상.progressPercent}%`,
-                    }}
-                  />
+                <div style={styles.xpItem}>
+                  <div style={styles.xpItemTop}>
+                    <div style={styles.xpItemLabel}>일상</div>
+                    <div style={styles.xpItemLevel}>Lv.{levelSummary.일상.level}</div>
+                  </div>
+                  <div style={styles.xpItemValue}>{xpSummary.일상} XP</div>
+                  <div style={styles.smallBarBackground}>
+                    <div
+                      style={{
+                        ...styles.smallBarFill,
+                        width: `${levelSummary.일상.progressPercent}%`,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1112,28 +1150,19 @@ export default function Home() {
 
         <div style={styles.section}>
           <div style={styles.addCard}>
-            <div style={styles.addCardTitle}>새 행동목표 추가</div>
+            <div style={styles.addCardTitle}>
+              새 행동목표 추가 · {activeCategory}
+            </div>
 
             <input
               type="text"
               value={newGoalTitle}
               onChange={(e) => setNewGoalTitle(e.target.value)}
-              placeholder="예: 7시 기상, 단어 20개, 30분 걷기"
+              placeholder={`${activeCategory} 행동목표를 입력하세요`}
               style={styles.input}
             />
 
             <div style={styles.formRow}>
-              <select
-                value={newGoalCategory}
-                onChange={(e) => setNewGoalCategory(e.target.value)}
-                style={styles.select}
-              >
-                <option value="일상">일상</option>
-                <option value="운동">운동</option>
-                <option value="공부">공부</option>
-                <option value="정신">정신</option>
-              </select>
-
               <input
                 type="date"
                 value={newGoalDateKey}
@@ -1141,9 +1170,7 @@ export default function Home() {
                 onChange={(e) => setNewGoalDateKey(e.target.value)}
                 style={styles.input}
               />
-            </div>
 
-            <div style={styles.formRow}>
               <input
                 type="date"
                 value={newGoalEndDateKey}
@@ -1151,7 +1178,9 @@ export default function Home() {
                 onChange={(e) => setNewGoalEndDateKey(e.target.value)}
                 style={styles.input}
               />
+            </div>
 
+            <div style={styles.formRowSingle}>
               <select
                 value={newRepeatType}
                 onChange={(e) => setNewRepeatType(e.target.value)}
@@ -1229,10 +1258,11 @@ export default function Home() {
                   onChange={(e) => setEditCategory(e.target.value)}
                   style={styles.select}
                 >
-                  <option value="일상">일상</option>
-                  <option value="운동">운동</option>
-                  <option value="공부">공부</option>
-                  <option value="정신">정신</option>
+                  {CATEGORY_OPTIONS.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
                 </select>
 
                 <input
@@ -1329,10 +1359,10 @@ export default function Home() {
         <div style={styles.sectionHeader}>
           <div>
             <h2 style={styles.sectionTitle}>
-              {selectedDateTab ? `${selectedDateTab.label}의 행동목표` : '행동목표'}
+              {activeCategory} 행동목표
             </h2>
             <div style={styles.sectionSubText}>
-              {selectedDateTab ? selectedDateTab.subLabel : ''}
+              {selectedDateTab ? `${selectedDateTab.label} · ${selectedDateTab.subLabel}` : ''}
             </div>
           </div>
 
@@ -1354,10 +1384,10 @@ export default function Home() {
         <div style={styles.goalList}>
           {filteredGoals.length === 0 ? (
             <div style={styles.emptyCard}>
-              <div style={styles.emptyEmoji}>🗓️</div>
-              <div style={styles.emptyTitle}>이 날짜에는 아직 목표가 없어요</div>
+              <div style={styles.emptyEmoji}>🗂️</div>
+              <div style={styles.emptyTitle}>{activeCategory} 목표가 아직 없어요</div>
               <div style={styles.emptyText}>
-                위에서 새 행동목표를 추가해보세요.
+                위에서 {activeCategory} 행동목표를 추가해보세요.
               </div>
             </div>
           ) : (
@@ -1480,7 +1510,7 @@ export default function Home() {
           <>
             <div style={styles.sectionHeader}>
               <div>
-                <h2 style={styles.sectionTitle}>종료된 목표 판정</h2>
+                <h2 style={styles.sectionTitle}>{activeCategory} 종료된 목표 판정</h2>
                 <div style={styles.sectionSubText}>
                   기간이 끝난 목표의 성공 / 실패 결과예요
                 </div>
@@ -1551,6 +1581,27 @@ const styles = {
   },
   section: {
     marginTop: '18px',
+  },
+  categoryTabs: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '8px',
+  },
+  categoryTabButton: {
+    height: '44px',
+    borderRadius: '14px',
+    border: '1px solid rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    color: '#cbd5e1',
+    fontSize: '14px',
+    fontWeight: 800,
+    cursor: 'pointer',
+  },
+  categoryTabButtonActive: {
+    background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+    color: '#ffffff',
+    border: 'none',
+    boxShadow: '0 8px 20px rgba(139,92,246,0.28)',
   },
   dateTabsScroll: {
     overflowX: 'auto',
@@ -1650,17 +1701,24 @@ const styles = {
     fontSize: '12px',
     lineHeight: 1.5,
   },
+  xpGridScroll: {
+    overflowX: 'auto',
+    paddingBottom: '4px',
+    marginTop: '14px',
+    scrollbarWidth: 'none',
+  },
   xpGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: 'repeat(4, minmax(140px, 1fr))',
     gap: '10px',
-    marginTop: '14px',
+    minWidth: '610px',
   },
   xpItem: {
     borderRadius: '16px',
-    padding: '14px',
+    padding: '12px',
     backgroundColor: 'rgba(255,255,255,0.05)',
     border: '1px solid rgba(255,255,255,0.06)',
+    minWidth: '140px',
   },
   xpItemTop: {
     display: 'flex',
@@ -1671,18 +1729,19 @@ const styles = {
   },
   xpItemLabel: {
     color: '#cbd5e1',
-    fontSize: '12px',
+    fontSize: '11px',
     fontWeight: 700,
   },
   xpItemLevel: {
     color: '#f5d0fe',
-    fontSize: '12px',
+    fontSize: '11px',
     fontWeight: 800,
   },
   xpItemValue: {
     color: '#ffffff',
-    fontSize: '18px',
+    fontSize: '15px',
     fontWeight: 800,
+    marginTop: '2px',
   },
   smallBarBackground: {
     width: '100%',
