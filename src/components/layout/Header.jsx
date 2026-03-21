@@ -21,9 +21,6 @@ function getLevelFromXp(xp) {
 
   return {
     level,
-    currentLevelStartXp,
-    nextLevelXp,
-    progressXp,
     progressPercent,
     remainXp: nextLevelXp - xp,
   };
@@ -116,28 +113,29 @@ export default function Header({
           <div style={styles.dateText}>{dateText}</div>
           <h1 style={styles.title}>{title}</h1>
           <p style={styles.subtitle}>{subtitle}</p>
-
-          <div style={styles.levelText}>
-            전체 Lv.{totalLevel.level} · 총 {xpSummary.total} XP
-          </div>
-
-          <div style={styles.levelSubText}>
-            다음 레벨까지 {totalLevel.remainXp} XP
-          </div>
-
-          <div style={styles.levelBarBackground}>
-            <div
-              style={{
-                ...styles.levelBarFill,
-                width: `${totalLevel.progressPercent}%`,
-              }}
-            />
-          </div>
         </div>
 
         <div style={styles.badgeBox}>
           <div style={styles.badgeEmoji}>🦊</div>
         </div>
+      </div>
+
+      <div style={styles.levelRow}>
+        <div style={styles.levelMainText}>
+          전체 Lv.{totalLevel.level} · 총 {xpSummary.total} XP
+        </div>
+        <div style={styles.levelSubText}>
+          다음 레벨까지 {totalLevel.remainXp} XP
+        </div>
+      </div>
+
+      <div style={styles.levelBarBackground}>
+        <div
+          style={{
+            ...styles.levelBarFill,
+            width: `${totalLevel.progressPercent}%`,
+          }}
+        />
       </div>
 
       <div style={styles.infoCard}>
@@ -154,19 +152,16 @@ export default function Header({
 
 const styles = {
   wrapper: {
-    paddingTop: '8px',
-    paddingLeft: '16px',
-    paddingRight: '16px',
-    paddingBottom: '8px',
+    padding: '10px 16px 10px',
     background:
-      'linear-gradient(180deg, rgba(20,15,29,0.98) 0%, rgba(27,20,48,0.98) 100%)',
+      'linear-gradient(180deg, rgba(20,15,29,0.985) 0%, rgba(27,20,48,0.985) 100%)',
     borderBottom: '1px solid rgba(255,255,255,0.06)',
   },
   topRow: {
     display: 'flex',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: '16px',
+    gap: '14px',
   },
   leftWrap: {
     flex: 1,
@@ -176,26 +171,43 @@ const styles = {
     color: '#cbd5e1',
     fontSize: '13px',
     fontWeight: 600,
-    marginBottom: '8px',
+    marginBottom: '6px',
   },
   title: {
     margin: 0,
     color: '#ffffff',
-    fontSize: '32px',
+    fontSize: '30px',
     fontWeight: 800,
-    lineHeight: 1.15,
+    lineHeight: 1.1,
     letterSpacing: '-0.02em',
   },
   subtitle: {
-    marginTop: '10px',
+    marginTop: '8px',
     marginBottom: 0,
     color: '#d1d5db',
     fontSize: '14px',
-    lineHeight: 1.5,
+    lineHeight: 1.45,
     wordBreak: 'keep-all',
   },
-  levelText: {
+  badgeBox: {
+    width: '64px',
+    height: '64px',
+    borderRadius: '20px',
+    background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 10px 22px rgba(139, 92, 246, 0.24)',
+    flexShrink: 0,
+  },
+  badgeEmoji: {
+    fontSize: '28px',
+    lineHeight: 1,
+  },
+  levelRow: {
     marginTop: '12px',
+  },
+  levelMainText: {
     color: '#ffffff',
     fontSize: '15px',
     fontWeight: 800,
@@ -214,39 +226,23 @@ const styles = {
     backgroundColor: 'rgba(255,255,255,0.08)',
     overflow: 'hidden',
     marginTop: '8px',
-    maxWidth: '260px',
   },
   levelBarFill: {
     height: '100%',
     borderRadius: '999px',
     background: 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)',
   },
-  badgeBox: {
-    width: '68px',
-    height: '68px',
-    borderRadius: '22px',
-    background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 12px 24px rgba(139, 92, 246, 0.28)',
-    flexShrink: 0,
-  },
-  badgeEmoji: {
-    fontSize: '30px',
-    lineHeight: 1,
-  },
   infoCard: {
-    marginTop: '18px',
+    marginTop: '14px',
     background:
       'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
     border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: '20px',
-    padding: '16px 18px',
+    borderRadius: '18px',
+    padding: '14px 16px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: '14px',
+    gap: '12px',
   },
   infoLeft: {
     minWidth: 0,
@@ -255,24 +251,24 @@ const styles = {
     color: '#c4b5fd',
     fontSize: '12px',
     fontWeight: 700,
-    marginBottom: '6px',
+    marginBottom: '4px',
   },
   infoTitle: {
     color: '#ffffff',
-    fontSize: '16px',
+    fontSize: '15px',
     fontWeight: 700,
-    lineHeight: 1.4,
+    lineHeight: 1.35,
     wordBreak: 'keep-all',
   },
   infoRight: {
-    width: '42px',
-    height: '42px',
+    width: '40px',
+    height: '40px',
     borderRadius: '14px',
     backgroundColor: 'rgba(255,255,255,0.08)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '20px',
+    fontSize: '19px',
     flexShrink: 0,
   },
 };
