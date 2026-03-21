@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import Header from './Header';
-import GoalProgress from './GoalProgress';
-import ActionGoalCard from './ActionGoalCard';
-import PhotoConfirmModal from './PhotoConfirmModal';
+import Header from '../components/layout/Header';
+import GoalProgress from '../components/home/GoalProgress';
+import ActionGoalCard from '../components/home/ActionGoalCard';
+import PhotoConfirmModal from '../components/home/PhotoConfirmModal';
 
 const STORAGE_KEY = 'root_home_goals_v7';
 
