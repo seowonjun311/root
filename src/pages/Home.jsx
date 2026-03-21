@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -122,6 +122,8 @@ export default function Home() {
   const [victoryGoal, setVictoryGoal] = useState(null);
   const [isPulling, setIsPulling] = useState(false);
   const [bannerMoveTrigger, setBannerMoveTrigger] = useState(0);
+  const initializedRef = useRef(false);
+
   const [shownVictoryIds, setShownVictoryIds] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('shownVictory') || '[]');
@@ -216,43 +218,57 @@ export default function Home() {
   useEffect(() => {
     if (isUserLoading) return;
 
-    if (user) {
-      if (!user.onboarding_complete) {
-        navigate('/Onboarding', { replace: true });
-        return;
-      }
-
-      if (categoryFromQuery) {
-        setActiveCategory(categoryFromQuery);
-        base44.auth.updateMe({ active_category: categoryFromQuery }).catch(() => {});
-        return;
-      }
-
-      if (user.active_category && CATEGORY_KEYS.includes(user.active_category)) {
-        setActiveCategory(user.active_category);
-      }
-
-      return;
-    }
-
-    const guestData = guestDataPersistence.loadOnboardingData();
-    const guestCompleted = guestData?.onboardingComplete === true;
-
-    if (!guestCompleted) {
+    if (user && !user.onboarding_complete) {
       navigate('/Onboarding', { replace: true });
       return;
     }
 
+    if (!user) {
+      const guestData = guestDataPersistence.loadOnboardingData();
+      const guestCompleted = guestData?.onboardingComplete === true;
+
+      if (!guestCompleted) {
+        navigate('/Onboarding', { replace: true });
+        return;
+      }
+    }
+
     if (categoryFromQuery) {
       setActiveCategory(categoryFromQuery);
-      guestDataPersistence.saveData('guest_active_category', categoryFromQuery);
+      initializedRef.current = true;
+
+      if (user) {
+        if (user.active_category !== categoryFromQuery) {
+          base44.auth.updateMe({ active_category: categoryFromQuery }).catch(() => {});
+        }
+      } else {
+        const guestData = guestDataPersistence.loadOnboardingData();
+        if (guestData?.activeCategory !== categoryFromQuery) {
+          guestDataPersistence.saveData('guest_active_category', categoryFromQuery);
+        }
+      }
+
       return;
     }
 
+    if (initializedRef.current) return;
+
+    if (user) {
+      if (user.active_category && CATEGORY_KEYS.includes(user.active_category)) {
+        setActiveCategory(user.active_category);
+      }
+      initializedRef.current = true;
+      return;
+    }
+
+    const guestData = guestDataPersistence.loadOnboardingData();
     const savedCategory = guestData?.activeCategory;
+
     if (savedCategory && CATEGORY_KEYS.includes(savedCategory)) {
       setActiveCategory(savedCategory);
     }
+
+    initializedRef.current = true;
   }, [isUserLoading, user, categoryFromQuery, navigate]);
 
   useEffect(() => {
@@ -342,6 +358,10 @@ export default function Home() {
   };
 
   const handleCategoryChange = (nextCategory) => {
+    if (!CATEGORY_KEYS.includes(nextCategory)) return;
+    if (nextCategory === activeCategory) return;
+
+    initializedRef.current = true;
     setActiveCategory(nextCategory);
 
     if (isGuest) {
@@ -585,7 +605,12 @@ export default function Home() {
         />
       )}
 
-      {celebration && <CelebrationToast trigger={celebration} onDone={() => setCelebration(null)} />}
+      {celebration && (
+        <CelebrationToast
+          trigger={celebration}
+          onDone={() => setCelebration(null)}
+        />
+      )}
 
       {victoryGoal && (
         <BossVictoryModal
