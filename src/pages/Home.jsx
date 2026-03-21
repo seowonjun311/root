@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import Header from '../components/Header';
 import ActionGoalCard from '../components/ActionGoalCard';
 
 const STORAGE_KEY = 'root-home-data-v2';
@@ -22,6 +23,7 @@ export default function Home() {
   const [editingTitle, setEditingTitle] = useState('');
   const [editingCategory, setEditingCategory] = useState('운동');
 
+  // ✅ 최초 로드
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -34,17 +36,20 @@ export default function Home() {
     }
   }, []);
 
+  // ✅ 저장 + 이벤트
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     window.dispatchEvent(new Event('root-home-data-updated'));
   }, [data]);
 
+  // ✅ 카테고리 필터
   const filteredGoals = useMemo(() => {
     return (data.actionGoals || []).filter(
       (goal) => goal.category === activeCategory
     );
   }, [data.actionGoals, activeCategory]);
 
+  // ✅ 목표 추가
   const handleAddGoal = () => {
     const title = newGoalTitle.trim();
     if (!title) return;
@@ -66,16 +71,20 @@ export default function Home() {
     setNewGoalCategory(activeCategory);
   };
 
+  // ✅ 삭제
   const handleDeleteGoal = (goalId) => {
     const ok = window.confirm('이 행동목표를 삭제할까요?');
     if (!ok) return;
 
     setData((prev) => ({
       ...prev,
-      actionGoals: (prev.actionGoals || []).filter((goal) => goal.id !== goalId),
+      actionGoals: (prev.actionGoals || []).filter(
+        (goal) => goal.id !== goalId
+      ),
     }));
   };
 
+  // ✅ 수정 시작
   const handleStartEdit = (goal) => {
     setEditingGoalId(goal.id);
     setEditingTitle(goal.title);
@@ -108,6 +117,7 @@ export default function Home() {
     handleCancelEdit();
   };
 
+  // ✅ 완료 (사진 포함)
   const handleCompleteGoal = (goalId, payload) => {
     setData((prev) => ({
       ...prev,
@@ -134,42 +144,19 @@ export default function Home() {
       style={{
         minHeight: '100vh',
         background: '#f6f7fb',
-        padding: '12px 12px 28px',
       }}
     >
+      {/* ✅ 헤더 */}
+      <Header />
+
       <div
         style={{
           maxWidth: 760,
           margin: '0 auto',
+          padding: '12px',
         }}
       >
-        {/* 상단 */}
-        <div
-          style={{
-            marginBottom: 10,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 24,
-              fontWeight: 900,
-              color: '#111827',
-              marginBottom: 4,
-            }}
-          >
-            루트
-          </div>
-          <div
-            style={{
-              fontSize: 13,
-              color: '#6b7280',
-            }}
-          >
-            카테고리별 행동목표를 간단하게 관리해보세요
-          </div>
-        </div>
-
-        {/* 카테고리 버튼 - 더 슬림하게 */}
+        {/* ✅ 카테고리 버튼 (슬림) */}
         <div
           style={{
             display: 'grid',
@@ -184,21 +171,21 @@ export default function Home() {
             return (
               <button
                 key={category}
-                type="button"
                 onClick={() => {
                   setActiveCategory(category);
                   setNewGoalCategory(category);
                 }}
                 style={{
-                  border: isActive ? '1px solid #111827' : '1px solid #d7dbe4',
-                  background: isActive ? '#111827' : '#ffffff',
-                  color: isActive ? '#ffffff' : '#4b5563',
+                  border: isActive
+                    ? '1px solid #111827'
+                    : '1px solid #d7dbe4',
+                  background: isActive ? '#111827' : '#fff',
+                  color: isActive ? '#fff' : '#4b5563',
                   borderRadius: 999,
-                  padding: '8px 8px',
+                  padding: '8px',
                   fontSize: 12,
                   fontWeight: 800,
                   cursor: 'pointer',
-                  lineHeight: 1.1,
                 }}
               >
                 {category}
@@ -207,229 +194,120 @@ export default function Home() {
           })}
         </div>
 
-        {/* 새 행동목표 추가 */}
+        {/* ✅ 새 목표 */}
         <div
           style={{
-            background: '#ffffff',
+            background: '#fff',
             border: '1px solid #e9e9ef',
             borderRadius: 18,
             padding: 14,
             marginBottom: 12,
-            boxShadow: '0 6px 20px rgba(20,20,43,0.05)',
           }}
         >
           <div
             style={{
               fontSize: 15,
               fontWeight: 800,
-              color: '#111827',
               marginBottom: 10,
             }}
           >
             새 행동목표 추가
           </div>
 
-          <div
+          <input
+            value={newGoalTitle}
+            onChange={(e) => setNewGoalTitle(e.target.value)}
+            placeholder={`${activeCategory} 목표 입력`}
             style={{
-              display: 'grid',
-              gap: 10,
+              width: '100%',
+              border: '1px solid #dbe1ea',
+              borderRadius: 12,
+              padding: 12,
+              marginBottom: 10,
+            }}
+          />
+
+          <button
+            onClick={handleAddGoal}
+            style={{
+              width: '100%',
+              background: '#111827',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 12,
+              padding: 12,
+              fontWeight: 800,
+              cursor: 'pointer',
             }}
           >
-            <input
-              value={newGoalTitle}
-              onChange={(e) => setNewGoalTitle(e.target.value)}
-              placeholder={`${activeCategory} 행동목표를 입력하세요`}
-              style={{
-                width: '100%',
-                border: '1px solid #dbe1ea',
-                borderRadius: 12,
-                padding: '12px 13px',
-                fontSize: 14,
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-
-            <select
-              value={newGoalCategory}
-              onChange={(e) => setNewGoalCategory(e.target.value)}
-              style={{
-                width: '100%',
-                border: '1px solid #dbe1ea',
-                borderRadius: 12,
-                padding: '12px 13px',
-                fontSize: 14,
-                background: '#fff',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            >
-              {CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-
-            <button
-              type="button"
-              onClick={handleAddGoal}
-              style={{
-                border: 'none',
-                background: '#111827',
-                color: '#ffffff',
-                borderRadius: 12,
-                padding: '12px 14px',
-                fontSize: 14,
-                fontWeight: 800,
-                cursor: 'pointer',
-              }}
-            >
-              행동목표 추가
-            </button>
-          </div>
+            추가
+          </button>
         </div>
 
-        {/* 수정 영역 */}
+        {/* ✅ 수정 */}
         {editingGoalId !== null && (
           <div
             style={{
-              background: '#ffffff',
-              border: '1px solid #e9e9ef',
+              background: '#fff',
               borderRadius: 18,
               padding: 14,
               marginBottom: 12,
-              boxShadow: '0 6px 20px rgba(20,20,43,0.05)',
             }}
           >
-            <div
+            <input
+              value={editingTitle}
+              onChange={(e) => setEditingTitle(e.target.value)}
               style={{
-                fontSize: 15,
-                fontWeight: 800,
-                color: '#111827',
+                width: '100%',
+                border: '1px solid #dbe1ea',
+                borderRadius: 12,
+                padding: 12,
                 marginBottom: 10,
               }}
-            >
-              행동목표 수정
-            </div>
+            />
 
-            <div
-              style={{
-                display: 'grid',
-                gap: 10,
-              }}
-            >
-              <input
-                value={editingTitle}
-                onChange={(e) => setEditingTitle(e.target.value)}
-                placeholder="행동목표를 수정하세요"
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={handleSaveEdit}
                 style={{
-                  width: '100%',
-                  border: '1px solid #dbe1ea',
+                  flex: 1,
+                  background: '#111827',
+                  color: '#fff',
                   borderRadius: 12,
-                  padding: '12px 13px',
-                  fontSize: 14,
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-              />
-
-              <select
-                value={editingCategory}
-                onChange={(e) => setEditingCategory(e.target.value)}
-                style={{
-                  width: '100%',
-                  border: '1px solid #dbe1ea',
-                  borderRadius: 12,
-                  padding: '12px 13px',
-                  fontSize: 14,
-                  background: '#fff',
-                  outline: 'none',
-                  boxSizing: 'border-box',
+                  padding: 12,
+                  border: 'none',
                 }}
               >
-                {CATEGORIES.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
+                저장
+              </button>
 
-              <div
+              <button
+                onClick={handleCancelEdit}
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 8,
+                  flex: 1,
+                  background: '#eee',
+                  borderRadius: 12,
+                  padding: 12,
+                  border: 'none',
                 }}
               >
-                <button
-                  type="button"
-                  onClick={handleSaveEdit}
-                  style={{
-                    border: 'none',
-                    background: '#111827',
-                    color: '#fff',
-                    borderRadius: 12,
-                    padding: '12px 14px',
-                    fontSize: 14,
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                  }}
-                >
-                  수정 저장
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  style={{
-                    border: 'none',
-                    background: '#eef2f7',
-                    color: '#374151',
-                    borderRadius: 12,
-                    padding: '12px 14px',
-                    fontSize: 14,
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                  }}
-                >
-                  취소
-                </button>
-              </div>
+                취소
+              </button>
             </div>
           </div>
         )}
 
-        {/* 목록 */}
-        <div
-          style={{
-            marginTop: 4,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 16,
-              fontWeight: 900,
-              color: '#111827',
-              marginBottom: 10,
-            }}
-          >
-            {activeCategory} 행동목표
-          </div>
-
+        {/* ✅ 리스트 */}
+        <div>
           {filteredGoals.length === 0 ? (
             <div
               style={{
-                background: '#ffffff',
-                border: '1px dashed #d8dee9',
-                borderRadius: 16,
-                padding: '18px 14px',
-                color: '#6b7280',
-                fontSize: 14,
                 textAlign: 'center',
+                padding: 20,
+                color: '#888',
               }}
             >
-              아직 {activeCategory} 행동목표가 없어요
+              아직 목표 없음
             </div>
           ) : (
             filteredGoals.map((goal) => (
