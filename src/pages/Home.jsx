@@ -1239,123 +1239,6 @@ export default function Home() {
           </div>
         </div>
 
-        {editingGoalId !== null && (
-          <div style={styles.section}>
-            <div style={styles.editCard}>
-              <div style={styles.editCardTitle}>행동목표 수정</div>
-
-              <input
-                type="text"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                placeholder="행동목표 이름"
-                style={styles.input}
-              />
-
-              <div style={styles.formRow}>
-                <select
-                  value={editCategory}
-                  onChange={(e) => setEditCategory(e.target.value)}
-                  style={styles.select}
-                >
-                  {CATEGORY_OPTIONS.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  type="date"
-                  value={editDateKey}
-                  min={todayKey}
-                  onChange={(e) => setEditDateKey(e.target.value)}
-                  style={styles.input}
-                />
-              </div>
-
-              <div style={styles.formRow}>
-                <input
-                  type="date"
-                  value={editEndDateKey}
-                  min={editDateKey}
-                  onChange={(e) => setEditEndDateKey(e.target.value)}
-                  style={styles.input}
-                />
-
-                <select
-                  value={editRepeatType}
-                  onChange={(e) => setEditRepeatType(e.target.value)}
-                  style={styles.select}
-                >
-                  <option value="once">1회성 목표</option>
-                  <option value="daily">매일</option>
-                  <option value="weeklyCount">주 n회</option>
-                  <option value="weekdays">특정 요일</option>
-                </select>
-              </div>
-
-              {editRepeatType === 'weeklyCount' && (
-                <div style={styles.formRowSingle}>
-                  <select
-                    value={editWeeklyTarget}
-                    onChange={(e) => setEditWeeklyTarget(Number(e.target.value))}
-                    style={styles.select}
-                  >
-                    <option value={1}>주 1회</option>
-                    <option value={2}>주 2회</option>
-                    <option value={3}>주 3회</option>
-                    <option value={4}>주 4회</option>
-                    <option value={5}>주 5회</option>
-                    <option value={6}>주 6회</option>
-                    <option value={7}>주 7회</option>
-                  </select>
-                </div>
-              )}
-
-              {editRepeatType === 'weekdays' && (
-                <div style={styles.dayButtonWrap}>
-                  {WEEKDAY_OPTIONS.map((day) => {
-                    const active = editRepeatDays.includes(day.value);
-
-                    return (
-                      <button
-                        key={day.value}
-                        type="button"
-                        onClick={() => toggleEditRepeatDay(day.value)}
-                        style={{
-                          ...styles.dayButton,
-                          ...(active ? styles.dayButtonActive : {}),
-                        }}
-                      >
-                        {day.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              <div style={styles.editButtonRow}>
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  style={styles.cancelEditButton}
-                >
-                  취소
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSaveEdit}
-                  style={styles.saveEditButton}
-                >
-                  수정 저장
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         <div style={styles.sectionHeader}>
           <div>
             <h2 style={styles.sectionTitle}>
@@ -1549,6 +1432,124 @@ export default function Home() {
           </>
         )}
       </div>
+
+      {editingGoalId !== null && (
+        <div style={styles.editModalOverlay}>
+          <div style={styles.editModalCard}>
+            <div style={styles.editModalTitle}>행동목표 수정</div>
+
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="행동목표 이름"
+              style={styles.input}
+            />
+
+            <div style={styles.modalSpacing}>
+              <select
+                value={editCategory}
+                onChange={(e) => setEditCategory(e.target.value)}
+                style={styles.select}
+              >
+                {CATEGORY_OPTIONS.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={styles.modalDateRow}>
+              <input
+                type="date"
+                value={editDateKey}
+                min={todayKey}
+                onChange={(e) => setEditDateKey(e.target.value)}
+                style={styles.input}
+              />
+              <input
+                type="date"
+                value={editEndDateKey}
+                min={editDateKey}
+                onChange={(e) => setEditEndDateKey(e.target.value)}
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.modalSpacing}>
+              <select
+                value={editRepeatType}
+                onChange={(e) => setEditRepeatType(e.target.value)}
+                style={styles.select}
+              >
+                <option value="once">1회성 목표</option>
+                <option value="daily">매일</option>
+                <option value="weeklyCount">주 n회</option>
+                <option value="weekdays">특정 요일</option>
+              </select>
+            </div>
+
+            {editRepeatType === 'weeklyCount' && (
+              <div style={styles.modalSpacing}>
+                <select
+                  value={editWeeklyTarget}
+                  onChange={(e) => setEditWeeklyTarget(Number(e.target.value))}
+                  style={styles.select}
+                >
+                  <option value={1}>주 1회</option>
+                  <option value={2}>주 2회</option>
+                  <option value={3}>주 3회</option>
+                  <option value={4}>주 4회</option>
+                  <option value={5}>주 5회</option>
+                  <option value={6}>주 6회</option>
+                  <option value={7}>주 7회</option>
+                </select>
+              </div>
+            )}
+
+            {editRepeatType === 'weekdays' && (
+              <div style={styles.modalDayWrap}>
+                {WEEKDAY_OPTIONS.map((day) => {
+                  const active = editRepeatDays.includes(day.value);
+
+                  return (
+                    <button
+                      key={day.value}
+                      type="button"
+                      onClick={() => toggleEditRepeatDay(day.value)}
+                      style={{
+                        ...styles.modalDayButton,
+                        ...(active ? styles.modalDayButtonActive : {}),
+                      }}
+                    >
+                      {day.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <div style={styles.modalButtonRow}>
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                style={styles.modalCancelButton}
+              >
+                취소
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                style={styles.modalSaveButton}
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <PhotoConfirmModal
         isOpen={photoModalOpen}
@@ -1775,19 +1776,6 @@ const styles = {
     fontWeight: 800,
     marginBottom: '14px',
   },
-  editCard: {
-    background: 'linear-gradient(180deg, #2d1d2f 0%, #231725 100%)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: '22px',
-    padding: '18px',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-  },
-  editCardTitle: {
-    color: '#ffffff',
-    fontSize: '18px',
-    fontWeight: 800,
-    marginBottom: '14px',
-  },
   input: {
     width: '100%',
     height: '46px',
@@ -1850,32 +1838,6 @@ const styles = {
     background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
     color: '#ffffff',
     fontSize: '15px',
-    fontWeight: 800,
-    cursor: 'pointer',
-  },
-  editButtonRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '10px',
-    marginTop: '14px',
-  },
-  cancelEditButton: {
-    height: '46px',
-    borderRadius: '14px',
-    border: '1px solid rgba(255,255,255,0.12)',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    color: '#ffffff',
-    fontSize: '14px',
-    fontWeight: 700,
-    cursor: 'pointer',
-  },
-  saveEditButton: {
-    height: '46px',
-    borderRadius: '14px',
-    border: 'none',
-    background: 'linear-gradient(135deg, #a855f7, #ec4899)',
-    color: '#ffffff',
-    fontSize: '14px',
     fontWeight: 800,
     cursor: 'pointer',
   },
@@ -2092,5 +2054,84 @@ const styles = {
     color: '#cbd5e1',
     fontSize: '12px',
     fontWeight: 600,
+  },
+  editModalOverlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+    padding: '16px',
+    boxSizing: 'border-box',
+  },
+  editModalCard: {
+    width: '100%',
+    maxWidth: '420px',
+    background: 'linear-gradient(180deg, #2d1d2f 0%, #231725 100%)',
+    borderRadius: '20px',
+    padding: '20px',
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxSizing: 'border-box',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.35)',
+  },
+  editModalTitle: {
+    color: '#ffffff',
+    fontSize: '18px',
+    fontWeight: 800,
+    marginBottom: '12px',
+  },
+  modalSpacing: {
+    marginTop: '10px',
+  },
+  modalDateRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '8px',
+    marginTop: '10px',
+  },
+  modalDayWrap: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(7, 1fr)',
+    gap: '6px',
+    marginTop: '10px',
+  },
+  modalDayButton: {
+    height: '36px',
+    borderRadius: '10px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.05)',
+    color: '#fff',
+    fontSize: '12px',
+    cursor: 'pointer',
+  },
+  modalDayButtonActive: {
+    background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+    border: 'none',
+  },
+  modalButtonRow: {
+    display: 'flex',
+    gap: '8px',
+    marginTop: '16px',
+  },
+  modalCancelButton: {
+    flex: 1,
+    height: '42px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.05)',
+    color: '#fff',
+    cursor: 'pointer',
+  },
+  modalSaveButton: {
+    flex: 1,
+    height: '42px',
+    borderRadius: '12px',
+    border: 'none',
+    background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+    color: '#fff',
+    fontWeight: 800,
+    cursor: 'pointer',
   },
 };
