@@ -1,182 +1,287 @@
-import React, { useState, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Image, X, Check, MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import FocusLock from 'react-focus-lock';
-import { MapContainer, TileLayer, Polyline, CircleMarker } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useEffect, useRef, useState } from 'react';
 
-export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip, onCancel }) {
-  const [photo, setPhoto] = useState(null);
-  const [photoUrl, setPhotoUrl] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const galleryRef = useRef(null);
-  const cameraRef = useRef(null);
+export default function PhotoConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title = '기록을 완료할까요?',
+  description = '사진을 남기거나, 사진 없이 완료할 수 있어요.',
+}) {
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedFile(null);
+      setPreviewUrl('');
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  if (!isOpen) return null;
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
-    setPhoto(file);
-    setPhotoUrl(URL.createObjectURL(file));
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
-  const handleSave = async () => {
-    let uploadedUrl = null;
-    if (photo) {
-      setUploading(true);
-      const res = await base44.integrations.Core.UploadFile({ file: photo });
-      uploadedUrl = res.file_url;
-      setUploading(false);
+  const handleRemovePhoto = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
     }
-    onSave(uploadedUrl, gpsData);
+
+    setSelectedFile(null);
+    setPreviewUrl('');
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+  };
+
+  const handleConfirm = () => {
+    if (onConfirm) {
+      onConfirm(selectedFile || null);
+    }
+    onClose?.();
   };
 
   return (
-    <AnimatePresence>
-      <FocusLock>
-        <motion.div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="photo-modal-title"
-        >
-          <motion.div
-            className="w-full max-w-lg bg-background rounded-t-3xl p-6 pb-28"
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          >
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <p id="photo-modal-title" className="font-bold text-base text-amber-900">🦊 오늘도 해냈네요, 용사님!</p>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                이 순간을 사진으로 남길 수 있어요.
-              </p>
+    <div style={styles.overlay}>
+      <div style={styles.modal}>
+        <button onClick={onClose} style={styles.closeButton}>
+          ×
+        </button>
+
+        <div style={styles.header}>
+          <div style={styles.iconCircle}>📸</div>
+          <h2 style={styles.title}>{title}</h2>
+          <p style={styles.description}>{description}</p>
+        </div>
+
+        <div style={styles.content}>
+          {previewUrl ? (
+            <div style={styles.previewWrap}>
+              <img src={previewUrl} alt="미리보기" style={styles.previewImage} />
+              <button onClick={handleRemovePhoto} style={styles.removeButton}>
+                사진 삭제
+              </button>
             </div>
-            <button onClick={onSkip} className="p-2 rounded-full hover:bg-secondary">
-              <X className="w-5 h-5 text-muted-foreground" />
+          ) : (
+            <div style={styles.emptyBox}>
+              <div style={styles.emptyEmoji}>🖼️</div>
+              <p style={styles.emptyText}>아직 선택한 사진이 없어요</p>
+            </div>
+          )}
+
+          <div style={styles.buttonGroup}>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={styles.secondaryButton}
+            >
+              갤러리에서 선택
+            </button>
+
+            <button
+              onClick={() => cameraInputRef.current?.click()}
+              style={styles.secondaryButton}
+            >
+              카메라로 촬영
             </button>
           </div>
 
-          {/* Photo preview or GPS map */}
-          {photoUrl ? (
-            <div className="relative mb-4 rounded-2xl overflow-hidden aspect-video bg-secondary">
-              <img src={photoUrl} alt="수련 사진" className="w-full h-full object-cover" />
-              <button
-                onClick={() => { setPhoto(null); setPhotoUrl(null); }}
-                className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center"
-              >
-                <X className="w-4 h-4 text-white" />
-              </button>
-            </div>
-          ) : gpsData?.gpsEnabled && gpsData?.coords?.length > 0 ? (
-            <div className="mb-4 rounded-2xl overflow-hidden aspect-video bg-blue-50 border-2 border-blue-200 flex items-center justify-center">
-              <SimpleMap coords={gpsData.coords} />
-            </div>
-          ) : (
-            <div className="flex gap-3 mb-4">
-              <label className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-amber-300/70 bg-amber-50/40 flex flex-col items-center justify-center gap-2 hover:bg-amber-50/80 transition-colors cursor-pointer">
-                <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                <Image className="w-7 h-7 text-amber-500" />
-                <span className="text-xs text-amber-700 font-semibold">갤러리</span>
-              </label>
-              <label className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-amber-300/70 bg-amber-50/40 flex flex-col items-center justify-center gap-2 hover:bg-amber-50/80 transition-colors cursor-pointer">
-                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
-                <Camera className="w-7 h-7 text-amber-500" />
-                <span className="text-xs text-amber-700 font-semibold">카메라</span>
-              </label>
-            </div>
-          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
 
-          {/* Info text */}
-          {gpsData?.gpsEnabled && (
-            <div className="flex items-center gap-2 mb-4 p-3 rounded-xl bg-blue-50 border border-blue-200">
-              <MapPin className="w-4 h-4 text-blue-600" />
-              <p className="text-xs text-blue-700 font-semibold">
-                거리: {gpsData.distance?.toFixed(2) || '0'}km
-              </p>
-            </div>
-          )}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
+        </div>
 
-          <div className="flex gap-3 flex-col">
-             <Button
-               onClick={handleSave}
-               disabled={uploading}
-               className="flex-1 h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-             >
-               {uploading ? (
-                 <span className="flex items-center gap-2">
-                   <span className="w-4 h-4 border-2 border-amber-200/50 border-t-amber-50 rounded-full animate-spin" />
-                   업로드 중...
-                 </span>
-               ) : (
-                 <>
-                   <Check className="w-4 h-4 mr-2" />
-                   저장
-                 </>
-               )}
-             </Button>
-             <Button
-               variant="outline"
-               onClick={onCancel}
-               disabled={uploading}
-               className="flex-1 h-11 rounded-xl font-semibold"
-             >
-               취소 (기록 안함)
-             </Button>
-             <p className="text-xs text-muted-foreground text-center">사진없이 저장할 수 있어요</p>
-           </div>
-        </motion.div>
-      </motion.div>
-      </FocusLock>
-    </AnimatePresence>
-  );
-}
+        <div style={styles.footer}>
+          <button onClick={onClose} style={styles.cancelButton}>
+            취소
+          </button>
 
-function SimpleMap({ coords }) {
-  if (!coords || coords.length < 2) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full gap-2">
-        <MapPin className="w-6 h-6 text-blue-600" />
-        <p className="text-xs text-blue-600 font-semibold">경로 지도</p>
+          <button onClick={handleConfirm} style={styles.confirmButton}>
+            {selectedFile ? '사진과 함께 완료' : '사진 없이 완료'}
+          </button>
+        </div>
       </div>
-    );
-  }
-
-  // 좌표의 범위 계산 (Leaflet은 [lat, lng] 형식)
-  const lats = coords.map(c => c[0]);
-  const lngs = coords.map(c => c[1]);
-  const minLat = Math.min(...lats);
-  const maxLat = Math.max(...lats);
-  const minLng = Math.min(...lngs);
-  const maxLng = Math.max(...lngs);
-
-  // 전체 경로를 포함하는 중심점
-  const centerLat = (minLat + maxLat) / 2;
-  const centerLng = (minLng + maxLng) / 2;
-
-  return (
-    <MapContainer
-      center={[centerLat, centerLng]}
-      zoom={15}
-      style={{ height: '100%', width: '100%' }}
-      className="rounded-xl"
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; OpenStreetMap contributors'
-      />
-      {/* 경로 선 */}
-      <Polyline positions={coords} color="#0ea5e9" weight={3} opacity={0.8} />
-      {/* 시작점 */}
-      <CircleMarker center={coords[0]} radius={6} fillColor="#10b981" color="#10b981" weight={2} opacity={1} fillOpacity={0.8} />
-      {/* 끝점 */}
-      <CircleMarker center={coords[coords.length - 1]} radius={6} fillColor="#ef4444" color="#ef4444" weight={2} opacity={1} fillOpacity={0.8} />
-    </MapContainer>
+    </div>
   );
 }
+
+const styles = {
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    zIndex: 9999,
+  },
+  modal: {
+    width: '100%',
+    maxWidth: '420px',
+    backgroundColor: '#1f172b',
+    color: '#ffffff',
+    borderRadius: '24px',
+    padding: '22px',
+    position: 'relative',
+    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.35)',
+    border: '1px solid rgba(255,255,255,0.08)',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: '14px',
+    right: '14px',
+    width: '34px',
+    height: '34px',
+    borderRadius: '50%',
+    border: 'none',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    color: '#fff',
+    fontSize: '20px',
+    cursor: 'pointer',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: '18px',
+  },
+  iconCircle: {
+    width: '60px',
+    height: '60px',
+    margin: '0 auto 12px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '28px',
+    background: 'linear-gradient(135deg, #7c3aed, #ec4899)',
+  },
+  title: {
+    margin: 0,
+    fontSize: '22px',
+    fontWeight: 700,
+  },
+  description: {
+    marginTop: '8px',
+    marginBottom: 0,
+    fontSize: '14px',
+    color: '#d1d5db',
+    lineHeight: 1.5,
+  },
+  content: {
+    marginTop: '16px',
+  },
+  emptyBox: {
+    border: '1px dashed rgba(255,255,255,0.18)',
+    borderRadius: '18px',
+    minHeight: '180px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    marginBottom: '14px',
+  },
+  emptyEmoji: {
+    fontSize: '34px',
+    marginBottom: '10px',
+  },
+  emptyText: {
+    margin: 0,
+    fontSize: '14px',
+    color: '#cbd5e1',
+  },
+  previewWrap: {
+    marginBottom: '14px',
+  },
+  previewImage: {
+    width: '100%',
+    height: '220px',
+    objectFit: 'cover',
+    borderRadius: '18px',
+    display: 'block',
+    border: '1px solid rgba(255,255,255,0.08)',
+  },
+  removeButton: {
+    marginTop: '10px',
+    width: '100%',
+    height: '42px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    color: '#fff',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 600,
+  },
+  buttonGroup: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '10px',
+  },
+  secondaryButton: {
+    height: '46px',
+    borderRadius: '14px',
+    border: '1px solid rgba(255,255,255,0.12)',
+    backgroundColor: '#2b1f3d',
+    color: '#fff',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 600,
+  },
+  footer: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1.3fr',
+    gap: '10px',
+    marginTop: '18px',
+  },
+  cancelButton: {
+    height: '48px',
+    borderRadius: '14px',
+    border: '1px solid rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    color: '#fff',
+    cursor: 'pointer',
+    fontSize: '15px',
+    fontWeight: 600,
+  },
+  confirmButton: {
+    height: '48px',
+    borderRadius: '14px',
+    border: 'none',
+    background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+    color: '#fff',
+    cursor: 'pointer',
+    fontSize: '15px',
+    fontWeight: 700,
+  },
+};
