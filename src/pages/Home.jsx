@@ -1,43 +1,72 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Header from '../components/Header';
 import GoalProgress from '../components/GoalProgress';
 import ActionGoalCard from '../components/ActionGoalCard';
 import PhotoConfirmModal from '../components/PhotoConfirmModal';
 
-export default function Home() {
-  const [goals, setGoals] = useState([
-    {
-      id: 1,
-      title: '물 2L 마시기',
-      category: '일상',
-      done: false,
-      photo: null,
-    },
-    {
-      id: 2,
-      title: '30분 걷기',
-      category: '운동',
-      done: false,
-      photo: null,
-    },
-    {
-      id: 3,
-      title: '영어 단어 20개 외우기',
-      category: '공부',
-      done: true,
-      photo: null,
-    },
-    {
-      id: 4,
-      title: '명상 10분',
-      category: '정신',
-      done: false,
-      photo: null,
-    },
-  ]);
+const STORAGE_KEY = 'root_home_goals_v1';
 
+const DEFAULT_GOALS = [
+  {
+    id: 1,
+    title: '물 2L 마시기',
+    category: '일상',
+    done: false,
+    photo: null,
+  },
+  {
+    id: 2,
+    title: '30분 걷기',
+    category: '운동',
+    done: false,
+    photo: null,
+  },
+  {
+    id: 3,
+    title: '영어 단어 20개 외우기',
+    category: '공부',
+    done: true,
+    photo: null,
+  },
+  {
+    id: 4,
+    title: '명상 10분',
+    category: '정신',
+    done: false,
+    photo: null,
+  },
+];
+
+function getSavedGoals() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return DEFAULT_GOALS;
+
+    const parsed = JSON.parse(saved);
+
+    if (!Array.isArray(parsed)) {
+      return DEFAULT_GOALS;
+    }
+
+    return parsed;
+  } catch (error) {
+    console.error('localStorage 불러오기 실패:', error);
+    return DEFAULT_GOALS;
+  }
+}
+
+export default function Home() {
+  const [goals, setGoals] = useState(getSavedGoals);
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(goals));
+    } catch (error) {
+      console.error('localStorage 저장 실패:', error);
+    }
+  }, [goals]);
 
   const selectedGoal = useMemo(() => {
     return goals.find((goal) => goal.id === selectedGoalId) || null;
@@ -87,6 +116,13 @@ export default function Home() {
     );
   };
 
+  const handleResetGoals = () => {
+    const ok = window.confirm('목표 상태를 처음 상태로 되돌릴까요?');
+    if (!ok) return;
+
+    setGoals(DEFAULT_GOALS);
+  };
+
   return (
     <div style={styles.page}>
       <div style={styles.container}>
@@ -105,9 +141,20 @@ export default function Home() {
 
         <div style={styles.sectionHeader}>
           <h2 style={styles.sectionTitle}>오늘의 행동목표</h2>
-          <span style={styles.sectionCount}>
-            {completedCount}/{totalCount} 완료
-          </span>
+
+          <div style={styles.sectionRight}>
+            <span style={styles.sectionCount}>
+              {completedCount}/{totalCount} 완료
+            </span>
+
+            <button
+              type="button"
+              onClick={handleResetGoals}
+              style={styles.resetButton}
+            >
+              초기화
+            </button>
+          </div>
         </div>
 
         <div style={styles.goalList}>
@@ -165,6 +212,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '12px',
+    flexWrap: 'wrap',
   },
   sectionTitle: {
     margin: 0,
@@ -172,10 +220,27 @@ const styles = {
     fontSize: '20px',
     fontWeight: 700,
   },
+  sectionRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    flexWrap: 'wrap',
+  },
   sectionCount: {
     color: '#cbd5e1',
     fontSize: '14px',
     fontWeight: 600,
+  },
+  resetButton: {
+    height: '34px',
+    padding: '0 12px',
+    borderRadius: '999px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    color: '#ffffff',
+    fontSize: '13px',
+    fontWeight: 700,
+    cursor: 'pointer',
   },
   goalList: {
     display: 'flex',
