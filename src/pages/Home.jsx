@@ -4,7 +4,24 @@ import GoalProgress from '../components/GoalProgress';
 import ActionGoalCard from '../components/ActionGoalCard';
 import PhotoConfirmModal from '../components/PhotoConfirmModal';
 
-const STORAGE_KEY = 'root_home_goals_v4';
+const STORAGE_KEY = 'root_home_goals_v5';
+
+const XP_BY_CATEGORY = {
+  운동: 12,
+  공부: 10,
+  정신: 8,
+  일상: 6,
+};
+
+const WEEKDAY_OPTIONS = [
+  { label: '월', value: 1 },
+  { label: '화', value: 2 },
+  { label: '수', value: 3 },
+  { label: '목', value: 4 },
+  { label: '금', value: 5 },
+  { label: '토', value: 6 },
+  { label: '일', value: 0 },
+];
 
 function pad(num) {
   return String(num).padStart(2, '0');
@@ -15,6 +32,11 @@ function getDateKey(date) {
   const month = pad(date.getMonth() + 1);
   const day = pad(date.getDate());
   return `${year}-${month}-${day}`;
+}
+
+function parseDateKey(dateKey) {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
 
 function addDays(baseDate, amount) {
@@ -38,81 +60,158 @@ function fileToBase64(file) {
   });
 }
 
-function makeDefaultGoals() {
+function getWeekStartDate(date) {
+  const target = new Date(date);
+  const day = target.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  target.setDate(target.getDate() + diff);
+  target.setHours(0, 0, 0, 0);
+  return target;
+}
+
+function makeRecordKey(goalId, dateKey) {
+  return `${goalId}_${dateKey}`;
+}
+
+function getRepeatLabel(goal) {
+  if (goal.repeatType === 'daily') {
+    return '매일';
+  }
+
+  if (goal.repeatType === 'weeklyCount') {
+    return `주 ${goal.weeklyTarget || 3}회`;
+  }
+
+  if (goal.repeatType === 'weekdays') {
+    const labels = WEEKDAY_OPTIONS.filter((item) =>
+      (goal.repeatDays || []).includes(item.value)
+    ).map((item) => item.label);
+
+    return labels.length ? `요일: ${labels.join(', ')}` : '특정 요일';
+  }
+
+  return '1회성';
+}
+
+function isGoalActiveOnDate(goal, dateKey) {
+  const targetDate = parseDateKey(dateKey);
+  const startDate = parseDateKey(goal.startDateKey);
+
+  targetDate.setHours(0, 0, 0, 0);
+  startDate.setHours(0, 0, 0, 0);
+
+  if (targetDate < startDate) {
+    return false;
+  }
+
+  if (goal.repeatType === 'daily') {
+    return true;
+  }
+
+  if (goal.repeatType === 'weeklyCount') {
+    return true;
+  }
+
+  if (goal.repeatType === 'weekdays') {
+    return (goal.repeatDays || []).includes(targetDate.getDay());
+  }
+
+  return goal.startDateKey === dateKey;
+}
+
+function makeDefaultData() {
   const today = new Date();
   const yesterday = addDays(today, -1);
   const tomorrow = addDays(today, 1);
 
-  return [
-    {
-      id: 1,
-      title: '물 2L 마시기',
-      category: '일상',
-      done: false,
-      photo: null,
-      dateKey: getDateKey(today),
+  return {
+    goals: [
+      {
+        id: 1,
+        title: '물 2L 마시기',
+        category: '일상',
+        startDateKey: getDateKey(today),
+        repeatType: 'daily',
+        repeatDays: [],
+        weeklyTarget: 3,
+      },
+      {
+        id: 2,
+        title: '30분 걷기',
+        category: '운동',
+        startDateKey: getDateKey(today),
+        repeatType: 'weeklyCount',
+        repeatDays: [],
+        weeklyTarget: 3,
+      },
+      {
+        id: 3,
+        title: '영어 단어 20개 외우기',
+        category: '공부',
+        startDateKey: getDateKey(today),
+        repeatType: 'once',
+        repeatDays: [],
+        weeklyTarget: 3,
+      },
+      {
+        id: 4,
+        title: '명상 10분',
+        category: '정신',
+        startDateKey: getDateKey(today),
+        repeatType: 'weekdays',
+        repeatDays: [1, 3, 5],
+        weeklyTarget: 3,
+      },
+      {
+        id: 5,
+        title: '방 정리 10분',
+        category: '일상',
+        startDateKey: getDateKey(yesterday),
+        repeatType: 'once',
+        repeatDays: [],
+        weeklyTarget: 3,
+      },
+      {
+        id: 6,
+        title: '팔굽혀펴기 20회',
+        category: '운동',
+        startDateKey: getDateKey(tomorrow),
+        repeatType: 'once',
+        repeatDays: [],
+        weeklyTarget: 3,
+      },
+    ],
+    records: {
+      [`${5}_${getDateKey(yesterday)}`]: {
+        done: true,
+        photo: null,
+      },
     },
-    {
-      id: 2,
-      title: '30분 걷기',
-      category: '운동',
-      done: false,
-      photo: null,
-      dateKey: getDateKey(today),
-    },
-    {
-      id: 3,
-      title: '영어 단어 20개 외우기',
-      category: '공부',
-      done: true,
-      photo: null,
-      dateKey: getDateKey(today),
-    },
-    {
-      id: 4,
-      title: '명상 10분',
-      category: '정신',
-      done: false,
-      photo: null,
-      dateKey: getDateKey(today),
-    },
-    {
-      id: 5,
-      title: '방 정리 10분',
-      category: '일상',
-      done: true,
-      photo: null,
-      dateKey: getDateKey(yesterday),
-    },
-    {
-      id: 6,
-      title: '팔굽혀펴기 20회',
-      category: '운동',
-      done: false,
-      photo: null,
-      dateKey: getDateKey(tomorrow),
-    },
-  ];
+  };
 }
 
-function getSavedGoals() {
+function getSavedData() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
 
     if (!saved) {
-      return makeDefaultGoals();
+      return makeDefaultData();
     }
 
     const parsed = JSON.parse(saved);
 
-    if (!Array.isArray(parsed)) {
-      return makeDefaultGoals();
+    if (
+      !parsed ||
+      !Array.isArray(parsed.goals) ||
+      typeof parsed.records !== 'object'
+    ) {
+      return makeDefaultData();
     }
 
     return parsed;
   } catch (error) {
     console.error('localStorage 불러오기 실패:', error);
-    return makeDefaultGoals();
+    return makeDefaultData();
   }
 }
 
@@ -139,7 +238,11 @@ export default function Home() {
     },
   ];
 
-  const [goals, setGoals] = useState(getSavedGoals);
+  const initialData = getSavedData();
+
+  const [goals, setGoals] = useState(initialData.goals);
+  const [records, setRecords] = useState(initialData.records);
+
   const [selectedDateKey, setSelectedDateKey] = useState(getDateKey(today));
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState(null);
@@ -147,31 +250,53 @@ export default function Home() {
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newGoalCategory, setNewGoalCategory] = useState('일상');
   const [newGoalDateKey, setNewGoalDateKey] = useState(getDateKey(today));
+  const [newRepeatType, setNewRepeatType] = useState('once');
+  const [newWeeklyTarget, setNewWeeklyTarget] = useState(3);
+  const [newRepeatDays, setNewRepeatDays] = useState([]);
 
   const [editingGoalId, setEditingGoalId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [editCategory, setEditCategory] = useState('일상');
   const [editDateKey, setEditDateKey] = useState(getDateKey(today));
+  const [editRepeatType, setEditRepeatType] = useState('once');
+  const [editWeeklyTarget, setEditWeeklyTarget] = useState(3);
+  const [editRepeatDays, setEditRepeatDays] = useState([]);
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(goals));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          goals,
+          records,
+        })
+      );
     } catch (error) {
       console.error('localStorage 저장 실패:', error);
     }
-  }, [goals]);
+  }, [goals, records]);
 
   useEffect(() => {
     setNewGoalDateKey(selectedDateKey);
   }, [selectedDateKey]);
 
   const filteredGoals = useMemo(() => {
-    return goals.filter((goal) => goal.dateKey === selectedDateKey);
-  }, [goals, selectedDateKey]);
+    return goals
+      .filter((goal) => isGoalActiveOnDate(goal, selectedDateKey))
+      .map((goal) => {
+        const record = records[makeRecordKey(goal.id, selectedDateKey)];
+
+        return {
+          ...goal,
+          done: record?.done || false,
+          photo: record?.photo || null,
+        };
+      });
+  }, [goals, records, selectedDateKey]);
 
   const selectedGoal = useMemo(() => {
-    return goals.find((goal) => goal.id === selectedGoalId) || null;
-  }, [goals, selectedGoalId]);
+    return filteredGoals.find((goal) => goal.id === selectedGoalId) || null;
+  }, [filteredGoals, selectedGoalId]);
 
   const completedCount = filteredGoals.filter((goal) => goal.done).length;
   const totalCount = filteredGoals.length;
@@ -179,6 +304,41 @@ export default function Home() {
     totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
   const selectedDateTab = dateTabs.find((tab) => tab.key === selectedDateKey);
+
+  const xpSummary = useMemo(() => {
+    const result = {
+      운동: 0,
+      공부: 0,
+      정신: 0,
+      일상: 0,
+      total: 0,
+    };
+
+    Object.entries(records).forEach(([recordKey, record]) => {
+      if (!record?.done) return;
+
+      const goalId = Number(String(recordKey).split('_')[0]);
+      const goal = goals.find((item) => item.id === goalId);
+      if (!goal) return;
+
+      const earnedXp = XP_BY_CATEGORY[goal.category] || 0;
+      result[goal.category] += earnedXp;
+      result.total += earnedXp;
+    });
+
+    return result;
+  }, [goals, records]);
+
+  const todayXp = useMemo(() => {
+    let total = 0;
+
+    filteredGoals.forEach((goal) => {
+      if (!goal.done) return;
+      total += XP_BY_CATEGORY[goal.category] || 0;
+    });
+
+    return total;
+  }, [filteredGoals]);
 
   const handleGoalClick = (goal) => {
     setSelectedGoalId(goal.id);
@@ -198,17 +358,15 @@ export default function Home() {
         photoData = await fileToBase64(file);
       }
 
-      setGoals((prevGoals) =>
-        prevGoals.map((goal) =>
-          goal.id === selectedGoalId
-            ? {
-                ...goal,
-                done: true,
-                photo: photoData || goal.photo || null,
-              }
-            : goal
-        )
-      );
+      const recordKey = makeRecordKey(selectedGoalId, selectedDateKey);
+
+      setRecords((prev) => ({
+        ...prev,
+        [recordKey]: {
+          done: true,
+          photo: photoData || prev[recordKey]?.photo || null,
+        },
+      }));
 
       handleCloseModal();
     } catch (error) {
@@ -218,15 +376,30 @@ export default function Home() {
   };
 
   const handleToggleDone = (goalId) => {
-    setGoals((prevGoals) =>
-      prevGoals.map((goal) =>
-        goal.id === goalId
-          ? {
-              ...goal,
-              done: !goal.done,
-            }
-          : goal
-      )
+    const recordKey = makeRecordKey(goalId, selectedDateKey);
+
+    setRecords((prev) => ({
+      ...prev,
+      [recordKey]: {
+        done: !prev[recordKey]?.done,
+        photo: prev[recordKey]?.photo || null,
+      },
+    }));
+  };
+
+  const toggleNewRepeatDay = (dayValue) => {
+    setNewRepeatDays((prev) =>
+      prev.includes(dayValue)
+        ? prev.filter((item) => item !== dayValue)
+        : [...prev, dayValue]
+    );
+  };
+
+  const toggleEditRepeatDay = (dayValue) => {
+    setEditRepeatDays((prev) =>
+      prev.includes(dayValue)
+        ? prev.filter((item) => item !== dayValue)
+        : [...prev, dayValue]
     );
   };
 
@@ -238,18 +411,28 @@ export default function Home() {
       return;
     }
 
+    if (newRepeatType === 'weekdays' && newRepeatDays.length === 0) {
+      alert('특정 요일을 하나 이상 선택해주세요.');
+      return;
+    }
+
     const newGoal = {
       id: Date.now(),
       title: trimmedTitle,
       category: newGoalCategory,
-      done: false,
-      photo: null,
-      dateKey: newGoalDateKey,
+      startDateKey: newGoalDateKey,
+      repeatType: newRepeatType,
+      repeatDays: newRepeatType === 'weekdays' ? newRepeatDays : [],
+      weeklyTarget: newRepeatType === 'weeklyCount' ? Number(newWeeklyTarget) : 3,
     };
 
     setGoals((prevGoals) => [newGoal, ...prevGoals]);
     setNewGoalTitle('');
     setNewGoalCategory('일상');
+    setNewGoalDateKey(selectedDateKey);
+    setNewRepeatType('once');
+    setNewWeeklyTarget(3);
+    setNewRepeatDays([]);
     setSelectedDateKey(newGoalDateKey);
   };
 
@@ -258,6 +441,16 @@ export default function Home() {
     if (!ok) return;
 
     setGoals((prevGoals) => prevGoals.filter((goal) => goal.id !== goalId));
+
+    setRecords((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((key) => {
+        if (String(key).startsWith(`${goalId}_`)) {
+          delete next[key];
+        }
+      });
+      return next;
+    });
 
     if (editingGoalId === goalId) {
       handleCancelEdit();
@@ -268,7 +461,10 @@ export default function Home() {
     setEditingGoalId(goal.id);
     setEditTitle(goal.title);
     setEditCategory(goal.category);
-    setEditDateKey(goal.dateKey);
+    setEditDateKey(goal.startDateKey);
+    setEditRepeatType(goal.repeatType);
+    setEditWeeklyTarget(goal.weeklyTarget || 3);
+    setEditRepeatDays(goal.repeatDays || []);
   };
 
   const handleCancelEdit = () => {
@@ -276,6 +472,9 @@ export default function Home() {
     setEditTitle('');
     setEditCategory('일상');
     setEditDateKey(getDateKey(new Date()));
+    setEditRepeatType('once');
+    setEditWeeklyTarget(3);
+    setEditRepeatDays([]);
   };
 
   const handleSaveEdit = () => {
@@ -286,6 +485,11 @@ export default function Home() {
       return;
     }
 
+    if (editRepeatType === 'weekdays' && editRepeatDays.length === 0) {
+      alert('특정 요일을 하나 이상 선택해주세요.');
+      return;
+    }
+
     setGoals((prevGoals) =>
       prevGoals.map((goal) =>
         goal.id === editingGoalId
@@ -293,7 +497,11 @@ export default function Home() {
               ...goal,
               title: trimmedTitle,
               category: editCategory,
-              dateKey: editDateKey,
+              startDateKey: editDateKey,
+              repeatType: editRepeatType,
+              repeatDays: editRepeatType === 'weekdays' ? editRepeatDays : [],
+              weeklyTarget:
+                editRepeatType === 'weeklyCount' ? Number(editWeeklyTarget) : 3,
             }
           : goal
       )
@@ -307,13 +515,20 @@ export default function Home() {
     const ok = window.confirm('전체 목표 데이터를 처음 상태로 되돌릴까요?');
     if (!ok) return;
 
-    const defaults = makeDefaultGoals();
-    setGoals(defaults);
+    const defaults = makeDefaultData();
+    setGoals(defaults.goals);
+    setRecords(defaults.records);
     setSelectedDateKey(getDateKey(new Date()));
+
     setNewGoalTitle('');
     setNewGoalCategory('일상');
     setNewGoalDateKey(getDateKey(new Date()));
+    setNewRepeatType('once');
+    setNewWeeklyTarget(3);
+    setNewRepeatDays([]);
+
     handleCancelEdit();
+
     localStorage.removeItem(STORAGE_KEY);
   };
 
@@ -322,7 +537,7 @@ export default function Home() {
       <div style={styles.container}>
         <Header
           title="루트"
-          subtitle="날짜별 행동목표를 추가하고 수정하며 하나씩 완료해보세요"
+          subtitle="반복 목표를 만들고 완료할 때마다 경험치를 얻어보세요"
         />
 
         <div style={styles.section}>
@@ -371,6 +586,47 @@ export default function Home() {
         </div>
 
         <div style={styles.section}>
+          <div style={styles.xpCard}>
+            <div style={styles.xpTopRow}>
+              <div>
+                <div style={styles.xpLabel}>경험치</div>
+                <div style={styles.xpTotal}>총 {xpSummary.total} XP</div>
+              </div>
+
+              <div style={styles.todayXpBadge}>
+                {selectedDateTab ? `${selectedDateTab.label}` : '오늘'} +{todayXp} XP
+              </div>
+            </div>
+
+            <div style={styles.xpGrid}>
+              <div style={styles.xpItem}>
+                <div style={styles.xpItemLabel}>운동</div>
+                <div style={styles.xpItemValue}>{xpSummary.운동} XP</div>
+              </div>
+
+              <div style={styles.xpItem}>
+                <div style={styles.xpItemLabel}>공부</div>
+                <div style={styles.xpItemValue}>{xpSummary.공부} XP</div>
+              </div>
+
+              <div style={styles.xpItem}>
+                <div style={styles.xpItemLabel}>정신</div>
+                <div style={styles.xpItemValue}>{xpSummary.정신} XP</div>
+              </div>
+
+              <div style={styles.xpItem}>
+                <div style={styles.xpItemLabel}>일상</div>
+                <div style={styles.xpItemValue}>{xpSummary.일상} XP</div>
+              </div>
+            </div>
+
+            <div style={styles.xpGuide}>
+              운동 +12 / 공부 +10 / 정신 +8 / 일상 +6
+            </div>
+          </div>
+        </div>
+
+        <div style={styles.section}>
           <div style={styles.addCard}>
             <div style={styles.addCardTitle}>새 행동목표 추가</div>
 
@@ -406,6 +662,59 @@ export default function Home() {
                 ))}
               </select>
             </div>
+
+            <div style={styles.formRowSingle}>
+              <select
+                value={newRepeatType}
+                onChange={(e) => setNewRepeatType(e.target.value)}
+                style={styles.select}
+              >
+                <option value="once">1회성 목표</option>
+                <option value="daily">매일</option>
+                <option value="weeklyCount">주 n회</option>
+                <option value="weekdays">특정 요일</option>
+              </select>
+            </div>
+
+            {newRepeatType === 'weeklyCount' && (
+              <div style={styles.formRowSingle}>
+                <select
+                  value={newWeeklyTarget}
+                  onChange={(e) => setNewWeeklyTarget(Number(e.target.value))}
+                  style={styles.select}
+                >
+                  <option value={1}>주 1회</option>
+                  <option value={2}>주 2회</option>
+                  <option value={3}>주 3회</option>
+                  <option value={4}>주 4회</option>
+                  <option value={5}>주 5회</option>
+                  <option value={6}>주 6회</option>
+                  <option value={7}>주 7회</option>
+                </select>
+              </div>
+            )}
+
+            {newRepeatType === 'weekdays' && (
+              <div style={styles.dayButtonWrap}>
+                {WEEKDAY_OPTIONS.map((day) => {
+                  const active = newRepeatDays.includes(day.value);
+
+                  return (
+                    <button
+                      key={day.value}
+                      type="button"
+                      onClick={() => toggleNewRepeatDay(day.value)}
+                      style={{
+                        ...styles.dayButton,
+                        ...(active ? styles.dayButtonActive : {}),
+                      }}
+                    >
+                      {day.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             <button type="button" onClick={handleAddGoal} style={styles.addButton}>
               행동목표 추가
@@ -450,6 +759,59 @@ export default function Home() {
                   ))}
                 </select>
               </div>
+
+              <div style={styles.formRowSingle}>
+                <select
+                  value={editRepeatType}
+                  onChange={(e) => setEditRepeatType(e.target.value)}
+                  style={styles.select}
+                >
+                  <option value="once">1회성 목표</option>
+                  <option value="daily">매일</option>
+                  <option value="weeklyCount">주 n회</option>
+                  <option value="weekdays">특정 요일</option>
+                </select>
+              </div>
+
+              {editRepeatType === 'weeklyCount' && (
+                <div style={styles.formRowSingle}>
+                  <select
+                    value={editWeeklyTarget}
+                    onChange={(e) => setEditWeeklyTarget(Number(e.target.value))}
+                    style={styles.select}
+                  >
+                    <option value={1}>주 1회</option>
+                    <option value={2}>주 2회</option>
+                    <option value={3}>주 3회</option>
+                    <option value={4}>주 4회</option>
+                    <option value={5}>주 5회</option>
+                    <option value={6}>주 6회</option>
+                    <option value={7}>주 7회</option>
+                  </select>
+                </div>
+              )}
+
+              {editRepeatType === 'weekdays' && (
+                <div style={styles.dayButtonWrap}>
+                  {WEEKDAY_OPTIONS.map((day) => {
+                    const active = editRepeatDays.includes(day.value);
+
+                    return (
+                      <button
+                        key={day.value}
+                        type="button"
+                        onClick={() => toggleEditRepeatDay(day.value)}
+                        style={{
+                          ...styles.dayButton,
+                          ...(active ? styles.dayButtonActive : {}),
+                        }}
+                      >
+                        {day.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               <div style={styles.editButtonRow}>
                 <button
@@ -507,38 +869,74 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            filteredGoals.map((goal) => (
-              <div key={goal.id} style={styles.goalRow}>
-                <div style={styles.goalItem}>
-                  <ActionGoalCard
-                    title={goal.title}
-                    category={goal.category}
-                    done={goal.done}
-                    photo={goal.photo}
-                    onClick={() => handleGoalClick(goal)}
-                    onToggleDone={() => handleToggleDone(goal.id)}
-                  />
-                </div>
+            filteredGoals.map((goal) => {
+              const selectedDate = parseDateKey(selectedDateKey);
+              const weekStart = getWeekStartDate(selectedDate);
 
-                <div style={styles.sideButtons}>
-                  <button
-                    type="button"
-                    onClick={() => handleStartEdit(goal)}
-                    style={styles.editButton}
-                  >
-                    수정
-                  </button>
+              let weeklyDoneCount = 0;
 
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteGoal(goal.id)}
-                    style={styles.deleteButton}
-                  >
-                    삭제
-                  </button>
+              if (goal.repeatType === 'weeklyCount') {
+                for (let i = 0; i < 7; i += 1) {
+                  const current = addDays(weekStart, i);
+                  const currentKey = getDateKey(current);
+                  const record = records[makeRecordKey(goal.id, currentKey)];
+                  if (record?.done) {
+                    weeklyDoneCount += 1;
+                  }
+                }
+              }
+
+              const gainedXp = goal.done ? XP_BY_CATEGORY[goal.category] || 0 : 0;
+
+              return (
+                <div key={goal.id} style={styles.goalBlock}>
+                  <div style={styles.repeatInfoRow}>
+                    <div style={styles.repeatBadge}>{getRepeatLabel(goal)}</div>
+
+                    {goal.repeatType === 'weeklyCount' && (
+                      <div style={styles.repeatSubInfo}>
+                        이번 주 {weeklyDoneCount}/{goal.weeklyTarget}회
+                      </div>
+                    )}
+
+                    {goal.done && (
+                      <div style={styles.xpEarnedBadge}>+{gainedXp} XP</div>
+                    )}
+                  </div>
+
+                  <div style={styles.goalRow}>
+                    <div style={styles.goalItem}>
+                      <ActionGoalCard
+                        title={goal.title}
+                        category={goal.category}
+                        done={goal.done}
+                        photo={goal.photo}
+                        onClick={() => handleGoalClick(goal)}
+                        onToggleDone={() => handleToggleDone(goal.id)}
+                      />
+                    </div>
+
+                    <div style={styles.sideButtons}>
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(goal)}
+                        style={styles.editButton}
+                      >
+                        수정
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteGoal(goal.id)}
+                        style={styles.deleteButton}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
@@ -611,6 +1009,72 @@ const styles = {
   dateTabSubLabelActive: {
     color: '#f5d0fe',
   },
+  xpCard: {
+    background: 'linear-gradient(180deg, #2b1c41 0%, #221733 100%)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: '22px',
+    padding: '18px',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+  },
+  xpTopRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '12px',
+    flexWrap: 'wrap',
+  },
+  xpLabel: {
+    color: '#cbd5e1',
+    fontSize: '13px',
+    fontWeight: 600,
+    marginBottom: '6px',
+  },
+  xpTotal: {
+    color: '#ffffff',
+    fontSize: '24px',
+    fontWeight: 800,
+  },
+  todayXpBadge: {
+    minHeight: '38px',
+    padding: '0 14px',
+    borderRadius: '999px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+    color: '#ffffff',
+    fontSize: '13px',
+    fontWeight: 800,
+  },
+  xpGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '10px',
+    marginTop: '14px',
+  },
+  xpItem: {
+    borderRadius: '16px',
+    padding: '14px',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(255,255,255,0.06)',
+  },
+  xpItemLabel: {
+    color: '#cbd5e1',
+    fontSize: '12px',
+    fontWeight: 700,
+    marginBottom: '6px',
+  },
+  xpItemValue: {
+    color: '#ffffff',
+    fontSize: '18px',
+    fontWeight: 800,
+  },
+  xpGuide: {
+    marginTop: '12px',
+    color: '#d1d5db',
+    fontSize: '12px',
+    lineHeight: 1.5,
+  },
   addCard: {
     background: 'linear-gradient(180deg, #261b3a 0%, #1f1730 100%)',
     border: '1px solid rgba(255,255,255,0.08)',
@@ -655,6 +1119,9 @@ const styles = {
     gap: '10px',
     marginTop: '12px',
   },
+  formRowSingle: {
+    marginTop: '12px',
+  },
   select: {
     width: '100%',
     height: '46px',
@@ -666,6 +1133,26 @@ const styles = {
     boxSizing: 'border-box',
     fontSize: '14px',
     outline: 'none',
+  },
+  dayButtonWrap: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(7, 1fr)',
+    gap: '8px',
+    marginTop: '12px',
+  },
+  dayButton: {
+    height: '42px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    color: '#ffffff',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: 700,
+  },
+  dayButtonActive: {
+    background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+    border: 'none',
   },
   addButton: {
     width: '100%',
@@ -751,7 +1238,38 @@ const styles = {
   goalList: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
+    gap: '16px',
+  },
+  goalBlock: {
+    width: '100%',
+  },
+  repeatInfoRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    flexWrap: 'wrap',
+    marginBottom: '8px',
+  },
+  repeatBadge: {
+    padding: '6px 10px',
+    borderRadius: '999px',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    color: '#f5d0fe',
+    fontSize: '12px',
+    fontWeight: 700,
+  },
+  repeatSubInfo: {
+    color: '#cbd5e1',
+    fontSize: '12px',
+    fontWeight: 600,
+  },
+  xpEarnedBadge: {
+    padding: '6px 10px',
+    borderRadius: '999px',
+    backgroundColor: 'rgba(16,185,129,0.14)',
+    color: '#86efac',
+    fontSize: '12px',
+    fontWeight: 800,
   },
   goalRow: {
     display: 'grid',
