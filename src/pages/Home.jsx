@@ -4,7 +4,7 @@ import GoalProgress from '../components/home/GoalProgress';
 import ActionGoalCard from '../components/home/ActionGoalCard';
 import PhotoConfirmModal from '../components/home/PhotoConfirmModal';
 
-const STORAGE_KEY = 'root_home_goals_v7';
+const STORAGE_KEY = 'root_home_goals_v8';
 
 const XP_BY_CATEGORY = {
   운동: 12,
@@ -34,6 +34,10 @@ function getDateKey(date) {
   return `${year}-${month}-${day}`;
 }
 
+function getTodayDateKey() {
+  return getDateKey(new Date());
+}
+
 function parseDateKey(dateKey) {
   const [year, month, day] = dateKey.split('-').map(Number);
   return new Date(year, month - 1, day);
@@ -47,6 +51,20 @@ function addDays(baseDate, amount) {
 
 function formatDateLabel(date) {
   return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+}
+
+function getDateTabLabel(dateKey) {
+  const target = parseDateKey(dateKey);
+  const today = new Date();
+  const tomorrow = addDays(today, 1);
+
+  const targetKey = getDateKey(target);
+  const todayKey = getDateKey(today);
+  const tomorrowKey = getDateKey(tomorrow);
+
+  if (targetKey === todayKey) return '오늘';
+  if (targetKey === tomorrowKey) return '내일';
+  return formatDateLabel(target);
 }
 
 function fileToBase64(file) {
@@ -160,8 +178,8 @@ function getLevelFromXp(xp) {
 
 function makeDefaultData() {
   const today = new Date();
-  const yesterday = addDays(today, -1);
   const tomorrow = addDays(today, 1);
+  const dayAfterTomorrow = addDays(today, 2);
 
   return {
     goals: [
@@ -203,15 +221,6 @@ function makeDefaultData() {
       },
       {
         id: 5,
-        title: '방 정리 10분',
-        category: '일상',
-        startDateKey: getDateKey(yesterday),
-        repeatType: 'once',
-        repeatDays: [],
-        weeklyTarget: 3,
-      },
-      {
-        id: 6,
         title: '팔굽혀펴기 20회',
         category: '운동',
         startDateKey: getDateKey(tomorrow),
@@ -219,13 +228,17 @@ function makeDefaultData() {
         repeatDays: [],
         weeklyTarget: 3,
       },
-    ],
-    records: {
-      [`${5}_${getDateKey(yesterday)}`]: {
-        done: true,
-        photo: null,
+      {
+        id: 6,
+        title: '책 30분 읽기',
+        category: '공부',
+        startDateKey: getDateKey(dayAfterTomorrow),
+        repeatType: 'once',
+        repeatDays: [],
+        weeklyTarget: 3,
       },
-    },
+    ],
+    records: {},
   };
 }
 
@@ -255,40 +268,21 @@ function getSavedData() {
 }
 
 export default function Home() {
-  const today = new Date();
-  const yesterday = addDays(today, -1);
-  const tomorrow = addDays(today, 1);
-
-  const dateTabs = [
-    {
-      key: getDateKey(yesterday),
-      label: '어제',
-      subLabel: formatDateLabel(yesterday),
-    },
-    {
-      key: getDateKey(today),
-      label: '오늘',
-      subLabel: formatDateLabel(today),
-    },
-    {
-      key: getDateKey(tomorrow),
-      label: '내일',
-      subLabel: formatDateLabel(tomorrow),
-    },
-  ];
+  const todayKey = getTodayDateKey();
+  const tomorrowKey = getDateKey(addDays(new Date(), 1));
 
   const initialData = getSavedData();
 
   const [goals, setGoals] = useState(initialData.goals);
   const [records, setRecords] = useState(initialData.records);
 
-  const [selectedDateKey, setSelectedDateKey] = useState(getDateKey(today));
+  const [selectedDateKey, setSelectedDateKey] = useState(todayKey);
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState(null);
 
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newGoalCategory, setNewGoalCategory] = useState('일상');
-  const [newGoalDateKey, setNewGoalDateKey] = useState(getDateKey(today));
+  const [newGoalDateKey, setNewGoalDateKey] = useState(todayKey);
   const [newRepeatType, setNewRepeatType] = useState('once');
   const [newWeeklyTarget, setNewWeeklyTarget] = useState(3);
   const [newRepeatDays, setNewRepeatDays] = useState([]);
@@ -296,7 +290,7 @@ export default function Home() {
   const [editingGoalId, setEditingGoalId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [editCategory, setEditCategory] = useState('일상');
-  const [editDateKey, setEditDateKey] = useState(getDateKey(today));
+  const [editDateKey, setEditDateKey] = useState(todayKey);
   const [editRepeatType, setEditRepeatType] = useState('once');
   const [editWeeklyTarget, setEditWeeklyTarget] = useState(3);
   const [editRepeatDays, setEditRepeatDays] = useState([]);
@@ -316,8 +310,37 @@ export default function Home() {
   }, [goals, records]);
 
   useEffect(() => {
-    setNewGoalDateKey(selectedDateKey);
-  }, [selectedDateKey]);
+    if (newGoalDateKey < todayKey) {
+      setNewGoalDateKey(todayKey);
+    }
+  }, [newGoalDateKey, todayKey]);
+
+  const availableDateTabs = useMemo(() => {
+    const futureOrTodayKeys = new Set([todayKey, tomorrowKey]);
+
+    goals.forEach((goal) => {
+      if (goal.startDateKey >= todayKey) {
+        futureOrTodayKeys.add(goal.startDateKey);
+      }
+    });
+
+    const sortedKeys = Array.from(futureOrTodayKeys).sort((a, b) =>
+      a.localeCompare(b)
+    );
+
+    return sortedKeys.map((dateKey) => ({
+      key: dateKey,
+      label: getDateTabLabel(dateKey),
+      subLabel: formatDateLabel(parseDateKey(dateKey)),
+    }));
+  }, [goals, todayKey, tomorrowKey]);
+
+  useEffect(() => {
+    const exists = availableDateTabs.some((tab) => tab.key === selectedDateKey);
+    if (!exists && availableDateTabs.length > 0) {
+      setSelectedDateKey(availableDateTabs[0].key);
+    }
+  }, [availableDateTabs, selectedDateKey]);
 
   const filteredGoals = useMemo(() => {
     return goals
@@ -342,7 +365,9 @@ export default function Home() {
   const progressPercent =
     totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
-  const selectedDateTab = dateTabs.find((tab) => tab.key === selectedDateKey);
+  const selectedDateTab = availableDateTabs.find(
+    (tab) => tab.key === selectedDateKey
+  );
 
   const xpSummary = useMemo(() => {
     const result = {
@@ -510,6 +535,16 @@ export default function Home() {
       return;
     }
 
+    if (!newGoalDateKey) {
+      alert('날짜를 선택해주세요.');
+      return;
+    }
+
+    if (newGoalDateKey < todayKey) {
+      alert('오늘 이전 날짜는 선택할 수 없어요.');
+      return;
+    }
+
     if (newRepeatType === 'weekdays' && newRepeatDays.length === 0) {
       alert('특정 요일을 하나 이상 선택해주세요.');
       return;
@@ -528,11 +563,11 @@ export default function Home() {
     setGoals((prevGoals) => [newGoal, ...prevGoals]);
     setNewGoalTitle('');
     setNewGoalCategory('일상');
-    setNewGoalDateKey(selectedDateKey);
+    setNewGoalDateKey(todayKey);
     setNewRepeatType('once');
     setNewWeeklyTarget(3);
     setNewRepeatDays([]);
-    setSelectedDateKey(newGoalDateKey);
+    setSelectedDateKey(newGoal.startDateKey);
   };
 
   const handleDeleteGoal = (goalId) => {
@@ -570,7 +605,7 @@ export default function Home() {
     setEditingGoalId(null);
     setEditTitle('');
     setEditCategory('일상');
-    setEditDateKey(getDateKey(new Date()));
+    setEditDateKey(todayKey);
     setEditRepeatType('once');
     setEditWeeklyTarget(3);
     setEditRepeatDays([]);
@@ -581,6 +616,16 @@ export default function Home() {
 
     if (!trimmedTitle) {
       alert('행동목표 이름을 입력해주세요.');
+      return;
+    }
+
+    if (!editDateKey) {
+      alert('날짜를 선택해주세요.');
+      return;
+    }
+
+    if (editDateKey < todayKey) {
+      alert('오늘 이전 날짜는 선택할 수 없어요.');
       return;
     }
 
@@ -617,11 +662,11 @@ export default function Home() {
     const defaults = makeDefaultData();
     setGoals(defaults.goals);
     setRecords(defaults.records);
-    setSelectedDateKey(getDateKey(new Date()));
+    setSelectedDateKey(todayKey);
 
     setNewGoalTitle('');
     setNewGoalCategory('일상');
-    setNewGoalDateKey(getDateKey(new Date()));
+    setNewGoalDateKey(todayKey);
     setNewRepeatType('once');
     setNewWeeklyTarget(3);
     setNewRepeatDays([]);
@@ -636,43 +681,45 @@ export default function Home() {
       <div style={styles.container}>
         <Header
           title="루트"
-          subtitle="반복 목표를 만들고 완료할 때마다 경험치와 레벨을 쌓아보세요"
+          subtitle="날짜를 고르고 반복 목표를 만들며 경험치와 레벨을 쌓아보세요"
         />
 
         <div style={styles.section}>
-          <div style={styles.dateTabs}>
-            {dateTabs.map((tab) => {
-              const active = tab.key === selectedDateKey;
+          <div style={styles.dateTabsScroll}>
+            <div style={styles.dateTabsInline}>
+              {availableDateTabs.map((tab) => {
+                const active = tab.key === selectedDateKey;
 
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setSelectedDateKey(tab.key)}
-                  style={{
-                    ...styles.dateTabButton,
-                    ...(active ? styles.dateTabButtonActive : {}),
-                  }}
-                >
-                  <div
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setSelectedDateKey(tab.key)}
                     style={{
-                      ...styles.dateTabLabel,
-                      ...(active ? styles.dateTabLabelActive : {}),
+                      ...styles.dateTabButtonWide,
+                      ...(active ? styles.dateTabButtonActive : {}),
                     }}
                   >
-                    {tab.label}
-                  </div>
-                  <div
-                    style={{
-                      ...styles.dateTabSubLabel,
-                      ...(active ? styles.dateTabSubLabelActive : {}),
-                    }}
-                  >
-                    {tab.subLabel}
-                  </div>
-                </button>
-              );
-            })}
+                    <div
+                      style={{
+                        ...styles.dateTabLabel,
+                        ...(active ? styles.dateTabLabelActive : {}),
+                      }}
+                    >
+                      {tab.label}
+                    </div>
+                    <div
+                      style={{
+                        ...styles.dateTabSubLabel,
+                        ...(active ? styles.dateTabSubLabelActive : {}),
+                      }}
+                    >
+                      {tab.subLabel}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -808,17 +855,13 @@ export default function Home() {
                 <option value="정신">정신</option>
               </select>
 
-              <select
+              <input
+                type="date"
                 value={newGoalDateKey}
+                min={todayKey}
                 onChange={(e) => setNewGoalDateKey(e.target.value)}
-                style={styles.select}
-              >
-                {dateTabs.map((tab) => (
-                  <option key={tab.key} value={tab.key}>
-                    {tab.label} ({tab.subLabel})
-                  </option>
-                ))}
-              </select>
+                style={styles.input}
+              />
             </div>
 
             <div style={styles.formRowSingle}>
@@ -905,17 +948,13 @@ export default function Home() {
                   <option value="정신">정신</option>
                 </select>
 
-                <select
+                <input
+                  type="date"
                   value={editDateKey}
+                  min={todayKey}
                   onChange={(e) => setEditDateKey(e.target.value)}
-                  style={styles.select}
-                >
-                  {dateTabs.map((tab) => (
-                    <option key={tab.key} value={tab.key}>
-                      {tab.label} ({tab.subLabel})
-                    </option>
-                  ))}
-                </select>
+                  style={styles.input}
+                />
               </div>
 
               <div style={styles.formRowSingle}>
@@ -1133,18 +1172,24 @@ const styles = {
   section: {
     marginTop: '18px',
   },
-  dateTabs: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '10px',
+  dateTabsScroll: {
+    overflowX: 'auto',
+    paddingBottom: '4px',
   },
-  dateTabButton: {
+  dateTabsInline: {
+    display: 'flex',
+    gap: '10px',
+    minWidth: 'max-content',
+  },
+  dateTabButtonWide: {
+    minWidth: '110px',
     border: '1px solid rgba(255,255,255,0.08)',
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: '18px',
-    padding: '14px 10px',
+    padding: '14px 12px',
     cursor: 'pointer',
     textAlign: 'center',
+    flexShrink: 0,
   },
   dateTabButtonActive: {
     background:
