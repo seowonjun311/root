@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import ActionGoalCard from '../components/home/ActionGoalCard';
 import PhotoConfirmModal from '../components/home/PhotoConfirmModal';
 
-const STORAGE_KEY = 'root_home_goals_v12';
+const STORAGE_KEY = 'root_home_goals_v13';
 const CATEGORY_OPTIONS = ['운동', '공부', '정신', '일상'];
 
 const XP_BY_CATEGORY = {
@@ -910,28 +910,26 @@ export default function Home() {
       <div style={styles.container}>
         <div style={styles.stickyTopWrap}>
           <div style={styles.topStatusCard}>
-            <div style={styles.topMiniDate}>
-              {formatDateLabel(parseDateKey(selectedDateKey))}
-            </div>
-            <div style={styles.topMiniTitle}>루트</div>
+            <div style={styles.topStatusRow}>
+              <div style={styles.characterCircle}>🦊</div>
 
-            <div style={styles.characterCircle}>🦊</div>
+              <div style={styles.topStatusTextWrap}>
+                <div style={styles.totalLevelText}>
+                  전체 Lv.{levelSummary.total.level} · 총 {xpSummary.total} XP
+                </div>
+                <div style={styles.totalSubText}>
+                  다음 레벨까지 {levelSummary.total.remainXp} XP
+                </div>
 
-            <div style={styles.totalLevelText}>
-              전체 Lv.{levelSummary.total.level} · 총 {xpSummary.total} XP
-            </div>
-
-            <div style={styles.totalSubText}>
-              다음 레벨까지 {levelSummary.total.remainXp} XP
-            </div>
-
-            <div style={styles.levelBarBackground}>
-              <div
-                style={{
-                  ...styles.levelBarFill,
-                  width: `${levelSummary.total.progressPercent}%`,
-                }}
-              />
+                <div style={styles.levelBarBackground}>
+                  <div
+                    style={{
+                      ...styles.levelBarFill,
+                      width: `${levelSummary.total.progressPercent}%`,
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -959,21 +957,15 @@ export default function Home() {
                   >
                     {category}
                   </div>
+
                   <div
                     style={{
-                      ...styles.categorySubLabel,
-                      ...(active ? styles.categorySubLabelActive : {}),
+                      ...styles.categoryMetaRow,
+                      ...(active ? styles.categoryMetaRowActive : {}),
                     }}
                   >
-                    Lv.{categoryLevel.level}
-                  </div>
-                  <div
-                    style={{
-                      ...styles.categoryXpLabel,
-                      ...(active ? styles.categoryXpLabelActive : {}),
-                    }}
-                  >
-                    {categoryXp} XP
+                    <span>Lv.{categoryLevel.level}</span>
+                    <span>{categoryXp}XP</span>
                   </div>
                 </button>
               );
@@ -1486,7 +1478,7 @@ export default function Home() {
 
 const styles = {
   page: {
-    minHeight: '100vh',
+    minHeight: '100%',
     background: 'linear-gradient(180deg, #140f1d 0%, #1b1430 45%, #221938 100%)',
     paddingBottom: '120px',
   },
@@ -1494,18 +1486,18 @@ const styles = {
     width: '100%',
     maxWidth: '720px',
     margin: '0 auto',
-    padding: '20px 16px 32px',
+    padding: '12px 16px 32px',
     boxSizing: 'border-box',
   },
   section: {
-    marginTop: '18px',
+    marginTop: '16px',
   },
   stickyTopWrap: {
     position: 'sticky',
     top: 0,
     zIndex: 1000,
-    paddingTop: '6px',
-    paddingBottom: '12px',
+    paddingTop: '10px',
+    paddingBottom: '10px',
     background: 'linear-gradient(180deg, rgba(20,15,29,0.96) 0%, rgba(27,20,48,0.96) 100%)',
     backdropFilter: 'blur(12px)',
     borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -1513,55 +1505,50 @@ const styles = {
   topStatusCard: {
     background: 'linear-gradient(180deg, #2a1b41 0%, #201632 100%)',
     border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: '24px',
-    padding: '18px',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+    borderRadius: '20px',
+    padding: '14px',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.18)',
   },
-  topMiniDate: {
-    color: '#cbd5e1',
-    fontSize: '13px',
-    fontWeight: 700,
-    textAlign: 'center',
-    marginBottom: '6px',
-  },
-  topMiniTitle: {
-    color: '#ffffff',
-    fontSize: '28px',
-    fontWeight: 900,
-    textAlign: 'center',
-    marginBottom: '12px',
+  topStatusRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
   },
   characterCircle: {
-    width: '64px',
-    height: '64px',
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, rgba(139,92,246,0.32), rgba(236,72,153,0.24))',
+    width: '52px',
+    height: '52px',
+    borderRadius: '16px',
+    background: 'linear-gradient(135deg, rgba(139,92,246,0.34), rgba(236,72,153,0.26))',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '30px',
-    margin: '0 auto 10px',
+    fontSize: '26px',
     border: '1px solid rgba(255,255,255,0.08)',
+    flexShrink: 0,
+  },
+  topStatusTextWrap: {
+    flex: 1,
+    minWidth: 0,
   },
   totalLevelText: {
     color: '#ffffff',
-    fontSize: '20px',
+    fontSize: '18px',
     fontWeight: 800,
-    textAlign: 'center',
+    lineHeight: 1.3,
   },
   totalSubText: {
     color: '#d1d5db',
     fontSize: '12px',
-    textAlign: 'center',
-    marginTop: '8px',
+    marginTop: '4px',
+    lineHeight: 1.4,
   },
   levelBarBackground: {
     width: '100%',
-    height: '10px',
+    height: '8px',
     borderRadius: '999px',
     backgroundColor: 'rgba(255,255,255,0.08)',
     overflow: 'hidden',
-    marginTop: '12px',
+    marginTop: '10px',
   },
   levelBarFill: {
     height: '100%',
@@ -1572,53 +1559,50 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: 'repeat(4, 1fr)',
     gap: '8px',
-    marginTop: '12px',
+    marginTop: '10px',
   },
   categoryTabButton: {
-    minHeight: '82px',
-    borderRadius: '18px',
+    minHeight: '64px',
+    borderRadius: '16px',
     border: '1px solid rgba(255,255,255,0.08)',
     backgroundColor: 'rgba(255,255,255,0.04)',
     color: '#cbd5e1',
-    padding: '10px 6px',
+    padding: '8px 6px',
     cursor: 'pointer',
   },
   categoryTabButtonActive: {
     background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
     color: '#ffffff',
     border: 'none',
-    boxShadow: '0 8px 20px rgba(139,92,246,0.28)',
+    boxShadow: '0 8px 18px rgba(139,92,246,0.24)',
   },
   categoryMainLabel: {
-    fontSize: '16px',
+    fontSize: '14px',
     fontWeight: 800,
     color: '#ffffff',
+    textAlign: 'center',
   },
   categoryMainLabelActive: {
     color: '#ffffff',
   },
-  categorySubLabel: {
+  categoryMetaRow: {
     marginTop: '8px',
-    fontSize: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    flexWrap: 'wrap',
+    fontSize: '11px',
     fontWeight: 700,
     color: '#d8b4fe',
   },
-  categorySubLabelActive: {
-    color: '#ffffff',
-  },
-  categoryXpLabel: {
-    marginTop: '4px',
-    fontSize: '12px',
-    fontWeight: 700,
-    color: '#cbd5e1',
-  },
-  categoryXpLabelActive: {
+  categoryMetaRowActive: {
     color: '#ffffff',
   },
   datePickerButton: {
     width: '100%',
-    minHeight: '52px',
-    borderRadius: '18px',
+    minHeight: '48px',
+    borderRadius: '16px',
     border: '1px solid rgba(255,255,255,0.08)',
     backgroundColor: 'rgba(255,255,255,0.05)',
     color: '#ffffff',
@@ -1635,7 +1619,7 @@ const styles = {
     fontSize: '18px',
   },
   sectionHeader: {
-    marginTop: '26px',
+    marginTop: '24px',
     marginBottom: '14px',
     display: 'flex',
     alignItems: 'center',
