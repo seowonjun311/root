@@ -4,7 +4,7 @@ import GoalProgress from '../components/home/GoalProgress';
 import ActionGoalCard from '../components/home/ActionGoalCard';
 import PhotoConfirmModal from '../components/home/PhotoConfirmModal';
 
-const STORAGE_KEY = 'root_home_goals_v8';
+const STORAGE_KEY = 'root_home_goals_v9';
 
 const XP_BY_CATEGORY = {
   운동: 12,
@@ -111,14 +111,31 @@ function getRepeatLabel(goal) {
   return '1회성';
 }
 
-function isGoalActiveOnDate(goal, dateKey) {
+function normalizeGoal(goal) {
+  return {
+    ...goal,
+    endDateKey: goal.endDateKey || goal.startDateKey,
+    repeatDays: goal.repeatDays || [],
+    weeklyTarget: goal.weeklyTarget || 3,
+  };
+}
+
+function isGoalActiveOnDate(goalInput, dateKey) {
+  const goal = normalizeGoal(goalInput);
+
   const targetDate = parseDateKey(dateKey);
   const startDate = parseDateKey(goal.startDateKey);
+  const endDate = parseDateKey(goal.endDateKey);
 
   targetDate.setHours(0, 0, 0, 0);
   startDate.setHours(0, 0, 0, 0);
+  endDate.setHours(0, 0, 0, 0);
 
   if (targetDate < startDate) {
+    return false;
+  }
+
+  if (targetDate > endDate) {
     return false;
   }
 
@@ -176,10 +193,175 @@ function getLevelFromXp(xp) {
   };
 }
 
+function getDateKeysInRange(startKey, endKey) {
+  if (!startKey || !endKey || endKey < startKey) return [];
+
+  const result = [];
+  let cursor = parseDateKey(startKey);
+  const end = parseDateKey(endKey);
+
+  cursor.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+
+  while (getDateKey(cursor) <= getDateKey(end)) {
+    result.push(getDateKey(cursor));
+    cursor = addDays(cursor, 1);
+  }
+
+  return result;
+}
+
+function getWeekStartKeysInRange(startKey, endKey) {
+  const dates = getDateKeysInRange(startKey, endKey);
+  const set = new Set();
+
+  dates.forEach((dateKey) => {
+    const weekStart = getWeekStartDate(parseDateKey(dateKey));
+    set.add(getDateKey(weekStart));
+  });
+
+  return Array.from(set);
+}
+
+function countRequiredInRange(goalInput, startKey, endKey) {
+  const goal = normalizeGoal(goalInput);
+
+  if (!startKey || !endKey || endKey < startKey) return 0;
+
+  if (goal.repeatType === 'once') {
+    return 1;
+  }
+
+  if (goal.repeatType === 'daily') {
+    return getDateKeysInRange(startKey, endKey).length;
+  }
+
+  if (goal.repeatType === 'weekdays') {
+    return getDateKeysInRange(startKey, endKey).filter((dateKey) => {
+      const day = parseDateKey(dateKey).getDay();
+      return (goal.repeatDays || []).includes(day);
+    }).length;
+  }
+
+  if (goal.repeatType === 'weeklyCount') {
+    const weekStartKeys = getWeekStartKeysInRange(startKey, endKey);
+    return weekStartKeys.length * (goal.weeklyTarget || 3);
+  }
+
+  return 0;
+}
+
+function countDoneInRange(goalInput, startKey, endKey, records) {
+  const goal = normalizeGoal(goalInput);
+
+  if (!startKey || !endKey || endKey < startKey) return 0;
+
+  if (goal.repeatType === 'once') {
+    const keys = getDateKeysInRange(startKey, endKey);
+    const found = keys.some((dateKey) => records[makeRecordKey(goal.id, dateKey)]?.done);
+    return found ? 1 : 0;
+  }
+
+  if (goal.repeatType === 'daily' || goal.repeatType === 'weekdays') {
+    return getDateKeysInRange(startKey, endKey).filter((dateKey) => {
+      if (!isGoalActiveOnDate(goal, dateKey)) return false;
+      return records[makeRecordKey(goal.id, dateKey)]?.done;
+    }).length;
+  }
+
+  if (goal.repeatType === 'weeklyCount') {
+    const weekStartKeys = getWeekStartKeysInRange(startKey, endKey);
+
+    return weekStartKeys.reduce((sum, weekStartKey) => {
+      let weeklyCount = 0;
+      const weekStart = parseDateKey(weekStartKey);
+
+      for (let i = 0; i < 7; i += 1) {
+        const current = addDays(weekStart, i);
+        const currentKey = getDateKey(current);
+
+        if (currentKey < startKey || currentKey > endKey) continue;
+
+        if (records[makeRecordKey(goal.id, currentKey)]?.done) {
+          weeklyCount += 1;
+        }
+      }
+
+      return sum + Math.min(weeklyCount, goal.weeklyTarget || 3);
+    }, 0);
+  }
+
+  return 0;
+}
+
+function getGoalPeriodMeta(goalInput, records) {
+  const goal = normalizeGoal(goalInput);
+  const todayKey = getTodayDateKey();
+
+  const progressEndKey = todayKey > goal.endDateKey ? goal.endDateKey : todayKey;
+
+  const doneForProgress =
+    progressEndKey < goal.startDateKey
+      ? 0
+      : countDoneInRange(goal, goal.startDateKey, progressEndKey, records);
+
+  const requiredForProgress =
+    progressEndKey < goal.startDateKey
+      ? 0
+      : countRequiredInRange(goal, goal.startDateKey, progressEndKey);
+
+  const progressPercent =
+    requiredForProgress === 0
+      ? 0
+      : Math.min(100, Math.round((doneForProgress / requiredForProgress) * 100));
+
+  const totalDone = countDoneInRange(goal, goal.startDateKey, goal.endDateKey, records);
+  const totalRequired = countRequiredInRange(goal, goal.startDateKey, goal.endDateKey);
+  const finalPercent =
+    totalRequired === 0
+      ? 0
+      : Math.min(100, Math.round((totalDone / totalRequired) * 100));
+
+  if (todayKey < goal.startDateKey) {
+    return {
+      status: 'before',
+      statusLabel: '시작 전',
+      progressPercent: 0,
+      progressText: '아직 시작 전',
+      finalPercent,
+      finalText: `${totalDone}/${totalRequired}`,
+    };
+  }
+
+  if (todayKey > goal.endDateKey) {
+    const success = finalPercent >= 100;
+
+    return {
+      status: success ? 'success' : 'fail',
+      statusLabel: success ? '성공' : '실패',
+      progressPercent: 100,
+      progressText: `종료됨 · 최종 ${finalPercent}%`,
+      finalPercent,
+      finalText: `${totalDone}/${totalRequired}`,
+    };
+  }
+
+  return {
+    status: 'ongoing',
+    statusLabel: '진행 중',
+    progressPercent,
+    progressText: `${doneForProgress}/${requiredForProgress}`,
+    finalPercent,
+    finalText: `${totalDone}/${totalRequired}`,
+  };
+}
+
 function makeDefaultData() {
   const today = new Date();
   const tomorrow = addDays(today, 1);
   const dayAfterTomorrow = addDays(today, 2);
+  const oneWeekLater = addDays(today, 6);
+  const twoWeeksLater = addDays(today, 13);
 
   return {
     goals: [
@@ -188,6 +370,7 @@ function makeDefaultData() {
         title: '물 2L 마시기',
         category: '일상',
         startDateKey: getDateKey(today),
+        endDateKey: getDateKey(oneWeekLater),
         repeatType: 'daily',
         repeatDays: [],
         weeklyTarget: 3,
@@ -197,6 +380,7 @@ function makeDefaultData() {
         title: '30분 걷기',
         category: '운동',
         startDateKey: getDateKey(today),
+        endDateKey: getDateKey(twoWeeksLater),
         repeatType: 'weeklyCount',
         repeatDays: [],
         weeklyTarget: 3,
@@ -206,6 +390,7 @@ function makeDefaultData() {
         title: '영어 단어 20개 외우기',
         category: '공부',
         startDateKey: getDateKey(today),
+        endDateKey: getDateKey(today),
         repeatType: 'once',
         repeatDays: [],
         weeklyTarget: 3,
@@ -215,6 +400,7 @@ function makeDefaultData() {
         title: '명상 10분',
         category: '정신',
         startDateKey: getDateKey(today),
+        endDateKey: getDateKey(oneWeekLater),
         repeatType: 'weekdays',
         repeatDays: [1, 3, 5],
         weeklyTarget: 3,
@@ -224,6 +410,7 @@ function makeDefaultData() {
         title: '팔굽혀펴기 20회',
         category: '운동',
         startDateKey: getDateKey(tomorrow),
+        endDateKey: getDateKey(tomorrow),
         repeatType: 'once',
         repeatDays: [],
         weeklyTarget: 3,
@@ -233,7 +420,8 @@ function makeDefaultData() {
         title: '책 30분 읽기',
         category: '공부',
         startDateKey: getDateKey(dayAfterTomorrow),
-        repeatType: 'once',
+        endDateKey: getDateKey(addDays(dayAfterTomorrow, 6)),
+        repeatType: 'daily',
         repeatDays: [],
         weeklyTarget: 3,
       },
@@ -260,7 +448,10 @@ function getSavedData() {
       return makeDefaultData();
     }
 
-    return parsed;
+    return {
+      goals: parsed.goals.map((goal) => normalizeGoal(goal)),
+      records: parsed.records,
+    };
   } catch (error) {
     console.error('localStorage 불러오기 실패:', error);
     return makeDefaultData();
@@ -283,6 +474,7 @@ export default function Home() {
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newGoalCategory, setNewGoalCategory] = useState('일상');
   const [newGoalDateKey, setNewGoalDateKey] = useState(todayKey);
+  const [newGoalEndDateKey, setNewGoalEndDateKey] = useState(todayKey);
   const [newRepeatType, setNewRepeatType] = useState('once');
   const [newWeeklyTarget, setNewWeeklyTarget] = useState(3);
   const [newRepeatDays, setNewRepeatDays] = useState([]);
@@ -291,6 +483,7 @@ export default function Home() {
   const [editTitle, setEditTitle] = useState('');
   const [editCategory, setEditCategory] = useState('일상');
   const [editDateKey, setEditDateKey] = useState(todayKey);
+  const [editEndDateKey, setEditEndDateKey] = useState(todayKey);
   const [editRepeatType, setEditRepeatType] = useState('once');
   const [editWeeklyTarget, setEditWeeklyTarget] = useState(3);
   const [editRepeatDays, setEditRepeatDays] = useState([]);
@@ -315,18 +508,36 @@ export default function Home() {
     }
   }, [newGoalDateKey, todayKey]);
 
-  const availableDateTabs = useMemo(() => {
-    const futureOrTodayKeys = new Set([todayKey, tomorrowKey]);
+  useEffect(() => {
+    if (newGoalEndDateKey < newGoalDateKey) {
+      setNewGoalEndDateKey(newGoalDateKey);
+    }
+  }, [newGoalDateKey, newGoalEndDateKey]);
 
-    goals.forEach((goal) => {
-      if (goal.startDateKey >= todayKey) {
-        futureOrTodayKeys.add(goal.startDateKey);
-      }
+  useEffect(() => {
+    if (editEndDateKey < editDateKey) {
+      setEditEndDateKey(editDateKey);
+    }
+  }, [editDateKey, editEndDateKey]);
+
+  const availableDateTabs = useMemo(() => {
+    const keys = new Set([todayKey, tomorrowKey]);
+
+    goals.forEach((goalInput) => {
+      const goal = normalizeGoal(goalInput);
+      const startKey = goal.startDateKey < todayKey ? todayKey : goal.startDateKey;
+      const endKey = goal.endDateKey;
+
+      if (endKey < todayKey) return;
+
+      getDateKeysInRange(startKey, endKey).forEach((dateKey) => {
+        if (isGoalActiveOnDate(goal, dateKey)) {
+          keys.add(dateKey);
+        }
+      });
     });
 
-    const sortedKeys = Array.from(futureOrTodayKeys).sort((a, b) =>
-      a.localeCompare(b)
-    );
+    const sortedKeys = Array.from(keys).sort((a, b) => a.localeCompare(b));
 
     return sortedKeys.map((dateKey) => ({
       key: dateKey,
@@ -344,17 +555,37 @@ export default function Home() {
 
   const filteredGoals = useMemo(() => {
     return goals
+      .map((goal) => normalizeGoal(goal))
       .filter((goal) => isGoalActiveOnDate(goal, selectedDateKey))
       .map((goal) => {
         const record = records[makeRecordKey(goal.id, selectedDateKey)];
+        const periodMeta = getGoalPeriodMeta(goal, records);
 
         return {
           ...goal,
           done: record?.done || false,
           photo: record?.photo || null,
+          periodMeta,
         };
       });
   }, [goals, records, selectedDateKey]);
+
+  const endedGoals = useMemo(() => {
+    return goals
+      .map((goal) => {
+        const normalized = normalizeGoal(goal);
+        return {
+          ...normalized,
+          periodMeta: getGoalPeriodMeta(normalized, records),
+        };
+      })
+      .filter(
+        (goal) =>
+          goal.periodMeta.status === 'success' ||
+          goal.periodMeta.status === 'fail'
+      )
+      .sort((a, b) => (b.endDateKey || '').localeCompare(a.endDateKey || ''));
+  }, [goals, records]);
 
   const selectedGoal = useMemo(() => {
     return filteredGoals.find((goal) => goal.id === selectedGoalId) || null;
@@ -415,6 +646,10 @@ export default function Home() {
   }, [filteredGoals]);
 
   const handleGoalClick = (goal) => {
+    if (goal.periodMeta.status !== 'ongoing') {
+      return;
+    }
+
     if (goal.repeatType === 'weeklyCount' && !goal.done) {
       const weeklyDoneCount = countWeeklyDoneForGoal(
         goal.id,
@@ -446,17 +681,26 @@ export default function Home() {
         return;
       }
 
+      const normalizedGoal = normalizeGoal(goal);
+      const periodMeta = getGoalPeriodMeta(normalizedGoal, records);
+
+      if (periodMeta.status !== 'ongoing') {
+        alert('이 목표는 현재 기록할 수 없는 상태예요.');
+        handleCloseModal();
+        return;
+      }
+
       const currentRecord = records[makeRecordKey(selectedGoalId, selectedDateKey)];
 
-      if (goal.repeatType === 'weeklyCount' && !currentRecord?.done) {
+      if (normalizedGoal.repeatType === 'weeklyCount' && !currentRecord?.done) {
         const weeklyDoneCount = countWeeklyDoneForGoal(
-          goal.id,
+          normalizedGoal.id,
           selectedDateKey,
           records
         );
 
-        if (weeklyDoneCount >= goal.weeklyTarget) {
-          alert(`이 목표는 이번 주 ${goal.weeklyTarget}회를 이미 완료했어요.`);
+        if (weeklyDoneCount >= normalizedGoal.weeklyTarget) {
+          alert(`이 목표는 이번 주 ${normalizedGoal.weeklyTarget}회를 이미 완료했어요.`);
           handleCloseModal();
           return;
         }
@@ -489,15 +733,23 @@ export default function Home() {
     const goal = goals.find((item) => item.id === goalId);
     if (!goal) return;
 
+    const normalizedGoal = normalizeGoal(goal);
+    const periodMeta = getGoalPeriodMeta(normalizedGoal, records);
+
+    if (periodMeta.status !== 'ongoing') {
+      alert('이 목표는 현재 체크할 수 없는 상태예요.');
+      return;
+    }
+
     const recordKey = makeRecordKey(goalId, selectedDateKey);
     const currentRecord = records[recordKey];
     const nextDone = !currentRecord?.done;
 
-    if (goal.repeatType === 'weeklyCount' && nextDone) {
+    if (normalizedGoal.repeatType === 'weeklyCount' && nextDone) {
       const weeklyDoneCount = countWeeklyDoneForGoal(goalId, selectedDateKey, records);
 
-      if (weeklyDoneCount >= goal.weeklyTarget) {
-        alert(`이 목표는 이번 주 ${goal.weeklyTarget}회를 이미 완료했어요.`);
+      if (weeklyDoneCount >= normalizedGoal.weeklyTarget) {
+        alert(`이 목표는 이번 주 ${normalizedGoal.weeklyTarget}회를 이미 완료했어요.`);
         return;
       }
     }
@@ -536,12 +788,22 @@ export default function Home() {
     }
 
     if (!newGoalDateKey) {
-      alert('날짜를 선택해주세요.');
+      alert('시작일을 선택해주세요.');
+      return;
+    }
+
+    if (!newGoalEndDateKey) {
+      alert('종료일을 선택해주세요.');
       return;
     }
 
     if (newGoalDateKey < todayKey) {
       alert('오늘 이전 날짜는 선택할 수 없어요.');
+      return;
+    }
+
+    if (newGoalEndDateKey < newGoalDateKey) {
+      alert('종료일은 시작일보다 빠를 수 없어요.');
       return;
     }
 
@@ -555,6 +817,7 @@ export default function Home() {
       title: trimmedTitle,
       category: newGoalCategory,
       startDateKey: newGoalDateKey,
+      endDateKey: newGoalEndDateKey,
       repeatType: newRepeatType,
       repeatDays: newRepeatType === 'weekdays' ? newRepeatDays : [],
       weeklyTarget: newRepeatType === 'weeklyCount' ? Number(newWeeklyTarget) : 3,
@@ -564,6 +827,7 @@ export default function Home() {
     setNewGoalTitle('');
     setNewGoalCategory('일상');
     setNewGoalDateKey(todayKey);
+    setNewGoalEndDateKey(todayKey);
     setNewRepeatType('once');
     setNewWeeklyTarget(3);
     setNewRepeatDays([]);
@@ -591,11 +855,13 @@ export default function Home() {
     }
   };
 
-  const handleStartEdit = (goal) => {
+  const handleStartEdit = (goalInput) => {
+    const goal = normalizeGoal(goalInput);
     setEditingGoalId(goal.id);
     setEditTitle(goal.title);
     setEditCategory(goal.category);
     setEditDateKey(goal.startDateKey);
+    setEditEndDateKey(goal.endDateKey);
     setEditRepeatType(goal.repeatType);
     setEditWeeklyTarget(goal.weeklyTarget || 3);
     setEditRepeatDays(goal.repeatDays || []);
@@ -606,6 +872,7 @@ export default function Home() {
     setEditTitle('');
     setEditCategory('일상');
     setEditDateKey(todayKey);
+    setEditEndDateKey(todayKey);
     setEditRepeatType('once');
     setEditWeeklyTarget(3);
     setEditRepeatDays([]);
@@ -620,12 +887,22 @@ export default function Home() {
     }
 
     if (!editDateKey) {
-      alert('날짜를 선택해주세요.');
+      alert('시작일을 선택해주세요.');
+      return;
+    }
+
+    if (!editEndDateKey) {
+      alert('종료일을 선택해주세요.');
       return;
     }
 
     if (editDateKey < todayKey) {
       alert('오늘 이전 날짜는 선택할 수 없어요.');
+      return;
+    }
+
+    if (editEndDateKey < editDateKey) {
+      alert('종료일은 시작일보다 빠를 수 없어요.');
       return;
     }
 
@@ -642,6 +919,7 @@ export default function Home() {
               title: trimmedTitle,
               category: editCategory,
               startDateKey: editDateKey,
+              endDateKey: editEndDateKey,
               repeatType: editRepeatType,
               repeatDays: editRepeatType === 'weekdays' ? editRepeatDays : [],
               weeklyTarget:
@@ -667,6 +945,7 @@ export default function Home() {
     setNewGoalTitle('');
     setNewGoalCategory('일상');
     setNewGoalDateKey(todayKey);
+    setNewGoalEndDateKey(todayKey);
     setNewRepeatType('once');
     setNewWeeklyTarget(3);
     setNewRepeatDays([]);
@@ -864,7 +1143,15 @@ export default function Home() {
               />
             </div>
 
-            <div style={styles.formRowSingle}>
+            <div style={styles.formRow}>
+              <input
+                type="date"
+                value={newGoalEndDateKey}
+                min={newGoalDateKey}
+                onChange={(e) => setNewGoalEndDateKey(e.target.value)}
+                style={styles.input}
+              />
+
               <select
                 value={newRepeatType}
                 onChange={(e) => setNewRepeatType(e.target.value)}
@@ -957,7 +1244,15 @@ export default function Home() {
                 />
               </div>
 
-              <div style={styles.formRowSingle}>
+              <div style={styles.formRow}>
+                <input
+                  type="date"
+                  value={editEndDateKey}
+                  min={editDateKey}
+                  onChange={(e) => setEditEndDateKey(e.target.value)}
+                  style={styles.input}
+                />
+
                 <select
                   value={editRepeatType}
                   onChange={(e) => setEditRepeatType(e.target.value)}
@@ -1090,6 +1385,25 @@ export default function Home() {
                   <div style={styles.repeatInfoRow}>
                     <div style={styles.repeatBadge}>{getRepeatLabel(goal)}</div>
 
+                    <div style={styles.periodBadge}>
+                      기간 {goal.startDateKey} ~ {goal.endDateKey}
+                    </div>
+
+                    <div
+                      style={{
+                        ...styles.statusBadge,
+                        ...(goal.periodMeta.status === 'success'
+                          ? styles.statusBadgeSuccess
+                          : goal.periodMeta.status === 'fail'
+                          ? styles.statusBadgeFail
+                          : goal.periodMeta.status === 'before'
+                          ? styles.statusBadgeBefore
+                          : styles.statusBadgeOngoing),
+                      }}
+                    >
+                      {goal.periodMeta.statusLabel}
+                    </div>
+
                     {goal.repeatType === 'weeklyCount' && (
                       <div style={styles.repeatSubInfo}>
                         {weeklyDoneCount >= goal.weeklyTarget
@@ -1101,6 +1415,29 @@ export default function Home() {
                     {goal.done && (
                       <div style={styles.xpEarnedBadge}>+{gainedXp} XP</div>
                     )}
+                  </div>
+
+                  <div style={styles.progressInfoBox}>
+                    <div style={styles.progressInfoTop}>
+                      <span>기간 진행률</span>
+                      <strong>{goal.periodMeta.progressPercent}%</strong>
+                    </div>
+
+                    <div style={styles.levelBarBackground}>
+                      <div
+                        style={{
+                          ...styles.levelBarFill,
+                          width: `${goal.periodMeta.progressPercent}%`,
+                        }}
+                      />
+                    </div>
+
+                    <div style={styles.progressInfoText}>
+                      진행 계산: {goal.periodMeta.progressText}
+                    </div>
+                    <div style={styles.progressInfoText}>
+                      최종 판정 기준: {goal.periodMeta.finalText}
+                    </div>
                   </div>
 
                   <div style={styles.goalRow}>
@@ -1138,6 +1475,49 @@ export default function Home() {
             })
           )}
         </div>
+
+        {endedGoals.length > 0 && (
+          <>
+            <div style={styles.sectionHeader}>
+              <div>
+                <h2 style={styles.sectionTitle}>종료된 목표 판정</h2>
+                <div style={styles.sectionSubText}>
+                  기간이 끝난 목표의 성공 / 실패 결과예요
+                </div>
+              </div>
+            </div>
+
+            <div style={styles.goalList}>
+              {endedGoals.map((goal) => (
+                <div key={`ended-${goal.id}`} style={styles.endedGoalCard}>
+                  <div style={styles.endedGoalTop}>
+                    <div>
+                      <div style={styles.endedGoalTitle}>{goal.title}</div>
+                      <div style={styles.endedGoalSub}>
+                        {goal.category} · {goal.startDateKey} ~ {goal.endDateKey}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        ...styles.statusBadge,
+                        ...(goal.periodMeta.status === 'success'
+                          ? styles.statusBadgeSuccess
+                          : styles.statusBadgeFail),
+                      }}
+                    >
+                      {goal.periodMeta.statusLabel}
+                    </div>
+                  </div>
+
+                  <div style={styles.progressInfoText}>
+                    최종 달성률: {goal.periodMeta.finalPercent}% ({goal.periodMeta.finalText})
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <PhotoConfirmModal
@@ -1506,6 +1886,36 @@ const styles = {
     fontSize: '12px',
     fontWeight: 700,
   },
+  periodBadge: {
+    padding: '6px 10px',
+    borderRadius: '999px',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    color: '#cbd5e1',
+    fontSize: '12px',
+    fontWeight: 700,
+  },
+  statusBadge: {
+    padding: '6px 10px',
+    borderRadius: '999px',
+    fontSize: '12px',
+    fontWeight: 800,
+  },
+  statusBadgeOngoing: {
+    backgroundColor: 'rgba(59,130,246,0.18)',
+    color: '#93c5fd',
+  },
+  statusBadgeBefore: {
+    backgroundColor: 'rgba(148,163,184,0.18)',
+    color: '#cbd5e1',
+  },
+  statusBadgeSuccess: {
+    backgroundColor: 'rgba(16,185,129,0.18)',
+    color: '#86efac',
+  },
+  statusBadgeFail: {
+    backgroundColor: 'rgba(239,68,68,0.18)',
+    color: '#fca5a5',
+  },
   repeatSubInfo: {
     color: '#cbd5e1',
     fontSize: '12px',
@@ -1518,6 +1928,29 @@ const styles = {
     color: '#86efac',
     fontSize: '12px',
     fontWeight: 800,
+  },
+  progressInfoBox: {
+    marginBottom: '10px',
+    borderRadius: '16px',
+    padding: '12px',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.06)',
+  },
+  progressInfoTop: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px',
+    color: '#ffffff',
+    fontSize: '13px',
+    fontWeight: 700,
+    marginBottom: '8px',
+  },
+  progressInfoText: {
+    marginTop: '8px',
+    color: '#cbd5e1',
+    fontSize: '12px',
+    lineHeight: 1.5,
   },
   goalRow: {
     display: 'grid',
@@ -1576,5 +2009,29 @@ const styles = {
     color: '#cbd5e1',
     fontSize: '13px',
     lineHeight: 1.5,
+  },
+  endedGoalCard: {
+    borderRadius: '20px',
+    padding: '16px',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+  },
+  endedGoalTop: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: '12px',
+    marginBottom: '8px',
+  },
+  endedGoalTitle: {
+    color: '#ffffff',
+    fontSize: '16px',
+    fontWeight: 800,
+  },
+  endedGoalSub: {
+    marginTop: '6px',
+    color: '#cbd5e1',
+    fontSize: '12px',
+    fontWeight: 600,
   },
 };
