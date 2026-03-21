@@ -63,8 +63,7 @@ export default function Home() {
       return [];
     }
   });
-
-  const [isPulling, setIsPulling] = React.useState(false);
+  const [isPulling, setIsPulling] = useState(false);
 
   const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: ['me'],
@@ -95,7 +94,6 @@ export default function Home() {
 
     if (user) {
       if (!user.onboarding_complete) {
-        queryClient.invalidateQueries({ queryKey: ['me'] });
         navigate('/Onboarding');
         return;
       }
@@ -104,7 +102,9 @@ export default function Home() {
         setActiveCategory(user.active_category);
       }
     } else {
-      const guestOnboardingComplete = localStorage.getItem('guest_onboarding_complete') === 'true';
+      const guestOnboardingComplete =
+        localStorage.getItem('guest_onboarding_complete') === 'true';
+
       if (!guestOnboardingComplete) {
         navigate('/Onboarding');
         return;
@@ -115,7 +115,7 @@ export default function Home() {
         setActiveCategory(guestCat);
       }
     }
-  }, [isUserLoading, user, activeCategory, navigate, queryClient]);
+  }, [isUserLoading, user, activeCategory, navigate]);
 
   const { data: goals = [] } = useQuery({
     queryKey: goalsKey,
@@ -198,15 +198,25 @@ export default function Home() {
     const { actionGoal, minutes, gpsData } = pendingLog;
     const todayStr = toLocalDateString(new Date());
 
-    const newLogs = [...allLogs, { action_goal_id: actionGoal.id, date: todayStr, completed: true }];
+    const newLogs = [
+      ...allLogs,
+      {
+        action_goal_id: actionGoal.id,
+        date: todayStr,
+        completed: true,
+      },
+    ];
+
     const streak = computeStreak(actionGoal.id, newLogs);
     const streakTrigger = getStreakTrigger(streak);
 
     const thisWeekLogs = newLogs.filter(
       (l) => l.action_goal_id === actionGoal.id && l.date >= weekStartStr
     );
+
     const target = actionGoal.weekly_frequency || 7;
-    const weeklyComplete = thisWeekLogs.length >= target && thisWeekLogs.length - 1 < target;
+    const weeklyComplete =
+      thisWeekLogs.length >= target && thisWeekLogs.length - 1 < target;
 
     const logData = {
       action_goal_id: actionGoal.id,
@@ -335,7 +345,10 @@ export default function Home() {
 
       {activeGoal ? (
         <div className="space-y-3">
-          <GoalProgress goal={activeGoal} logs={allLogs.filter((l) => l.goal_id === activeGoal.id)} />
+          <GoalProgress
+            goal={activeGoal}
+            logs={allLogs.filter((l) => l.goal_id === activeGoal.id)}
+          />
 
           <WeekDays logs={allLogs.filter((l) => l.category === activeCategory)} />
 
