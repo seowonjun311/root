@@ -55,7 +55,13 @@ function getLevel(category, userLevels = {}) {
 export default function CategoryTabs({ active = 'exercise', onChange, userLevels = {} }) {
   return (
     <div className="px-4 pb-3">
-      <div className="grid grid-cols-2 gap-2">
+      <div
+        className="flex gap-2 overflow-x-auto pb-1"
+        style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+        }}
+      >
         {CATEGORY_ORDER.map((category) => {
           const config = CATEGORY_CONFIG[category];
           const Icon = config.icon;
@@ -81,8 +87,10 @@ export default function CategoryTabs({ active = 'exercise', onChange, userLevels
                   : { y: 0, boxShadow: '0 5px 12px rgba(60, 35, 10, 0.08)' }
               }
               transition={{ duration: 0.2 }}
-              className="relative overflow-hidden rounded-2xl p-3 text-left"
+              className="relative overflow-hidden rounded-2xl p-3 text-left shrink-0"
               style={{
+                width: '152px',
+                minWidth: '152px',
                 background: isActive ? config.selectedBg : config.bg,
                 border: `1.5px solid ${isActive ? config.selectedBorder : config.border}`,
               }}
@@ -111,7 +119,7 @@ export default function CategoryTabs({ active = 'exercise', onChange, userLevels
                       {config.label}
                     </div>
 
-                    <div className="mt-2 flex items-end gap-1">
+                    <div className="mt-2">
                       <span
                         className="text-lg font-extrabold leading-none"
                         style={{ color: isActive ? '#3d2408' : '#4b2f14' }}
@@ -130,7 +138,7 @@ export default function CategoryTabs({ active = 'exercise', onChange, userLevels
                         border: '1px solid rgba(90,54,16,0.10)',
                       }}
                     >
-                      선택됨
+                      선택
                     </div>
                   )}
                 </div>
