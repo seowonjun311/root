@@ -170,7 +170,8 @@ export default function CharacterBanner({
               className="absolute left-[6%] right-[12%] bottom-0 h-14 rounded-[999px]"
               style={{
                 background: theme.road,
-                clipPath: 'polygon(0% 100%, 16% 60%, 28% 52%, 48% 42%, 66% 28%, 100% 0%, 100% 100%)',
+                clipPath:
+                  'polygon(0% 100%, 16% 60%, 28% 52%, 48% 42%, 66% 28%, 100% 0%, 100% 100%)',
                 opacity: 0.95,
               }}
             />
