@@ -4,7 +4,7 @@ import GoalProgress from '../components/GoalProgress';
 import ActionGoalCard from '../components/ActionGoalCard';
 import PhotoConfirmModal from '../components/PhotoConfirmModal';
 
-const STORAGE_KEY = 'root_home_goals_v1';
+const STORAGE_KEY = 'root_home_goals_v2';
 
 const DEFAULT_GOALS = [
   {
@@ -40,7 +40,10 @@ const DEFAULT_GOALS = [
 function getSavedGoals() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return DEFAULT_GOALS;
+
+    if (!saved) {
+      return DEFAULT_GOALS;
+    }
 
     const parsed = JSON.parse(saved);
 
@@ -53,6 +56,22 @@ function getSavedGoals() {
     console.error('localStorage 불러오기 실패:', error);
     return DEFAULT_GOALS;
   }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      resolve(reader.result);
+    };
+
+    reader.onerror = () => {
+      reject(new Error('파일을 읽는 중 오류가 발생했습니다.'));
+    };
+
+    reader.readAsDataURL(file);
+  });
 }
 
 export default function Home() {
@@ -87,20 +106,31 @@ export default function Home() {
     setSelectedGoalId(null);
   };
 
-  const handleConfirmPhoto = (file) => {
-    setGoals((prevGoals) =>
-      prevGoals.map((goal) =>
-        goal.id === selectedGoalId
-          ? {
-              ...goal,
-              done: true,
-              photo: file ? URL.createObjectURL(file) : goal.photo,
-            }
-          : goal
-      )
-    );
+  const handleConfirmPhoto = async (file) => {
+    try {
+      let photoData = null;
 
-    handleCloseModal();
+      if (file) {
+        photoData = await fileToBase64(file);
+      }
+
+      setGoals((prevGoals) =>
+        prevGoals.map((goal) =>
+          goal.id === selectedGoalId
+            ? {
+                ...goal,
+                done: true,
+                photo: photoData || goal.photo || null,
+              }
+            : goal
+        )
+      );
+
+      handleCloseModal();
+    } catch (error) {
+      console.error(error);
+      alert('사진을 저장하는 중 문제가 발생했어요.');
+    }
   };
 
   const handleToggleDone = (goalId) => {
@@ -121,6 +151,7 @@ export default function Home() {
     if (!ok) return;
 
     setGoals(DEFAULT_GOALS);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   return (
