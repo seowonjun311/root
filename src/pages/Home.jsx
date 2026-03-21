@@ -40,7 +40,6 @@ function getGreeting() {
   if (hour < 18) return '오후에도 마왕성을 향해 전진 중이에요.';
   if (hour < 22) return '오늘 하루도 꽤 잘 걸어오고 있어요.';
   return '오늘도 수고했어요. 이제 마지막 한 걸음만 더.';
-
 }
 
 function normalizeGuestGoals(data) {
@@ -121,6 +120,8 @@ export default function Home() {
   const [pendingLog, setPendingLog] = useState(null);
   const [celebration, setCelebration] = useState(null);
   const [victoryGoal, setVictoryGoal] = useState(null);
+  const [isPulling, setIsPulling] = useState(false);
+  const [bannerMoveTrigger, setBannerMoveTrigger] = useState(0);
   const [shownVictoryIds, setShownVictoryIds] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('shownVictory') || '[]');
@@ -128,7 +129,6 @@ export default function Home() {
       return [];
     }
   });
-  const [isPulling, setIsPulling] = useState(false);
 
   const categoryFromQuery = useMemo(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -382,7 +382,9 @@ export default function Home() {
 
     if (isGuest) {
       const currentGuestData = guestDataPersistence.loadOnboardingData();
-      const existingLogs = Array.isArray(currentGuestData?.actionLogs) ? currentGuestData.actionLogs : [];
+      const existingLogs = Array.isArray(currentGuestData?.actionLogs)
+        ? currentGuestData.actionLogs
+        : [];
 
       const savedLog = {
         ...logData,
@@ -418,15 +420,11 @@ export default function Home() {
     const streakTrigger = getStreakTrigger(streak);
 
     const thisWeekLogs = optimisticLogs.filter(
-      (log) =>
-        log?.action_goal_id === actionGoal.id &&
-        log?.date &&
-        log.date >= weekStart
+      (log) => log?.action_goal_id === actionGoal.id && log?.date && log.date >= weekStart
     );
 
     const target = actionGoal.weekly_frequency || 7;
-    const weeklyComplete =
-      thisWeekLogs.length >= target && thisWeekLogs.length - 1 < target;
+    const weeklyComplete = thisWeekLogs.length >= target && thisWeekLogs.length - 1 < target;
 
     if (streakTrigger) {
       setCelebration(streakTrigger);
@@ -445,6 +443,7 @@ export default function Home() {
     }
 
     setPendingLog(null);
+    setBannerMoveTrigger(Date.now());
 
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['me'] }),
@@ -491,11 +490,7 @@ export default function Home() {
   }
 
   return (
-    <div
-      className="bg-background"
-      style={{ minHeight: '100%' }}
-      onTouchStart={handlePullStart}
-    >
+    <div className="bg-background" style={{ minHeight: '100%' }} onTouchStart={handlePullStart}>
       <motion.div
         className="fixed top-12 left-0 right-0 flex justify-center pt-2 z-50 pointer-events-none"
         animate={{ opacity: pullProgress > 0 ? 1 : 0 }}
@@ -508,13 +503,13 @@ export default function Home() {
         </motion.div>
       </motion.div>
 
-       <CharacterBanner
-  nickname={bannerNickname}
-  message={bannerMessage}
-  activeCategory={activeCategory}
-  moveTrigger={bannerMoveTrigger}
-  expText="+1 EXP"
-/>
+      <CharacterBanner
+        nickname={bannerNickname}
+        message={bannerMessage}
+        activeCategory={activeCategory}
+        moveTrigger={bannerMoveTrigger}
+        expText="+1 EXP"
+      />
 
       <CategoryTabs
         active={activeCategory}
@@ -590,12 +585,7 @@ export default function Home() {
         />
       )}
 
-      {celebration && (
-        <CelebrationToast
-          trigger={celebration}
-          onDone={() => setCelebration(null)}
-        />
-      )}
+      {celebration && <CelebrationToast trigger={celebration} onDone={() => setCelebration(null)} />}
 
       {victoryGoal && (
         <BossVictoryModal
