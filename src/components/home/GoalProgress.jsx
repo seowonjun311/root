@@ -11,6 +11,12 @@ import { guestDataPersistence } from '@/lib/GuestDataPersistence';
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 
+function toLocalDateString(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+    date.getDate()
+  ).padStart(2, '0')}`;
+}
+
 function getMonthDates(year, month) {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -28,9 +34,7 @@ function MonthCalendar({ logs, onClose }) {
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
 
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
-    today.getDate()
-  ).padStart(2, '0')}`;
+  const todayStr = toLocalDateString(today);
   const doneDates = new Set(logs.map((l) => l.date));
   const days = getMonthDates(viewYear, viewMonth);
 
@@ -154,7 +158,6 @@ export default function GoalProgress({ goal, logs = [] }) {
   const [showMenu, setShowMenu] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
-
   const [editTitle, setEditTitle] = useState(goal?.title || '');
   const [editDuration, setEditDuration] = useState(goal?.duration_days || 56);
   const [editCustomWeeks, setEditCustomWeeks] = useState('');
@@ -419,7 +422,11 @@ export default function GoalProgress({ goal, logs = [] }) {
           <div className="px-4 space-y-4 pb-6">
             <div>
               <label className="text-xs font-semibold text-amber-800 mb-1.5 block">결과 목표</label>
-              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="h-11 rounded-xl" />
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="h-11 rounded-xl"
+              />
             </div>
 
             <div>
