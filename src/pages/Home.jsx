@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import Header from '../components/layout/Header';
 import ActionGoalCard from '../components/home/ActionGoalCard';
 import PhotoConfirmModal from '../components/home/PhotoConfirmModal';
 
-const STORAGE_KEY = 'root_home_goals_v11';
+const STORAGE_KEY = 'root_home_goals_v12';
 const CATEGORY_OPTIONS = ['운동', '공부', '정신', '일상'];
 
 const XP_BY_CATEGORY = {
@@ -16,7 +15,7 @@ const XP_BY_CATEGORY = {
 const WEEKDAY_OPTIONS = [
   { label: '월', value: 1 },
   { label: '화', value: 2 },
-  { label: '수', value: 2 + 1 },
+  { label: '수', value: 3 },
   { label: '목', value: 4 },
   { label: '금', value: 5 },
   { label: '토', value: 6 },
@@ -909,13 +908,13 @@ export default function Home() {
   return (
     <div style={styles.page}>
       <div style={styles.container}>
-        <Header
-          title="루트"
-          subtitle="카테고리를 고르고 목표를 기록하며 성장해보세요"
-        />
-
         <div style={styles.stickyTopWrap}>
           <div style={styles.topStatusCard}>
+            <div style={styles.topMiniDate}>
+              {formatDateLabel(parseDateKey(selectedDateKey))}
+            </div>
+            <div style={styles.topMiniTitle}>루트</div>
+
             <div style={styles.characterCircle}>🦊</div>
 
             <div style={styles.totalLevelText}>
@@ -1505,7 +1504,7 @@ const styles = {
     position: 'sticky',
     top: 0,
     zIndex: 1000,
-    paddingTop: '10px',
+    paddingTop: '6px',
     paddingBottom: '12px',
     background: 'linear-gradient(180deg, rgba(20,15,29,0.96) 0%, rgba(27,20,48,0.96) 100%)',
     backdropFilter: 'blur(12px)',
@@ -1518,15 +1517,29 @@ const styles = {
     padding: '18px',
     boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
   },
+  topMiniDate: {
+    color: '#cbd5e1',
+    fontSize: '13px',
+    fontWeight: 700,
+    textAlign: 'center',
+    marginBottom: '6px',
+  },
+  topMiniTitle: {
+    color: '#ffffff',
+    fontSize: '28px',
+    fontWeight: 900,
+    textAlign: 'center',
+    marginBottom: '12px',
+  },
   characterCircle: {
-    width: '60px',
-    height: '60px',
+    width: '64px',
+    height: '64px',
     borderRadius: '50%',
     background: 'linear-gradient(135deg, rgba(139,92,246,0.32), rgba(236,72,153,0.24))',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '28px',
+    fontSize: '30px',
     margin: '0 auto 10px',
     border: '1px solid rgba(255,255,255,0.08)',
   },
