@@ -1,204 +1,182 @@
-import React, { useRef, useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { base44 } from '@/api/base44Client';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Camera, Image, X, Check, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import FocusLock from 'react-focus-lock';
+import { MapContainer, TileLayer, Polyline, CircleMarker } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
-export default function PhotoConfirmModal({
-  open,
-  onClose,
-  onConfirm,
-  goalTitle,
-}) {
-  const galleryInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
-  const [selectedFileName, setSelectedFileName] = useState('');
+export default function PhotoConfirmModal({ actionGoal, gpsData, onSave, onSkip, onCancel }) {
+  const [photo, setPhoto] = useState(null);
+  const [photoUrl, setPhotoUrl] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const galleryRef = useRef(null);
+  const cameraRef = useRef(null);
 
-  if (!open) return null;
-
-  const handleGalleryClick = () => {
-    galleryInputRef.current?.click();
-  };
-
-  const handleCameraClick = () => {
-    cameraInputRef.current?.click();
-  };
-
-  const handleFileSelected = (event, source) => {
-    const file = event.target.files?.[0];
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
     if (!file) return;
+    setPhoto(file);
+    setPhotoUrl(URL.createObjectURL(file));
+  };
 
-    setSelectedFileName(file.name);
-
-    onConfirm?.({
-      type: source,
-      file,
-      fileName: file.name,
-    });
+  const handleSave = async () => {
+    let uploadedUrl = null;
+    if (photo) {
+      setUploading(true);
+      const res = await base44.integrations.Core.UploadFile({ file: photo });
+      uploadedUrl = res.file_url;
+      setUploading(false);
+    }
+    onSave(uploadedUrl, gpsData);
   };
 
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.45)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        zIndex: 1000,
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: 380,
-          background: '#fff',
-          borderRadius: 20,
-          padding: 18,
-          boxShadow: '0 18px 50px rgba(15, 23, 42, 0.20)',
-        }}
-      >
-        <div
-          style={{
-            marginBottom: 14,
-          }}
+    <AnimatePresence>
+      <FocusLock>
+        <motion.div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="photo-modal-title"
         >
-          <div
-            style={{
-              fontSize: 18,
-              fontWeight: 800,
-              color: '#111827',
-              marginBottom: 6,
-            }}
+          <motion.div
+            className="w-full max-w-lg bg-background rounded-t-3xl p-6 pb-28"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           >
-            완료 기록
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <p id="photo-modal-title" className="font-bold text-base text-amber-900">🦊 오늘도 해냈네요, 용사님!</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                이 순간을 사진으로 남길 수 있어요.
+              </p>
+            </div>
+            <button onClick={onSkip} className="p-2 rounded-full hover:bg-secondary">
+              <X className="w-5 h-5 text-muted-foreground" />
+            </button>
           </div>
 
-          <div
-            style={{
-              fontSize: 14,
-              color: '#6b7280',
-              lineHeight: 1.5,
-            }}
-          >
-            <strong style={{ color: '#374151' }}>{goalTitle}</strong>
-            {' '}기록을 어떻게 남길까요?
-          </div>
-        </div>
+          {/* Photo preview or GPS map */}
+          {photoUrl ? (
+            <div className="relative mb-4 rounded-2xl overflow-hidden aspect-video bg-secondary">
+              <img src={photoUrl} alt="수련 사진" className="w-full h-full object-cover" />
+              <button
+                onClick={() => { setPhoto(null); setPhotoUrl(null); }}
+                className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center"
+              >
+                <X className="w-4 h-4 text-white" />
+              </button>
+            </div>
+          ) : gpsData?.gpsEnabled && gpsData?.coords?.length > 0 ? (
+            <div className="mb-4 rounded-2xl overflow-hidden aspect-video bg-blue-50 border-2 border-blue-200 flex items-center justify-center">
+              <SimpleMap coords={gpsData.coords} />
+            </div>
+          ) : (
+            <div className="flex gap-3 mb-4">
+              <label className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-amber-300/70 bg-amber-50/40 flex flex-col items-center justify-center gap-2 hover:bg-amber-50/80 transition-colors cursor-pointer">
+                <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                <Image className="w-7 h-7 text-amber-500" />
+                <span className="text-xs text-amber-700 font-semibold">갤러리</span>
+              </label>
+              <label className="flex-1 aspect-square rounded-2xl border-2 border-dashed border-amber-300/70 bg-amber-50/40 flex flex-col items-center justify-center gap-2 hover:bg-amber-50/80 transition-colors cursor-pointer">
+                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
+                <Camera className="w-7 h-7 text-amber-500" />
+                <span className="text-xs text-amber-700 font-semibold">카메라</span>
+              </label>
+            </div>
+          )}
 
-        <div
-          style={{
-            display: 'grid',
-            gap: 10,
-          }}
-        >
-          <button
-            type="button"
-            onClick={handleGalleryClick}
-            style={{
-              width: '100%',
-              border: '1px solid #e5e7eb',
-              background: '#fff',
-              borderRadius: 14,
-              padding: '14px 16px',
-              fontSize: 15,
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
-          >
-            갤러리에서 사진 선택
-          </button>
+          {/* Info text */}
+          {gpsData?.gpsEnabled && (
+            <div className="flex items-center gap-2 mb-4 p-3 rounded-xl bg-blue-50 border border-blue-200">
+              <MapPin className="w-4 h-4 text-blue-600" />
+              <p className="text-xs text-blue-700 font-semibold">
+                거리: {gpsData.distance?.toFixed(2) || '0'}km
+              </p>
+            </div>
+          )}
 
-          <button
-            type="button"
-            onClick={handleCameraClick}
-            style={{
-              width: '100%',
-              border: '1px solid #e5e7eb',
-              background: '#fff',
-              borderRadius: 14,
-              padding: '14px 16px',
-              fontSize: 15,
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
-          >
-            카메라로 찍기
-          </button>
+          <div className="flex gap-3 flex-col">
+             <Button
+               onClick={handleSave}
+               disabled={uploading}
+               className="flex-1 h-12 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
+             >
+               {uploading ? (
+                 <span className="flex items-center gap-2">
+                   <span className="w-4 h-4 border-2 border-amber-200/50 border-t-amber-50 rounded-full animate-spin" />
+                   업로드 중...
+                 </span>
+               ) : (
+                 <>
+                   <Check className="w-4 h-4 mr-2" />
+                   저장
+                 </>
+               )}
+             </Button>
+             <Button
+               variant="outline"
+               onClick={onCancel}
+               disabled={uploading}
+               className="flex-1 h-11 rounded-xl font-semibold"
+             >
+               취소 (기록 안함)
+             </Button>
+             <p className="text-xs text-muted-foreground text-center">사진없이 저장할 수 있어요</p>
+           </div>
+        </motion.div>
+      </motion.div>
+      </FocusLock>
+    </AnimatePresence>
+  );
+}
 
-          <button
-            type="button"
-            onClick={() =>
-              onConfirm?.({
-                type: 'none',
-                file: null,
-                fileName: '',
-              })
-            }
-            style={{
-              width: '100%',
-              border: 'none',
-              background: '#111827',
-              color: '#fff',
-              borderRadius: 14,
-              padding: '14px 16px',
-              fontSize: 15,
-              fontWeight: 800,
-              cursor: 'pointer',
-            }}
-          >
-            저장
-          </button>
-        </div>
-
-        {selectedFileName ? (
-          <div
-            style={{
-              marginTop: 12,
-              fontSize: 12,
-              color: '#6b7280',
-            }}
-          >
-            선택된 파일: {selectedFileName}
-          </div>
-        ) : null}
-
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            marginTop: 14,
-            width: '100%',
-            border: 'none',
-            background: '#f3f4f6',
-            color: '#374151',
-            borderRadius: 12,
-            padding: '12px 14px',
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
-        >
-          닫기
-        </button>
-
-        <input
-          ref={galleryInputRef}
-          type="file"
-          accept="image/*"
-          style={{ display: 'none' }}
-          onChange={(e) => handleFileSelected(e, 'gallery')}
-        />
-
-        <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          style={{ display: 'none' }}
-          onChange={(e) => handleFileSelected(e, 'camera')}
-        />
+function SimpleMap({ coords }) {
+  if (!coords || coords.length < 2) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-2">
+        <MapPin className="w-6 h-6 text-blue-600" />
+        <p className="text-xs text-blue-600 font-semibold">경로 지도</p>
       </div>
-    </div>
+    );
+  }
+
+  // 좌표의 범위 계산 (Leaflet은 [lat, lng] 형식)
+  const lats = coords.map(c => c[0]);
+  const lngs = coords.map(c => c[1]);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+
+  // 전체 경로를 포함하는 중심점
+  const centerLat = (minLat + maxLat) / 2;
+  const centerLng = (minLng + maxLng) / 2;
+
+  return (
+    <MapContainer
+      center={[centerLat, centerLng]}
+      zoom={15}
+      style={{ height: '100%', width: '100%' }}
+      className="rounded-xl"
+    >
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; OpenStreetMap contributors'
+      />
+      {/* 경로 선 */}
+      <Polyline positions={coords} color="#0ea5e9" weight={3} opacity={0.8} />
+      {/* 시작점 */}
+      <CircleMarker center={coords[0]} radius={6} fillColor="#10b981" color="#10b981" weight={2} opacity={1} fillOpacity={0.8} />
+      {/* 끝점 */}
+      <CircleMarker center={coords[coords.length - 1]} radius={6} fillColor="#ef4444" color="#ef4444" weight={2} opacity={1} fillOpacity={0.8} />
+    </MapContainer>
   );
 }

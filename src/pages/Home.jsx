@@ -1,1179 +1,381 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import Header from '../components/layout/Header';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import CharacterBanner from '../components/home/CharacterBanner';
+import CategoryTabs from '../components/home/CategoryTabs';
+import GoalProgress from '../components/home/GoalProgress';
+import WeekDays from '../components/home/WeekDays';
 import ActionGoalCard from '../components/home/ActionGoalCard';
+import EmptyGoalState from '../components/home/EmptyGoalState';
+import PhotoConfirmModal from '../components/home/PhotoConfirmModal';
+import BossVictoryModal from '../components/home/BossVictoryModal';
+import CelebrationToast from '../components/home/CelebrationToast';
+import { computeStreak, getStreakTrigger, getBadgeForGoal } from '../components/badgeUtils';
+import { Plus, RefreshCw } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
+import { guestDataPersistence } from '../lib/GuestDataPersistence';
 
-const STORAGE_KEY = 'root-home-data-v3';
-const CATEGORIES = ['운동', '공부', '정신', '일상'];
-
-function createInitialData() {
-  return {
-    resultGoals: [
-      {
-        id: 1001,
-        category: '운동',
-        title: '체력 만들기',
-        description: '꾸준히 몸을 움직이며 기초 체력을 올리기',
-        targetValue: 30,
-        currentValue: 8,
-        unit: '회',
-      },
-      {
-        id: 1002,
-        category: '공부',
-        title: '영어 공부 루틴 만들기',
-        description: '매일 꾸준히 영어 학습 습관 만들기',
-        targetValue: 20,
-        currentValue: 5,
-        unit: '일',
-      },
-      {
-        id: 1003,
-        category: '정신',
-        title: '마음 안정 루틴 만들기',
-        description: '명상과 기록으로 마음 정리하기',
-        targetValue: 14,
-        currentValue: 3,
-        unit: '회',
-      },
-      {
-        id: 1004,
-        category: '일상',
-        title: '생활 리듬 안정화',
-        description: '정리정돈과 규칙적인 일상 만들기',
-        targetValue: 21,
-        currentValue: 6,
-        unit: '일',
-      },
-    ],
-    actionGoals: [
-      {
-        id: 2001,
-        category: '운동',
-        title: '팔굽혀펴기 20회',
-        createdAt: new Date().toISOString(),
-        logs: [],
-      },
-      {
-        id: 2002,
-        category: '운동',
-        title: '30분 걷기',
-        createdAt: new Date().toISOString(),
-        logs: [],
-      },
-      {
-        id: 2003,
-        category: '공부',
-        title: '영단어 30개 외우기',
-        createdAt: new Date().toISOString(),
-        logs: [],
-      },
-      {
-        id: 2004,
-        category: '정신',
-        title: '10분 명상하기',
-        createdAt: new Date().toISOString(),
-        logs: [],
-      },
-    ],
-  };
+function isGoalComplete(goal) {
+  if (!goal || !goal.start_date || !goal.duration_days) return false;
+  const start = new Date(goal.start_date);
+  const end = new Date(start);
+  end.setDate(start.getDate() + goal.duration_days);
+  return new Date() >= end;
 }
 
-function getCategoryTheme(category) {
-  switch (category) {
-    case '운동':
-      return {
-        emoji: '🏃',
-        title: '운동 루트',
-        desc: '몸을 움직이며 성장하는 길',
-      };
-    case '공부':
-      return {
-        emoji: '📘',
-        title: '공부 루트',
-        desc: '지식을 쌓아 앞으로 나아가는 길',
-      };
-    case '정신':
-      return {
-        emoji: '🧠',
-        title: '정신 루트',
-        desc: '마음과 집중력을 단단하게 만드는 길',
-      };
-    case '일상':
-      return {
-        emoji: '🌿',
-        title: '일상 루트',
-        desc: '생활을 정돈하고 균형을 만드는 길',
-      };
-    default:
-      return {
-        emoji: '✨',
-        title: '루트',
-        desc: '오늘의 행동을 쌓아가는 길',
-      };
-  }
-}
-
-function clampPercent(value) {
-  if (value < 0) return 0;
-  if (value > 100) return 100;
-  return value;
-}
-
-function getProgressPercent(currentValue = 0, targetValue = 0) {
-  if (!targetValue || targetValue <= 0) return 0;
-  return clampPercent(Math.round((currentValue / targetValue) * 100));
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 6) return '늦은 밤, 오늘도 수고했어요.';
+  if (hour < 10) return '좋은 아침이에요. 오늘도 천천히 걸어볼까요?';
+  if (hour < 13) return '당신을 기다리고 있습니다.';
+  if (hour < 18) return '오후에도 한 걸음씩, 용사님.';
+  if (hour < 22) return '오늘 하루도 잘 걸어왔어요.';
+  return '오늘 하루도 수고했어요, 용사님.';
 }
 
 export default function Home() {
-  const [data, setData] = useState(createInitialData());
-  const [activeCategory, setActiveCategory] = useState('운동');
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [activeCategory, setActiveCategory] = useState('exercise');
+  const [pendingLog, setPendingLog] = useState(null);
+  const [celebration, setCelebration] = useState(null);
+  const [victoryGoal, setVictoryGoal] = useState(null);
+  const [shownVictoryIds, setShownVictoryIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('shownVictory') || '[]'); } catch { return []; }
+  });
 
-  const [newResultTitle, setNewResultTitle] = useState('');
-  const [newResultDescription, setNewResultDescription] = useState('');
-  const [newResultTargetValue, setNewResultTargetValue] = useState('');
-  const [newResultUnit, setNewResultUnit] = useState('회');
+  const [isPulling, setIsPulling] = React.useState(false);
+  
+  const { pullProgress, onTouchStart: handlePullStart } = usePullToRefresh(async () => {
+    if (isPulling) return;
+    setIsPulling(true);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['goals'] }),
+      queryClient.invalidateQueries({ queryKey: ['actionLogs'] }),
+      queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
+    ]);
+    setIsPulling(false);
+  });
 
-  const [newGoalTitle, setNewGoalTitle] = useState('');
-  const [newGoalCategory, setNewGoalCategory] = useState('운동');
-
-  const [editingGoalId, setEditingGoalId] = useState(null);
-  const [editingTitle, setEditingTitle] = useState('');
-  const [editingCategory, setEditingCategory] = useState('운동');
+  const { data: user, isLoading: isUserLoading } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => base44.auth.me().catch(() => null),
+  });
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setData(parsed);
-      } catch (error) {
-        console.error('저장 데이터 파싱 실패:', error);
+    // 로딩 중엔 아무것도 하지 않음
+    if (isUserLoading) return;
+
+    if (user) {
+      // 로그인 사용자: onboarding_complete 체크
+      if (!user.onboarding_complete) {
+        // 캐시된 데이터일 수 있으므로 재조회 후 판단
+        queryClient.invalidateQueries({ queryKey: ['me'] });
+        navigate('/Onboarding');
+        return;
+      }
+      // 초기 로드 시에만 user.active_category로 설정
+      if (user.active_category && activeCategory === 'exercise') {
+        setActiveCategory(user.active_category);
+      }
+    } else {
+      // 비로그인 게스트: localStorage 체크
+      const guestOnboardingComplete = localStorage.getItem('guest_onboarding_complete') === 'true';
+      if (!guestOnboardingComplete) {
+        navigate('/Onboarding');
+        return;
+      }
+      const guestCat = localStorage.getItem('guest_active_category');
+      if (guestCat && activeCategory === 'exercise') setActiveCategory(guestCat);
+    }
+  }, [isUserLoading, navigate]);
+
+  const isGuest = !isUserLoading && !user;
+
+  const { data: goals = [] } = useQuery({
+    queryKey: ['goals', isGuest],
+    queryFn: () => {
+      if (isGuest) {
+        const data = guestDataPersistence.loadOnboardingData();
+        const goalData = data.goalData || data.goals?.[0];
+        return goalData ? [goalData] : [];
+      }
+      return base44.entities.Goal.filter({ status: 'active', goal_type: 'result' });
+    },
+    enabled: !isUserLoading,
+    staleTime: 1000 * 60 * 5, // 5분 동안 fresh 상태 유지
+  });
+
+  const deleteGoalMutation = useMutation({
+    mutationFn: (goalId) => base44.entities.Goal.delete(goalId),
+    onMutate: async (deletedGoalId) => {
+      await queryClient.cancelQueries({ queryKey: ['goals'] });
+      const previousGoals = queryClient.getQueryData(['goals']);
+      queryClient.setQueryData(['goals'], (old) => old.filter(g => g.id !== deletedGoalId));
+      return { previousGoals };
+    },
+    onError: (err, goalId, context) => {
+      if (context?.previousGoals) queryClient.setQueryData(['goals'], context.previousGoals);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['goals'] }),
+  });
+
+  const { data: actionGoals = [] } = useQuery({
+    queryKey: ['actionGoals', isGuest],
+    queryFn: () => {
+      if (isGuest) {
+        const data = guestDataPersistence.loadOnboardingData();
+        const actionGoalData = data.actionGoalData || data.actionGoals?.[0];
+        return actionGoalData ? [actionGoalData] : [];
+      }
+      return base44.entities.ActionGoal.filter({ status: 'active' });
+    },
+    enabled: !isUserLoading,
+    staleTime: 1000 * 60 * 5, // 5분 동안 fresh 상태 유지
+  });
+
+  const { data: allLogs = [] } = useQuery({
+    queryKey: ['allLogs', isGuest],
+    queryFn: () => {
+      if (isGuest) {
+        const data = guestDataPersistence.loadOnboardingData();
+        return data.actionLogs || [];
+      }
+      return base44.entities.ActionLog.list('-created_date', 200);
+    },
+    enabled: !isUserLoading,
+    staleTime: 1000 * 30, // 30초 동안 fresh 상태 유지
+  });
+
+  useEffect(() => {
+    if (!goals.length) return;
+    for (const goal of goals) {
+      if (isGoalComplete(goal) && !shownVictoryIds.includes(goal.id)) {
+        setVictoryGoal(goal);
+        break;
       }
     }
-  }, []);
+  }, [goals, shownVictoryIds]);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    window.dispatchEvent(new Event('root-home-data-updated'));
-  }, [data]);
+  const createLogMutation = useMutation({
+    mutationFn: (data) => base44.entities.ActionLog.create(data),
+    onMutate: async (newLog) => {
+      await queryClient.cancelQueries({ queryKey: ['allLogs'] });
+      const previousLogs = queryClient.getQueryData(['allLogs']);
+      queryClient.setQueryData(['allLogs'], (old) => [newLog, ...old]);
+      return { previousLogs };
+    },
+    onError: (err, newLog, context) => {
+      if (context?.previousLogs) queryClient.setQueryData(['allLogs'], context.previousLogs);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
+  });
 
-  const activeTheme = useMemo(() => {
-    return getCategoryTheme(activeCategory);
-  }, [activeCategory]);
+  const createBadgeMutation = useMutation({
+    mutationFn: (data) => base44.entities.Badge.create(data),
+  });
 
-  const filteredActionGoals = useMemo(() => {
-    return (data.actionGoals || []).filter(
-      (goal) => goal.category === activeCategory
-    );
-  }, [data.actionGoals, activeCategory]);
+  const categoryGoals = goals.filter(g => g.category === activeCategory);
+  const activeGoal = categoryGoals[0];
+  const categoryActionGoals = activeGoal
+    ? actionGoals.filter(ag => ag.goal_id === activeGoal.id)
+    : [];
 
-  const filteredResultGoals = useMemo(() => {
-    return (data.resultGoals || []).filter(
-      (goal) => goal.category === activeCategory
-    );
-  }, [data.resultGoals, activeCategory]);
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const weekStartDate = new Date(today);
+  weekStartDate.setDate(today.getDate() + mondayOffset);
+  const weekStartStr = `${weekStartDate.getFullYear()}-${String(weekStartDate.getMonth() + 1).padStart(2, '0')}-${String(weekStartDate.getDate()).padStart(2, '0')}`;
 
-  const activeStats = useMemo(() => {
-    const totalActionGoals = filteredActionGoals.length;
-    const totalActionLogs = filteredActionGoals.reduce((sum, goal) => {
-      return sum + (goal.logs?.length || 0);
-    }, 0);
+  const getWeeklyLogs = (actionGoalId) =>
+    allLogs.filter(l => l.action_goal_id === actionGoalId && l.date >= weekStartStr);
 
-    const totalResultGoals = filteredResultGoals.length;
+  const handleComplete = (actionGoal, minutes, gpsData = {}) => {
+    setPendingLog({ actionGoal, minutes, gpsData });
+  };
 
-    const avgProgress =
-      totalResultGoals === 0
-        ? 0
-        : Math.round(
-            filteredResultGoals.reduce((sum, goal) => {
-              return sum + getProgressPercent(goal.currentValue, goal.targetValue);
-            }, 0) / totalResultGoals
-          );
+  const handlePhotoSave = async (photoUrl, receivedGpsData) => {
+    const { actionGoal, minutes, gpsData } = pendingLog;
+    const todayStr = new Date().toISOString().split('T')[0];
 
-    return {
-      totalActionGoals,
-      totalActionLogs,
-      totalResultGoals,
-      avgProgress,
-    };
-  }, [filteredActionGoals, filteredResultGoals]);
+    const newLogs = [...allLogs, { action_goal_id: actionGoal.id, date: todayStr, completed: true }];
+    const streak = computeStreak(actionGoal.id, newLogs);
+    const streakTrigger = getStreakTrigger(streak);
 
-  const handleAddResultGoal = () => {
-    const title = newResultTitle.trim();
-    const description = newResultDescription.trim();
-    const targetValue = Number(newResultTargetValue);
+    const thisWeekLogs = newLogs.filter(l => l.action_goal_id === actionGoal.id && l.date >= weekStartStr);
+    const target = actionGoal.weekly_frequency || 7;
+    const weeklyComplete = thisWeekLogs.length >= target && thisWeekLogs.length - 1 < target;
 
-    if (!title) return;
-    if (!targetValue || targetValue <= 0) return;
-
-    const newResultGoal = {
-      id: Date.now(),
-      category: activeCategory,
-      title,
-      description,
-      targetValue,
-      currentValue: 0,
-      unit: newResultUnit.trim() || '회',
+    const logData = {
+      action_goal_id: actionGoal.id,
+      goal_id: actionGoal.goal_id,
+      category: actionGoal.category,
+      date: todayStr,
+      duration_minutes: minutes,
+      completed: true,
+      photo_url: photoUrl || null,
+      gps_enabled: !!(gpsData?.gpsEnabled && gpsData?.distance),
     };
 
-    setData((prev) => ({
-      ...prev,
-      resultGoals: [newResultGoal, ...(prev.resultGoals || [])],
-    }));
+    if (gpsData?.gpsEnabled && gpsData?.distance) {
+      logData.distance_km = gpsData.distance;
+      logData.route_coordinates = JSON.stringify(gpsData.coords || []);
+    }
 
-    setNewResultTitle('');
-    setNewResultDescription('');
-    setNewResultTargetValue('');
-    setNewResultUnit('회');
+    if (isGuest) {
+      // 게스트: localStorage에 저장
+      const guestData = guestDataPersistence.loadOnboardingData();
+      const existingLogs = guestData.actionLogs || [];
+      guestDataPersistence.saveData('local_action_logs', [...existingLogs, { ...logData, id: `local_log_${Date.now()}`, created_date: new Date().toISOString() }]);
+      queryClient.invalidateQueries({ queryKey: ['allLogs', true] });
+    } else {
+      await base44.entities.ActionLog.create(logData);
+      // 로그 생성 후 즉시 쿼리 무효화 및 리페칭
+      await queryClient.invalidateQueries({ queryKey: ['allLogs', isGuest] });
+      queryClient.refetchQueries({ queryKey: ['allLogs', isGuest] });
+    }
+
+    const catKey = actionGoal.category;
+    const xpKey = `${catKey}_xp`;
+    const levelKey = `${catKey}_level`;
+    const currentXp = user?.[xpKey] || 0;
+    const newXp = currentXp + 1;
+    const newLevel = Math.floor(newXp / 30) + 1;
+
+    if (!isGuest) await base44.auth.updateMe({ [xpKey]: newXp, [levelKey]: newLevel }).catch(() => {});
+    queryClient.invalidateQueries({ queryKey: ['me'] });
+    setPendingLog(null);
+
+    if (streakTrigger) {
+      setCelebration(streakTrigger);
+      const { title } = getBadgeForGoal({ title: actionGoal.title });
+      createBadgeMutation.mutate({
+        title: `${title} (${streak}일 연속)`,
+        description: `${actionGoal.title} ${streak}일 연속 성공`,
+        category: actionGoal.category,
+        badge_type: 'cumulative',
+        earned_date: todayStr,
+        streak,
+      });
+    } else if (weeklyComplete) {
+      setCelebration('weekly_complete');
+    }
   };
 
-  const handleDeleteResultGoal = (resultGoalId) => {
-    const ok = window.confirm('이 결과목표를 삭제할까요?');
-    if (!ok) return;
-
-    setData((prev) => ({
-      ...prev,
-      resultGoals: (prev.resultGoals || []).filter(
-        (goal) => goal.id !== resultGoalId
-      ),
-    }));
+  const handleCategoryChange = (cat) => {
+    setActiveCategory(cat);
+    if (!isGuest) base44.auth.updateMe({ active_category: cat }).catch(() => {});
   };
 
-  const handleIncreaseResultGoal = (resultGoalId) => {
-    setData((prev) => ({
-      ...prev,
-      resultGoals: (prev.resultGoals || []).map((goal) =>
-        goal.id === resultGoalId
-          ? {
-              ...goal,
-              currentValue: Math.min(goal.currentValue + 1, goal.targetValue),
-            }
-          : goal
-      ),
-    }));
+  const handleVictoryClose = () => {
+    if (!victoryGoal) return;
+    const newShown = [...shownVictoryIds, victoryGoal.id];
+    setShownVictoryIds(newShown);
+    localStorage.setItem('shownVictory', JSON.stringify(newShown));
+    queryClient.invalidateQueries({ queryKey: ['goals'] });
+    setVictoryGoal(null);
   };
 
-  const handleAddGoal = () => {
-    const title = newGoalTitle.trim();
-    if (!title) return;
-
-    const newGoal = {
-      id: Date.now(),
-      title,
-      category: newGoalCategory,
-      createdAt: new Date().toISOString(),
-      logs: [],
-    };
-
-    setData((prev) => ({
-      ...prev,
-      actionGoals: [newGoal, ...(prev.actionGoals || [])],
-    }));
-
-    setNewGoalTitle('');
-    setNewGoalCategory(activeCategory);
-  };
-
-  const handleDeleteGoal = (goalId) => {
-    const ok = window.confirm('이 행동목표를 삭제할까요?');
-    if (!ok) return;
-
-    setData((prev) => ({
-      ...prev,
-      actionGoals: (prev.actionGoals || []).filter(
-        (goal) => goal.id !== goalId
-      ),
-    }));
-  };
-
-  const handleStartEdit = (goal) => {
-    setEditingGoalId(goal.id);
-    setEditingTitle(goal.title);
-    setEditingCategory(goal.category);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingGoalId(null);
-    setEditingTitle('');
-    setEditingCategory(activeCategory);
-  };
-
-  const handleSaveEdit = () => {
-    const title = editingTitle.trim();
-    if (!title) return;
-
-    setData((prev) => ({
-      ...prev,
-      actionGoals: (prev.actionGoals || []).map((goal) =>
-        goal.id === editingGoalId
-          ? {
-              ...goal,
-              title,
-              category: editingCategory,
-            }
-          : goal
-      ),
-    }));
-
-    handleCancelEdit();
-  };
-
-  const handleCompleteGoal = (goalId, payload) => {
-    setData((prev) => ({
-      ...prev,
-      actionGoals: (prev.actionGoals || []).map((goal) => {
-        if (goal.id !== goalId) return goal;
-
-        const newLog = {
-          id: Date.now(),
-          completedAt: new Date().toISOString(),
-          photoType: payload?.type || 'none',
-          photoName: payload?.fileName || '',
-        };
-
-        return {
-          ...goal,
-          logs: [...(goal.logs || []), newLog],
-        };
-      }),
-    }));
+  const handleVictoryNewGoal = () => {
+    const cat = victoryGoal?.category || activeCategory;
+    handleVictoryClose();
+    navigate('/CreateGoal?category=' + cat);
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#f6f7fb',
-      }}
-    >
-      <Header />
-
-      <div
-        style={{
-          maxWidth: 760,
-          margin: '0 auto',
-          padding: '14px 12px 32px',
-          boxSizing: 'border-box',
-        }}
+    <div className="bg-background" style={{ minHeight: '100%' }} onTouchStart={handlePullStart}>
+      <motion.div
+        className="fixed top-12 left-0 right-0 flex justify-center pt-2 z-50 pointer-events-none"
+        animate={{ opacity: pullProgress > 0 ? 1 : 0 }}
       >
-        {/* 성장 카드 */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)',
-            borderRadius: 24,
-            padding: 18,
-            color: '#fff',
-            marginBottom: 14,
-            boxShadow: '0 12px 30px rgba(17, 24, 39, 0.18)',
-          }}
-        >
-          <div
-            style={{
-              fontSize: 13,
-              opacity: 0.85,
-              marginBottom: 8,
-            }}
-          >
-            {activeTheme.emoji} {activeTheme.title}
-          </div>
+        <motion.div animate={{ rotate: pullProgress * 360 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
+          <RefreshCw className="w-6 h-6 text-amber-600" />
+        </motion.div>
+      </motion.div>
 
-          <div
-            style={{
-              fontSize: 24,
-              fontWeight: 900,
-              lineHeight: 1.25,
-              marginBottom: 8,
-            }}
-          >
-            오늘도 한 걸음
-            <br />
-            루트를 쌓아보세요
-          </div>
+      <CharacterBanner
+        nickname={user?.nickname}
+        message={getGreeting()}
+      />
+      <CategoryTabs active={activeCategory} onChange={handleCategoryChange} userLevels={{
+        exercise_level: user?.exercise_level || 1,
+        exercise_xp: user?.exercise_xp || 0,
+        study_level: user?.study_level || 1,
+        study_xp: user?.study_xp || 0,
+        mental_level: user?.mental_level || 1,
+        mental_xp: user?.mental_xp || 0,
+        daily_level: user?.daily_level || 1,
+        daily_xp: user?.daily_xp || 0,
+      }} />
 
-          <div
-            style={{
-              fontSize: 13,
-              opacity: 0.9,
-              lineHeight: 1.6,
-              marginBottom: 14,
-            }}
-          >
-            {activeTheme.desc}
-          </div>
+      {activeGoal ? (
+        <div className="space-y-3">
+          <GoalProgress goal={activeGoal} logs={allLogs.filter(l => l.goal_id === activeGoal.id)} />
+          <WeekDays logs={allLogs.filter(l => l.category === activeCategory)} />
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: 8,
-            }}
-          >
-            <div
-              style={{
-                background: 'rgba(255,255,255,0.10)',
-                borderRadius: 16,
-                padding: '12px 10px',
-              }}
-            >
-              <div style={{ fontSize: 11, opacity: 0.8, marginBottom: 4 }}>
-                결과목표
-              </div>
-              <div style={{ fontSize: 18, fontWeight: 900 }}>
-                {activeStats.totalResultGoals}
-              </div>
-            </div>
-
-            <div
-              style={{
-                background: 'rgba(255,255,255,0.10)',
-                borderRadius: 16,
-                padding: '12px 10px',
-              }}
-            >
-              <div style={{ fontSize: 11, opacity: 0.8, marginBottom: 4 }}>
-                행동목표
-              </div>
-              <div style={{ fontSize: 18, fontWeight: 900 }}>
-                {activeStats.totalActionGoals}
-              </div>
-            </div>
-
-            <div
-              style={{
-                background: 'rgba(255,255,255,0.10)',
-                borderRadius: 16,
-                padding: '12px 10px',
-              }}
-            >
-              <div style={{ fontSize: 11, opacity: 0.8, marginBottom: 4 }}>
-                평균 진행률
-              </div>
-              <div style={{ fontSize: 18, fontWeight: 900 }}>
-                {activeStats.avgProgress}%
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 카테고리 탭 */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 6,
-            marginBottom: 14,
-          }}
-        >
-          {CATEGORIES.map((category) => {
-            const isActive = activeCategory === category;
-
-            return (
-              <button
-                key={category}
-                type="button"
-                onClick={() => {
-                  setActiveCategory(category);
-                  setNewGoalCategory(category);
-                }}
-                style={{
-                  border: isActive ? '1px solid #111827' : '1px solid #d7dbe4',
-                  background: isActive ? '#111827' : '#fff',
-                  color: isActive ? '#fff' : '#4b5563',
-                  borderRadius: 999,
-                  padding: '9px 8px',
-                  fontSize: 12,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                }}
-              >
-                {category}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 요약 카드 */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 10,
-            marginBottom: 14,
-          }}
-        >
-          <div
-            style={{
-              background: '#fff',
-              border: '1px solid #e9e9ef',
-              borderRadius: 18,
-              padding: 14,
-              boxShadow: '0 6px 20px rgba(20,20,43,0.04)',
-            }}
-          >
-            <div
-              style={{
-                fontSize: 12,
-                color: '#6b7280',
-                marginBottom: 6,
-              }}
-            >
-              현재 카테고리
-            </div>
-            <div
-              style={{
-                fontSize: 18,
-                fontWeight: 900,
-                color: '#111827',
-                marginBottom: 4,
-              }}
-            >
-              {activeTheme.emoji} {activeCategory}
-            </div>
-            <div
-              style={{
-                fontSize: 12,
-                color: '#6b7280',
-                lineHeight: 1.5,
-              }}
-            >
-              {activeTheme.desc}
-            </div>
-          </div>
-
-          <div
-            style={{
-              background: '#fff',
-              border: '1px solid #e9e9ef',
-              borderRadius: 18,
-              padding: 14,
-              boxShadow: '0 6px 20px rgba(20,20,43,0.04)',
-            }}
-          >
-            <div
-              style={{
-                fontSize: 12,
-                color: '#6b7280',
-                marginBottom: 6,
-              }}
-            >
-              완료 기록
-            </div>
-            <div
-              style={{
-                fontSize: 18,
-                fontWeight: 900,
-                color: '#111827',
-                marginBottom: 4,
-              }}
-            >
-              총 {activeStats.totalActionLogs}회
-            </div>
-            <div
-              style={{
-                fontSize: 12,
-                color: '#6b7280',
-                lineHeight: 1.5,
-              }}
-            >
-              행동목표 완료를 쌓아 결과목표까지 나아가세요.
-            </div>
-          </div>
-        </div>
-
-        {/* 결과목표 추가 */}
-        <div
-          style={{
-            background: '#fff',
-            border: '1px solid #e9e9ef',
-            borderRadius: 20,
-            padding: 14,
-            marginBottom: 14,
-            boxShadow: '0 6px 20px rgba(20,20,43,0.05)',
-          }}
-        >
-          <div
-            style={{
-              fontSize: 17,
-              fontWeight: 900,
-              color: '#111827',
-              marginBottom: 6,
-            }}
-          >
-            결과목표 추가
-          </div>
-
-          <div
-            style={{
-              fontSize: 13,
-              color: '#6b7280',
-              lineHeight: 1.5,
-              marginBottom: 12,
-            }}
-          >
-            {activeCategory} 카테고리에서 이루고 싶은 큰 목표를 설정하세요.
-          </div>
-
-          <div
-            style={{
-              display: 'grid',
-              gap: 10,
-            }}
-          >
-            <input
-              value={newResultTitle}
-              onChange={(e) => setNewResultTitle(e.target.value)}
-              placeholder={`${activeCategory} 결과목표 제목`}
-              style={{
-                width: '100%',
-                border: '1px solid #dbe1ea',
-                borderRadius: 12,
-                padding: '12px 13px',
-                fontSize: 14,
-                boxSizing: 'border-box',
-              }}
+          {categoryActionGoals.map(ag => (
+            <ActionGoalCard
+              key={ag.id}
+              actionGoal={ag}
+              weeklyLogs={getWeeklyLogs(ag.id)}
+              onComplete={handleComplete}
             />
+          ))}
 
-            <input
-              value={newResultDescription}
-              onChange={(e) => setNewResultDescription(e.target.value)}
-              placeholder="결과목표 설명"
-              style={{
-                width: '100%',
-                border: '1px solid #dbe1ea',
-                borderRadius: 12,
-                padding: '12px 13px',
-                fontSize: 14,
-                boxSizing: 'border-box',
-              }}
-            />
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: 8,
-              }}
-            >
-              <input
-                type="number"
-                value={newResultTargetValue}
-                onChange={(e) => setNewResultTargetValue(e.target.value)}
-                placeholder="목표 수치"
-                style={{
-                  width: '100%',
-                  border: '1px solid #dbe1ea',
-                  borderRadius: 12,
-                  padding: '12px 13px',
-                  fontSize: 14,
-                  boxSizing: 'border-box',
-                }}
-              />
-
-              <input
-                value={newResultUnit}
-                onChange={(e) => setNewResultUnit(e.target.value)}
-                placeholder="단위 (회, 일, 점)"
-                style={{
-                  width: '100%',
-                  border: '1px solid #dbe1ea',
-                  borderRadius: 12,
-                  padding: '12px 13px',
-                  fontSize: 14,
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-
+          <div className="px-4 pb-4">
             <button
-              type="button"
-              onClick={handleAddResultGoal}
+              onClick={() => {
+                const pageMap = { exercise: 'CreateGoalExercise', study: 'CreateGoalStudy', mental: 'CreateGoalMental', daily: 'CreateGoalDaily' };
+                navigate(`/${pageMap[activeCategory]}?goalId=${activeGoal.id}`);
+              }}
+              className="w-full rounded-lg font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
               style={{
-                border: 'none',
-                background: '#111827',
-                color: '#fff',
-                borderRadius: 12,
-                padding: '12px 14px',
-                fontSize: 14,
-                fontWeight: 800,
-                cursor: 'pointer',
+                minHeight: '44px',
+                background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 60%, #f0e0bc 100%)',
+                border: '2px dashed #a07840',
+                color: '#7a5020',
               }}
             >
-              결과목표 추가
+              <Plus className="w-4 h-4" />
+              행동 목표 직접 추가하기
             </button>
           </div>
         </div>
-
-        {/* 결과목표 목록 */}
-        <div
-          style={{
-            marginBottom: 16,
+      ) : (
+        <EmptyGoalState
+          category={activeCategory}
+          onCreateGoal={() => {
+            const pageMap = { exercise: 'CreateGoalExercise', study: 'CreateGoalStudy', mental: 'CreateGoalMental', daily: 'CreateGoalDaily' };
+            navigate(`/${pageMap[activeCategory]}`);
           }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 10,
-              marginBottom: 10,
-              flexWrap: 'wrap',
-            }}
-          >
-            <div
-              style={{
-                fontSize: 17,
-                fontWeight: 900,
-                color: '#111827',
-              }}
-            >
-              {activeCategory} 결과목표
-            </div>
+        />
+      )}
 
-            <div
-              style={{
-                fontSize: 12,
-                color: '#6b7280',
-                background: '#eef2f7',
-                borderRadius: 999,
-                padding: '6px 10px',
-                fontWeight: 700,
-              }}
-            >
-              총 {filteredResultGoals.length}개
-            </div>
-          </div>
+      {pendingLog && (
+        <PhotoConfirmModal
+          actionGoal={pendingLog.actionGoal}
+          gpsData={pendingLog.gpsData}
+          onSave={handlePhotoSave}
+          onSkip={() => handlePhotoSave(null, pendingLog.gpsData)}
+          onCancel={() => setPendingLog(null)}
+        />
+      )}
 
-          {filteredResultGoals.length === 0 ? (
-            <div
-              style={{
-                background: '#fff',
-                border: '1px dashed #d8dee9',
-                borderRadius: 16,
-                padding: '20px 16px',
-                color: '#6b7280',
-                fontSize: 14,
-                textAlign: 'center',
-                lineHeight: 1.6,
-                marginBottom: 14,
-              }}
-            >
-              아직 {activeCategory} 결과목표가 없어요.
-            </div>
-          ) : (
-            <div
-              style={{
-                display: 'grid',
-                gap: 10,
-                marginBottom: 14,
-              }}
-            >
-              {filteredResultGoals.map((goal) => {
-                const percent = getProgressPercent(
-                  goal.currentValue,
-                  goal.targetValue
-                );
+      {celebration && (
+        <CelebrationToast trigger={celebration} onDone={() => setCelebration(null)} />
+      )}
 
-                return (
-                  <div
-                    key={goal.id}
-                    style={{
-                      background: '#fff',
-                      border: '1px solid #e9e9ef',
-                      borderRadius: 18,
-                      padding: 14,
-                      boxShadow: '0 6px 20px rgba(20,20,43,0.04)',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        gap: 10,
-                        marginBottom: 8,
-                        alignItems: 'flex-start',
-                      }}
-                    >
-                      <div style={{ minWidth: 0, flex: 1 }}>
-                        <div
-                          style={{
-                            fontSize: 16,
-                            fontWeight: 900,
-                            color: '#111827',
-                            marginBottom: 4,
-                          }}
-                        >
-                          {goal.title}
-                        </div>
-
-                        <div
-                          style={{
-                            fontSize: 13,
-                            color: '#6b7280',
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          {goal.description || '설명 없음'}
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteResultGoal(goal.id)}
-                        style={{
-                          border: 'none',
-                          background: '#fef2f2',
-                          color: '#dc2626',
-                          borderRadius: 10,
-                          padding: '8px 10px',
-                          fontSize: 12,
-                          fontWeight: 800,
-                          cursor: 'pointer',
-                          flexShrink: 0,
-                        }}
-                      >
-                        삭제
-                      </button>
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: '#374151',
-                        marginBottom: 8,
-                      }}
-                    >
-                      {goal.currentValue} / {goal.targetValue} {goal.unit}
-                    </div>
-
-                    <div
-                      style={{
-                        height: 10,
-                        background: '#edf2f7',
-                        borderRadius: 999,
-                        overflow: 'hidden',
-                        marginBottom: 10,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${percent}%`,
-                          height: '100%',
-                          background: '#111827',
-                          borderRadius: 999,
-                        }}
-                      />
-                    </div>
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        gap: 8,
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: '#6b7280',
-                          fontWeight: 700,
-                        }}
-                      >
-                        진행률 {percent}%
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleIncreaseResultGoal(goal.id)}
-                        style={{
-                          border: 'none',
-                          background: '#111827',
-                          color: '#fff',
-                          borderRadius: 10,
-                          padding: '9px 12px',
-                          fontSize: 13,
-                          fontWeight: 800,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        +1 진행
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* 행동목표 추가 */}
-        <div
-          style={{
-            background: '#fff',
-            border: '1px solid #e9e9ef',
-            borderRadius: 20,
-            padding: 14,
-            marginBottom: 14,
-            boxShadow: '0 6px 20px rgba(20,20,43,0.05)',
-          }}
-        >
-          <div
-            style={{
-              fontSize: 17,
-              fontWeight: 900,
-              color: '#111827',
-              marginBottom: 6,
-            }}
-          >
-            행동목표 추가
-          </div>
-
-          <div
-            style={{
-              fontSize: 13,
-              color: '#6b7280',
-              lineHeight: 1.5,
-              marginBottom: 12,
-            }}
-          >
-            결과목표를 향해 가는 작은 행동들을 추가해보세요.
-          </div>
-
-          <div
-            style={{
-              display: 'grid',
-              gap: 10,
-            }}
-          >
-            <input
-              value={newGoalTitle}
-              onChange={(e) => setNewGoalTitle(e.target.value)}
-              placeholder={`${activeCategory} 행동목표를 입력하세요`}
-              style={{
-                width: '100%',
-                border: '1px solid #dbe1ea',
-                borderRadius: 12,
-                padding: '12px 13px',
-                fontSize: 14,
-                boxSizing: 'border-box',
-              }}
-            />
-
-            <select
-              value={newGoalCategory}
-              onChange={(e) => setNewGoalCategory(e.target.value)}
-              style={{
-                width: '100%',
-                border: '1px solid #dbe1ea',
-                borderRadius: 12,
-                padding: '12px 13px',
-                fontSize: 14,
-                background: '#fff',
-                boxSizing: 'border-box',
-              }}
-            >
-              {CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-
-            <button
-              type="button"
-              onClick={handleAddGoal}
-              style={{
-                border: 'none',
-                background: '#111827',
-                color: '#fff',
-                borderRadius: 12,
-                padding: '12px 14px',
-                fontSize: 14,
-                fontWeight: 800,
-                cursor: 'pointer',
-              }}
-            >
-              행동목표 추가
-            </button>
-          </div>
-        </div>
-
-        {/* 행동목표 수정 */}
-        {editingGoalId !== null && (
-          <div
-            style={{
-              background: '#fff',
-              border: '1px solid #e9e9ef',
-              borderRadius: 18,
-              padding: 14,
-              marginBottom: 14,
-              boxShadow: '0 6px 20px rgba(20,20,43,0.05)',
-            }}
-          >
-            <div
-              style={{
-                fontSize: 16,
-                fontWeight: 900,
-                color: '#111827',
-                marginBottom: 10,
-              }}
-            >
-              행동목표 수정
-            </div>
-
-            <div
-              style={{
-                display: 'grid',
-                gap: 10,
-              }}
-            >
-              <input
-                value={editingTitle}
-                onChange={(e) => setEditingTitle(e.target.value)}
-                placeholder="행동목표를 수정하세요"
-                style={{
-                  width: '100%',
-                  border: '1px solid #dbe1ea',
-                  borderRadius: 12,
-                  padding: '12px 13px',
-                  fontSize: 14,
-                  boxSizing: 'border-box',
-                }}
-              />
-
-              <select
-                value={editingCategory}
-                onChange={(e) => setEditingCategory(e.target.value)}
-                style={{
-                  width: '100%',
-                  border: '1px solid #dbe1ea',
-                  borderRadius: 12,
-                  padding: '12px 13px',
-                  fontSize: 14,
-                  background: '#fff',
-                  boxSizing: 'border-box',
-                }}
-              >
-                {CATEGORIES.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 8,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={handleSaveEdit}
-                  style={{
-                    border: 'none',
-                    background: '#111827',
-                    color: '#fff',
-                    borderRadius: 12,
-                    padding: '12px 14px',
-                    fontSize: 14,
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                  }}
-                >
-                  수정 저장
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  style={{
-                    border: 'none',
-                    background: '#eef2f7',
-                    color: '#374151',
-                    borderRadius: 12,
-                    padding: '12px 14px',
-                    fontSize: 14,
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                  }}
-                >
-                  취소
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 행동목표 목록 */}
-        <div>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 10,
-              marginBottom: 10,
-              flexWrap: 'wrap',
-            }}
-          >
-            <div
-              style={{
-                fontSize: 17,
-                fontWeight: 900,
-                color: '#111827',
-              }}
-            >
-              {activeCategory} 행동목표
-            </div>
-
-            <div
-              style={{
-                fontSize: 12,
-                color: '#6b7280',
-                background: '#eef2f7',
-                borderRadius: 999,
-                padding: '6px 10px',
-                fontWeight: 700,
-              }}
-            >
-              총 {filteredActionGoals.length}개
-            </div>
-          </div>
-
-          {filteredActionGoals.length === 0 ? (
-            <div
-              style={{
-                background: '#fff',
-                border: '1px dashed #d8dee9',
-                borderRadius: 16,
-                padding: '24px 16px',
-                color: '#6b7280',
-                fontSize: 14,
-                textAlign: 'center',
-                lineHeight: 1.6,
-              }}
-            >
-              아직 {activeCategory} 행동목표가 없어요.
-              <br />
-              위에서 새로운 행동목표를 추가해보세요.
-            </div>
-          ) : (
-            filteredActionGoals.map((goal) => (
-              <ActionGoalCard
-                key={goal.id}
-                goal={goal}
-                onEdit={handleStartEdit}
-                onDelete={handleDeleteGoal}
-                onComplete={handleCompleteGoal}
-              />
-            ))
-          )}
-        </div>
-      </div>
+      {victoryGoal && (
+        <BossVictoryModal
+          goal={victoryGoal}
+          badge={getBadgeForGoal(victoryGoal)?.title}
+          onClose={handleVictoryClose}
+          onNewGoal={handleVictoryNewGoal}
+        />
+      )}
     </div>
   );
 }

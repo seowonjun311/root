@@ -1,73 +1,62 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
 
-export default function Header({
-  title = '루트',
-  subtitle = '오늘의 행동을 기록하고 성장해보세요',
-}) {
-  return (
-    <header
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 30,
-        background: 'rgba(246, 247, 251, 0.92)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(229, 231, 235, 0.75)',
-      }}
-    >
+const TAB_PATHS = ['/Home', '/Records', '/Badges', '/AppSettings'];
+
+const PAGE_TITLES = {
+  '/CreateGoal': '목표 만들기',
+  '/NotificationSettings': '알림 설정',
+};
+
+const GO_HOME_DIRECTLY = [
+  '/CreateGoalExercise',
+  '/CreateGoalStudy',
+  '/CreateGoalMental',
+  '/CreateGoalDaily',
+];
+
+export default function Header() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isTabPage = TAB_PATHS.includes(location.pathname);
+  const title = PAGE_TITLES[location.pathname] || '';
+  const canGoBack = !isTabPage && location.key !== 'default';
+
+  if (isTabPage) {
+    return (
       <div
+        className="flex items-center justify-center px-4 shrink-0"
         style={{
-          width: '100%',
-          maxWidth: 760,
-          margin: '0 auto',
-          padding: '12px 12px 10px',
-          boxSizing: 'border-box',
+          height: 'calc(52px + env(safe-area-inset-top))',
+          paddingTop: 'env(safe-area-inset-top)',
+          borderBottom: '1px solid hsl(var(--border) / 0.4)',
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            minHeight: 44,
-          }}
-        >
-          <div
-            style={{
-              minWidth: 0,
-              flex: 1,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 900,
-                color: '#111827',
-                lineHeight: 1.1,
-                letterSpacing: '-0.02em',
-                marginBottom: 2,
-              }}
-            >
-              {title}
-            </div>
-
-            <div
-              style={{
-                fontSize: 12,
-                color: '#6b7280',
-                lineHeight: 1.35,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {subtitle}
-            </div>
-          </div>
-        </div>
+        <span className="text-base font-bold text-amber-900">퀘스트로그</span>
       </div>
-    </header>
+    );
+  }
+
+  return (
+    <div
+      className="flex items-center px-4 gap-3 shrink-0"
+      style={{
+        height: 'calc(52px + env(safe-area-inset-top))',
+        paddingTop: 'env(safe-area-inset-top)',
+        borderBottom: '1px solid hsl(var(--border) / 0.4)',
+      }}
+    >
+      {canGoBack && (
+        <button
+          onClick={() => GO_HOME_DIRECTLY.includes(location.pathname) ? navigate('/Home') : navigate(-1)}
+          className="p-1.5 rounded-lg hover:bg-secondary transition-colors -ml-1.5"
+          aria-label="이전 페이지로 돌아가기"
+        >
+          <ChevronLeft className="w-5 h-5 text-amber-800" aria-hidden="true" />
+        </button>
+      )}
+      {title && <span className="text-sm font-bold text-amber-900">{title}</span>}
+    </div>
   );
 }
