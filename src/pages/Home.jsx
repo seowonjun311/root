@@ -508,7 +508,7 @@ export default function Home() {
         </motion.div>
       </motion.div>
 
-    <CharacterBanner
+       <CharacterBanner
   nickname={bannerNickname}
   message={bannerMessage}
   activeCategory={activeCategory}
