@@ -4,7 +4,7 @@ import GoalProgress from '../components/GoalProgress';
 import ActionGoalCard from '../components/ActionGoalCard';
 import PhotoConfirmModal from '../components/PhotoConfirmModal';
 
-const STORAGE_KEY = 'root_home_goals_v5';
+const STORAGE_KEY = 'root_home_goals_v7';
 
 const XP_BY_CATEGORY = {
   운동: 12,
@@ -117,6 +117,45 @@ function isGoalActiveOnDate(goal, dateKey) {
   }
 
   return goal.startDateKey === dateKey;
+}
+
+function countWeeklyDoneForGoal(goalId, dateKey, records) {
+  const selectedDate = parseDateKey(dateKey);
+  const weekStart = getWeekStartDate(selectedDate);
+
+  let count = 0;
+
+  for (let i = 0; i < 7; i += 1) {
+    const current = addDays(weekStart, i);
+    const currentKey = getDateKey(current);
+    const record = records[makeRecordKey(goalId, currentKey)];
+
+    if (record?.done) {
+      count += 1;
+    }
+  }
+
+  return count;
+}
+
+function getLevelFromXp(xp) {
+  const level = Math.floor(xp / 100) + 1;
+  const currentLevelStartXp = (level - 1) * 100;
+  const nextLevelXp = level * 100;
+  const progressXp = xp - currentLevelStartXp;
+  const progressPercent = Math.min(
+    100,
+    Math.max(0, Math.round((progressXp / 100) * 100))
+  );
+
+  return {
+    level,
+    currentLevelStartXp,
+    nextLevelXp,
+    progressXp,
+    progressPercent,
+    remainXp: nextLevelXp - xp,
+  };
 }
 
 function makeDefaultData() {
@@ -329,6 +368,16 @@ export default function Home() {
     return result;
   }, [goals, records]);
 
+  const levelSummary = useMemo(() => {
+    return {
+      운동: getLevelFromXp(xpSummary.운동),
+      공부: getLevelFromXp(xpSummary.공부),
+      정신: getLevelFromXp(xpSummary.정신),
+      일상: getLevelFromXp(xpSummary.일상),
+      total: getLevelFromXp(xpSummary.total),
+    };
+  }, [xpSummary]);
+
   const todayXp = useMemo(() => {
     let total = 0;
 
@@ -341,6 +390,19 @@ export default function Home() {
   }, [filteredGoals]);
 
   const handleGoalClick = (goal) => {
+    if (goal.repeatType === 'weeklyCount' && !goal.done) {
+      const weeklyDoneCount = countWeeklyDoneForGoal(
+        goal.id,
+        selectedDateKey,
+        records
+      );
+
+      if (weeklyDoneCount >= goal.weeklyTarget) {
+        alert(`이 목표는 이번 주 ${goal.weeklyTarget}회를 이미 완료했어요.`);
+        return;
+      }
+    }
+
     setSelectedGoalId(goal.id);
     setPhotoModalOpen(true);
   };
@@ -352,6 +414,29 @@ export default function Home() {
 
   const handleConfirmPhoto = async (file) => {
     try {
+      const goal = goals.find((item) => item.id === selectedGoalId);
+
+      if (!goal) {
+        handleCloseModal();
+        return;
+      }
+
+      const currentRecord = records[makeRecordKey(selectedGoalId, selectedDateKey)];
+
+      if (goal.repeatType === 'weeklyCount' && !currentRecord?.done) {
+        const weeklyDoneCount = countWeeklyDoneForGoal(
+          goal.id,
+          selectedDateKey,
+          records
+        );
+
+        if (weeklyDoneCount >= goal.weeklyTarget) {
+          alert(`이 목표는 이번 주 ${goal.weeklyTarget}회를 이미 완료했어요.`);
+          handleCloseModal();
+          return;
+        }
+      }
+
       let photoData = null;
 
       if (file) {
@@ -376,12 +461,26 @@ export default function Home() {
   };
 
   const handleToggleDone = (goalId) => {
+    const goal = goals.find((item) => item.id === goalId);
+    if (!goal) return;
+
     const recordKey = makeRecordKey(goalId, selectedDateKey);
+    const currentRecord = records[recordKey];
+    const nextDone = !currentRecord?.done;
+
+    if (goal.repeatType === 'weeklyCount' && nextDone) {
+      const weeklyDoneCount = countWeeklyDoneForGoal(goalId, selectedDateKey, records);
+
+      if (weeklyDoneCount >= goal.weeklyTarget) {
+        alert(`이 목표는 이번 주 ${goal.weeklyTarget}회를 이미 완료했어요.`);
+        return;
+      }
+    }
 
     setRecords((prev) => ({
       ...prev,
       [recordKey]: {
-        done: !prev[recordKey]?.done,
+        done: nextDone,
         photo: prev[recordKey]?.photo || null,
       },
     }));
@@ -537,7 +636,7 @@ export default function Home() {
       <div style={styles.container}>
         <Header
           title="루트"
-          subtitle="반복 목표를 만들고 완료할 때마다 경험치를 얻어보세요"
+          subtitle="반복 목표를 만들고 완료할 때마다 경험치와 레벨을 쌓아보세요"
         />
 
         <div style={styles.section}>
@@ -589,8 +688,10 @@ export default function Home() {
           <div style={styles.xpCard}>
             <div style={styles.xpTopRow}>
               <div>
-                <div style={styles.xpLabel}>경험치</div>
-                <div style={styles.xpTotal}>총 {xpSummary.total} XP</div>
+                <div style={styles.xpLabel}>전체 성장</div>
+                <div style={styles.xpTotal}>
+                  Lv.{levelSummary.total.level} · 총 {xpSummary.total} XP
+                </div>
               </div>
 
               <div style={styles.todayXpBadge}>
@@ -598,25 +699,82 @@ export default function Home() {
               </div>
             </div>
 
+            <div style={styles.levelBarBackground}>
+              <div
+                style={{
+                  ...styles.levelBarFill,
+                  width: `${levelSummary.total.progressPercent}%`,
+                }}
+              />
+            </div>
+
+            <div style={styles.levelGuide}>
+              다음 레벨까지 {levelSummary.total.remainXp} XP 남았어요
+            </div>
+
             <div style={styles.xpGrid}>
               <div style={styles.xpItem}>
-                <div style={styles.xpItemLabel}>운동</div>
+                <div style={styles.xpItemTop}>
+                  <div style={styles.xpItemLabel}>운동</div>
+                  <div style={styles.xpItemLevel}>Lv.{levelSummary.운동.level}</div>
+                </div>
                 <div style={styles.xpItemValue}>{xpSummary.운동} XP</div>
+                <div style={styles.smallBarBackground}>
+                  <div
+                    style={{
+                      ...styles.smallBarFill,
+                      width: `${levelSummary.운동.progressPercent}%`,
+                    }}
+                  />
+                </div>
               </div>
 
               <div style={styles.xpItem}>
-                <div style={styles.xpItemLabel}>공부</div>
+                <div style={styles.xpItemTop}>
+                  <div style={styles.xpItemLabel}>공부</div>
+                  <div style={styles.xpItemLevel}>Lv.{levelSummary.공부.level}</div>
+                </div>
                 <div style={styles.xpItemValue}>{xpSummary.공부} XP</div>
+                <div style={styles.smallBarBackground}>
+                  <div
+                    style={{
+                      ...styles.smallBarFill,
+                      width: `${levelSummary.공부.progressPercent}%`,
+                    }}
+                  />
+                </div>
               </div>
 
               <div style={styles.xpItem}>
-                <div style={styles.xpItemLabel}>정신</div>
+                <div style={styles.xpItemTop}>
+                  <div style={styles.xpItemLabel}>정신</div>
+                  <div style={styles.xpItemLevel}>Lv.{levelSummary.정신.level}</div>
+                </div>
                 <div style={styles.xpItemValue}>{xpSummary.정신} XP</div>
+                <div style={styles.smallBarBackground}>
+                  <div
+                    style={{
+                      ...styles.smallBarFill,
+                      width: `${levelSummary.정신.progressPercent}%`,
+                    }}
+                  />
+                </div>
               </div>
 
               <div style={styles.xpItem}>
-                <div style={styles.xpItemLabel}>일상</div>
+                <div style={styles.xpItemTop}>
+                  <div style={styles.xpItemLabel}>일상</div>
+                  <div style={styles.xpItemLevel}>Lv.{levelSummary.일상.level}</div>
+                </div>
                 <div style={styles.xpItemValue}>{xpSummary.일상} XP</div>
+                <div style={styles.smallBarBackground}>
+                  <div
+                    style={{
+                      ...styles.smallBarFill,
+                      width: `${levelSummary.일상.progressPercent}%`,
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -895,7 +1053,9 @@ export default function Home() {
 
                     {goal.repeatType === 'weeklyCount' && (
                       <div style={styles.repeatSubInfo}>
-                        이번 주 {weeklyDoneCount}/{goal.weeklyTarget}회
+                        {weeklyDoneCount >= goal.weeklyTarget
+                          ? `이번 주 목표 달성 완료 (${weeklyDoneCount}/${goal.weeklyTarget})`
+                          : `이번 주 ${weeklyDoneCount}/${goal.weeklyTarget}회`}
                       </div>
                     )}
 
@@ -1046,6 +1206,25 @@ const styles = {
     fontSize: '13px',
     fontWeight: 800,
   },
+  levelBarBackground: {
+    width: '100%',
+    height: '14px',
+    borderRadius: '999px',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+    marginTop: '14px',
+  },
+  levelBarFill: {
+    height: '100%',
+    borderRadius: '999px',
+    background: 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)',
+  },
+  levelGuide: {
+    marginTop: '10px',
+    color: '#d1d5db',
+    fontSize: '12px',
+    lineHeight: 1.5,
+  },
   xpGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
@@ -1058,16 +1237,40 @@ const styles = {
     backgroundColor: 'rgba(255,255,255,0.05)',
     border: '1px solid rgba(255,255,255,0.06)',
   },
+  xpItemTop: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px',
+    marginBottom: '6px',
+  },
   xpItemLabel: {
     color: '#cbd5e1',
     fontSize: '12px',
     fontWeight: 700,
-    marginBottom: '6px',
+  },
+  xpItemLevel: {
+    color: '#f5d0fe',
+    fontSize: '12px',
+    fontWeight: 800,
   },
   xpItemValue: {
     color: '#ffffff',
     fontSize: '18px',
     fontWeight: 800,
+  },
+  smallBarBackground: {
+    width: '100%',
+    height: '8px',
+    borderRadius: '999px',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+    marginTop: '10px',
+  },
+  smallBarFill: {
+    height: '100%',
+    borderRadius: '999px',
+    background: 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)',
   },
   xpGuide: {
     marginTop: '12px',
