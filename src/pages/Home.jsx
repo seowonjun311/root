@@ -101,17 +101,6 @@ function getWeekStartString() {
   ).padStart(2, '0')}`;
 }
 
-function getPagePathByCategory(category) {
-  const pageMap = {
-    exercise: 'CreateGoalExercise',
-    study: 'CreateGoalStudy',
-    mental: 'CreateGoalMental',
-    daily: 'CreateGoalDaily',
-  };
-
-  return `/${pageMap[category] || 'CreateGoalExercise'}`;
-}
-
 export default function Home() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -642,8 +631,9 @@ export default function Home() {
             </div>
 
             <button
+              type="button"
               onClick={() => {
-                navigate(`${getPagePathByCategory(activeCategory)}?goalId=${activeGoal.id}`);
+                navigate(`/CreateGoal?category=${activeCategory}&goalId=${activeGoal.id}`);
               }}
               className="w-full rounded-xl font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
               style={{
@@ -661,7 +651,7 @@ export default function Home() {
           <EmptyGoalState
             category={activeCategory}
             onCreateGoal={() => {
-              navigate(getPagePathByCategory(activeCategory));
+              navigate(`/CreateGoal?category=${activeCategory}`);
             }}
           />
         )}
