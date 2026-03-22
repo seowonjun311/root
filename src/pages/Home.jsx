@@ -13,6 +13,7 @@ import EmptyGoalState from '../components/home/EmptyGoalState';
 import PhotoConfirmModal from '../components/home/PhotoConfirmModal';
 import BossVictoryModal from '../components/home/BossVictoryModal';
 import CelebrationToast from '../components/home/CelebrationToast';
+import CompletionRewardOverlay from '../components/home/CompletionRewardOverlay';
 import { computeStreak, getBadgeForGoal, getStreakTrigger } from '../components/badgeUtils';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { guestDataPersistence } from '../lib/GuestDataPersistence';
@@ -124,6 +125,7 @@ export default function Home() {
   const [pendingLog, setPendingLog] = useState(null);
   const [celebration, setCelebration] = useState(null);
   const [victoryGoal, setVictoryGoal] = useState(null);
+  const [completionReward, setCompletionReward] = useState(null);
   const [isPulling, setIsPulling] = useState(false);
   const [bannerMoveTrigger, setBannerMoveTrigger] = useState(0);
   const [bannerHeight, setBannerHeight] = useState(112);
@@ -265,7 +267,6 @@ export default function Home() {
       }
     }
 
-    // URL의 ?category=... 값은 처음 한 번만 적용
     if (!initializedRef.current && categoryFromQuery) {
       setActiveCategory(categoryFromQuery);
       initializedRef.current = true;
@@ -496,6 +497,18 @@ export default function Home() {
       setCelebration('weekly_complete');
     }
 
+    const rewardExp = actionGoal?.action_mode === 'single' ? 5 : 1;
+
+    setCompletionReward({
+      title: actionGoal.title,
+      category: actionGoal.category,
+      exp: rewardExp,
+      message:
+        actionGoal?.action_mode === 'single'
+          ? '단 한 번의 도전이 큰 발걸음이 되었어요.'
+          : '작은 행동이 루트를 앞으로 움직였어요.',
+    });
+
     setPendingLog(null);
     setBannerMoveTrigger(Date.now());
 
@@ -670,6 +683,11 @@ export default function Home() {
           onDone={() => setCelebration(null)}
         />
       )}
+
+      <CompletionRewardOverlay
+        reward={completionReward}
+        onDone={() => setCompletionReward(null)}
+      />
 
       {victoryGoal && (
         <BossVictoryModal
