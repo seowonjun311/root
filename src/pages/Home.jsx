@@ -265,10 +265,7 @@ export default function Home() {
           base44.auth.updateMe({ active_category: categoryFromQuery }).catch(() => {});
         }
       } else {
-        const guestData = guestDataPersistence.loadOnboardingData();
-        if (guestData?.activeCategory !== categoryFromQuery) {
-          guestDataPersistence.saveData('guest_active_category', categoryFromQuery);
-        }
+        guestDataPersistence.saveData('guest_active_category', categoryFromQuery);
       }
 
       navigate('/Home', { replace: true });
@@ -324,7 +321,7 @@ export default function Home() {
   const guestData = useMemo(() => {
     if (!isGuest) return null;
     return guestDataPersistence.loadOnboardingData();
-  }, [isGuest, goals, actionGoals, allLogs]);
+  }, [isGuest]);
 
   const guestLevels = useMemo(() => buildGuestLevelStats(allLogs), [allLogs]);
 
@@ -441,7 +438,8 @@ export default function Home() {
       await base44.entities.ActionLog.create(logData);
 
       const currentXp = user?.[`${actionGoal.category}_xp`] || 0;
-      const newXp = currentXp + 1;
+      const gainXp = actionGoal?.action_mode === 'single' ? 5 : 1;
+      const newXp = currentXp + gainXp;
       const newLevel = Math.floor(newXp / 30) + 1;
 
       await base44.auth
