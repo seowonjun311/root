@@ -496,7 +496,7 @@ export default function Home() {
       <div className="bg-background min-h-full px-4 py-6">
         <div className="animate-pulse space-y-4">
           <div className="h-24 rounded-3xl bg-secondary/60" />
-          <div className="h-16 rounded-2xl bg-secondary/60" />
+          <div className="h-14 rounded-2xl bg-secondary/60" />
           <div className="h-24 rounded-2xl bg-secondary/60" />
           <div className="h-20 rounded-2xl bg-secondary/60" />
           <div className="h-20 rounded-2xl bg-secondary/60" />
@@ -540,9 +540,11 @@ export default function Home() {
       <div
         style={{
           position: 'sticky',
-          top: 112,
+          top: 92,
           zIndex: 19,
           background: 'hsl(var(--background))',
+          paddingTop: '2px',
+          paddingBottom: '2px',
         }}
       >
         <CategoryTabs
