@@ -495,12 +495,8 @@ export default function Home() {
     return (
       <div className="bg-background min-h-full px-4 py-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-36 rounded-3xl bg-secondary/60" />
-          <div className="grid grid-cols-4 gap-2">
-            {[1, 2, 3, 4].map((item) => (
-              <div key={item} className="h-16 rounded-xl bg-secondary/60" />
-            ))}
-          </div>
+          <div className="h-24 rounded-3xl bg-secondary/60" />
+          <div className="h-16 rounded-2xl bg-secondary/60" />
           <div className="h-24 rounded-2xl bg-secondary/60" />
           <div className="h-20 rounded-2xl bg-secondary/60" />
           <div className="h-20 rounded-2xl bg-secondary/60" />
@@ -523,19 +519,38 @@ export default function Home() {
         </motion.div>
       </motion.div>
 
-      <CharacterBanner
-        nickname={bannerNickname}
-        message={bannerMessage}
-        activeCategory={activeCategory}
-        moveTrigger={bannerMoveTrigger}
-        expText="+1 EXP"
-      />
+      <div
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 20,
+          background: 'hsl(var(--background))',
+          paddingTop: '2px',
+        }}
+      >
+        <CharacterBanner
+          nickname={bannerNickname}
+          message={bannerMessage}
+          activeCategory={activeCategory}
+          moveTrigger={bannerMoveTrigger}
+          expText="+1 EXP"
+        />
+      </div>
 
-      <CategoryTabs
-        active={activeCategory}
-        onChange={handleCategoryChange}
-        userLevels={userLevels}
-      />
+      <div
+        style={{
+          position: 'sticky',
+          top: 112,
+          zIndex: 19,
+          background: 'hsl(var(--background))',
+        }}
+      >
+        <CategoryTabs
+          active={activeCategory}
+          onChange={handleCategoryChange}
+          userLevels={userLevels}
+        />
+      </div>
 
       <div className="px-4 pb-5">
         {activeGoal ? (
