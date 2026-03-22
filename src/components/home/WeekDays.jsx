@@ -1,4 +1,5 @@
 import React from 'react';
+import { Footprints, Swords } from 'lucide-react';
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 
@@ -14,19 +15,40 @@ function getWeekDates() {
   });
 }
 
-export default function WeekDays({ logs = [] }) {
+export default function WeekDays({
+  logs = [],
+  weeklyTarget = 7,
+  category = 'daily',
+}) {
   const todayStr = new Date().toISOString().split('T')[0];
   const weekDates = getWeekDates();
   const doneDates = new Set((logs || []).map((log) => log.date));
+  const weeklyCount = weekDates.filter((date) => doneDates.has(date)).length;
+  const isWeeklyComplete = weeklyCount >= weeklyTarget;
+
+  const DoneIcon = category === 'exercise' ? Footprints : Swords;
 
   return (
     <div
-      className="mt-2 rounded-xl px-2.5 py-2"
+      className="mt-2 rounded-xl px-2.5 py-2 relative"
       style={{
         background: 'rgba(255,248,232,0.52)',
         border: '1px solid rgba(160,120,64,0.12)',
       }}
     >
+      {isWeeklyComplete && (
+        <div
+          className="absolute top-2 right-2 px-1.5 py-[2px] rounded-full text-[9px] font-bold leading-none"
+          style={{
+            background: 'linear-gradient(180deg, #d6a64b 0%, #b88328 100%)',
+            color: '#fffaf0',
+            border: '1px solid rgba(122,80,32,0.22)',
+          }}
+        >
+          주간 완료
+        </div>
+      )}
+
       <div className="grid grid-cols-7 gap-1">
         {weekDates.map((date, index) => {
           const isToday = date === todayStr;
@@ -43,7 +65,7 @@ export default function WeekDays({ logs = [] }) {
               </span>
 
               <div
-                className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold transition-all"
+                className="w-6 h-6 rounded-md flex items-center justify-center transition-all"
                 style={
                   isDone
                     ? {
@@ -70,7 +92,14 @@ export default function WeekDays({ logs = [] }) {
                           }
                 }
               >
-                {isDone ? '✓' : isToday ? '●' : ''}
+                {isDone ? (
+                  <DoneIcon className="w-3.5 h-3.5" />
+                ) : isToday ? (
+                  <div
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: '#7a5020' }}
+                  />
+                ) : null}
               </div>
             </div>
           );
