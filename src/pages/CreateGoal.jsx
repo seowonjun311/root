@@ -37,7 +37,7 @@ const ACTION_MODES = [
   {
     value: 'single',
     label: '🎯 단발형',
-    desc: '정해진 날짜에 한 번 해내는 행동이에요',
+    desc: '정해진 날짜에 한 번 해내는 목표예요',
     sub: '예: 모의고사 보기, 병원 가기, 책 1권 끝내기',
   },
 ];
@@ -56,7 +56,7 @@ const categoryEmojis = {
   daily: '🏠',
 };
 
-const getActionPlaceholder = (category) => {
+const getRoutinePlaceholder = (category) => {
   if (category === 'daily') return '예: 팩하기, 집청소, 빨래, 부모님 연락';
   if (category === 'mental') return '예: 7시 기상, 일기쓰기, 금연, 명상';
   if (category === 'study') return '예: 독해, 듣기, 회화, 전공서, 수학';
@@ -83,8 +83,7 @@ const getDaysLeft = (dateString) => {
   const target = new Date(dateString);
   target.setHours(0, 0, 0, 0);
 
-  const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-  return diff;
+  return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
 };
 
 function SectionTitle({ title, desc }) {
@@ -152,8 +151,8 @@ export default function CreateGoal() {
   const [dDay, setDDay] = useState('');
   const [examTitle, setExamTitle] = useState('');
 
-  const [actionTitle, setActionTitle] = useState('');
   const [actionMode, setActionMode] = useState('routine');
+  const [actionTitle, setActionTitle] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
   const [actionType, setActionType] = useState('confirm');
   const [frequency, setFrequency] = useState(3);
@@ -175,43 +174,33 @@ export default function CreateGoal() {
     return Math.max(1, diff || 1);
   };
 
+  const finalGoalTitle = isStudy && hasDDay ? examTitle.trim() : goalTitle.trim();
+  const finalDuration = isStudy && hasDDay ? calcDuration() : duration;
+
+  const getSingleActionTitle = () => {
+    if (isAddingActionOnly && existingGoal?.title) return `${existingGoal.title} 실행`;
+    if (isStudy && hasDDay && examTitle.trim()) return `${examTitle.trim()} 실행`;
+    if (goalTitle.trim()) return `${goalTitle.trim()} 실행`;
+    return '1회 목표';
+  };
+
   const isGoalStep =
     !isAddingActionOnly &&
     ((isStudy && step === 1 && !hasDDay) || (!isStudy && step === 0));
 
   const isStudyDDayStep = !isAddingActionOnly && isStudy && step === 1 && hasDDay;
+
   const isActionStep =
     isAddingActionOnly ||
     (!isAddingActionOnly && ((isStudy && step === 2) || (!isStudy && step === 1)));
 
-  const finalGoalTitle = isStudy && hasDDay ? examTitle.trim() : goalTitle.trim();
-  const finalDuration = isStudy && hasDDay ? calcDuration() : duration;
-
-  const getSingleActionTitle = () => {
-    if (isAddingActionOnly && existingGoal?.title) {
-      return `${existingGoal.title} 실행`;
-    }
-
-    if (isStudy && hasDDay && examTitle.trim()) {
-      return `${examTitle.trim()} 실행`;
-    }
-
-    if (goalTitle.trim()) {
-      return `${goalTitle.trim()} 실행`;
-    }
-
-    return '1회 행동';
-  };
-
   const isGoalStepValid = (() => {
     if (!isGoalStep) return false;
     if (!goalTitle.trim()) return false;
-
     if (isCustomDuration) {
       const weeks = Number(customWeeks);
       if (!weeks || weeks < 1) return false;
     }
-
     return true;
   })();
 
@@ -232,7 +221,6 @@ export default function CreateGoal() {
     if (!actionTitle.trim()) return false;
     if (!frequency || frequency < 1 || frequency > 7) return false;
     if (actionType === 'timer' && (!minutes || Number(minutes) < 1)) return false;
-
     return true;
   })();
 
@@ -513,11 +501,8 @@ export default function CreateGoal() {
         className="h-12 w-full rounded-xl bg-amber-700 font-semibold text-amber-50 hover:bg-amber-800"
         disabled={!isGoalStepValid}
         onClick={() => {
-          if (isStudy) {
-            setStep(2);
-          } else {
-            setStep(1);
-          }
+          if (isStudy) setStep(2);
+          else setStep(1);
         }}
       >
         다음
@@ -549,7 +534,7 @@ export default function CreateGoal() {
     <div className="space-y-3">
       <SectionTitle
         title="기록 방식 선택"
-        desc="이 행동을 어떤 방식으로 완료 처리할지 정해요"
+        desc="이 목표를 어떤 방식으로 완료 처리할지 정해요"
       />
 
       {ACTION_TYPES.map((type) => (
@@ -571,7 +556,7 @@ export default function CreateGoal() {
         <Input
           value={actionTitle}
           onChange={(e) => setActionTitle(e.target.value)}
-          placeholder={getActionPlaceholder(category)}
+          placeholder={getRoutinePlaceholder(category)}
           className="h-12 rounded-xl bg-white/80"
         />
       </div>
@@ -602,7 +587,7 @@ export default function CreateGoal() {
   const renderSingleSection = () => (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        이 1회 목표는 별도의 행동 이름 없이 날짜와 기록 방식만 정하면 돼요.
+        이 1회 목표는 행동을 따로 적지 않고 날짜와 기록 방식만 정하면 돼요.
       </p>
 
       <div>
