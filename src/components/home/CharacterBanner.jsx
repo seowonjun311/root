@@ -30,29 +30,29 @@ const CATEGORY_THEME = {
 
 function Castle({ color }) {
   return (
-    <div className="relative w-20 h-20">
+    <div className="relative w-14 h-14 sm:w-16 sm:h-16">
       <div
-        className="absolute bottom-0 left-3 right-3 h-9 rounded-t-md"
+        className="absolute bottom-0 left-2 right-2 h-6 rounded-t-md"
         style={{ background: color }}
       />
       <div
-        className="absolute bottom-7 left-1 w-5 h-8 rounded-t-md"
+        className="absolute bottom-5 left-0.5 w-4 h-6 rounded-t-md"
         style={{ background: color }}
       />
       <div
-        className="absolute bottom-7 right-1 w-5 h-8 rounded-t-md"
+        className="absolute bottom-5 right-0.5 w-4 h-6 rounded-t-md"
         style={{ background: color }}
       />
       <div
-        className="absolute bottom-11 left-7 right-7 h-8 rounded-t-md"
+        className="absolute bottom-8 left-5 right-5 h-6 rounded-t-md"
         style={{ background: color }}
       />
       <div
-        className="absolute bottom-0 left-8 right-8 h-5 rounded-t-full"
+        className="absolute bottom-0 left-5 right-5 h-4 rounded-t-full"
         style={{ background: '#2f170d' }}
       />
       <div
-        className="absolute bottom-14 left-9 w-2 h-2 rounded-full"
+        className="absolute bottom-10 left-6 w-2 h-2 rounded-full"
         style={{ background: '#ffd36b' }}
       />
     </div>
@@ -61,14 +61,14 @@ function Castle({ color }) {
 
 function Hero() {
   return (
-    <div className="relative w-12 h-12">
-      <div className="absolute top-0 left-3.5 w-5 h-5 rounded-full bg-[#ffe0bd]" />
-      <div className="absolute top-4 left-2 w-8 h-5 rounded-t-xl bg-[#6a4020]" />
-      <div className="absolute top-7 left-2.5 w-3 h-4 rounded-b-lg bg-[#3c5aa8]" />
-      <div className="absolute top-7 right-2.5 w-3 h-4 rounded-b-lg bg-[#3c5aa8]" />
-      <div className="absolute top-5 -left-0.5 w-3 h-1.5 rounded-full bg-[#ffe0bd]" />
-      <div className="absolute top-5 right-0 w-3 h-1.5 rounded-full bg-[#ffe0bd]" />
-      <div className="absolute top-3 left-3 w-6 h-2 rounded-full bg-[#4b2a12]" />
+    <div className="relative w-9 h-9 sm:w-10 sm:h-10">
+      <div className="absolute top-0 left-2.5 w-4 h-4 rounded-full bg-[#ffe0bd]" />
+      <div className="absolute top-3 left-1.5 w-6 h-4 rounded-t-xl bg-[#6a4020]" />
+      <div className="absolute top-5.5 left-2 w-2.5 h-3.5 rounded-b-lg bg-[#3c5aa8]" />
+      <div className="absolute top-5.5 right-2 w-2.5 h-3.5 rounded-b-lg bg-[#3c5aa8]" />
+      <div className="absolute top-4 -left-0.5 w-2.5 h-1.5 rounded-full bg-[#ffe0bd]" />
+      <div className="absolute top-4 right-0 w-2.5 h-1.5 rounded-full bg-[#ffe0bd]" />
+      <div className="absolute top-2 left-2 w-5 h-2 rounded-full bg-[#4b2a12]" />
     </div>
   );
 }
@@ -96,17 +96,17 @@ export default function CharacterBanner({
   }, [moveTrigger]);
 
   return (
-    <div className="px-4 pt-4 pb-3">
+    <div className="px-4 pt-2 pb-2">
       <div
-        className="relative overflow-hidden rounded-[28px] px-4 pt-4 pb-5"
+        className="relative overflow-hidden rounded-[24px] px-4 pt-3 pb-3"
         style={{
           background: theme.sky,
           border: '1.5px solid rgba(100,60,20,0.14)',
-          boxShadow: '0 10px 24px rgba(60,35,10,0.12)',
+          boxShadow: '0 8px 18px rgba(60,35,10,0.10)',
         }}
       >
         <div
-          className="absolute -top-6 -right-8 w-28 h-28 rounded-full"
+          className="absolute -top-6 -right-8 w-24 h-24 rounded-full"
           style={{ background: theme.glow, filter: 'blur(6px)' }}
         />
 
@@ -136,7 +136,7 @@ export default function CharacterBanner({
             style={{
               background: 'rgba(255,255,255,0.48)',
               border: '1px solid rgba(107,71,25,0.10)',
-              minWidth: '78px',
+              minWidth: '74px',
             }}
           >
             <div className="text-[10px] font-semibold" style={{ color: '#8d6b3b' }}>
@@ -148,12 +148,12 @@ export default function CharacterBanner({
           </div>
         </div>
 
-        <div className="relative z-10 mt-5 h-32">
-          <div className="absolute inset-x-0 top-1 flex justify-end pr-2">
+        <div className="relative z-10 mt-3 h-20 sm:h-24">
+          <div className="absolute inset-x-0 top-0 flex justify-end pr-2">
             <motion.div
               animate={{
-                y: [0, -2, 0],
-                scale: [1, 1.03, 1],
+                y: [0, -1.5, 0],
+                scale: [1, 1.02, 1],
               }}
               transition={{
                 duration: 2.4,
@@ -165,13 +165,12 @@ export default function CharacterBanner({
             </motion.div>
           </div>
 
-          <div className="absolute left-0 right-0 bottom-0 h-16">
+          <div className="absolute left-0 right-0 bottom-0 h-12">
             <div
-              className="absolute left-[6%] right-[12%] bottom-0 h-14 rounded-[999px]"
+              className="absolute left-[6%] right-[12%] bottom-0 h-10 rounded-[999px]"
               style={{
                 background: theme.road,
-                clipPath:
-                  'polygon(0% 100%, 16% 60%, 28% 52%, 48% 42%, 66% 28%, 100% 0%, 100% 100%)',
+                clipPath: 'polygon(0% 100%, 16% 60%, 28% 52%, 48% 42%, 66% 28%, 100% 0%, 100% 100%)',
                 opacity: 0.95,
               }}
             />
@@ -179,20 +178,20 @@ export default function CharacterBanner({
 
           <motion.div
             key={moveTrigger}
-            className="absolute left-[14%] bottom-4 z-20"
+            className="absolute left-[14%] bottom-2 z-20"
             initial={{ x: 0, y: 0, scale: 1 }}
             animate={
               moveTrigger
                 ? {
-                    x: [0, 10, 22, 18],
-                    y: [0, -2, -5, 0],
-                    scale: [1, 1.04, 1.07, 1],
+                    x: [0, 8, 16, 14],
+                    y: [0, -1.5, -3, 0],
+                    scale: [1, 1.03, 1.06, 1],
                   }
-                : { x: 0, y: [0, -2, 0], scale: 1 }
+                : { x: 0, y: [0, -1.5, 0], scale: 1 }
             }
             transition={
               moveTrigger
-                ? { duration: 0.9, ease: 'easeOut' }
+                ? { duration: 0.85, ease: 'easeOut' }
                 : { duration: 2.2, repeat: Infinity, ease: 'easeInOut' }
             }
           >
@@ -202,14 +201,14 @@ export default function CharacterBanner({
           <AnimatePresence>
             {showReward && (
               <motion.div
-                initial={{ opacity: 0, y: 8, scale: 0.9 }}
-                animate={{ opacity: 1, y: -12, scale: 1 }}
-                exit={{ opacity: 0, y: -22, scale: 0.95 }}
+                initial={{ opacity: 0, y: 6, scale: 0.9 }}
+                animate={{ opacity: 1, y: -10, scale: 1 }}
+                exit={{ opacity: 0, y: -18, scale: 0.95 }}
                 transition={{ duration: 0.6 }}
-                className="absolute left-[21%] bottom-14 z-30"
+                className="absolute left-[21%] bottom-10 z-30"
               >
                 <div
-                  className="rounded-full px-3 py-1 text-xs font-extrabold"
+                  className="rounded-full px-2.5 py-1 text-[11px] font-extrabold"
                   style={{
                     background: 'rgba(255,255,255,0.92)',
                     color: '#8b5a20',
@@ -223,7 +222,7 @@ export default function CharacterBanner({
             )}
           </AnimatePresence>
 
-          <div className="absolute bottom-1 left-[12%] right-[16%]">
+          <div className="absolute bottom-0 left-[12%] right-[16%]">
             <div
               className="h-2 rounded-full overflow-hidden"
               style={{ background: 'rgba(80,45,12,0.14)' }}
