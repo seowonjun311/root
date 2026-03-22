@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom
 
 import Header from './components/layout/Header';
 import AppLayout from './components/layout/AppLayout';
-import { TabNavigationProvider } from './components/layout/TabNavigationContext';
+import { TabNavigationProvider } from './lib/TabNavigationContext';
 
 const PageFallback = () => (
   <div className="flex items-center justify-center min-h-screen text-sm text-muted-foreground">
@@ -14,6 +14,9 @@ const PageFallback = () => (
 const PageTransition = ({ children }) => <>{children}</>;
 
 const Home = lazy(() => import('./pages/Home'));
+const Records = lazy(() => import('./pages/Records'));
+const Badges = lazy(() => import('./pages/Badges'));
+const AppSettings = lazy(() => import('./pages/AppSettings'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const CreateGoal = lazy(() => import('./pages/CreateGoal'));
 
@@ -119,9 +122,38 @@ export default function App() {
                 }
               />
 
-              <Route path="/Records" element={<div />} />
-              <Route path="/Badges" element={<div />} />
-              <Route path="/AppSettings" element={<div />} />
+              <Route
+                path="/Records"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <PageTransition>
+                      <Records />
+                    </PageTransition>
+                  </Suspense>
+                }
+              />
+
+              <Route
+                path="/Badges"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <PageTransition>
+                      <Badges />
+                    </PageTransition>
+                  </Suspense>
+                }
+              />
+
+              <Route
+                path="/AppSettings"
+                element={
+                  <Suspense fallback={<PageFallback />}>
+                    <PageTransition>
+                      <AppSettings />
+                    </PageTransition>
+                  </Suspense>
+                }
+              />
 
               <Route path="/Record" element={<Navigate to="/Records" replace />} />
               <Route path="/Badge" element={<Navigate to="/Badges" replace />} />
