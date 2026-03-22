@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Play, Square, Check, X, Pencil, Trash2 } from 'lucide-react';
+import { Play, Square, Check, X, Pencil, Trash2, ChevronDown, ChevronUp, CalendarDays } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Drawer,
@@ -13,6 +13,7 @@ import {
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import WeekDays from './WeekDays';
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 const TIMER_KEY = (id) => `timer_start_${id}`;
@@ -77,7 +78,7 @@ function MonthCalendar({ logs = [], onClose }) {
   const [viewMonth, setViewMonth] = useState(today.getMonth());
 
   const todayStr = today.toISOString().split('T')[0];
-  const doneDates = new Set(logs.map((log) => log.date));
+  const doneDates = new Set((logs || []).map((log) => log.date));
   const days = getMonthDates(viewYear, viewMonth);
 
   const prevMonth = () => {
@@ -178,11 +179,17 @@ function MonthCalendar({ logs = [], onClose }) {
   );
 }
 
-export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete }) {
+export default function ActionGoalCard({
+  actionGoal,
+  weeklyLogs = [],
+  allLogs = [],
+  onComplete,
+}) {
   const queryClient = useQueryClient();
 
   const [elapsed, setElapsed] = useState(0);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showWeeklyDetail, setShowWeeklyDetail] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -217,6 +224,8 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
 
   const todayStr = new Date().toISOString().split('T')[0];
   const doneToday = weeklyLogs.some((log) => log.date === todayStr);
+
+  const detailLogs = Array.isArray(allLogs) && allLogs.length > 0 ? allLogs : weeklyLogs;
 
   const [isRunning, setIsRunning] = useState(() => !!localStorage.getItem(TIMER_KEY(actionGoal.id)));
 
@@ -474,11 +483,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
           }}
         >
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowCalendar((prev) => !prev)}
-              className="flex items-center gap-2 min-w-0 flex-1 text-left"
-              aria-label={`${actionGoal.title} 달력 보기`}
-            >
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <span className="text-base shrink-0">{typeEmoji}</span>
 
               <div className="min-w-0 flex-1">
@@ -520,7 +525,7 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
                   </span>
                 </div>
               </div>
-            </button>
+            </div>
 
             {actionGoal.action_type === 'timer' ? (
               doneToday && !isRunning ? (
@@ -600,11 +605,80 @@ export default function ActionGoalCard({ actionGoal, weeklyLogs = [], onComplete
               <Pencil className="w-3.5 h-3.5" />
             </button>
           </div>
+
+          <button
+            onClick={() => setShowWeeklyDetail((prev) => !prev)}
+            className="w-full text-left"
+            aria-label="주간 기록 펼치기"
+          >
+            <WeekDays logs={weeklyLogs} weeklyTarget={targetFreq} />
+          </button>
+
+          <AnimatePresence initial={false}>
+            {showWeeklyDetail && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.16 }}
+                className="mt-2 rounded-xl px-3 py-3"
+                style={{
+                  background: 'rgba(255,250,240,0.82)',
+                  border: '1px solid rgba(160,120,64,0.18)',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div
+                      className="text-xs font-bold"
+                      style={{ color: '#7a5020' }}
+                    >
+                      주간 기록 요약
+                    </div>
+                    <div
+                      className="text-[11px] mt-1"
+                      style={{ color: '#8f6a33' }}
+                    >
+                      이번 주 {weeklyCount}회 완료 / 목표 {targetFreq}회
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowCalendar((prev) => !prev);
+                      }}
+                      className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center gap-1"
+                      style={{
+                        background: '#fff3d6',
+                        color: '#7a5020',
+                        border: '1px solid rgba(160,120,64,0.18)',
+                      }}
+                    >
+                      <CalendarDays className="w-3.5 h-3.5" />
+                      달력
+                    </button>
+
+                    <div
+                      className="h-8 w-8 rounded-lg flex items-center justify-center"
+                      style={{
+                        background: 'rgba(122,80,32,0.08)',
+                        color: '#7a5020',
+                      }}
+                    >
+                      {showWeeklyDetail ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <AnimatePresence>
           {showCalendar && (
-            <MonthCalendar logs={weeklyLogs} onClose={() => setShowCalendar(false)} />
+            <MonthCalendar logs={detailLogs} onClose={() => setShowCalendar(false)} />
           )}
         </AnimatePresence>
       </div>
