@@ -19,6 +19,12 @@ import { guestDataPersistence } from '../lib/GuestDataPersistence';
 
 const CATEGORY_KEYS = ['exercise', 'study', 'mental', 'daily'];
 
+// 고정 높이
+const HEADER_FIXED_HEIGHT = 92;
+const CATEGORY_FIXED_TOP = 92;
+const CATEGORY_FIXED_HEIGHT = 72;
+const CONTENT_TOP_SPACER = HEADER_FIXED_HEIGHT + CATEGORY_FIXED_HEIGHT + 8;
+
 function isGoalComplete(goal) {
   if (!goal?.start_date || !goal?.duration_days) return false;
 
@@ -519,13 +525,15 @@ export default function Home() {
         </motion.div>
       </motion.div>
 
+      {/* 캐릭터 배너 고정 */}
       <div
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
-          zIndex: 20,
+          left: 0,
+          right: 0,
+          zIndex: 30,
           background: 'hsl(var(--background))',
-          paddingTop: '2px',
         }}
       >
         <CharacterBanner
@@ -537,11 +545,14 @@ export default function Home() {
         />
       </div>
 
+      {/* 카테고리 탭 고정 */}
       <div
         style={{
-          position: 'sticky',
-          top: 92,
-          zIndex: 19,
+          position: 'fixed',
+          top: `${CATEGORY_FIXED_TOP}px`,
+          left: 0,
+          right: 0,
+          zIndex: 29,
           background: 'hsl(var(--background))',
           paddingTop: '2px',
           paddingBottom: '2px',
@@ -553,6 +564,9 @@ export default function Home() {
           userLevels={userLevels}
         />
       </div>
+
+      {/* 고정 영역만큼 위쪽 여백 */}
+      <div style={{ height: `${CONTENT_TOP_SPACER}px` }} />
 
       <div className="px-4 pb-5">
         {activeGoal ? (
