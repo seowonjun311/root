@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -18,12 +18,6 @@ import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { guestDataPersistence } from '../lib/GuestDataPersistence';
 
 const CATEGORY_KEYS = ['exercise', 'study', 'mental', 'daily'];
-
-// 고정 높이
-const HEADER_FIXED_HEIGHT = 92;
-const CATEGORY_FIXED_TOP = 92;
-const CATEGORY_FIXED_HEIGHT = 72;
-const CONTENT_TOP_SPACER = HEADER_FIXED_HEIGHT + CATEGORY_FIXED_HEIGHT + 8;
 
 function isGoalComplete(goal) {
   if (!goal?.start_date || !goal?.duration_days) return false;
@@ -122,13 +116,18 @@ export default function Home() {
   const location = useLocation();
   const queryClient = useQueryClient();
 
+  const bannerRef = useRef(null);
+  const tabsRef = useRef(null);
+  const initializedRef = useRef(false);
+
   const [activeCategory, setActiveCategory] = useState('exercise');
   const [pendingLog, setPendingLog] = useState(null);
   const [celebration, setCelebration] = useState(null);
   const [victoryGoal, setVictoryGoal] = useState(null);
   const [isPulling, setIsPulling] = useState(false);
   const [bannerMoveTrigger, setBannerMoveTrigger] = useState(0);
-  const initializedRef = useRef(false);
+  const [bannerHeight, setBannerHeight] = useState(112);
+  const [tabsHeight, setTabsHeight] = useState(64);
 
   const [shownVictoryIds, setShownVictoryIds] = useState(() => {
     try {
@@ -143,6 +142,33 @@ export default function Home() {
     const value = searchParams.get('category');
     return CATEGORY_KEYS.includes(value) ? value : null;
   }, [location.search]);
+
+  useLayoutEffect(() => {
+    const updateHeights = () => {
+      if (bannerRef.current) {
+        setBannerHeight(Math.ceil(bannerRef.current.getBoundingClientRect().height));
+      }
+      if (tabsRef.current) {
+        setTabsHeight(Math.ceil(tabsRef.current.getBoundingClientRect().height));
+      }
+    };
+
+    updateHeights();
+    window.addEventListener('resize', updateHeights);
+    return () => window.removeEventListener('resize', updateHeights);
+  }, []);
+
+  useEffect(() => {
+    if (bannerMoveTrigger) {
+      requestAnimationFrame(() => {
+        if (bannerRef.current) {
+          setBannerHeight(Math.ceil(bannerRef.current.getBoundingClientRect().height));
+        }
+      });
+    }
+  }, [bannerMoveTrigger]);
+
+  const contentTopSpacer = bannerHeight + tabsHeight + 8;
 
   const { pullProgress, onTouchStart: handlePullStart } = usePullToRefresh(async () => {
     if (isPulling) return;
@@ -525,8 +551,8 @@ export default function Home() {
         </motion.div>
       </motion.div>
 
-      {/* 캐릭터 배너 고정 */}
       <div
+        ref={bannerRef}
         style={{
           position: 'fixed',
           top: 0,
@@ -545,11 +571,11 @@ export default function Home() {
         />
       </div>
 
-      {/* 카테고리 탭 고정 */}
       <div
+        ref={tabsRef}
         style={{
           position: 'fixed',
-          top: `${CATEGORY_FIXED_TOP}px`,
+          top: `${bannerHeight}px`,
           left: 0,
           right: 0,
           zIndex: 29,
@@ -565,8 +591,7 @@ export default function Home() {
         />
       </div>
 
-      {/* 고정 영역만큼 위쪽 여백 */}
-      <div style={{ height: `${CONTENT_TOP_SPACER}px` }} />
+      <div style={{ height: `${contentTopSpacer}px` }} />
 
       <div className="px-4 pb-5">
         {activeGoal ? (
