@@ -32,13 +32,13 @@ const ACTION_MODES = [
     value: 'routine',
     label: '🔁 루틴형',
     desc: '반복해서 쌓는 행동이에요',
-    sub: '예: 주 3회 러닝, 매일 영어 30분',
+    sub: '예: 주 3회 러닝, 주 5회 영어 단어',
   },
   {
     value: 'single',
     label: '🎯 단발형',
-    desc: '정해진 날짜에 한 번 해내는 목표예요',
-    sub: '예: 모의고사 보기, 병원 가기, 책 1권 끝내기',
+    desc: '특정 날짜에 한 번 하는 행동이에요',
+    sub: '예: 모의고사 보기, 병원 가기, 서류 제출',
   },
 ];
 
@@ -56,7 +56,15 @@ const categoryEmojis = {
   daily: '🏠',
 };
 
-const getRoutinePlaceholder = (category) => {
+const getGoalPlaceholder = (category) => {
+  if (category === 'mental') return '예: 자기관리, 생활규칙 만들기, 절제, 나 챙기기';
+  if (category === 'daily') return '예: 갓생살기, 일찍 일어나기, 루틴 찾기';
+  if (category === 'exercise') return '예: 살빼기, 턱걸이 30개, 등산 100회';
+  if (category === 'study') return '예: 수학 1회독, 영어 실력 올리기';
+  return '어떤 결과를 이루고 싶으신가요?';
+};
+
+const getRoutineActionPlaceholder = (category) => {
   if (category === 'daily') return '예: 팩하기, 집청소, 빨래, 부모님 연락';
   if (category === 'mental') return '예: 7시 기상, 일기쓰기, 금연, 명상';
   if (category === 'study') return '예: 독해, 듣기, 회화, 전공서, 수학';
@@ -64,12 +72,12 @@ const getRoutinePlaceholder = (category) => {
   return '예: 러닝, LC 공부, 명상';
 };
 
-const getGoalPlaceholder = (category) => {
-  if (category === 'mental') return '예: 자기관리, 생활규칙 만들기, 절제, 나 챙기기';
-  if (category === 'daily') return '예: 갓생살기, 일찍 일어나기, 루틴 찾기';
-  if (category === 'exercise') return '예: 살빼기, 턱걸이 30개, 등산 100회';
-  if (category === 'study') return '예: 수학 1회독, 영어 실력 올리기';
-  return '어떤 결과를 이루고 싶으신가요?';
+const getSingleActionPlaceholder = (category) => {
+  if (category === 'daily') return '예: 방 청소하기, 서류 제출하기, 행정업무 처리';
+  if (category === 'mental') return '예: 상담 예약하기, 디지털 디톡스 하루 하기';
+  if (category === 'study') return '예: 모의고사 보기, 과제 제출하기, 시험 접수하기';
+  if (category === 'exercise') return '예: 체성분 검사하기, 헬스 OT 받기, 등산 가기';
+  return '예: 한 번에 끝낼 행동을 입력하세요';
 };
 
 const getToday = () => new Date().toISOString().split('T')[0];
@@ -142,15 +150,16 @@ export default function CreateGoal() {
 
   const [step, setStep] = useState(0);
 
+  // 결과목표 전용
   const [hasDDay, setHasDDay] = useState(null);
   const [goalTitle, setGoalTitle] = useState('');
   const [duration, setDuration] = useState(56);
   const [customWeeks, setCustomWeeks] = useState('');
   const [isCustomDuration, setIsCustomDuration] = useState(false);
-
   const [dDay, setDDay] = useState('');
   const [examTitle, setExamTitle] = useState('');
 
+  // 행동목표 전용
   const [actionMode, setActionMode] = useState('routine');
   const [actionTitle, setActionTitle] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
@@ -160,11 +169,11 @@ export default function CreateGoal() {
 
   const pageTitle = isAddingActionOnly
     ? `${categoryNames[category]} 행동 목표 추가`
-    : `${categoryNames[category]} 목표 만들기`;
+    : `${categoryNames[category]} 결과 목표 만들기`;
 
   const pageDesc = isAddingActionOnly
-    ? '지금 목표에 연결할 행동을 추가해요'
-    : '새로운 여정을 시작해보세요';
+    ? '지금 결과목표에 연결할 행동을 추가해요'
+    : '이번 카테고리의 최종 목표를 먼저 정해요';
 
   const daysLeft = useMemo(() => getDaysLeft(dDay), [dDay]);
 
@@ -177,30 +186,30 @@ export default function CreateGoal() {
   const finalGoalTitle = isStudy && hasDDay ? examTitle.trim() : goalTitle.trim();
   const finalDuration = isStudy && hasDDay ? calcDuration() : duration;
 
-  const getSingleActionTitle = () => {
-    if (isAddingActionOnly && existingGoal?.title) return `${existingGoal.title} 실행`;
-    if (isStudy && hasDDay && examTitle.trim()) return `${examTitle.trim()} 실행`;
-    if (goalTitle.trim()) return `${goalTitle.trim()} 실행`;
-    return '1회 목표';
-  };
+  // 결과목표 생성 흐름
+  // 공부:
+  // step 0 = D-day 여부
+  // step 1 = (D-day 있음이면 시험정보 / 없음이면 결과목표)
+  // step 2 = 저장
+  // 기타:
+  // step 0 = 결과목표
+  // step 1 = 저장
 
+  const isStudyEntryStep = !isAddingActionOnly && isStudy && step === 0;
+  const isStudyDDayStep = !isAddingActionOnly && isStudy && step === 1 && hasDDay;
   const isGoalStep =
     !isAddingActionOnly &&
     ((isStudy && step === 1 && !hasDDay) || (!isStudy && step === 0));
 
-  const isStudyDDayStep = !isAddingActionOnly && isStudy && step === 1 && hasDDay;
-
-  const isActionStep =
-    isAddingActionOnly ||
-    (!isAddingActionOnly && ((isStudy && step === 2) || (!isStudy && step === 1)));
-
   const isGoalStepValid = (() => {
     if (!isGoalStep) return false;
     if (!goalTitle.trim()) return false;
+
     if (isCustomDuration) {
       const weeks = Number(customWeeks);
       if (!weeks || weeks < 1) return false;
     }
+
     return true;
   })();
 
@@ -210,17 +219,13 @@ export default function CreateGoal() {
   })();
 
   const isActionStepValid = (() => {
-    if (!isActionStep) return false;
-
-    if (actionMode === 'single') {
-      if (!scheduledDate) return false;
-      if (actionType === 'timer' && (!minutes || Number(minutes) < 1)) return false;
-      return true;
-    }
-
+    if (!isAddingActionOnly) return false;
     if (!actionTitle.trim()) return false;
-    if (!frequency || frequency < 1 || frequency > 7) return false;
+
+    if (actionMode === 'single' && !scheduledDate) return false;
+    if (actionMode === 'routine' && (!frequency || frequency < 1 || frequency > 7)) return false;
     if (actionType === 'timer' && (!minutes || Number(minutes) < 1)) return false;
+
     return true;
   })();
 
@@ -237,20 +242,7 @@ export default function CreateGoal() {
       toast.success(data.message);
       setTimeout(() => navigate(`/Home?category=${category}`), 250);
     },
-    onError: () => toast.error('목표 생성에 실패했습니다.'),
-  });
-
-  const getActionPayload = (goalId, durationDaysForAction = null) => ({
-    goal_id: goalId,
-    category,
-    title: actionMode === 'single' ? getSingleActionTitle() : actionTitle.trim(),
-    action_mode: actionMode,
-    action_type: actionType,
-    weekly_frequency: actionMode === 'routine' ? frequency : null,
-    scheduled_date: actionMode === 'single' ? scheduledDate : null,
-    duration_minutes: actionType === 'timer' ? Math.max(1, Number(minutes) || 1) : 0,
-    ...(durationDaysForAction ? { duration_days: durationDaysForAction } : {}),
-    status: 'active',
+    onError: () => toast.error('저장에 실패했습니다.'),
   });
 
   const handleBack = () => {
@@ -266,36 +258,25 @@ export default function CreateGoal() {
         navigate(`/Home?category=${category}`);
         return;
       }
-      if (step === 2) {
-        setStep(1);
-        return;
-      }
-      if (step === 1) {
-        setStep(0);
-        return;
-      }
-    } else {
-      if (step === 0) {
-        navigate(`/Home?category=${category}`);
-        return;
-      }
       setStep(step - 1);
+      return;
     }
+
+    if (step === 0) {
+      navigate(`/Home?category=${category}`);
+      return;
+    }
+
+    setStep(step - 1);
   };
 
-  const handleSubmit = async () => {
-    if (!isActionStepValid || createGoalMutation.isPending) return;
+  const handleCreateResultGoal = async () => {
+    if (createGoalMutation.isPending) return;
 
     try {
       triggerHaptic('impact', 'heavy');
 
-      if (isAddingActionOnly) {
-        await base44.entities.ActionGoal.create(getActionPayload(existingGoalId));
-        createGoalMutation.mutate({ message: '행동 목표가 추가되었습니다! 🦊' });
-        return;
-      }
-
-      const goal = await base44.entities.Goal.create({
+      await base44.entities.Goal.create({
         category,
         goal_type: 'result',
         title: finalGoalTitle,
@@ -305,11 +286,35 @@ export default function CreateGoal() {
         status: 'active',
       });
 
-      await base44.entities.ActionGoal.create(getActionPayload(goal.id, finalDuration));
-      createGoalMutation.mutate({ message: '새로운 여정이 시작되었습니다! 🦊' });
+      createGoalMutation.mutate({ message: '결과 목표가 만들어졌습니다! 🦊' });
     } catch (error) {
       console.error(error);
-      toast.error('목표 저장 중 문제가 발생했습니다.');
+      toast.error('결과 목표 저장 중 문제가 발생했습니다.');
+    }
+  };
+
+  const handleCreateActionGoal = async () => {
+    if (!existingGoalId || !isActionStepValid || createGoalMutation.isPending) return;
+
+    try {
+      triggerHaptic('impact', 'heavy');
+
+      await base44.entities.ActionGoal.create({
+        goal_id: existingGoalId,
+        category,
+        title: actionTitle.trim(),
+        action_mode: actionMode,
+        action_type: actionType,
+        weekly_frequency: actionMode === 'routine' ? frequency : null,
+        scheduled_date: actionMode === 'single' ? scheduledDate : null,
+        duration_minutes: actionType === 'timer' ? Math.max(1, Number(minutes) || 1) : 0,
+        status: 'active',
+      });
+
+      createGoalMutation.mutate({ message: '행동 목표가 추가되었습니다! 🦊' });
+    } catch (error) {
+      console.error(error);
+      toast.error('행동 목표 저장 중 문제가 발생했습니다.');
     }
   };
 
@@ -342,7 +347,7 @@ export default function CreateGoal() {
         <p className="mb-3 text-4xl">📚</p>
         <h2 className="text-lg font-bold text-amber-900">시험 D-day가 있나요?</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          시험형 목표인지, 꾸준한 공부 목표인지 먼저 정해요
+          공부 결과목표는 시험형과 일반형으로 나눌 수 있어요
         </p>
       </div>
 
@@ -361,8 +366,8 @@ export default function CreateGoal() {
         <SelectCard
           active={hasDDay === false}
           title="📖 D-day 없음"
-          desc="꾸준히 공부 습관을 만들고 싶어요"
-          sub="예: 수학 1회독, 영어 실력 올리기, 전공 공부"
+          desc="꾸준히 실력을 쌓는 결과목표예요"
+          sub="예: 수학 1회독, 영어 실력 올리기"
           onClick={() => {
             setHasDDay(false);
             setStep(1);
@@ -375,8 +380,8 @@ export default function CreateGoal() {
   const renderStudyDDayStep = () => (
     <div className="space-y-6">
       <SectionTitle
-        title="시험 목표 설정"
-        desc="시험 날짜와 목표 이름을 입력하면 D-day 기반으로 기간이 계산돼요"
+        title="시험 결과목표 설정"
+        desc="시험 날짜와 목표 이름을 입력하면 기간이 자동 계산돼요"
       />
 
       <div>
@@ -399,7 +404,7 @@ export default function CreateGoal() {
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-semibold text-amber-800">어떤 시험인가요?</label>
+        <label className="mb-2 block text-sm font-semibold text-amber-800">시험 목표 이름</label>
         <Input
           value={examTitle}
           onChange={(e) => setExamTitle(e.target.value)}
@@ -411,10 +416,10 @@ export default function CreateGoal() {
       <Button
         type="button"
         className="h-12 w-full rounded-xl bg-amber-700 font-semibold text-amber-50 hover:bg-amber-800"
-        disabled={!isStudyDDayStepValid}
-        onClick={() => setStep(2)}
+        disabled={!isStudyDDayStepValid || createGoalMutation.isPending}
+        onClick={handleCreateResultGoal}
       >
-        다음
+        {createGoalMutation.isPending ? '저장 중...' : '결과 목표 만들기 🦊'}
       </Button>
     </div>
   );
@@ -423,7 +428,7 @@ export default function CreateGoal() {
     <div className="space-y-6">
       <SectionTitle
         title="결과 목표 설정"
-        desc="이번 카테고리에서 이루고 싶은 최종 목표를 먼저 정해요"
+        desc="이번 카테고리에서 이루고 싶은 최종 목표 하나를 정해요"
       />
 
       <div>
@@ -499,13 +504,10 @@ export default function CreateGoal() {
       <Button
         type="button"
         className="h-12 w-full rounded-xl bg-amber-700 font-semibold text-amber-50 hover:bg-amber-800"
-        disabled={!isGoalStepValid}
-        onClick={() => {
-          if (isStudy) setStep(2);
-          else setStep(1);
-        }}
+        disabled={!isGoalStepValid || createGoalMutation.isPending}
+        onClick={handleCreateResultGoal}
       >
-        다음
+        {createGoalMutation.isPending ? '저장 중...' : '결과 목표 만들기 🦊'}
       </Button>
     </div>
   );
@@ -514,7 +516,7 @@ export default function CreateGoal() {
     <div className="space-y-3">
       <SectionTitle
         title="행동 방식 선택"
-        desc="반복해서 쌓을지, 특정 날짜에 한 번 할지 정해요"
+        desc="행동목표 안에서만 루틴형과 단발형을 만들 수 있어요"
       />
 
       {ACTION_MODES.map((mode) => (
@@ -534,7 +536,7 @@ export default function CreateGoal() {
     <div className="space-y-3">
       <SectionTitle
         title="기록 방식 선택"
-        desc="이 목표를 어떤 방식으로 완료 처리할지 정해요"
+        desc="이 행동을 어떤 방식으로 완료 처리할지 정해요"
       />
 
       {ACTION_TYPES.map((type) => (
@@ -556,7 +558,7 @@ export default function CreateGoal() {
         <Input
           value={actionTitle}
           onChange={(e) => setActionTitle(e.target.value)}
-          placeholder={getRoutinePlaceholder(category)}
+          placeholder={getRoutineActionPlaceholder(category)}
           className="h-12 rounded-xl bg-white/80"
         />
       </div>
@@ -586,9 +588,15 @@ export default function CreateGoal() {
 
   const renderSingleSection = () => (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        이 1회 목표는 행동을 따로 적지 않고 날짜와 기록 방식만 정하면 돼요.
-      </p>
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-amber-800">1회 행동</label>
+        <Input
+          value={actionTitle}
+          onChange={(e) => setActionTitle(e.target.value)}
+          placeholder={getSingleActionPlaceholder(category)}
+          className="h-12 rounded-xl bg-white/80"
+        />
+      </div>
 
       <div>
         <label className="mb-2 block text-sm font-semibold text-amber-800">날짜 선택</label>
@@ -601,7 +609,7 @@ export default function CreateGoal() {
         />
         {scheduledDate ? (
           <p className="mt-2 text-xs font-semibold text-amber-700">
-            🎯 {scheduledDate}에 완료할 1회 목표예요
+            🎯 {scheduledDate}에 완료할 1회 행동이에요
           </p>
         ) : (
           <p className="mt-2 text-xs text-muted-foreground">오늘 이후 날짜만 선택할 수 있어요</p>
@@ -650,8 +658,8 @@ export default function CreateGoal() {
   const renderActionStep = () => (
     <div className="space-y-6">
       <SectionTitle
-        title="행동 목표 설정"
-        desc="어떤 방식으로 길을 앞으로 나아갈지 정해요"
+        title="행동 목표 추가"
+        desc="루틴형과 단발형은 여기서만 만들 수 있어요"
       />
 
       {renderActionModeSection()}
@@ -666,23 +674,18 @@ export default function CreateGoal() {
         type="button"
         className="h-12 w-full rounded-xl bg-amber-700 font-semibold text-amber-50 hover:bg-amber-800"
         disabled={!isActionStepValid || createGoalMutation.isPending}
-        onClick={handleSubmit}
+        onClick={handleCreateActionGoal}
       >
-        {createGoalMutation.isPending
-          ? '저장 중...'
-          : isAddingActionOnly
-          ? '행동 목표 추가하기 🦊'
-          : '목표 시작하기 🦊'}
+        {createGoalMutation.isPending ? '저장 중...' : '행동 목표 추가하기 🦊'}
       </Button>
     </div>
   );
 
   const renderStep = () => {
     if (isAddingActionOnly) return renderActionStep();
-    if (isStudy && step === 0) return renderStudyEntryStep();
+    if (isStudyEntryStep) return renderStudyEntryStep();
     if (isStudyDDayStep) return renderStudyDDayStep();
     if (isGoalStep) return renderGoalStep();
-    if (isActionStep) return renderActionStep();
     return null;
   };
 
