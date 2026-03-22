@@ -605,11 +605,12 @@ export default function Home() {
               {categoryActionGoals.length > 0 ? (
                 categoryActionGoals.map((actionGoal) => (
                   <ActionGoalCard
-                    key={actionGoal.id}
-                    actionGoal={actionGoal}
-                    weeklyLogs={getWeeklyLogs(actionGoal.id)}
-                    onComplete={handleComplete}
-                  />
+  key={actionGoal.id}
+  actionGoal={actionGoal}
+  weeklyLogs={getWeeklyLogs(actionGoal.id)}
+  allLogs={allLogs.filter((log) => log?.action_goal_id === actionGoal.id)}
+  onComplete={handleComplete}
+/>
                 ))
               ) : (
                 <div
