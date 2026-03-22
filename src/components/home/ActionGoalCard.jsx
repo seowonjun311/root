@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Play, Square, Check, X, Pencil, Trash2, ChevronDown, ChevronUp, CalendarDays } from 'lucide-react';
+import { Play, Square, Check, X, Pencil, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Drawer,
@@ -189,7 +189,6 @@ export default function ActionGoalCard({
 
   const [elapsed, setElapsed] = useState(0);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [showWeeklyDetail, setShowWeeklyDetail] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -220,7 +219,7 @@ export default function ActionGoalCard({
 
   const weeklyCount = weeklyLogs.length;
   const targetFreq = actionGoal.weekly_frequency || 7;
-  const progressPercent = Math.min(100, Math.round((weeklyCount / targetFreq) * 100));
+  const progressPercent = Math.min(100, Math.round((weeklyCount / Math.max(1, targetFreq)) * 100));
 
   const todayStr = new Date().toISOString().split('T')[0];
   const doneToday = weeklyLogs.some((log) => log.date === todayStr);
@@ -457,25 +456,19 @@ export default function ActionGoalCard({
     deleteMutation.mutate();
   };
 
-  const typeEmoji =
-    actionGoal.action_type === 'timer'
-      ? '⏱️'
-      : actionGoal.action_type === 'abstain'
-        ? '🚫'
-        : '✅';
-
-  const rightMeta =
+  const typeLabel =
     actionGoal.action_type === 'timer'
       ? `${actionGoal.duration_minutes || 0}분`
       : actionGoal.action_type === 'abstain'
-        ? '안하기'
+        ? '안하기형'
         : '확인형';
 
   return (
     <>
       <div ref={cardRef} className="relative">
         <div
-          className="rounded-2xl px-3 py-3"
+          onClick={() => setShowCalendar((prev) => !prev)}
+          className="rounded-2xl px-3 py-3 cursor-pointer"
           style={{
             background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 60%, #f0e0bc 100%)',
             border: '1.5px solid #d7b97b',
@@ -484,7 +477,19 @@ export default function ActionGoalCard({
         >
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className="text-base shrink-0">{typeEmoji}</span>
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                style={{
+                  background: 'rgba(255,255,255,0.28)',
+                  border: '1px solid rgba(122,80,32,0.12)',
+                }}
+              >
+                {doneToday ? (
+                  <Check className="w-4 h-4" style={{ color: '#4ca86a' }} />
+                ) : (
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#d2b06a' }} />
+                )}
+              </div>
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 min-w-0">
@@ -494,11 +499,12 @@ export default function ActionGoalCard({
                   >
                     {actionGoal.title}
                   </span>
+
                   <span
                     className="text-[11px] font-semibold shrink-0"
                     style={{ color: '#8f6a33' }}
                   >
-                    {rightMeta}
+                    {typeLabel}
                   </span>
                 </div>
 
@@ -530,6 +536,7 @@ export default function ActionGoalCard({
             {actionGoal.action_type === 'timer' ? (
               doneToday && !isRunning ? (
                 <span
+                  onClick={(e) => e.stopPropagation()}
                   className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center shrink-0"
                   style={{
                     background: 'rgba(122,80,32,0.12)',
@@ -541,7 +548,10 @@ export default function ActionGoalCard({
                 </span>
               ) : (
                 <button
-                  onClick={handleTimerToggle}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTimerToggle();
+                  }}
                   className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center gap-1 shrink-0"
                   style={
                     isRunning
@@ -570,6 +580,7 @@ export default function ActionGoalCard({
               )
             ) : doneToday ? (
               <span
+                onClick={(e) => e.stopPropagation()}
                 className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center shrink-0"
                 style={{
                   background: 'rgba(122,80,32,0.12)',
@@ -581,7 +592,10 @@ export default function ActionGoalCard({
               </span>
             ) : (
               <button
-                onClick={handleConfirm}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleConfirm();
+                }}
                 className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center gap-1 shrink-0"
                 style={{
                   background: '#8b5a20',
@@ -594,7 +608,10 @@ export default function ActionGoalCard({
             )}
 
             <button
-              onClick={() => setShowMenu(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(true);
+              }}
               className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
               style={{
                 background: 'rgba(122,80,32,0.08)',
@@ -606,74 +623,13 @@ export default function ActionGoalCard({
             </button>
           </div>
 
-          <button
-            onClick={() => setShowWeeklyDetail((prev) => !prev)}
-            className="w-full text-left"
-            aria-label="주간 기록 펼치기"
-          >
-            <WeekDays logs={weeklyLogs} weeklyTarget={targetFreq} />
-          </button>
-
-          <AnimatePresence initial={false}>
-            {showWeeklyDetail && (
-              <motion.div
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.16 }}
-                className="mt-2 rounded-xl px-3 py-3"
-                style={{
-                  background: 'rgba(255,250,240,0.82)',
-                  border: '1px solid rgba(160,120,64,0.18)',
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div
-                      className="text-xs font-bold"
-                      style={{ color: '#7a5020' }}
-                    >
-                      주간 기록 요약
-                    </div>
-                    <div
-                      className="text-[11px] mt-1"
-                      style={{ color: '#8f6a33' }}
-                    >
-                      이번 주 {weeklyCount}회 완료 / 목표 {targetFreq}회
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowCalendar((prev) => !prev);
-                      }}
-                      className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center gap-1"
-                      style={{
-                        background: '#fff3d6',
-                        color: '#7a5020',
-                        border: '1px solid rgba(160,120,64,0.18)',
-                      }}
-                    >
-                      <CalendarDays className="w-3.5 h-3.5" />
-                      달력
-                    </button>
-
-                    <div
-                      className="h-8 w-8 rounded-lg flex items-center justify-center"
-                      style={{
-                        background: 'rgba(122,80,32,0.08)',
-                        color: '#7a5020',
-                      }}
-                    >
-                      {showWeeklyDetail ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div className="mt-1">
+            <WeekDays
+              logs={weeklyLogs}
+              weeklyTarget={targetFreq}
+              category={actionGoal.category}
+            />
+          </div>
         </div>
 
         <AnimatePresence>
@@ -847,7 +803,11 @@ export default function ActionGoalCard({
           </p>
 
           <DrawerFooter className="flex gap-2 pt-6">
-            <Button variant="outline" onClick={() => handleTimerStart(false)} className="flex-1 rounded-xl">
+            <Button
+              variant="outline"
+              onClick={() => handleTimerStart(false)}
+              className="flex-1 rounded-xl"
+            >
               안 함
             </Button>
             <Button
