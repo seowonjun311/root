@@ -4,15 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
-
-const categoryNames = {
-  exercise: '운동',
-  study: '공부',
-  mental: '정신',
-  daily: '일상',
-};
 
 export default function CreateGoalForm({ category }) {
   const navigate = useNavigate();
@@ -20,8 +12,7 @@ export default function CreateGoalForm({ category }) {
 
   const [step, setStep] = useState(0);
 
-  // ⭐ 핵심 상태
-  const [actionMode, setActionMode] = useState('routine'); // routine | single
+  const [actionMode, setActionMode] = useState('routine');
   const [scheduledDate, setScheduledDate] = useState('');
 
   const [goalTitle, setGoalTitle] = useState('');
@@ -46,56 +37,54 @@ export default function CreateGoalForm({ category }) {
         goal_id: goal.id,
         category,
         title: actionTitle,
-
         action_mode: actionMode,
         action_type: actionType,
-
         weekly_frequency: actionMode === 'routine' ? frequency : null,
         scheduled_date: actionMode === 'single' ? scheduledDate : null,
-
         duration_minutes: actionType === 'timer' ? minutes : 0,
         status: 'active',
       });
-
-      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
-      toast.success('루트가 생성되었습니다! 🦊');
-      navigate(`/Home?category=${category}`);
+      toast.success('퀘스트 생성 완료 🦊');
+      navigate('/Home');
     },
   });
 
   const handleSubmit = () => {
     if (!goalTitle || !actionTitle) {
-      toast.error('목표를 입력해주세요');
+      toast.error('입력해주세요');
       return;
     }
 
     if (actionMode === 'single' && !scheduledDate) {
-      toast.error('날짜를 선택해주세요');
+      toast.error('날짜 선택 필요');
       return;
     }
 
     createMutation.mutate();
   };
 
-  // ================= STEP UI =================
-
+  // ============================
   // STEP 0 👉 루틴/단발 선택
+  // ============================
   if (step === 0) {
     return (
       <div className="p-4 space-y-4">
-        <h2 className="text-xl font-bold">퀘스트 종류 선택</h2>
+        <h2 className="text-xl font-bold">퀘스트 선택</h2>
 
         <button
           onClick={() => {
             setActionMode('routine');
             setStep(1);
           }}
-          className="w-full p-5 border rounded-xl"
+          className="w-full p-5 rounded-xl border text-left"
         >
-          🔁 루틴형 (반복)
+          <div className="text-lg font-bold">🔁 루틴형</div>
+          <div className="text-sm text-gray-500">
+            매일 또는 주 n회 반복하는 습관
+          </div>
         </button>
 
         <button
@@ -103,24 +92,35 @@ export default function CreateGoalForm({ category }) {
             setActionMode('single');
             setStep(1);
           }}
-          className="w-full p-5 border rounded-xl"
+          className="w-full p-5 rounded-xl border text-left"
         >
-          🎯 단발형 (1회)
+          <div className="text-lg font-bold">🎯 단발형</div>
+          <div className="text-sm text-gray-500">
+            특정 날짜에 한 번 수행하는 도전
+          </div>
         </button>
       </div>
     );
   }
 
-  // STEP 1 👉 결과목표
+  // ============================
+  // STEP 1 👉 결과목표 or 1회 행동
+  // ============================
   if (step === 1) {
     return (
       <div className="p-4 space-y-4">
-        <h2 className="text-lg font-bold">결과 목표</h2>
+        <h2 className="text-lg font-bold">
+          {actionMode === 'single' ? '1회 행동' : '결과 목표'}
+        </h2>
 
         <Input
           value={goalTitle}
           onChange={(e) => setGoalTitle(e.target.value)}
-          placeholder="예: 체력 키우기"
+          placeholder={
+            actionMode === 'single'
+              ? '예: 한라산 등산'
+              : '예: 체력 키우기'
+          }
         />
 
         <Button onClick={() => setStep(2)}>다음</Button>
@@ -128,16 +128,18 @@ export default function CreateGoalForm({ category }) {
     );
   }
 
+  // ============================
   // STEP 2 👉 행동목표 이름
+  // ============================
   if (step === 2) {
     return (
       <div className="p-4 space-y-4">
-        <h2 className="text-lg font-bold">행동 목표</h2>
+        <h2 className="text-lg font-bold">행동</h2>
 
         <Input
           value={actionTitle}
           onChange={(e) => setActionTitle(e.target.value)}
-          placeholder="예: 러닝 30분"
+          placeholder="예: 러닝 / 공부 / 금연"
         />
 
         <Button onClick={() => setStep(3)}>다음</Button>
@@ -145,7 +147,9 @@ export default function CreateGoalForm({ category }) {
     );
   }
 
+  // ============================
   // STEP 3 👉 단발이면 날짜
+  // ============================
   if (step === 3 && actionMode === 'single') {
     return (
       <div className="p-4 space-y-4">
@@ -164,16 +168,44 @@ export default function CreateGoalForm({ category }) {
     );
   }
 
-  // STEP 4 👉 유형 선택
-  if (step === 3 || step === 4) {
+  // ============================
+  // STEP 4 👉 유형 선택 (설명 추가)
+  // ============================
+  if ((step === 3 && actionMode === 'routine') || step === 4) {
     return (
       <div className="p-4 space-y-4">
         <h2 className="text-lg font-bold">유형 선택</h2>
 
-        <div className="flex gap-2">
-          <Button onClick={() => setActionType('confirm')}>확인형</Button>
-          <Button onClick={() => setActionType('timer')}>시간형</Button>
-          <Button onClick={() => setActionType('abstain')}>안하기</Button>
+        <div className="space-y-2">
+          <button
+            onClick={() => setActionType('confirm')}
+            className="w-full p-3 border rounded text-left"
+          >
+            ✔ 확인형  
+            <div className="text-xs text-gray-500">
+              했는지 체크만 하면 끝
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActionType('timer')}
+            className="w-full p-3 border rounded text-left"
+          >
+            ⏱ 시간형  
+            <div className="text-xs text-gray-500">
+              시간 측정 (공부 / 운동)
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActionType('abstain')}
+            className="w-full p-3 border rounded text-left"
+          >
+            🚫 안하기형  
+            <div className="text-xs text-gray-500">
+              금연 / 야식 금지
+            </div>
+          </button>
         </div>
 
         <Button onClick={() => setStep(5)}>다음</Button>
@@ -181,7 +213,9 @@ export default function CreateGoalForm({ category }) {
     );
   }
 
+  // ============================
   // STEP 5 👉 루틴이면 횟수
+  // ============================
   if (step === 5 && actionMode === 'routine') {
     return (
       <div className="p-4 space-y-4">
@@ -200,7 +234,9 @@ export default function CreateGoalForm({ category }) {
     );
   }
 
+  // ============================
   // STEP 6 👉 시간형
+  // ============================
   if (step === 5 && actionType === 'timer') {
     return (
       <div className="p-4 space-y-4">
