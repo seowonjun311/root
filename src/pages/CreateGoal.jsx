@@ -56,15 +56,7 @@ const categoryEmojis = {
   daily: '🏠',
 };
 
-const getActionPlaceholder = (category, actionMode) => {
-  if (actionMode === 'single') {
-    if (category === 'exercise') return '예: 등산 가기, 헬스 OT 받기, 체력측정 하기';
-    if (category === 'study') return '예: 모의고사 보기, 과제 제출하기, 시험 접수하기';
-    if (category === 'mental') return '예: 상담 예약하기, 디지털 디톡스 하루 하기';
-    if (category === 'daily') return '예: 방 대청소 하기, 행정업무 처리하기';
-    return '예: 한 번에 끝낼 행동을 입력하세요';
-  }
-
+const getActionPlaceholder = (category) => {
   if (category === 'daily') return '예: 팩하기, 집청소, 빨래, 부모님 연락';
   if (category === 'mental') return '예: 7시 기상, 일기쓰기, 금연, 명상';
   if (category === 'study') return '예: 독해, 듣기, 회화, 전공서, 수학';
@@ -76,6 +68,7 @@ const getGoalPlaceholder = (category) => {
   if (category === 'mental') return '예: 자기관리, 생활규칙 만들기, 절제, 나 챙기기';
   if (category === 'daily') return '예: 갓생살기, 일찍 일어나기, 루틴 찾기';
   if (category === 'exercise') return '예: 살빼기, 턱걸이 30개, 등산 100회';
+  if (category === 'study') return '예: 수학 1회독, 영어 실력 올리기';
   return '어떤 결과를 이루고 싶으신가요?';
 };
 
@@ -83,6 +76,7 @@ const getToday = () => new Date().toISOString().split('T')[0];
 
 const getDaysLeft = (dateString) => {
   if (!dateString) return null;
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -147,24 +141,17 @@ export default function CreateGoal() {
   const isStudy = category === 'study';
   const isAddingActionOnly = !!existingGoalId;
 
-  // step
-  // 행동만 추가: 0
-  // 공부: 0(D-day 여부) -> 1(결과목표 입력 or 시험정보 입력) -> 2(행동목표 입력)
-  // 기타: 0(결과목표 입력) -> 1(행동목표 입력)
   const [step, setStep] = useState(0);
 
-  // 결과목표
   const [hasDDay, setHasDDay] = useState(null);
   const [goalTitle, setGoalTitle] = useState('');
   const [duration, setDuration] = useState(56);
   const [customWeeks, setCustomWeeks] = useState('');
   const [isCustomDuration, setIsCustomDuration] = useState(false);
 
-  // 공부 D-day
   const [dDay, setDDay] = useState('');
   const [examTitle, setExamTitle] = useState('');
 
-  // 행동목표
   const [actionTitle, setActionTitle] = useState('');
   const [actionMode, setActionMode] = useState('routine');
   const [scheduledDate, setScheduledDate] = useState('');
@@ -200,13 +187,31 @@ export default function CreateGoal() {
   const finalGoalTitle = isStudy && hasDDay ? examTitle.trim() : goalTitle.trim();
   const finalDuration = isStudy && hasDDay ? calcDuration() : duration;
 
+  const getSingleActionTitle = () => {
+    if (isAddingActionOnly && existingGoal?.title) {
+      return `${existingGoal.title} 실행`;
+    }
+
+    if (isStudy && hasDDay && examTitle.trim()) {
+      return `${examTitle.trim()} 실행`;
+    }
+
+    if (goalTitle.trim()) {
+      return `${goalTitle.trim()} 실행`;
+    }
+
+    return '1회 행동';
+  };
+
   const isGoalStepValid = (() => {
     if (!isGoalStep) return false;
     if (!goalTitle.trim()) return false;
+
     if (isCustomDuration) {
       const weeks = Number(customWeeks);
       if (!weeks || weeks < 1) return false;
     }
+
     return true;
   })();
 
@@ -217,10 +222,15 @@ export default function CreateGoal() {
 
   const isActionStepValid = (() => {
     if (!isActionStep) return false;
-    if (!actionTitle.trim()) return false;
 
-    if (actionMode === 'single' && !scheduledDate) return false;
-    if (actionMode === 'routine' && (!frequency || frequency < 1 || frequency > 7)) return false;
+    if (actionMode === 'single') {
+      if (!scheduledDate) return false;
+      if (actionType === 'timer' && (!minutes || Number(minutes) < 1)) return false;
+      return true;
+    }
+
+    if (!actionTitle.trim()) return false;
+    if (!frequency || frequency < 1 || frequency > 7) return false;
     if (actionType === 'timer' && (!minutes || Number(minutes) < 1)) return false;
 
     return true;
@@ -245,7 +255,7 @@ export default function CreateGoal() {
   const getActionPayload = (goalId, durationDaysForAction = null) => ({
     goal_id: goalId,
     category,
-    title: actionTitle.trim(),
+    title: actionMode === 'single' ? getSingleActionTitle() : actionTitle.trim(),
     action_mode: actionMode,
     action_type: actionType,
     weekly_frequency: actionMode === 'routine' ? frequency : null,
@@ -557,6 +567,16 @@ export default function CreateGoal() {
   const renderRoutineSection = () => (
     <div className="space-y-4">
       <div>
+        <label className="mb-2 block text-sm font-semibold text-amber-800">행동 목표 이름</label>
+        <Input
+          value={actionTitle}
+          onChange={(e) => setActionTitle(e.target.value)}
+          placeholder={getActionPlaceholder(category)}
+          className="h-12 rounded-xl bg-white/80"
+        />
+      </div>
+
+      <div>
         <label className="mb-2 block text-sm font-semibold text-amber-800">주 횟수</label>
         <div className="grid grid-cols-7 gap-1.5">
           {[1, 2, 3, 4, 5, 6, 7].map((f) => (
@@ -581,6 +601,10 @@ export default function CreateGoal() {
 
   const renderSingleSection = () => (
     <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        이 1회 목표는 별도의 행동 이름 없이 날짜와 기록 방식만 정하면 돼요.
+      </p>
+
       <div>
         <label className="mb-2 block text-sm font-semibold text-amber-800">날짜 선택</label>
         <input
@@ -592,7 +616,7 @@ export default function CreateGoal() {
         />
         {scheduledDate ? (
           <p className="mt-2 text-xs font-semibold text-amber-700">
-            🎯 {scheduledDate}에 완료할 1회 행동이에요
+            🎯 {scheduledDate}에 완료할 1회 목표예요
           </p>
         ) : (
           <p className="mt-2 text-xs text-muted-foreground">오늘 이후 날짜만 선택할 수 있어요</p>
@@ -642,20 +666,8 @@ export default function CreateGoal() {
     <div className="space-y-6">
       <SectionTitle
         title="행동 목표 설정"
-        desc="어떤 행동으로 길을 앞으로 나아갈지 정해요"
+        desc="어떤 방식으로 길을 앞으로 나아갈지 정해요"
       />
-
-      <div>
-        <label className="mb-2 block text-sm font-semibold text-amber-800">
-          {actionMode === 'single' ? '1회 행동' : '행동 목표 이름'}
-        </label>
-        <Input
-          value={actionTitle}
-          onChange={(e) => setActionTitle(e.target.value)}
-          placeholder={getActionPlaceholder(category, actionMode)}
-          className="h-12 rounded-xl bg-white/80"
-        />
-      </div>
 
       {renderActionModeSection()}
 
