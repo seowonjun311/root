@@ -197,6 +197,7 @@ export default function ActionGoalCard({
   const [editTitle, setEditTitle] = useState(actionGoal.title || '');
   const [editFrequency, setEditFrequency] = useState(actionGoal.weekly_frequency || 5);
   const [editMinutes, setEditMinutes] = useState(actionGoal.duration_minutes || 30);
+  const [editActionType, setEditActionType] = useState(actionGoal.action_type || 'confirm');
 
   const [gpsEnabled, setGpsEnabled] = useState(() => {
     try {
@@ -416,6 +417,7 @@ export default function ActionGoalCard({
     setEditTitle(actionGoal.title || '');
     setEditFrequency(actionGoal.weekly_frequency || 5);
     setEditMinutes(actionGoal.duration_minutes || 30);
+    setEditActionType(actionGoal.action_type || 'confirm');
     setShowMenu(false);
     setShowEdit(true);
   };
@@ -426,13 +428,18 @@ export default function ActionGoalCard({
   };
 
   const handleSave = () => {
+    const safeActionType = editActionType || 'confirm';
+
     const updateData = {
       title: editTitle.trim(),
       weekly_frequency: editFrequency,
+      action_type: safeActionType,
     };
 
-    if (actionGoal.action_type === 'timer') {
-      updateData.duration_minutes = editMinutes;
+    if (safeActionType === 'timer') {
+      updateData.duration_minutes = Math.max(1, Number(editMinutes) || 30);
+    } else {
+      updateData.duration_minutes = 0;
     }
 
     if (isGuest) {
@@ -687,6 +694,49 @@ export default function ActionGoalCard({
 
             <div>
               <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
+                목표 유형
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => setEditActionType('confirm')}
+                  className="py-2 rounded-xl text-sm font-semibold"
+                  style={
+                    editActionType === 'confirm'
+                      ? { background: '#8b5a20', color: '#fff' }
+                      : { background: '#f3ead7', color: '#7a5020' }
+                  }
+                >
+                  확인형
+                </button>
+
+                <button
+                  onClick={() => setEditActionType('timer')}
+                  className="py-2 rounded-xl text-sm font-semibold"
+                  style={
+                    editActionType === 'timer'
+                      ? { background: '#8b5a20', color: '#fff' }
+                      : { background: '#f3ead7', color: '#7a5020' }
+                  }
+                >
+                  시간기록형
+                </button>
+
+                <button
+                  onClick={() => setEditActionType('abstain')}
+                  className="py-2 rounded-xl text-sm font-semibold"
+                  style={
+                    editActionType === 'abstain'
+                      ? { background: '#8b5a20', color: '#fff' }
+                      : { background: '#f3ead7', color: '#7a5020' }
+                  }
+                >
+                  안하기형
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
                 주 횟수
               </label>
               <div className="grid grid-cols-7 gap-1.5">
@@ -710,7 +760,7 @@ export default function ActionGoalCard({
               </p>
             </div>
 
-            {actionGoal.action_type === 'timer' && (
+            {editActionType === 'timer' && (
               <div>
                 <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
                   1회 시간
