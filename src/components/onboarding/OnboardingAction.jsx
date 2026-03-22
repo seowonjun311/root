@@ -14,7 +14,15 @@ const ACTION_MODE_OPTIONS = [
 
 const getToday = () => new Date().toISOString().split('T')[0];
 
-const getRoutinePlaceholder = (category) => {
+const getPlaceholder = (category, actionMode) => {
+  if (actionMode === 'single') {
+    if (category === 'daily') return '예: 방 청소하기, 서류 제출하기, 병원 가기';
+    if (category === 'mental') return '예: 상담 예약하기, 디지털 디톡스 하루 하기';
+    if (category === 'study') return '예: 모의고사 보기, 과제 제출하기, 시험 접수하기';
+    if (category === 'exercise') return '예: 등산 가기, 헬스 OT 받기, 체력측정 하기';
+    return '예: 한 번에 끝낼 행동을 입력하세요';
+  }
+
   if (category === 'daily') return '예: 팩하기, 집청소, 빨래, 부모님 연락';
   if (category === 'mental') return '예: 7시 기상, 일기쓰기, 금연, 명상';
   if (category === 'study') return '예: 독해, 듣기, 회화, 전공서, 수학';
@@ -43,7 +51,7 @@ export default function OnboardingAction({
         행동 목표를 정해볼까요?
       </h2>
       <p className="text-xs text-muted-foreground text-center mb-5">
-        루틴형이면 행동을 적고, 단발형이면 날짜와 유형만 정하면 돼요
+        루틴형은 반복 행동, 단발형은 특정 날짜의 1회 행동이에요
       </p>
 
       <p className="text-xs font-semibold text-amber-800 mb-2">행동 방식</p>
@@ -66,15 +74,20 @@ export default function OnboardingAction({
         ))}
       </div>
 
+      <div className="mb-4">
+        <p className="text-xs font-semibold text-amber-800 mb-2">
+          {actionMode === 'single' ? '1회 행동' : '행동 목표'}
+        </p>
+        <Input
+          value={actionTitle}
+          onChange={onActionTitleChange}
+          placeholder={getPlaceholder(category, actionMode)}
+          className="h-11 rounded-xl text-center text-sm border-amber-300 bg-white/80 text-amber-900 placeholder:text-amber-300"
+        />
+      </div>
+
       {actionMode === 'routine' ? (
         <>
-          <Input
-            value={actionTitle}
-            onChange={onActionTitleChange}
-            placeholder={getRoutinePlaceholder(category)}
-            className="h-11 rounded-xl text-center text-sm border-amber-300 bg-white/80 mb-4 text-amber-900 placeholder:text-amber-300"
-          />
-
           <p className="text-xs font-semibold text-amber-800 mb-2">주 횟수</p>
           <div className="grid grid-cols-7 gap-1.5 mb-4 relative z-10">
             {[1, 2, 3, 4, 5, 6, 7].map((f) => (
@@ -97,9 +110,6 @@ export default function OnboardingAction({
         </>
       ) : (
         <div className="mb-4">
-          <p className="text-sm text-muted-foreground mb-3">
-            이 1회 목표는 행동을 따로 적지 않고 날짜와 기록 방식만 정하면 돼요.
-          </p>
           <label className="text-xs font-semibold text-amber-800 mb-2 block">날짜 선택</label>
           <input
             type="date"
@@ -108,6 +118,9 @@ export default function OnboardingAction({
             onChange={onScheduledDateChange}
             className="w-full h-12 rounded-xl border border-input bg-white/80 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50"
           />
+          <p className="text-xs text-muted-foreground mt-2">
+            오늘 이후 날짜만 선택할 수 있어요
+          </p>
         </div>
       )}
 
