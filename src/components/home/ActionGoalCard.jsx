@@ -14,6 +14,7 @@ import { base44 } from '@/api/base44Client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import WeekDays from './WeekDays';
+import SingleActionGoalCard from './SingleActionGoalCard';
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 const TIMER_KEY = (id) => `timer_start_${id}`;
@@ -185,6 +186,16 @@ export default function ActionGoalCard({
   allLogs = [],
   onComplete,
 }) {
+  if (actionGoal?.action_mode === 'single') {
+    return (
+      <SingleActionGoalCard
+        actionGoal={actionGoal}
+        allLogs={allLogs}
+        onComplete={onComplete}
+      />
+    );
+  }
+
   const queryClient = useQueryClient();
 
   const [elapsed, setElapsed] = useState(0);
