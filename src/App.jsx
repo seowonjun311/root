@@ -1,7 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 
-import Header from './components/Header';
+import Header from './components/layout/Header';
 import BottomNav from './components/layout/BottomNav';
 import AppLayout from './components/layout/AppLayout';
 
