@@ -24,7 +24,7 @@ export default function WeekDays({
   const weekDates = getWeekDates();
   const doneDates = new Set((logs || []).map((log) => log.date));
   const weeklyCount = weekDates.filter((date) => doneDates.has(date)).length;
-  const isWeeklyComplete = weeklyCount >= weeklyTarget;
+  const isWeeklyComplete = weeklyCount >= Math.max(1, weeklyTarget);
 
   const DoneIcon = category === 'exercise' ? Footprints : Swords;
 
@@ -43,6 +43,7 @@ export default function WeekDays({
             background: 'linear-gradient(180deg, #d6a64b 0%, #b88328 100%)',
             color: '#fffaf0',
             border: '1px solid rgba(122,80,32,0.22)',
+            boxShadow: '0 1px 2px rgba(80,50,10,0.12)',
           }}
         >
           주간 완료
@@ -72,6 +73,7 @@ export default function WeekDays({
                         background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
                         border: '1.2px solid #7a5820',
                         color: '#fffaf0',
+                        boxShadow: 'inset 0 1px 1px rgba(255,240,190,0.2)',
                       }
                     : isToday
                       ? {
