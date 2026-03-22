@@ -117,12 +117,9 @@ export default function Onboarding() {
   const finalGoalTitle = isStudy && hasDDay ? examTitle.trim() : goalTitle.trim();
 
   const getSingleActionTitle = () => {
-    if (isStudy && hasDDay && examTitle.trim()) {
-      return `${examTitle.trim()} 실행`;
-    }
-    if (goalTitle.trim()) {
-      return `${goalTitle.trim()} 실행`;
-    }
+    if (actionTitle.trim()) return actionTitle.trim();
+    if (isStudy && hasDDay && examTitle.trim()) return `${examTitle.trim()} 실행`;
+    if (goalTitle.trim()) return `${goalTitle.trim()} 실행`;
     return '1회 목표';
   };
 
@@ -145,13 +142,14 @@ export default function Onboarding() {
     }
 
     if (currentStep === 'action') {
+      if (!actionTitle.trim()) return false;
+
       if (actionMode === 'single') {
         if (!scheduledDate) return false;
         if (actionType === 'timer' && (!actionMinutes || Number(actionMinutes) < 1)) return false;
         return true;
       }
 
-      if (!actionTitle.trim()) return false;
       if (!frequency || frequency < 1 || frequency > 7) return false;
       if (actionType === 'timer' && (!actionMinutes || Number(actionMinutes) < 1)) return false;
       return true;
@@ -382,8 +380,10 @@ export default function Onboarding() {
 
   return (
     <div
-      className="bg-background max-w-lg mx-auto flex flex-col min-h-screen"
+      className="bg-background max-w-lg mx-auto flex flex-col"
       style={{
+        position: 'fixed',
+        inset: 0,
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
@@ -392,7 +392,7 @@ export default function Onboarding() {
         <OnboardingProgress stepIndex={stepIndex} totalSteps={totalSteps} />
       ) : null}
 
-      <div className="flex-1 overflow-y-auto py-6">
+      <div className="flex-1 overflow-y-auto pb-4">
         {renderContent()}
       </div>
 
