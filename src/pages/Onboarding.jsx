@@ -18,13 +18,10 @@ const getToday = () => new Date().toISOString().split('T')[0];
 
 const getDaysLeft = (dateString) => {
   if (!dateString) return null;
-
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
   const target = new Date(dateString);
   target.setHours(0, 0, 0, 0);
-
   return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
 };
 
@@ -123,11 +120,9 @@ export default function Onboarding() {
     if (isStudy && hasDDay && examTitle.trim()) {
       return `${examTitle.trim()} 실행`;
     }
-
     if (goalTitle.trim()) {
       return `${goalTitle.trim()} 실행`;
     }
-
     return '1회 목표';
   };
 
@@ -142,12 +137,10 @@ export default function Onboarding() {
 
     if (currentStep === 'goal') {
       if (!goalTitle.trim()) return false;
-
       if (isCustomDuration) {
         const weeks = Number(customWeeks);
         if (!weeks || weeks < 1) return false;
       }
-
       return true;
     }
 
@@ -330,20 +323,10 @@ export default function Onboarding() {
         );
 
       case 'category':
-        return (
-          <OnboardingCategory
-            category={category}
-            onCategorySelect={setCategory}
-          />
-        );
+        return <OnboardingCategory value={category} onChange={setCategory} />;
 
       case 'study_dday':
-        return (
-          <OnboardingDDay
-            hasDDay={hasDDay}
-            onSelect={setHasDDay}
-          />
-        );
+        return <OnboardingDDay value={hasDDay} onChange={setHasDDay} />;
 
       case 'study_dday_date':
         return (
@@ -351,7 +334,7 @@ export default function Onboarding() {
             dDay={dDay}
             onDDayChange={(e) => setDDay(e.target.value)}
             examTitle={examTitle}
-            onExamTitleChange={(e) => setExamTitle(e.target.value)}
+            onExamChange={(e) => setExamTitle(e.target.value)}
             daysLeft={daysLeft}
           />
         );
@@ -359,17 +342,12 @@ export default function Onboarding() {
       case 'goal':
         return (
           <OnboardingGoal
-            category={category}
-            goalTitle={goalTitle}
-            onGoalTitleChange={(e) => setGoalTitle(e.target.value)}
+            value={goalTitle}
+            onChange={(e) => setGoalTitle(e.target.value)}
             duration={duration}
+            customDuration={customWeeks}
             onDurationChange={setDuration}
-            customWeeks={customWeeks}
-            onCustomWeeksChange={(e) => {
-              const value = e.target.value;
-              setCustomWeeks(value);
-              setDuration(Math.max(1, Number(value) || 0) * 7);
-            }}
+            onCustomChange={(e) => setCustomWeeks(e.target.value)}
             isCustomDuration={isCustomDuration}
             onCustomDurationToggle={setIsCustomDuration}
           />
@@ -395,12 +373,7 @@ export default function Onboarding() {
         );
 
       case 'nickname':
-        return (
-          <OnboardingNickname
-            nickname={nickname}
-            onNicknameChange={(e) => setNickname(e.target.value)}
-          />
-        );
+        return <OnboardingNickname value={nickname} onChange={(e) => setNickname(e.target.value)} />;
 
       default:
         return null;
@@ -419,18 +392,18 @@ export default function Onboarding() {
         <OnboardingProgress stepIndex={stepIndex} totalSteps={totalSteps} />
       ) : null}
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto py-6">
         {renderContent()}
       </div>
 
       {currentStep !== 'welcome' ? (
         <OnboardingNavigation
+          showBack={stepHistory.length > 1}
+          isLastStep={currentStep === 'nickname'}
+          isSubmitting={isSubmitting}
+          canContinue={canNext()}
           onBack={goBack}
           onNext={handleNext}
-          canGoBack={stepHistory.length > 1}
-          canGoNext={canNext() && !isSubmitting}
-          isLastStep={currentStep === 'nickname'}
-          isLoading={isSubmitting}
         />
       ) : null}
     </div>
