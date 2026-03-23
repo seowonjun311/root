@@ -178,6 +178,8 @@ export default function Home() {
   const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: ['me'],
     queryFn: () => base44.auth.me().catch(() => null),
+    retry: false,
+    staleTime: 1000 * 30,
   });
 
   const isGuest = !isUserLoading && !user;
