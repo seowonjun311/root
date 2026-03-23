@@ -13,7 +13,6 @@ import EmptyGoalState from '../components/home/EmptyGoalState';
 import PhotoConfirmModal from '../components/home/PhotoConfirmModal';
 import BossVictoryModal from '../components/home/BossVictoryModal';
 import CelebrationToast from '../components/home/CelebrationToast';
-import CompletionRewardOverlay from '../components/home/CompletionRewardOverlay';
 import { computeStreak, getBadgeForGoal, getStreakTrigger } from '../components/badgeUtils';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { guestDataPersistence } from '../lib/GuestDataPersistence';
@@ -101,6 +100,17 @@ function getWeekStartString() {
   ).padStart(2, '0')}`;
 }
 
+function getPagePathByCategory(category) {
+  const pageMap = {
+    exercise: 'CreateGoalExercise',
+    study: 'CreateGoalStudy',
+    mental: 'CreateGoalMental',
+    daily: 'CreateGoalDaily',
+  };
+
+  return `/${pageMap[category] || 'CreateGoalExercise'}`;
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -114,7 +124,6 @@ export default function Home() {
   const [pendingLog, setPendingLog] = useState(null);
   const [celebration, setCelebration] = useState(null);
   const [victoryGoal, setVictoryGoal] = useState(null);
-  const [completionReward, setCompletionReward] = useState(null);
   const [isPulling, setIsPulling] = useState(false);
   const [bannerMoveTrigger, setBannerMoveTrigger] = useState(0);
   const [bannerHeight, setBannerHeight] = useState(112);
@@ -178,8 +187,6 @@ export default function Home() {
   const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: ['me'],
     queryFn: () => base44.auth.me().catch(() => null),
-    retry: false,
-    staleTime: 1000 * 30,
   });
 
   const isGuest = !isUserLoading && !user;
@@ -258,6 +265,7 @@ export default function Home() {
       }
     }
 
+    // URL의 ?category=... 값은 처음 한 번만 적용
     if (!initializedRef.current && categoryFromQuery) {
       setActiveCategory(categoryFromQuery);
       initializedRef.current = true;
@@ -267,7 +275,10 @@ export default function Home() {
           base44.auth.updateMe({ active_category: categoryFromQuery }).catch(() => {});
         }
       } else {
-        guestDataPersistence.saveData('guest_active_category', categoryFromQuery);
+        const guestData = guestDataPersistence.loadOnboardingData();
+        if (guestData?.activeCategory !== categoryFromQuery) {
+          guestDataPersistence.saveData('guest_active_category', categoryFromQuery);
+        }
       }
 
       navigate('/Home', { replace: true });
@@ -323,7 +334,7 @@ export default function Home() {
   const guestData = useMemo(() => {
     if (!isGuest) return null;
     return guestDataPersistence.loadOnboardingData();
-  }, [isGuest]);
+  }, [isGuest, goals, actionGoals, allLogs]);
 
   const guestLevels = useMemo(() => buildGuestLevelStats(allLogs), [allLogs]);
 
@@ -440,8 +451,7 @@ export default function Home() {
       await base44.entities.ActionLog.create(logData);
 
       const currentXp = user?.[`${actionGoal.category}_xp`] || 0;
-      const gainXp = actionGoal?.action_mode === 'single' ? 5 : 1;
-      const newXp = currentXp + gainXp;
+      const newXp = currentXp + 1;
       const newLevel = Math.floor(newXp / 30) + 1;
 
       await base44.auth
@@ -485,18 +495,6 @@ export default function Home() {
     } else if (weeklyComplete) {
       setCelebration('weekly_complete');
     }
-
-    const rewardExp = actionGoal?.action_mode === 'single' ? 5 : 1;
-
-    setCompletionReward({
-      title: actionGoal.title,
-      category: actionGoal.category,
-      exp: rewardExp,
-      message:
-        actionGoal?.action_mode === 'single'
-          ? '단 한 번의 도전이 큰 발걸음이 되었어요.'
-          : '작은 행동이 루트를 앞으로 움직였어요.',
-    });
 
     setPendingLog(null);
     setBannerMoveTrigger(Date.now());
@@ -631,9 +629,8 @@ export default function Home() {
             </div>
 
             <button
-              type="button"
               onClick={() => {
-                navigate(`/CreateGoal?category=${activeCategory}&goalId=${activeGoal.id}`);
+                navigate(`${getPagePathByCategory(activeCategory)}?goalId=${activeGoal.id}`);
               }}
               className="w-full rounded-xl font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
               style={{
@@ -650,15 +647,9 @@ export default function Home() {
         ) : (
           <EmptyGoalState
             category={activeCategory}
-            onClick={() => {
-  navigate(`/CreateGoal?category=${activeCategory}&goalId=${activeGoal.id}`, {
-    state: {
-      category: activeCategory,
-      goalId: activeGoal.id,
-      mode: 'action',
-    },
-  });
-}}
+            onCreateGoal={() => {
+              navigate(getPagePathByCategory(activeCategory));
+            }}
           />
         )}
       </div>
@@ -679,11 +670,6 @@ export default function Home() {
           onDone={() => setCelebration(null)}
         />
       )}
-
-      <CompletionRewardOverlay
-        reward={completionReward}
-        onDone={() => setCompletionReward(null)}
-      />
 
       {victoryGoal && (
         <BossVictoryModal

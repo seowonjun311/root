@@ -1,43 +1,93 @@
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, BarChart2, Trophy, Settings } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
+import { BookOpen, Trophy, Settings } from 'lucide-react';
 
-const tabs = [
-  { id: 'home', label: '홈', icon: Home, path: '/Home' },
-  { id: 'records', label: '기록', icon: BarChart2, path: '/Records' },
-  { id: 'badges', label: '칭호', icon: Trophy, path: '/Badges' },
-  { id: 'settings', label: '설정', icon: Settings, path: '/AppSettings' },
+const RouteIcon = () => <span className="text-lg leading-none">🛤️</span>;
+
+const navItems = [
+  { path: '/Home', label: '길', icon: RouteIcon },
+  { path: '/Records', label: '기록', icon: BookOpen },
+  { path: '/Badges', label: '칭호', icon: Trophy },
+  { path: '/AppSettings', label: '설정', icon: Settings },
 ];
 
 export default function BottomNav() {
-  const navigate = useNavigate();
   const location = useLocation();
+  const { triggerHaptic } = useHapticFeedback();
+  const [pressed, setPressed] = useState(null);
+
+  const isActive = (path) => location.pathname === path;
+
+  const handleNavClick = (path) => {
+    triggerHaptic('impact', 'light');
+
+    if (location.pathname === path) {
+      const tabScroller = document.querySelector('[data-root-tab-scroll="true"]');
+      if (tabScroller) {
+        tabScroller.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  };
 
   return (
-    <div
-      className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white"
-      style={{ height: '60px' }}
+    <nav
+      style={{
+        background: 'linear-gradient(180deg, #7a5020 0%, #5a3510 60%, #3d2008 100%)',
+        borderTop: '3px solid #a07030',
+        boxShadow: '0 -3px 12px rgba(40,20,5,0.5)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        position: 'relative',
+        zIndex: 30,
+        flexShrink: 0,
+      }}
     >
-      <div className="flex h-full">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = location.pathname === tab.path;
+      <div
+        className="h-0.5 w-full"
+        style={{
+          background:
+            'linear-gradient(90deg, transparent, #e8c060, #ffd880, #e8c060, transparent)',
+          opacity: 0.6,
+        }}
+      />
+      <div
+        className="flex justify-around items-center max-w-lg mx-auto px-2"
+        style={{ height: '64px' }}
+      >
+        {navItems.map(({ path, label, icon: Icon }) => {
+          const active = isActive(path);
+          const isPressed = pressed === path;
 
           return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => navigate(tab.path)}
-              className={`flex-1 flex flex-col items-center justify-center text-xs ${
-                isActive ? 'text-amber-600 font-bold' : 'text-gray-400'
-              }`}
+            <Link
+              key={path}
+              to={path}
+              onClick={() => handleNavClick(path)}
+              onTouchStart={() => setPressed(path)}
+              onTouchEnd={() => setPressed(null)}
+              onMouseDown={() => setPressed(path)}
+              onMouseUp={() => setPressed(null)}
+              onMouseLeave={() => setPressed(null)}
+              className="flex flex-col items-center justify-center gap-0.5 rounded-xl select-none"
+              style={{
+                minWidth: '64px',
+                minHeight: '48px',
+                transition: 'transform 0.1s ease, color 0.15s ease',
+                transform: isPressed ? 'scale(0.88)' : active ? 'scale(1.05)' : 'scale(1)',
+                color: active ? '#ffe8a0' : isPressed ? '#d4b060' : 'rgba(220,180,100,0.7)',
+                textShadow: active ? '0 0 8px rgba(255,200,80,0.6)' : 'none',
+              }}
+              aria-label={`${label} 탭으로 이동`}
+              aria-current={active ? 'page' : undefined}
             >
-              <Icon className="w-5 h-5 mb-1" />
-              {tab.label}
-            </button>
+              <Icon className="w-5 h-5" aria-hidden="true" />
+              <span className="text-[10px] font-bold">{label}</span>
+            </Link>
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 }
