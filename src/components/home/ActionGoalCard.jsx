@@ -564,10 +564,14 @@ export default function ActionGoalCard({
                       <span
                         className="text-[11px] font-bold shrink-0 ml-auto"
                         style={{
-                          color: getDdayText(actionGoal.scheduled_date) === '기한 지남' ? '#b94030' : '#7a5020',
+                          color: doneToday
+                            ? '#4ca86a'
+                            : getDdayText(actionGoal.scheduled_date) === '기한 지남'
+                              ? '#b94030'
+                              : '#7a5020',
                         }}
                       >
-                        {getDdayText(actionGoal.scheduled_date)}
+                        {doneToday ? '1/1' : '0/1'}
                       </span>
                     </>
                   ) : (
@@ -592,6 +596,12 @@ export default function ActionGoalCard({
                     </>
                   )}
                 </div>
+
+                {isOneTime && (
+                  <div className="mt-1 text-[11px] font-semibold" style={{ color: '#9a7b47' }}>
+                    {getDdayText(actionGoal.scheduled_date)}
+                  </div>
+                )}
               </div>
             </div>
 
