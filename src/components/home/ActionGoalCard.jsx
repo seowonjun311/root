@@ -202,6 +202,7 @@ export default function ActionGoalCard({
   actionGoal,
   weeklyLogs = [],
   allLogs = [],
+  streak = 0,
   onComplete,
 }) {
   const queryClient = useQueryClient();
@@ -551,6 +552,22 @@ export default function ActionGoalCard({
                     {typeLabel}
                   </span>
                 </div>
+
+                {!isOneTime && streak > 0 && (
+                  <div className="mt-1 flex items-center gap-2">
+                    <div
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-xl text-[11px] font-bold"
+                      style={{
+                        background: 'rgba(255,140,0,0.10)',
+                        color: '#b85c00',
+                        border: '1px solid rgba(184,92,0,0.16)',
+                      }}
+                    >
+                      <span>🔥</span>
+                      <span>{streak}일 연속</span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-1 flex items-center gap-2">
                   {isOneTime ? (
