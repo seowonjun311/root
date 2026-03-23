@@ -15,7 +15,7 @@ function save(data) {
 
 export const guestDataPersistence = {
   // 🔹 온보딩 저장
-  saveOnboardingData(goalData, actionGoalData, nickname) {
+  saveOnboardingData({ goalData, actionGoalData, nickname, category }) {
     const current = load();
 
     const newGoal = {
@@ -37,6 +37,7 @@ export const guestDataPersistence = {
       ...current,
       onboardingComplete: true,
       nickname,
+      activeCategory: category,
 
       // 🔥 핵심: 배열 누적
       goals: [...(current.goals || []), newGoal],
