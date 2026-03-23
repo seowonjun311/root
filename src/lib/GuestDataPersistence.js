@@ -87,7 +87,6 @@ export const guestDataPersistence = {
     let nickname = '용사';
     let category = null;
 
-    // 새 방식: 객체 1개
     if (
       arg1 &&
       typeof arg1 === 'object' &&
@@ -108,7 +107,6 @@ export const guestDataPersistence = {
         current.activeCategory ||
         'exercise';
     } else {
-      // 예전 방식: 개별 파라미터
       goalData = arg1 || null;
       actionGoalData = arg2 || null;
       nickname = arg3 || '용사';
@@ -142,7 +140,10 @@ export const guestDataPersistence = {
       newActionGoal = {
         ...actionGoalData,
         id: actionGoalData.id || `local_action_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-        goal_id: actionGoalData.goal_id || newGoal?.id || current.goalData?.id || null,
+
+        // 🔥🔥🔥 핵심 수정된 줄
+        goal_id: newGoal?.id || actionGoalData.goal_id || current.goalData?.id || null,
+
         created_date: actionGoalData.created_date || new Date().toISOString(),
         updated_date: new Date().toISOString(),
         status: actionGoalData.status || 'active',
@@ -150,7 +151,6 @@ export const guestDataPersistence = {
       };
     }
 
-    // 중복 방지: id 같으면 교체, 없으면 추가
     const nextGoals = newGoal
       ? [...goals.filter((g) => g.id !== newGoal.id), newGoal]
       : goals;
@@ -165,12 +165,10 @@ export const guestDataPersistence = {
       nickname,
       activeCategory: category || current.activeCategory || 'exercise',
 
-      // 새 구조
       goals: nextGoals,
       actionGoals: nextActionGoals,
       actionLogs,
 
-      // 예전 호환 구조도 같이 유지
       goalData: newGoal || nextGoals[0] || current.goalData || null,
       actionGoalData: newActionGoal || nextActionGoals[0] || current.actionGoalData || null,
     };
@@ -192,7 +190,6 @@ export const guestDataPersistence = {
       [normalizedKey]: value,
     };
 
-    // 호환용 동기화
     if (normalizedKey === 'goals') {
       next.goalData = ensureArray(value)[0] || null;
     }
