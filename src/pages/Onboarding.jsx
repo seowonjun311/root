@@ -256,14 +256,12 @@ export default function Onboarding() {
         }));
       } else {
         const goalData = {
-          id: 'local_goal_1',
           ...goalPayload,
           created_date: new Date().toISOString(),
         };
 
         const actionGoalData = {
-          id: 'local_ag_1',
-          goal_id: 'local_goal_1',
+          goal_id: 'placeholder',
           ...actionPayload,
           created_date: new Date().toISOString(),
         };
@@ -274,9 +272,12 @@ export default function Onboarding() {
           nickname: nickname || '용사',
           category,
         });
+
+        queryClient.invalidateQueries({ queryKey: ['goals'] });
+        queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
       }
 
-      navigate('/Home');
+      navigate('/Home', { replace: true });
     } catch (error) {
       console.error('온보딩 완료 오류:', error);
       setIsSubmitting(false);
