@@ -21,6 +21,33 @@ const GPS_KEY = (id) => `gps_enabled_${id}`;
 const GPS_COORDS_KEY = (id) => `gps_coords_${id}`;
 const GUEST_STORAGE_KEY = 'root_guest_data';
 
+function getTodayString() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function formatKoreanDate(dateString) {
+  if (!dateString) return '-';
+  const d = new Date(dateString);
+  if (Number.isNaN(d.getTime())) return dateString;
+  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+}
+
+function getDdayText(dateString) {
+  if (!dateString) return '-';
+
+  const today = new Date();
+  const target = new Date(dateString);
+
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+
+  const diff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diff === 0) return '오늘';
+  if (diff > 0) return `D-${diff}`;
+  return '기한 지남';
+}
+
 function getMonthDates(year, month) {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -113,11 +140,7 @@ function MonthCalendar({ logs = [], onClose }) {
       onClick={(e) => e.stopPropagation()}
     >
       <div className="flex items-center justify-between mb-3">
-        <button
-          onClick={prevMonth}
-          className="px-2 py-1 rounded-lg text-sm"
-          style={{ color: '#7a5020' }}
-        >
+        <button onClick={prevMonth} className="px-2 py-1 rounded-lg text-sm" style={{ color: '#7a5020' }}>
           ‹
         </button>
 
@@ -126,11 +149,7 @@ function MonthCalendar({ logs = [], onClose }) {
         </p>
 
         <div className="flex items-center gap-1">
-          <button
-            onClick={nextMonth}
-            className="px-2 py-1 rounded-lg text-sm"
-            style={{ color: '#7a5020' }}
-          >
+          <button onClick={nextMonth} className="px-2 py-1 rounded-lg text-sm" style={{ color: '#7a5020' }}>
             ›
           </button>
           <button onClick={onClose} className="p-1 rounded-lg">
@@ -198,6 +217,7 @@ export default function ActionGoalCard({
   const [editFrequency, setEditFrequency] = useState(actionGoal.weekly_frequency || 5);
   const [editMinutes, setEditMinutes] = useState(actionGoal.duration_minutes || 30);
   const [editActionType, setEditActionType] = useState(actionGoal.action_type || 'confirm');
+  const [editScheduledDate, setEditScheduledDate] = useState(actionGoal.scheduled_date || '');
 
   const [gpsEnabled, setGpsEnabled] = useState(() => {
     try {
@@ -217,13 +237,24 @@ export default function ActionGoalCard({
   });
 
   const isGuest = !user;
+  const isOneTime = actionGoal.action_type === 'one_time';
 
   const weeklyCount = weeklyLogs.length;
   const targetFreq = actionGoal.weekly_frequency || 7;
-  const progressPercent = Math.min(100, Math.round((weeklyCount / Math.max(1, targetFreq)) * 100));
 
-  const todayStr = new Date().toISOString().split('T')[0];
-  const doneToday = weeklyLogs.some((log) => log.date === todayStr);
+  const todayStr = getTodayString();
+  const doneToday = isOneTime
+    ? actionGoal.status === 'completed' ||
+      allLogs.some((log) => log?.action_goal_id === actionGoal.id && log?.completed)
+    : weeklyLogs.some((log) => log.date === todayStr);
+
+  const progressPercent = isOneTime
+    ? actionGoal.status === 'completed'
+      ? 100
+      : getDdayText(actionGoal.scheduled_date) === '기한 지남'
+        ? 100
+        : 0
+    : Math.min(100, Math.round((weeklyCount / Math.max(1, targetFreq)) * 100));
 
   const detailLogs = Array.isArray(allLogs) && allLogs.length > 0 ? allLogs : weeklyLogs;
 
@@ -279,6 +310,7 @@ export default function ActionGoalCard({
       toast.success('행동 목표가 수정되었습니다.');
       queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
       setShowEdit(false);
+      window.dispatchEvent(new Event('root-home-data-updated'));
     },
     onError: () => {
       toast.error('수정에 실패했습니다.');
@@ -291,6 +323,7 @@ export default function ActionGoalCard({
       toast.success('행동 목표가 삭제되었습니다.');
       queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
       setShowDelete(false);
+      window.dispatchEvent(new Event('root-home-data-updated'));
     },
     onError: () => {
       toast.error('삭제에 실패했습니다.');
@@ -405,6 +438,11 @@ export default function ActionGoalCard({
   };
 
   const handleConfirm = () => {
+    if (isOneTime) {
+      onComplete(actionGoal, 0, { gpsEnabled: false });
+      return;
+    }
+
     if (doneToday) {
       toast.error('오늘 이미 완료했어요. 내일 다시 도전해 주세요! 💪');
       return;
@@ -418,6 +456,7 @@ export default function ActionGoalCard({
     setEditFrequency(actionGoal.weekly_frequency || 5);
     setEditMinutes(actionGoal.duration_minutes || 30);
     setEditActionType(actionGoal.action_type || 'confirm');
+    setEditScheduledDate(actionGoal.scheduled_date || '');
     setShowMenu(false);
     setShowEdit(true);
   };
@@ -432,8 +471,10 @@ export default function ActionGoalCard({
 
     const updateData = {
       title: editTitle.trim(),
-      weekly_frequency: editFrequency,
+      weekly_frequency: safeActionType === 'one_time' ? 0 : editFrequency,
       action_type: safeActionType,
+      scheduled_date: safeActionType === 'one_time' ? editScheduledDate || null : null,
+      frequency_mode: safeActionType === 'one_time' ? 'one_time' : 'weekly',
     };
 
     if (safeActionType === 'timer') {
@@ -468,7 +509,9 @@ export default function ActionGoalCard({
       ? `${actionGoal.duration_minutes || 0}분`
       : actionGoal.action_type === 'abstain'
         ? '안하기형'
-        : '확인형';
+        : actionGoal.action_type === 'one_time'
+          ? '1회성'
+          : '확인형';
 
   return (
     <>
@@ -500,47 +543,74 @@ export default function ActionGoalCard({
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span
-                    className="truncate text-sm font-bold"
-                    style={{ color: '#3a1f04' }}
-                  >
+                  <span className="truncate text-sm font-bold" style={{ color: '#3a1f04' }}>
                     {actionGoal.title}
                   </span>
 
-                  <span
-                    className="text-[11px] font-semibold shrink-0"
-                    style={{ color: '#8f6a33' }}
-                  >
+                  <span className="text-[11px] font-semibold shrink-0" style={{ color: '#8f6a33' }}>
                     {typeLabel}
                   </span>
                 </div>
 
                 <div className="mt-1 flex items-center gap-2">
-                  <div
-                    className="h-1.5 flex-1 overflow-hidden rounded-full"
-                    style={{ background: 'rgba(122,80,32,0.16)' }}
-                  >
-                    <div
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{
-                        width: `${progressPercent}%`,
-                        background:
-                          'linear-gradient(90deg, #8b5a20 0%, #c98a2b 50%, #e1b44f 100%)',
-                      }}
-                    />
-                  </div>
+                  {isOneTime ? (
+                    <>
+                      <div className="text-[11px] font-semibold" style={{ color: '#7a5020' }}>
+                        {actionGoal.scheduled_date
+                          ? `예정일: ${formatKoreanDate(actionGoal.scheduled_date)}`
+                          : '날짜 미지정'}
+                      </div>
 
-                  <span
-                    className="text-[11px] font-bold shrink-0"
-                    style={{ color: '#7a5020' }}
-                  >
-                    {weeklyCount}/{targetFreq}
-                  </span>
+                      <span
+                        className="text-[11px] font-bold shrink-0 ml-auto"
+                        style={{
+                          color: getDdayText(actionGoal.scheduled_date) === '기한 지남' ? '#b94030' : '#7a5020',
+                        }}
+                      >
+                        {getDdayText(actionGoal.scheduled_date)}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <div
+                        className="h-1.5 flex-1 overflow-hidden rounded-full"
+                        style={{ background: 'rgba(122,80,32,0.16)' }}
+                      >
+                        <div
+                          className="h-full rounded-full transition-all duration-300"
+                          style={{
+                            width: `${progressPercent}%`,
+                            background:
+                              'linear-gradient(90deg, #8b5a20 0%, #c98a2b 50%, #e1b44f 100%)',
+                          }}
+                        />
+                      </div>
+
+                      <span className="text-[11px] font-bold shrink-0" style={{ color: '#7a5020' }}>
+                        {weeklyCount}/{targetFreq}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
 
-            {actionGoal.action_type === 'timer' ? (
+            {isOneTime ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleConfirm();
+                }}
+                className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center gap-1 shrink-0"
+                style={{
+                  background: '#8b5a20',
+                  color: '#fff',
+                }}
+              >
+                <Check className="w-3 h-3" />
+                완료
+              </button>
+            ) : actionGoal.action_type === 'timer' ? (
               doneToday && !isRunning ? (
                 <span
                   onClick={(e) => e.stopPropagation()}
@@ -630,19 +700,19 @@ export default function ActionGoalCard({
             </button>
           </div>
 
-          <div className="mt-1">
-            <WeekDays
-              logs={weeklyLogs}
-              weeklyTarget={targetFreq}
-              category={actionGoal.category}
-            />
-          </div>
+          {!isOneTime && (
+            <div className="mt-1">
+              <WeekDays
+                logs={weeklyLogs}
+                weeklyTarget={targetFreq}
+                category={actionGoal.category}
+              />
+            </div>
+          )}
         </div>
 
         <AnimatePresence>
-          {showCalendar && (
-            <MonthCalendar logs={detailLogs} onClose={() => setShowCalendar(false)} />
-          )}
+          {showCalendar && <MonthCalendar logs={detailLogs} onClose={() => setShowCalendar(false)} />}
         </AnimatePresence>
       </div>
 
@@ -654,18 +724,12 @@ export default function ActionGoalCard({
 
           <div className="px-4 pb-6">
             <div className="space-y-2">
-              <button
-                onClick={handleEditOpen}
-                className="w-full flex items-center gap-3 p-3 rounded-xl text-left"
-              >
+              <button onClick={handleEditOpen} className="w-full flex items-center gap-3 p-3 rounded-xl text-left">
                 <Pencil className="w-4 h-4 text-amber-600" />
                 <span className="text-sm font-semibold">목표 수정</span>
               </button>
 
-              <button
-                onClick={handleDeleteOpen}
-                className="w-full flex items-center gap-3 p-3 rounded-xl text-left"
-              >
+              <button onClick={handleDeleteOpen} className="w-full flex items-center gap-3 p-3 rounded-xl text-left">
                 <Trash2 className="w-4 h-4 text-red-500" />
                 <span className="text-sm font-semibold text-red-500">목표 삭제</span>
               </button>
@@ -696,7 +760,8 @@ export default function ActionGoalCard({
               <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
                 목표 유형
               </label>
-              <div className="grid grid-cols-3 gap-2">
+
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setEditActionType('confirm')}
                   className="py-2 rounded-xl text-sm font-semibold"
@@ -732,33 +797,60 @@ export default function ActionGoalCard({
                 >
                   안하기형
                 </button>
+
+                <button
+                  onClick={() => setEditActionType('one_time')}
+                  className="py-2 rounded-xl text-sm font-semibold"
+                  style={
+                    editActionType === 'one_time'
+                      ? { background: '#8b5a20', color: '#fff' }
+                      : { background: '#f3ead7', color: '#7a5020' }
+                  }
+                >
+                  1회성
+                </button>
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
-                주 횟수
-              </label>
-              <div className="grid grid-cols-7 gap-1.5">
-                {[1, 2, 3, 4, 5, 6, 7].map((freq) => (
-                  <button
-                    key={freq}
-                    onClick={() => setEditFrequency(freq)}
-                    className="py-2 rounded-xl text-sm font-semibold"
-                    style={
-                      editFrequency === freq
-                        ? { background: '#8b5a20', color: '#fff' }
-                        : { background: '#f3ead7', color: '#7a5020' }
-                    }
-                  >
-                    {freq}
-                  </button>
-                ))}
+            {editActionType === 'one_time' ? (
+              <div>
+                <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
+                  예정 날짜
+                </label>
+                <Input
+                  type="date"
+                  min={getTodayString()}
+                  value={editScheduledDate}
+                  onChange={(e) => setEditScheduledDate(e.target.value)}
+                  className="h-11 rounded-xl"
+                />
               </div>
-              <p className="text-xs mt-1.5" style={{ color: '#9a7b47' }}>
-                주 {editFrequency}회
-              </p>
-            </div>
+            ) : (
+              <div>
+                <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
+                  주 횟수
+                </label>
+                <div className="grid grid-cols-7 gap-1.5">
+                  {[1, 2, 3, 4, 5, 6, 7].map((freq) => (
+                    <button
+                      key={freq}
+                      onClick={() => setEditFrequency(freq)}
+                      className="py-2 rounded-xl text-sm font-semibold"
+                      style={
+                        editFrequency === freq
+                          ? { background: '#8b5a20', color: '#fff' }
+                          : { background: '#f3ead7', color: '#7a5020' }
+                      }
+                    >
+                      {freq}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs mt-1.5" style={{ color: '#9a7b47' }}>
+                  주 {editFrequency}회
+                </p>
+              </div>
+            )}
 
             {editActionType === 'timer' && (
               <div>
@@ -807,7 +899,7 @@ export default function ActionGoalCard({
             </Button>
             <Button
               onClick={handleSave}
-              disabled={!editTitle.trim() || updateMutation.isPending}
+              disabled={!editTitle.trim() || (editActionType === 'one_time' && !editScheduledDate) || updateMutation.isPending}
               className="flex-1 rounded-xl"
               style={{ background: '#8b5a20', color: '#fff' }}
             >
@@ -853,11 +945,7 @@ export default function ActionGoalCard({
           </p>
 
           <DrawerFooter className="flex gap-2 pt-6">
-            <Button
-              variant="outline"
-              onClick={() => handleTimerStart(false)}
-              className="flex-1 rounded-xl"
-            >
+            <Button variant="outline" onClick={() => handleTimerStart(false)} className="flex-1 rounded-xl">
               안 함
             </Button>
             <Button
