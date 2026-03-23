@@ -1,89 +1,97 @@
 const STORAGE_KEY = 'root_guest_data';
 
-function load() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
+class GuestDataPersistence {
+  loadGuestData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw);
+
+      return {
+        onboardingComplete: false,
+        nickname: '',
+        category: '',
+        goalData: null,
+        actionGoalData: null,
+        ...parsed,
+      };
+    } catch (error) {
+      console.error('게스트 데이터 불러오기 실패:', error);
+      return null;
+    }
+  }
+
+  saveGuestData(data) {
+    try {
+      const current = this.loadGuestData() || {};
+
+      const nextData = {
+        ...current,
+        ...data,
+      };
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextData));
+      return nextData;
+    } catch (error) {
+      console.error('게스트 데이터 저장 실패:', error);
+      return null;
+    }
+  }
+
+  saveOnboardingData({ goalData, actionGoalData, nickname, category }) {
+    try {
+      const nextData = {
+        onboardingComplete: true,
+        nickname: nickname || '',
+        category: category || '',
+        goalData: goalData || null,
+        actionGoalData: actionGoalData || null,
+      };
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextData));
+      return nextData;
+    } catch (error) {
+      console.error('온보딩 데이터 저장 실패:', error);
+      return null;
+    }
+  }
+
+  isOnboardingComplete() {
+    const data = this.loadGuestData();
+    return Boolean(data?.onboardingComplete);
+  }
+
+  getNickname() {
+    const data = this.loadGuestData();
+    return data?.nickname || '';
+  }
+
+  getCategory() {
+    const data = this.loadGuestData();
+    return data?.category || '';
+  }
+
+  getGoalData() {
+    const data = this.loadGuestData();
+    return data?.goalData || null;
+  }
+
+  getActionGoalData() {
+    const data = this.loadGuestData();
+    return data?.actionGoalData || null;
+  }
+
+  clearGuestData() {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      return true;
+    } catch (error) {
+      console.error('게스트 데이터 삭제 실패:', error);
+      return false;
+    }
   }
 }
 
-function save(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
-export const guestDataPersistence = {
-  // 🔹 온보딩 저장
-  saveOnboardingData({ goalData, actionGoalData, nickname, category }) {
-    const current = load();
-
-    const newGoal = {
-      ...goalData,
-      id: `local_goal_${Date.now()}`,
-      created_date: new Date().toISOString(),
-      status: 'active',
-    };
-
-    const newActionGoal = {
-      ...actionGoalData,
-      id: `local_action_${Date.now()}`,
-      goal_id: newGoal.id,
-      created_date: new Date().toISOString(),
-      status: 'active',
-    };
-
-    const updated = {
-      ...current,
-      onboardingComplete: true,
-      nickname,
-      activeCategory: category,
-
-      // 🔥 핵심: 배열 누적
-      goals: [...(current.goals || []), newGoal],
-      actionGoals: [...(current.actionGoals || []), newActionGoal],
-    };
-
-    save(updated);
-  },
-
-  // 🔹 데이터 불러오기
-  loadOnboardingData() {
-    return load();
-  },
-
-  // 🔹 행동로그 추가
-  addActionLog(log) {
-    const current = load();
-
-    const newLog = {
-      ...log,
-      id: `local_log_${Date.now()}`,
-      created_date: new Date().toISOString(),
-    };
-
-    const updated = {
-      ...current,
-      actionLogs: [...(current.actionLogs || []), newLog],
-    };
-
-    save(updated);
-  },
-
-  // 🔹 카테고리 저장
-  saveData(key, value) {
-    const current = load();
-
-    const updated = {
-      ...current,
-      [key === 'guest_active_category' ? 'activeCategory' : key]: value,
-    };
-
-    save(updated);
-  },
-
-  // 🔹 전체 초기화 (로그아웃 등)
-  clear() {
-    localStorage.removeItem(STORAGE_KEY);
-  },
-};
+export const guestDataPersistence = new GuestDataPersistence();
+export default guestDataPersistence;
