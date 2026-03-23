@@ -265,7 +265,6 @@ export default function Home() {
       }
     }
 
-    // URL의 ?category=... 값은 처음 한 번만 적용
     if (!initializedRef.current && categoryFromQuery) {
       setActiveCategory(categoryFromQuery);
       initializedRef.current = true;
@@ -417,6 +416,7 @@ export default function Home() {
     const finalGpsData = receivedGpsData || gpsData || {};
     const todayStr = getTodayString();
     const weekStart = getWeekStartString();
+    const isOneTime = actionGoal.action_type === 'one_time';
 
     const logData = {
       action_goal_id: actionGoal.id,
@@ -446,9 +446,40 @@ export default function Home() {
         created_date: new Date().toISOString(),
       };
 
+      const currentActionGoals = Array.isArray(currentGuestData?.actionGoals)
+        ? currentGuestData.actionGoals
+        : [];
+
+      const nextActionGoals = currentActionGoals.map((goal) =>
+        goal.id === actionGoal.id
+          ? {
+              ...goal,
+              ...(isOneTime
+                ? {
+                    status: 'completed',
+                    completed: true,
+                    completed_date: todayStr,
+                  }
+                : {}),
+            }
+          : goal
+      );
+
       guestDataPersistence.saveData('local_action_logs', [...existingLogs, savedLog]);
+
+      if (isOneTime) {
+        guestDataPersistence.saveData('local_action_goals', nextActionGoals);
+      }
     } else {
       await base44.entities.ActionLog.create(logData);
+
+      if (isOneTime) {
+        await base44.entities.ActionGoal.update(actionGoal.id, {
+          status: 'completed',
+          completed: true,
+          completed_date: todayStr,
+        });
+      }
 
       const currentXp = user?.[`${actionGoal.category}_xp`] || 0;
       const newXp = currentXp + 1;
@@ -470,30 +501,34 @@ export default function Home() {
       },
     ];
 
-    const streak = computeStreak(actionGoal.id, optimisticLogs);
-    const streakTrigger = getStreakTrigger(streak);
+    if (!isOneTime) {
+      const streak = computeStreak(actionGoal.id, optimisticLogs);
+      const streakTrigger = getStreakTrigger(streak);
 
-    const thisWeekLogs = optimisticLogs.filter(
-      (log) => log?.action_goal_id === actionGoal.id && log?.date && log.date >= weekStart
-    );
+      const thisWeekLogs = optimisticLogs.filter(
+        (log) => log?.action_goal_id === actionGoal.id && log?.date && log.date >= weekStart
+      );
 
-    const target = actionGoal.weekly_frequency || 7;
-    const weeklyComplete = thisWeekLogs.length >= target && thisWeekLogs.length - 1 < target;
+      const target = actionGoal.weekly_frequency || 7;
+      const weeklyComplete = thisWeekLogs.length >= target && thisWeekLogs.length - 1 < target;
 
-    if (streakTrigger) {
-      setCelebration(streakTrigger);
+      if (streakTrigger) {
+        setCelebration(streakTrigger);
 
-      const badge = getBadgeForGoal({ title: actionGoal.title });
-      createBadgeMutation.mutate({
-        title: `${badge?.title || '칭호'} (${streak}일 연속)`,
-        description: `${actionGoal.title} ${streak}일 연속 성공`,
-        category: actionGoal.category,
-        badge_type: 'cumulative',
-        earned_date: todayStr,
-        streak,
-      });
-    } else if (weeklyComplete) {
-      setCelebration('weekly_complete');
+        const badge = getBadgeForGoal({ title: actionGoal.title });
+        createBadgeMutation.mutate({
+          title: `${badge?.title || '칭호'} (${streak}일 연속)`,
+          description: `${actionGoal.title} ${streak}일 연속 성공`,
+          category: actionGoal.category,
+          badge_type: 'cumulative',
+          earned_date: todayStr,
+          streak,
+        });
+      } else if (weeklyComplete) {
+        setCelebration('weekly_complete');
+      }
+    } else {
+      setCelebration('goal_complete');
     }
 
     setPendingLog(null);
@@ -505,6 +540,8 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
       queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
     ]);
+
+    window.dispatchEvent(new Event('root-home-data-updated'));
   };
 
   const handleVictoryClose = () => {
@@ -586,11 +623,7 @@ export default function Home() {
           paddingBottom: '2px',
         }}
       >
-        <CategoryTabs
-          active={activeCategory}
-          onChange={handleCategoryChange}
-          userLevels={userLevels}
-        />
+        <CategoryTabs active={activeCategory} onChange={handleCategoryChange} userLevels={userLevels} />
       </div>
 
       <div style={{ height: `${contentTopSpacer}px` }} />
@@ -664,12 +697,7 @@ export default function Home() {
         />
       )}
 
-      {celebration && (
-        <CelebrationToast
-          trigger={celebration}
-          onDone={() => setCelebration(null)}
-        />
-      )}
+      {celebration && <CelebrationToast trigger={celebration} onDone={() => setCelebration(null)} />}
 
       {victoryGoal && (
         <BossVictoryModal
