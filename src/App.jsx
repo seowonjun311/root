@@ -153,9 +153,13 @@ const AppRoutes = () => {
 
               <Route element={<AppLayout />}>
   <Route path="/Home" element={<div />} />
+
+  {/* 🔥 여기에 추가 */}
+  <Route path="/Timeline" element={<Timeline />} />
+
   <Route path="/Records" element={<div />} />
   <Route path="/Badges" element={<div />} />
-  <Route path="/AppSettings" element={<div />} />
+  <Route path="/AppSettings" element={<div />} />/>
 
   {/* 예전/잘못된 경로 호환용 */}
   <Route path="/Record" element={<Navigate to="/Records" replace />} />
