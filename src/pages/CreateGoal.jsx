@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
@@ -124,16 +124,20 @@ function SelectCard({ active, title, desc, sub, onClick }) {
 
 export default function CreateGoal() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { triggerHaptic } = useHapticFeedback();
   const formContainerRef = useScrollIntoViewOnFocus();
 
-  const params = new URLSearchParams(window.location.search);
-  const category = params.get('category') || 'exercise';
-  const paramGoalId = params.get('goalId');
+  const category = searchParams.get('category') || location.state?.category || 'exercise';
+  const paramGoalId = searchParams.get('goalId') || location.state?.goalId || null;
+  const isAddingActionOnly = Boolean(paramGoalId);
+  const isStudy = category === 'study';
 
   const { data: existingGoal } = useQuery({
     queryKey: ['existingGoal', category],
+    enabled: !isAddingActionOnly,
     queryFn: async () => {
       const goals = await base44.entities.Goal.filter({
         category,
@@ -144,9 +148,7 @@ export default function CreateGoal() {
     },
   });
 
-  const existingGoalId = paramGoalId || existingGoal?.id;
-  const isStudy = category === 'study';
-  const isAddingActionOnly = !!existingGoalId;
+  const existingGoalId = paramGoalId || existingGoal?.id || null;
 
   const [step, setStep] = useState(0);
 
@@ -167,6 +169,16 @@ export default function CreateGoal() {
   const [frequency, setFrequency] = useState(3);
   const [minutes, setMinutes] = useState(30);
 
+  useEffect(() => {
+    setStep(0);
+    setActionMode('routine');
+    setActionTitle('');
+    setScheduledDate('');
+    setActionType('confirm');
+    setFrequency(3);
+    setMinutes(30);
+  }, [category, paramGoalId]);
+
   const pageTitle = isAddingActionOnly
     ? `${categoryNames[category]} 행동 목표 추가`
     : `${categoryNames[category]} 결과 목표 만들기`;
@@ -185,15 +197,6 @@ export default function CreateGoal() {
 
   const finalGoalTitle = isStudy && hasDDay ? examTitle.trim() : goalTitle.trim();
   const finalDuration = isStudy && hasDDay ? calcDuration() : duration;
-
-  // 결과목표 생성 흐름
-  // 공부:
-  // step 0 = D-day 여부
-  // step 1 = (D-day 있음이면 시험정보 / 없음이면 결과목표)
-  // step 2 = 저장
-  // 기타:
-  // step 0 = 결과목표
-  // step 1 = 저장
 
   const isStudyEntryStep = !isAddingActionOnly && isStudy && step === 0;
   const isStudyDDayStep = !isAddingActionOnly && isStudy && step === 1 && hasDDay;
@@ -220,6 +223,7 @@ export default function CreateGoal() {
 
   const isActionStepValid = (() => {
     if (!isAddingActionOnly) return false;
+    if (!existingGoalId) return false;
     if (!actionTitle.trim()) return false;
 
     if (actionMode === 'single' && !scheduledDate) return false;
@@ -294,7 +298,12 @@ export default function CreateGoal() {
   };
 
   const handleCreateActionGoal = async () => {
-    if (!existingGoalId || !isActionStepValid || createGoalMutation.isPending) return;
+    if (!existingGoalId) {
+      toast.error('연결할 결과목표를 찾지 못했습니다. 홈에서 다시 들어와 주세요.');
+      return;
+    }
+
+    if (!isActionStepValid || createGoalMutation.isPending) return;
 
     try {
       triggerHaptic('impact', 'heavy');
@@ -661,6 +670,13 @@ export default function CreateGoal() {
         title="행동 목표 추가"
         desc="루틴형과 단발형은 여기서만 만들 수 있어요"
       />
+
+      {!existingGoalId ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          연결할 결과목표를 찾지 못했습니다. 홈 화면에서 결과목표 카드 아래의
+          “행동목표 추가하기” 버튼으로 다시 들어와 주세요.
+        </div>
+      ) : null}
 
       {renderActionModeSection()}
 
