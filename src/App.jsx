@@ -24,6 +24,7 @@ const CreateGoalMental = lazy(() => import(/* webpackChunkName: "create-goal-men
 const CreateGoalDaily = lazy(() => import(/* webpackChunkName: "create-goal-daily" */ './pages/CreateGoalDaily'));
 const NotificationSettings = lazy(() => import(/* webpackChunkName: "notifications" */ './pages/NotificationSettings'));
 const PrivacyPolicy = lazy(() => import(/* webpackChunkName: "privacy" */ './pages/PrivacyPolicy'));
+const Timeline = lazy(() => import('./pages/Timeline'));
 
 // Lazy-load onboarding components for faster initial load
 const OnboardingWelcome = lazy(() => import(/* webpackChunkName: "onboarding-welcome" */ '@/components/onboarding/OnboardingWelcome'));
