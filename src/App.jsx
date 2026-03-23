@@ -7,7 +7,13 @@ import AppLayout from './components/layout/AppLayout';
 import { TabNavigationProvider } from './lib/TabNavigationContext';
 
 // ✅ React Query 설정
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
 
 // 로딩 화면
 const PageFallback = () => (
