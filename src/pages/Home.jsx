@@ -390,6 +390,29 @@ export default function Home() {
     );
   };
 
+  const getLogsByActionGoalId = (actionGoalId) => {
+    return allLogs.filter((log) => log?.action_goal_id === actionGoalId);
+  };
+
+  const todayStr = getTodayString();
+
+  const todaysGoals = useMemo(() => {
+    return categoryActionGoals.filter((goal) => {
+      if (goal.action_type === 'one_time') {
+        return goal.status !== 'completed';
+      }
+
+      const logs = getLogsByActionGoalId(goal.id);
+      const doneToday = logs.some((log) => log?.date === todayStr);
+
+      return !doneToday;
+    });
+  }, [categoryActionGoals, allLogs, todayStr]);
+
+  const otherGoals = useMemo(() => {
+    return categoryActionGoals.filter((goal) => !todaysGoals.some((item) => item.id === goal.id));
+  }, [categoryActionGoals, todaysGoals]);
+
   const handleCategoryChange = (nextCategory) => {
     if (!CATEGORY_KEYS.includes(nextCategory)) return;
     if (nextCategory === activeCategory) return;
@@ -414,7 +437,7 @@ export default function Home() {
 
     const { actionGoal, minutes, gpsData } = pendingLog;
     const finalGpsData = receivedGpsData || gpsData || {};
-    const todayStr = getTodayString();
+    const todayStrLocal = getTodayString();
     const weekStart = getWeekStartString();
     const isOneTime = actionGoal.action_type === 'one_time';
 
@@ -422,7 +445,7 @@ export default function Home() {
       action_goal_id: actionGoal.id,
       goal_id: actionGoal.goal_id,
       category: actionGoal.category,
-      date: todayStr,
+      date: todayStrLocal,
       duration_minutes: minutes || 0,
       completed: true,
       photo_url: photoUrl || null,
@@ -458,7 +481,7 @@ export default function Home() {
                 ? {
                     status: 'completed',
                     completed: true,
-                    completed_date: todayStr,
+                    completed_date: todayStrLocal,
                   }
                 : {}),
             }
@@ -477,7 +500,7 @@ export default function Home() {
         await base44.entities.ActionGoal.update(actionGoal.id, {
           status: 'completed',
           completed: true,
-          completed_date: todayStr,
+          completed_date: todayStrLocal,
         });
       }
 
@@ -521,7 +544,7 @@ export default function Home() {
           description: `${actionGoal.title} ${streak}일 연속 성공`,
           category: actionGoal.category,
           badge_type: 'cumulative',
-          earned_date: todayStr,
+          earned_date: todayStrLocal,
           streak,
         });
       } else if (weeklyComplete) {
@@ -636,22 +659,50 @@ export default function Home() {
               logs={allLogs.filter((log) => log?.goal_id === activeGoal.id)}
             />
 
-            <div className="space-y-2">
-              {categoryActionGoals.length > 0 ? (
-                categoryActionGoals.map((actionGoal) => (
-                  <ActionGoalCard
-  key={actionGoal.id}
-  actionGoal={actionGoal}
-  weeklyLogs={getWeeklyLogs(actionGoal.id)}
-  allLogs={allLogs.filter((log) => log?.action_goal_id === actionGoal.id)}
-  streak={computeStreak(
-    actionGoal.id,
-    allLogs.filter((log) => log?.action_goal_id === actionGoal.id)
-  )}
-  onComplete={handleComplete}
-/>
-                ))
-              ) : (
+            <div className="space-y-4">
+              {todaysGoals.length > 0 && (
+                <div>
+                  <div className="text-sm font-bold mb-2" style={{ color: '#7a5020' }}>
+                    🔥 오늘 해야 할 것
+                  </div>
+
+                  <div className="space-y-2">
+                    {todaysGoals.map((actionGoal) => (
+                      <ActionGoalCard
+                        key={actionGoal.id}
+                        actionGoal={actionGoal}
+                        weeklyLogs={getWeeklyLogs(actionGoal.id)}
+                        allLogs={getLogsByActionGoalId(actionGoal.id)}
+                        streak={computeStreak(actionGoal.id, getLogsByActionGoalId(actionGoal.id))}
+                        onComplete={handleComplete}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {otherGoals.length > 0 && (
+                <div>
+                  <div className="text-sm font-bold mb-2" style={{ color: '#9a7b47' }}>
+                    전체 목표
+                  </div>
+
+                  <div className="space-y-2">
+                    {otherGoals.map((actionGoal) => (
+                      <ActionGoalCard
+                        key={actionGoal.id}
+                        actionGoal={actionGoal}
+                        weeklyLogs={getWeeklyLogs(actionGoal.id)}
+                        allLogs={getLogsByActionGoalId(actionGoal.id)}
+                        streak={computeStreak(actionGoal.id, getLogsByActionGoalId(actionGoal.id))}
+                        onComplete={handleComplete}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {categoryActionGoals.length === 0 && (
                 <div
                   className="rounded-2xl px-4 py-4 text-sm"
                   style={{
