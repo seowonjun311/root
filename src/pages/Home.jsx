@@ -648,9 +648,15 @@ export default function Home() {
         ) : (
           <EmptyGoalState
             category={activeCategory}
-            onCreateGoal={() => {
-              navigate(`/CreateGoal?category=${activeCategory}`);
-            }}
+            onClick={() => {
+  navigate(`/CreateGoal?category=${activeCategory}&goalId=${activeGoal.id}`, {
+    state: {
+      category: activeCategory,
+      goalId: activeGoal.id,
+      mode: 'action',
+    },
+  });
+}}
           />
         )}
       </div>
