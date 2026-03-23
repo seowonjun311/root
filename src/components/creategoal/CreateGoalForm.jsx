@@ -16,6 +16,7 @@ import {
   Target,
   Clock3,
   Flag,
+  CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -23,26 +24,34 @@ const ACTION_TYPES = [
   {
     value: 'confirm',
     title: '확인형',
-    short: '했으면 체크',
+    short: '했는지 체크',
     icon: Sword,
     emoji: '✅',
-    desc: '행동을 끝낸 뒤 바로 확인하는 일반 퀘스트예요.',
+    desc: '했는지 체크하는 행동이에요.',
   },
   {
     value: 'timer',
     title: '시간기록형',
-    short: '시간을 재며 수행',
+    short: '시간을 기록',
     icon: Clock3,
     emoji: '⏱️',
-    desc: '집중 시간이나 운동 시간을 기록하는 퀘스트예요.',
+    desc: '얼마나 했는지 시간을 기록하는 행동이에요.',
   },
   {
     value: 'abstain',
     title: '안하기형',
-    short: '유혹을 참기',
+    short: '하지 않기',
     icon: ShieldBan,
     emoji: '🚫',
-    desc: '하지 않기로 한 행동을 버티는 절제 퀘스트예요.',
+    desc: '하지 않았는지 지키는 행동이에요.',
+  },
+  {
+    value: 'one_time',
+    title: '1회성',
+    short: '한 번만 하면 끝',
+    icon: CheckCircle2,
+    emoji: '📌',
+    desc: '날짜를 정하고 한 번만 완료하면 끝나는 행동이에요.',
   },
 ];
 
@@ -67,22 +76,40 @@ const frequencyPresets = [
   { value: 7, label: '매일', desc: '매일 전진' },
 ];
 
+const durationPresets = [
+  { days: 7, label: '1주' },
+  { days: 14, label: '2주' },
+  { days: 28, label: '4주' },
+  { days: 56, label: '8주' },
+];
+
 function getDefaultActionPlaceholder(category) {
-  if (category === 'daily') return '예: 빨래하기, 책상 정리, 부모님께 연락하기';
-  if (category === 'mental') return '예: 7시 기상, 일기 쓰기, 금연, 명상';
-  if (category === 'study') return '예: 영어 듣기 30분, 수학 20문제, 전공 복습';
-  return '예: 러닝 30분, 헬스 가기, 야식 참기';
+  if (category === 'daily') return '예: 빨래하기, 책상 정리, 책 반납하기';
+  if (category === 'mental') return '예: 7시 기상, 일기 쓰기, 금연, 병원 예약하기';
+  if (category === 'study') return '예: 영어 듣기 30분, 수학 20문제, 토익 시험 접수하기';
+  return '예: 러닝 30분, 헬스 가기, 운동화 사기';
 }
 
 function getDefaultGoalPlaceholder(category) {
   if (category === 'mental') return '예: 자기관리 루틴 만들기, 절제력 키우기';
   if (category === 'daily') return '예: 생활 루틴 잡기, 집관리 습관 만들기';
   if (category === 'exercise') return '예: 5kg 감량, 턱걸이 10개, 러닝 습관 만들기';
+  if (category === 'study') return '예: 토익 900점, 수학 실력 올리기, 자격증 합격';
   return '어떤 결과를 이루고 싶나요?';
 }
 
 function getActionTypeMeta(type) {
   return ACTION_TYPES.find((item) => item.value === type) || ACTION_TYPES[0];
+}
+
+function formatDateKorean(dateString) {
+  if (!dateString) return '-';
+  const d = new Date(dateString);
+  if (Number.isNaN(d.getTime())) return dateString;
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const date = d.getDate();
+  return `${year}년 ${month}월 ${date}일`;
 }
 
 function SummaryChip({ icon, label, value }) {
@@ -147,6 +174,7 @@ function ActionTypeCard({ item, selected, onClick }) {
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className="w-full rounded-2xl p-4 text-left transition-all active:scale-[0.99]"
       style={
@@ -193,9 +221,10 @@ function ActionTypeCard({ item, selected, onClick }) {
   );
 }
 
-function FrequencyCard({ selected, onClick, label, desc }) {
+function SelectCard({ selected, onClick, label, desc }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className="rounded-2xl p-3 text-left transition-all active:scale-[0.99]"
       style={
@@ -213,9 +242,11 @@ function FrequencyCard({ selected, onClick, label, desc }) {
       <div className="text-sm font-bold" style={{ color: '#3d2408' }}>
         {label}
       </div>
-      <div className="text-[11px] mt-1" style={{ color: '#8f6a33' }}>
-        {desc}
-      </div>
+      {desc ? (
+        <div className="text-[11px] mt-1" style={{ color: '#8f6a33' }}>
+          {desc}
+        </div>
+      ) : null}
     </button>
   );
 }
@@ -227,6 +258,8 @@ export default function CreateGoalForm({ category }) {
   const paramGoalId = new URLSearchParams(window.location.search).get('goalId');
   const isAddingActionOnlyEarly = !!paramGoalId;
   const formContainerRef = isAddingActionOnlyEarly ? null : useScrollIntoViewOnFocus();
+
+  const today = new Date().toISOString().split('T')[0];
 
   const { data: existingGoal } = useQuery({
     queryKey: ['existingGoal', category],
@@ -242,22 +275,23 @@ export default function CreateGoalForm({ category }) {
   });
 
   const existingGoalId = paramGoalId || existingGoal?.id;
-  const isStudy = category === 'study';
   const isAddingActionOnly = !!existingGoalId;
 
   const [step, setStep] = useState(0);
-  const [hasDDay, setHasDDay] = useState(null);
-  const [dDay, setDDay] = useState('');
-  const [examTitle, setExamTitle] = useState('');
+
   const [goalTitle, setGoalTitle] = useState('');
-  const [duration, setDuration] = useState(56);
-  const [customWeeks, setCustomWeeks] = useState('');
+  const [duration, setDuration] = useState(28);
   const [isCustomDuration, setIsCustomDuration] = useState(false);
+  const [customWeeks, setCustomWeeks] = useState('');
 
   const [actionTitle, setActionTitle] = useState('');
   const [actionType, setActionType] = useState('confirm');
+
+  const [frequencyMode, setFrequencyMode] = useState('weekly');
   const [frequency, setFrequency] = useState(3);
+
   const [minutes, setMinutes] = useState(30);
+  const [oneTimeDate, setOneTimeDate] = useState('');
 
   const createGoalMutation = useMutation({
     mutationFn: async (payload) => payload.data,
@@ -267,438 +301,136 @@ export default function CreateGoalForm({ category }) {
       queryClient.invalidateQueries({ queryKey: ['allLogs'] });
       queryClient.invalidateQueries({ queryKey: ['allGoals'] });
       queryClient.invalidateQueries({ queryKey: ['actionGoalsAll'] });
-      toast.success(data.message);
-      setTimeout(() => navigate(`/Home?category=${category}`), 300);
+      toast.success(data.message || '저장되었습니다.');
+      setTimeout(() => navigate(`/Home?category=${category}`), 250);
     },
     onError: () => toast.error('목표 생성에 실패했습니다.'),
   });
 
-  const calcDuration = () => {
-    if (!dDay) return 90;
-    const diff = Math.ceil((new Date(dDay) - new Date()) / (1000 * 60 * 60 * 24));
-    return Math.max(1, diff);
-  };
-
   const currentActionTypeMeta = useMemo(() => getActionTypeMeta(actionType), [actionType]);
 
-  const resultTitle = isStudy && hasDDay ? examTitle : goalTitle;
-  const resultDuration = isStudy && hasDDay ? calcDuration() : duration;
-  const resultSummary = resultTitle?.trim() || `${categoryNames[category]} 결과목표`;
-  const actionSummary = actionTitle?.trim() || '행동목표 이름을 정해주세요';
-  const frequencySummary = frequency === 7 ? '매일' : `주 ${frequency}회`;
+  const totalSteps = isAddingActionOnly ? 4 : 5;
+  const resultSummary = isAddingActionOnly ? '기존 결과목표에 추가' : goalTitle?.trim() || `${categoryNames[category]} 결과목표`;
+  const actionSummary = actionTitle?.trim() || '행동 이름을 입력해주세요';
+  const durationSummary = `${duration}일`;
+  const frequencySummary =
+    actionType === 'one_time'
+      ? formatDateKorean(oneTimeDate)
+      : actionType === 'abstain'
+        ? `${duration}일 동안 지키기`
+        : frequencyMode === 'daily'
+          ? '매일'
+          : frequencyMode === 'weekly'
+            ? `주 ${frequency}회`
+            : `월 ${frequency}회`;
+
   const typeSummary =
     actionType === 'timer'
       ? `시간기록형 · ${minutes}분`
       : actionType === 'abstain'
         ? '안하기형'
-        : '확인형';
+        : actionType === 'one_time'
+          ? '1회성'
+          : '확인형';
+
+  const canGoNextFromGoal = isAddingActionOnly || goalTitle.trim();
+  const canGoNextFromActionTitle = actionTitle.trim();
+  const canGoNextFromOneTimeDate = !!oneTimeDate;
+  const canSubmit =
+    !!actionTitle.trim() &&
+    (isAddingActionOnly || !!goalTitle.trim()) &&
+    (actionType !== 'one_time' || !!oneTimeDate) &&
+    (actionType !== 'timer' || Number(minutes) > 0);
 
   const handleBack = () => {
     triggerHaptic('impact', 'light');
-
-    if (isAddingActionOnly) {
-      navigate('/Home');
-      return;
-    }
 
     if (step === 0) {
       navigate('/Home');
       return;
     }
 
-    if (isStudy) {
-      if (step === 1) {
-        setStep(0);
-        return;
-      }
-      if (step === 2) {
-        setStep(1);
-        return;
-      }
-      if (step === 3) {
-        setStep(2);
-        return;
-      }
-      if (step === 4) {
-        setStep(3);
-        return;
-      }
-      if (step === 5) {
-        if (actionType === 'timer') {
-          setStep(4);
-        } else {
-          setStep(3);
-        }
-        return;
-      }
-    } else {
-      if (step === 1) {
-        setStep(0);
-        return;
-      }
-      if (step === 2) {
-        setStep(1);
-        return;
-      }
-      if (step === 3) {
-        setStep(2);
-        return;
-      }
-      if (step === 4) {
-        if (actionType === 'timer') {
-          setStep(3);
-        } else {
-          setStep(2);
-        }
-      }
-    }
+    setStep((prev) => Math.max(0, prev - 1));
   };
 
   const handleSubmit = async () => {
-    triggerHaptic('impact', 'heavy');
+    if (!canSubmit) return;
 
-    if (isAddingActionOnly) {
+    try {
+      triggerHaptic('impact', 'heavy');
+
+      if (isAddingActionOnly) {
+        await base44.entities.ActionGoal.create({
+          goal_id: existingGoalId,
+          category,
+          title: actionTitle.trim(),
+          action_type: actionType,
+          weekly_frequency: actionType === 'one_time' ? 0 : frequencyMode === 'daily' ? 7 : frequency,
+          frequency_mode: actionType === 'one_time' ? 'one_time' : frequencyMode,
+          duration_minutes: actionType === 'timer' ? Number(minutes) : 0,
+          duration_days: actionType === 'one_time' ? null : duration,
+          scheduled_date: actionType === 'one_time' ? oneTimeDate : null,
+          status: 'active',
+        });
+
+        createGoalMutation.mutate({
+          data: { message: '새 행동목표가 추가되었습니다! 🦊' },
+        });
+        return;
+      }
+
+      const goal = await base44.entities.Goal.create({
+        category,
+        goal_type: 'result',
+        title: goalTitle.trim(),
+        duration_days: duration,
+        start_date: today,
+        status: 'active',
+      });
+
       await base44.entities.ActionGoal.create({
-        goal_id: existingGoalId,
+        goal_id: goal.id,
         category,
         title: actionTitle.trim(),
         action_type: actionType,
-        weekly_frequency: frequency,
-        duration_minutes: actionType === 'timer' ? minutes : 0,
+        weekly_frequency: actionType === 'one_time' ? 0 : frequencyMode === 'daily' ? 7 : frequency,
+        frequency_mode: actionType === 'one_time' ? 'one_time' : frequencyMode,
+        duration_minutes: actionType === 'timer' ? Number(minutes) : 0,
+        duration_days: actionType === 'one_time' ? null : duration,
+        scheduled_date: actionType === 'one_time' ? oneTimeDate : null,
         status: 'active',
       });
 
       createGoalMutation.mutate({
-        addingActionOnly: true,
-        data: { message: '새 퀘스트가 추가되었습니다! 🦊' },
+        data: { message: '새로운 루트가 시작되었습니다! 🦊' },
       });
-      return;
+    } catch (error) {
+      console.error(error);
+      toast.error('목표 생성에 실패했습니다.');
     }
-
-    const finalDuration = isStudy && hasDDay ? calcDuration() : duration;
-    const finalTitle = isStudy && hasDDay ? examTitle.trim() : goalTitle.trim();
-    const finalDDay = isStudy && hasDDay ? dDay : undefined;
-
-    const goal = await base44.entities.Goal.create({
-      category,
-      goal_type: 'result',
-      title: finalTitle,
-      duration_days: finalDuration,
-      start_date: new Date().toISOString().split('T')[0],
-      ...(finalDDay ? { d_day: finalDDay, has_d_day: true } : {}),
-      status: 'active',
-    });
-
-    await base44.entities.ActionGoal.create({
-      goal_id: goal.id,
-      category,
-      title: actionTitle.trim() || finalTitle,
-      action_type: actionType,
-      weekly_frequency: frequency,
-      duration_minutes: actionType === 'timer' ? minutes : 0,
-      duration_days: finalDuration,
-      status: 'active',
-    });
-
-    createGoalMutation.mutate({
-      data: { message: '새로운 루트가 시작되었습니다! 🦊' },
-    });
   };
 
-  const goNextFromGoal = () => {
-    if (isStudy) {
-      setStep(1);
-      return;
-    }
-    setStep(1);
-  };
-
-  const renderAddActionOnlyMode = () => {
-    const finalStep = actionType === 'timer' ? 3 : 2;
-
-    return (
-      <div className="space-y-5">
-        <StepHeader
-          category={category}
-          stepLabel={`행동목표 생성 · ${step + 1}/${finalStep + 1}`}
-          title="새 퀘스트를 추가해요"
-          desc="이 결과목표를 향해 앞으로 나아갈 행동을 정해보세요."
-        />
-
-        <div className="grid grid-cols-1 gap-2">
-          <SummaryChip icon={<Flag className="w-4 h-4" />} label="카테고리" value={categoryNames[category]} />
-          <SummaryChip icon={<Target className="w-4 h-4" />} label="행동목표" value={actionSummary} />
-        </div>
-
-        {step === 0 && (
-          <div className="space-y-5">
-            <div>
-              <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
-                퀘스트 이름
-              </label>
-              <Input
-                value={actionTitle}
-                onChange={(e) => setActionTitle(e.target.value)}
-                placeholder={getDefaultActionPlaceholder(category)}
-                className="h-12 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
-              />
-            </div>
-
-            <Button
-              className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-              disabled={!actionTitle.trim()}
-              onClick={() => setStep(1)}
-            >
-              행동유형 정하기
-            </Button>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="space-y-3">
-            <StepHeader
-              category={category}
-              stepLabel={`행동목표 생성 · 2/${finalStep + 1}`}
-              title="이 퀘스트는 어떤 방식인가요?"
-              desc="기록 방식에 따라 홈 화면의 버튼과 진행 방식이 달라져요."
-            />
-
-            {ACTION_TYPES.map((item) => (
-              <ActionTypeCard
-                key={item.value}
-                item={item}
-                selected={actionType === item.value}
-                onClick={() => {
-                  setActionType(item.value);
-                  if (item.value === 'abstain') setFrequency(7);
-                }}
-              />
-            ))}
-
-            <Button
-              className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-              onClick={() => setStep(2)}
-            >
-              퀘스트 빈도 정하기
-            </Button>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-5">
-            <StepHeader
-              category={category}
-              stepLabel={`행동목표 생성 · 3/${finalStep + 1}`}
-              title="얼마나 자주 도전할까요?"
-              desc="너무 무겁지 않게, 하지만 성장할 수 있게 정해보세요."
-            />
-
-            <div className="grid grid-cols-2 gap-2">
-              {frequencyPresets.map((item) => (
-                <FrequencyCard
-                  key={item.value}
-                  selected={frequency === item.value}
-                  onClick={() => setFrequency(item.value)}
-                  label={item.label}
-                  desc={item.desc}
-                />
-              ))}
-            </div>
-
-            <div>
-              <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
-                직접 선택
-              </label>
-              <div className="grid grid-cols-7 gap-1.5">
-                {[1, 2, 3, 4, 5, 6, 7].map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFrequency(f)}
-                    className="py-2.5 rounded-xl text-sm font-semibold transition-all"
-                    style={
-                      frequency === f
-                        ? { background: '#8b5a20', color: '#fff' }
-                        : { background: '#f3ead7', color: '#7a5020' }
-                    }
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <Button
-              className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-              onClick={() => {
-                if (actionType === 'timer') {
-                  setStep(3);
-                } else {
-                  handleSubmit();
-                }
-              }}
-              disabled={createGoalMutation.isPending}
-            >
-              {actionType === 'timer' ? '시간 설정하기' : createGoalMutation.isPending ? '생성 중...' : '퀘스트 시작하기'}
-            </Button>
-          </div>
-        )}
-
-        {step === 3 && actionType === 'timer' && (
-          <div className="space-y-5">
-            <StepHeader
-              category={category}
-              stepLabel={`행동목표 생성 · 4/${finalStep + 1}`}
-              title="한 번에 얼마 동안 할까요?"
-              desc="시간기록형은 한 번 수행할 기준 시간을 정해두면 더 편해요."
-            />
-
-            <div className="grid grid-cols-3 gap-2">
-              {[20, 30, 60].map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMinutes(m)}
-                  className="py-3 rounded-2xl text-sm font-semibold transition-all"
-                  style={
-                    minutes === m
-                      ? { background: '#8b5a20', color: '#fff' }
-                      : { background: '#f3ead7', color: '#7a5020' }
-                  }
-                >
-                  {m}분
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min="1"
-                max="300"
-                value={minutes}
-                onChange={(e) => setMinutes(Number(e.target.value))}
-                className="flex-1 h-11 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
-              />
-              <span className="text-sm font-semibold" style={{ color: '#7a5020' }}>
-                분
-              </span>
-            </div>
-
-            <Button
-              className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-              onClick={handleSubmit}
-              disabled={!actionTitle.trim() || createGoalMutation.isPending}
-            >
-              {createGoalMutation.isPending ? '생성 중...' : '퀘스트 시작하기 🦊'}
-            </Button>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderStudyDDaySelect = () => (
-    <div className="space-y-5">
-      <StepHeader
-        category={category}
-        stepLabel="1/6"
-        title="시험 D-day가 있나요?"
-        desc="공부 목표는 D-day형과 일반 성장형으로 나눠서 만들 수 있어요."
-      />
-
-      <div className="space-y-3">
-        <button
-          onClick={() => {
-            setHasDDay(true);
-            setStep(1);
-          }}
-          className="w-full p-5 rounded-3xl text-left transition-all active:scale-[0.99]"
-          style={{
-            background: 'linear-gradient(135deg, #fff3d6 0%, #f5deb0 100%)',
-            border: '2px solid #d6a64b',
-          }}
-        >
-          <div className="text-lg mb-2">📅</div>
-          <div className="text-base font-bold" style={{ color: '#3d2408' }}>
-            D-day 있음
-          </div>
-          <div className="text-sm mt-1" style={{ color: '#8f6a33' }}>
-            시험, 자격증, 마감일이 정해져 있어요.
-          </div>
-        </button>
-
-        <button
-          onClick={() => {
-            setHasDDay(false);
-            setStep(1);
-          }}
-          className="w-full p-5 rounded-3xl text-left transition-all active:scale-[0.99]"
-          style={{
-            background: '#fffaf0',
-            border: '1.5px solid rgba(160,120,64,0.18)',
-          }}
-        >
-          <div className="text-lg mb-2">📖</div>
-          <div className="text-base font-bold" style={{ color: '#3d2408' }}>
-            D-day 없음
-          </div>
-          <div className="text-sm mt-1" style={{ color: '#8f6a33' }}>
-            꾸준히 실력을 쌓고 싶은 장기 성장 목표예요.
-          </div>
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderStudyGoalStep = () => {
-    if (hasDDay) {
-      const daysLeft = dDay ? Math.ceil((new Date(dDay) - new Date()) / (1000 * 60 * 60 * 24)) : null;
-
+  const renderGoalStep = () => {
+    if (isAddingActionOnly) {
       return (
         <div className="space-y-5">
           <StepHeader
             category={category}
-            stepLabel="2/6"
-            title="시험 정보를 정해볼까요?"
-            desc="마감일과 시험 이름을 정하면 공부 루트가 더 선명해져요."
+            stepLabel={`1/${totalSteps}`}
+            title="새 행동목표를 만들어요"
+            desc="이 결과목표를 향해 앞으로 나아갈 행동을 정해보세요."
           />
 
-          <div>
-            <label className="text-sm font-semibold mb-2 block flex items-center gap-1" style={{ color: '#7a5020' }}>
-              <CalendarDays className="w-4 h-4" />
-              시험 날짜
-            </label>
-            <input
-              type="date"
-              value={dDay}
-              min={new Date().toISOString().split('T')[0]}
-              onChange={(e) => setDDay(e.target.value)}
-              className="w-full h-12 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
-            />
-            {daysLeft !== null && daysLeft > 0 && (
-              <p className="text-xs font-semibold mt-2" style={{ color: '#8a5a17' }}>
-                🎯 D-{daysLeft} · {daysLeft}일 남았어요
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
-              시험 이름
-            </label>
-            <Input
-              value={examTitle}
-              onChange={(e) => setExamTitle(e.target.value)}
-              placeholder="예: 토익 900점, 수능, 정보처리기사"
-              className="h-12 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
-            />
+          <div className="grid grid-cols-1 gap-2">
+            <SummaryChip icon={<Flag className="w-4 h-4" />} label="카테고리" value={categoryNames[category]} />
+            <SummaryChip icon={<Target className="w-4 h-4" />} label="상태" value="기존 결과목표에 행동목표 추가" />
           </div>
 
           <Button
             className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-            disabled={!dDay || !examTitle.trim()}
-            onClick={() => setStep(2)}
+            onClick={() => setStep(1)}
           >
-            행동목표 이름 정하기
+            행동 이름 입력하기
           </Button>
         </div>
       );
@@ -708,9 +440,9 @@ export default function CreateGoalForm({ category }) {
       <div className="space-y-5">
         <StepHeader
           category={category}
-          stepLabel="2/5"
+          stepLabel={`1/${totalSteps}`}
           title="먼저 결과목표를 정해요"
-          desc="공부 루트의 도착점을 먼저 정하면 행동목표를 만들기 쉬워져요."
+          desc="루트의 도착점을 정하면 행동목표가 더 자연스럽게 따라와요."
         />
 
         <div>
@@ -729,27 +461,30 @@ export default function CreateGoalForm({ category }) {
           <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
             기간
           </label>
+
           <div className="grid grid-cols-4 gap-2 mb-2">
-            {[4, 8, 12].map((weeks) => (
+            {durationPresets.map((item) => (
               <button
-                key={weeks}
+                type="button"
+                key={item.days}
                 onClick={() => {
-                  setDuration(weeks * 7);
+                  setDuration(item.days);
                   setIsCustomDuration(false);
                   setCustomWeeks('');
                 }}
                 className="py-3 rounded-2xl text-sm font-semibold transition-all"
                 style={
-                  !isCustomDuration && duration === weeks * 7
+                  !isCustomDuration && duration === item.days
                     ? { background: '#8b5a20', color: '#fff' }
                     : { background: '#f3ead7', color: '#7a5020' }
                 }
               >
-                {weeks}주
+                {item.label}
               </button>
             ))}
 
             <button
+              type="button"
               onClick={() => setIsCustomDuration(true)}
               className="py-3 rounded-2xl text-sm font-semibold transition-all"
               style={
@@ -770,8 +505,9 @@ export default function CreateGoalForm({ category }) {
                 max="52"
                 value={customWeeks}
                 onChange={(e) => {
-                  setCustomWeeks(e.target.value);
-                  setDuration(Number(e.target.value) * 7);
+                  const value = e.target.value;
+                  setCustomWeeks(value);
+                  setDuration(Math.max(1, Number(value || 0)) * 7);
                 }}
                 placeholder="주 수 입력"
                 className="flex-1 h-11 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
@@ -785,121 +521,34 @@ export default function CreateGoalForm({ category }) {
 
         <Button
           className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-          disabled={!goalTitle.trim()}
-          onClick={() => setStep(2)}
+          disabled={!canGoNextFromGoal}
+          onClick={() => setStep(1)}
         >
-          행동목표 이름 정하기
+          행동 이름 입력하기
         </Button>
       </div>
     );
   };
 
-  const renderGenericGoalStep = () => (
+  const renderActionTitleStep = () => (
     <div className="space-y-5">
       <StepHeader
         category={category}
-        stepLabel="1/5"
-        title="먼저 결과목표를 정해요"
-        desc="루트의 도착점을 정하면 행동목표가 더 자연스럽게 따라와요."
-      />
-
-      <div>
-        <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
-          결과 목표
-        </label>
-        <Input
-          value={goalTitle}
-          onChange={(e) => setGoalTitle(e.target.value)}
-          placeholder={getDefaultGoalPlaceholder(category)}
-          className="h-12 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-900 placeholder:text-amber-400 font-medium"
-        />
-      </div>
-
-      <div>
-        <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
-          기간
-        </label>
-        <div className="grid grid-cols-4 gap-2 mb-2">
-          {[4, 8, 12].map((weeks) => (
-            <button
-              key={weeks}
-              onClick={() => {
-                setDuration(weeks * 7);
-                setIsCustomDuration(false);
-                setCustomWeeks('');
-              }}
-              className="py-3 rounded-2xl text-sm font-semibold transition-all"
-              style={
-                !isCustomDuration && duration === weeks * 7
-                  ? { background: '#8b5a20', color: '#fff' }
-                  : { background: '#f3ead7', color: '#7a5020' }
-              }
-            >
-              {weeks}주
-            </button>
-          ))}
-
-          <button
-            onClick={() => setIsCustomDuration(true)}
-            className="py-3 rounded-2xl text-sm font-semibold transition-all"
-            style={
-              isCustomDuration
-                ? { background: '#8b5a20', color: '#fff' }
-                : { background: '#f3ead7', color: '#7a5020' }
-            }
-          >
-            직접
-          </button>
-        </div>
-
-        {isCustomDuration && (
-          <div className="flex items-center gap-2 mt-2">
-            <input
-              type="number"
-              min="1"
-              max="52"
-              value={customWeeks}
-              onChange={(e) => {
-                setCustomWeeks(e.target.value);
-                setDuration(Number(e.target.value) * 7);
-              }}
-              placeholder="주 수 입력"
-              className="flex-1 h-11 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
-            />
-            <span className="text-sm font-semibold" style={{ color: '#7a5020' }}>
-              주
-            </span>
-          </div>
-        )}
-      </div>
-
-      <Button
-        className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-        disabled={!goalTitle.trim()}
-        onClick={goNextFromGoal}
-      >
-        행동목표 이름 정하기
-      </Button>
-    </div>
-  );
-
-  const renderActionTitleStep = ({ totalSteps, nextStep }) => (
-    <div className="space-y-5">
-      <StepHeader
-        category={category}
-        stepLabel={`${step + 1}/${totalSteps}`}
-        title="첫 퀘스트 이름을 정해요"
-        desc="결과목표를 향해 실제로 움직이게 만드는 행동이에요."
+        stepLabel={`2/${totalSteps}`}
+        title="어떤 행동을 할 건가요?"
+        desc="작게라도 지금 시작할 수 있는 행동을 적어보세요."
       />
 
       <div className="grid grid-cols-1 gap-2">
         <SummaryChip icon={<Target className="w-4 h-4" />} label="결과목표" value={resultSummary} />
-        <SummaryChip icon={<CalendarDays className="w-4 h-4" />} label="기간" value={`${resultDuration}일`} />
+        {!isAddingActionOnly && (
+          <SummaryChip icon={<CalendarDays className="w-4 h-4" />} label="기간" value={durationSummary} />
+        )}
       </div>
 
       <div>
         <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
-          행동목표 이름
+          행동 이름
         </label>
         <Input
           value={actionTitle}
@@ -911,26 +560,26 @@ export default function CreateGoalForm({ category }) {
 
       <Button
         className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-        disabled={!actionTitle.trim()}
-        onClick={() => setStep(nextStep)}
+        disabled={!canGoNextFromActionTitle}
+        onClick={() => setStep(2)}
       >
-        행동유형 정하기
+        행동유형 선택하기
       </Button>
     </div>
   );
 
-  const renderActionTypeStep = ({ totalSteps, nextStep }) => (
+  const renderActionTypeStep = () => (
     <div className="space-y-5">
       <StepHeader
         category={category}
-        stepLabel={`${step + 1}/${totalSteps}`}
-        title="이 퀘스트는 어떤 방식인가요?"
-        desc="유형에 따라 홈 화면의 버튼과 기록 방식이 달라져요."
+        stepLabel={`3/${totalSteps}`}
+        title="이 행동은 어떻게 기록할까요?"
+        desc="행동에 맞는 기록 방식을 선택하세요."
       />
 
       <div className="grid grid-cols-1 gap-2">
         <SummaryChip icon={<Target className="w-4 h-4" />} label="행동목표" value={actionSummary} />
-        <SummaryChip icon={<Flag className="w-4 h-4" />} label="결과목표" value={resultSummary} />
+        <SummaryChip icon={<Flag className="w-4 h-4" />} label="카테고리" value={categoryNames[category]} />
       </div>
 
       <div className="space-y-3">
@@ -941,7 +590,15 @@ export default function CreateGoalForm({ category }) {
             selected={actionType === item.value}
             onClick={() => {
               setActionType(item.value);
-              if (item.value === 'abstain') setFrequency(7);
+
+              if (item.value === 'abstain') {
+                setFrequencyMode('daily');
+                setFrequency(7);
+              } else if (item.value === 'one_time') {
+                setOneTimeDate(oneTimeDate || today);
+              } else if (frequencyMode === 'daily' && item.value !== 'abstain') {
+                setFrequency(7);
+              }
             }}
           />
         ))}
@@ -949,211 +606,364 @@ export default function CreateGoalForm({ category }) {
 
       <Button
         className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-        onClick={() => setStep(nextStep)}
+        onClick={() => setStep(3)}
       >
-        퀘스트 빈도 정하기
+        다음
       </Button>
     </div>
   );
 
-  const renderFrequencyStep = ({ totalSteps, nextStep, isFinalWithoutTimer = false }) => (
-    <div className="space-y-5">
-      <StepHeader
-        category={category}
-        stepLabel={`${step + 1}/${totalSteps}`}
-        title="얼마나 자주 도전할까요?"
-        desc="지금의 나에게 무리가 없으면서도 성장할 수 있는 빈도로 정해보세요."
-      />
-
-      <div className="grid grid-cols-2 gap-2">
-        {frequencyPresets.map((item) => (
-          <FrequencyCard
-            key={item.value}
-            selected={frequency === item.value}
-            onClick={() => setFrequency(item.value)}
-            label={item.label}
-            desc={item.desc}
+  const renderConfigStep = () => {
+    if (actionType === 'one_time') {
+      return (
+        <div className="space-y-5">
+          <StepHeader
+            category={category}
+            stepLabel={`4/${totalSteps}`}
+            title="언제 할 예정인가요?"
+            desc="한 번만 하면 끝나는 행동이에요. 날짜를 선택하세요."
           />
-        ))}
-      </div>
 
-      <div>
-        <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
-          직접 선택
-        </label>
-        <div className="grid grid-cols-7 gap-1.5">
-          {[1, 2, 3, 4, 5, 6, 7].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFrequency(f)}
-              className="py-2.5 rounded-xl text-sm font-semibold transition-all"
-              style={
-                frequency === f
-                  ? { background: '#8b5a20', color: '#fff' }
-                  : { background: '#f3ead7', color: '#7a5020' }
-              }
+          <div className="grid grid-cols-1 gap-2">
+            <SummaryChip icon={<Target className="w-4 h-4" />} label="행동목표" value={actionSummary} />
+            <SummaryChip icon={<currentActionTypeMeta.icon className="w-4 h-4" />} label="행동유형" value="1회성" />
+          </div>
+
+          <div>
+            <label
+              className="text-sm font-semibold mb-2 block flex items-center gap-1"
+              style={{ color: '#7a5020' }}
             >
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
+              <CalendarDays className="w-4 h-4" />
+              날짜 선택
+            </label>
+            <input
+              type="date"
+              value={oneTimeDate}
+              min={today}
+              onChange={(e) => setOneTimeDate(e.target.value)}
+              className="w-full h-12 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
+            />
+            <p className="text-xs font-semibold mt-2" style={{ color: '#8a5a17' }}>
+              오늘 이후 날짜만 선택할 수 있어요.
+            </p>
+          </div>
 
-      <Button
-        className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-        onClick={() => {
-          if (isFinalWithoutTimer && actionType !== 'timer') {
-            handleSubmit();
-            return;
-          }
-          setStep(nextStep);
-        }}
-        disabled={createGoalMutation.isPending}
-      >
-        {isFinalWithoutTimer && actionType !== 'timer'
-          ? createGoalMutation.isPending
-            ? '생성 중...'
-            : '최종 확인하기'
-          : '다음으로'}
-      </Button>
-    </div>
-  );
-
-  const renderTimerStep = ({ totalSteps, nextStep }) => (
-    <div className="space-y-5">
-      <StepHeader
-        category={category}
-        stepLabel={`${step + 1}/${totalSteps}`}
-        title="한 번에 얼마 동안 할까요?"
-        desc="시간기록형은 한 번 수행할 기준 시간을 정해두면 더 분명해져요."
-      />
-
-      <div className="grid grid-cols-3 gap-2">
-        {[20, 30, 60].map((m) => (
-          <button
-            key={m}
-            onClick={() => setMinutes(m)}
-            className="py-3 rounded-2xl text-sm font-semibold transition-all"
-            style={
-              minutes === m
-                ? { background: '#8b5a20', color: '#fff' }
-                : { background: '#f3ead7', color: '#7a5020' }
-            }
+          <div
+            className="rounded-2xl px-4 py-3"
+            style={{
+              background: 'rgba(255,248,232,0.78)',
+              border: '1px solid rgba(160,120,64,0.16)',
+              color: '#7a5020',
+            }}
           >
-            {m}분
-          </button>
-        ))}
-      </div>
+            <div className="text-sm font-bold mb-1">선택한 날짜</div>
+            <div className="text-sm" style={{ color: '#8f6a33' }}>
+              {oneTimeDate ? formatDateKorean(oneTimeDate) : '날짜를 선택해주세요.'}
+            </div>
+          </div>
 
-      <div className="flex items-center gap-2">
-        <input
-          type="number"
-          min="1"
-          max="300"
-          value={minutes}
-          onChange={(e) => setMinutes(Number(e.target.value))}
-          className="flex-1 h-11 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
+          <Button
+            className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
+            disabled={!canGoNextFromOneTimeDate}
+            onClick={() => setStep(4)}
+          >
+            저장 전 확인하기
+          </Button>
+        </div>
+      );
+    }
+
+    if (actionType === 'abstain') {
+      return (
+        <div className="space-y-5">
+          <StepHeader
+            category={category}
+            stepLabel={`4/${totalSteps}`}
+            title="얼마나 지킬까요?"
+            desc="하지 않을 기간을 정하세요."
+          />
+
+          <div className="grid grid-cols-1 gap-2">
+            <SummaryChip icon={<Target className="w-4 h-4" />} label="행동목표" value={actionSummary} />
+            <SummaryChip icon={<currentActionTypeMeta.icon className="w-4 h-4" />} label="행동유형" value="안하기형" />
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
+              지킬 기간
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {durationPresets.map((item) => (
+                <SelectCard
+                  key={item.days}
+                  selected={duration === item.days}
+                  onClick={() => setDuration(item.days)}
+                  label={item.label}
+                />
+              ))}
+            </div>
+          </div>
+
+          <Button
+            className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
+            onClick={() => setStep(4)}
+          >
+            저장 전 확인하기
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-5">
+        <StepHeader
+          category={category}
+          stepLabel={`4/${totalSteps}`}
+          title={actionType === 'timer' ? '얼마나 기록할까요?' : '얼마나 자주 할까요?'}
+          desc={
+            actionType === 'timer'
+              ? '한 번에 할 시간과 반복 방식을 정하세요.'
+              : '반복 방식과 기간을 정하세요.'
+          }
         />
-        <span className="text-sm font-semibold" style={{ color: '#7a5020' }}>
-          분
-        </span>
+
+        <div className="grid grid-cols-1 gap-2">
+          <SummaryChip icon={<Target className="w-4 h-4" />} label="행동목표" value={actionSummary} />
+          <SummaryChip icon={<currentActionTypeMeta.icon className="w-4 h-4" />} label="행동유형" value={currentActionTypeMeta.title} />
+        </div>
+
+        {actionType === 'timer' && (
+          <div>
+            <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
+              한 번에 얼마나 할까요?
+            </label>
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              {[10, 20, 30, 60, 90, 120].map((m) => (
+                <button
+                  type="button"
+                  key={m}
+                  onClick={() => setMinutes(m)}
+                  className="py-3 rounded-2xl text-sm font-semibold transition-all"
+                  style={
+                    minutes === m
+                      ? { background: '#8b5a20', color: '#fff' }
+                      : { background: '#f3ead7', color: '#7a5020' }
+                  }
+                >
+                  {m >= 60 && m % 60 === 0 ? `${m / 60}시간` : `${m}분`}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="1"
+                max="300"
+                value={minutes}
+                onChange={(e) => setMinutes(Number(e.target.value))}
+                className="flex-1 h-11 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
+              />
+              <span className="text-sm font-semibold" style={{ color: '#7a5020' }}>
+                분
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div>
+          <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
+            반복 방식
+          </label>
+
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            <SelectCard
+              selected={frequencyMode === 'daily'}
+              onClick={() => {
+                setFrequencyMode('daily');
+                setFrequency(7);
+              }}
+              label="매일"
+              desc="매일 실천"
+            />
+            <SelectCard
+              selected={frequencyMode === 'weekly'}
+              onClick={() => {
+                setFrequencyMode('weekly');
+                if (frequency === 7) setFrequency(3);
+              }}
+              label="주 n회"
+              desc="주마다 반복"
+            />
+            <SelectCard
+              selected={frequencyMode === 'monthly'}
+              onClick={() => {
+                setFrequencyMode('monthly');
+                if (frequency === 7) setFrequency(4);
+              }}
+              label="월 n회"
+              desc="한 달 기준"
+            />
+          </div>
+
+          {frequencyMode === 'weekly' && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                {frequencyPresets.map((item) => (
+                  <SelectCard
+                    key={item.value}
+                    selected={frequency === item.value}
+                    onClick={() => setFrequency(item.value)}
+                    label={item.label}
+                    desc={item.desc}
+                  />
+                ))}
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
+                  직접 선택
+                </label>
+                <div className="grid grid-cols-7 gap-1.5">
+                  {[1, 2, 3, 4, 5, 6, 7].map((f) => (
+                    <button
+                      type="button"
+                      key={f}
+                      onClick={() => setFrequency(f)}
+                      className="py-2.5 rounded-xl text-sm font-semibold transition-all"
+                      style={
+                        frequency === f
+                          ? { background: '#8b5a20', color: '#fff' }
+                          : { background: '#f3ead7', color: '#7a5020' }
+                      }
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {frequencyMode === 'monthly' && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-5 gap-2">
+                {[1, 2, 4, 8, 12].map((f) => (
+                  <button
+                    type="button"
+                    key={f}
+                    onClick={() => setFrequency(f)}
+                    className="py-3 rounded-2xl text-sm font-semibold transition-all"
+                    style={
+                      frequency === f
+                        ? { background: '#8b5a20', color: '#fff' }
+                        : { background: '#f3ead7', color: '#7a5020' }
+                    }
+                  >
+                    {f}회
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={frequency}
+                  onChange={(e) => setFrequency(Number(e.target.value))}
+                  className="flex-1 h-11 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
+                />
+                <span className="text-sm font-semibold" style={{ color: '#7a5020' }}>
+                  회 / 월
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
+            기간
+          </label>
+          <div className="grid grid-cols-4 gap-2">
+            {durationPresets.map((item) => (
+              <SelectCard
+                key={item.days}
+                selected={duration === item.days}
+                onClick={() => setDuration(item.days)}
+                label={item.label}
+              />
+            ))}
+          </div>
+        </div>
+
+        <Button
+          className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
+          onClick={() => setStep(4)}
+        >
+          저장 전 확인하기
+        </Button>
       </div>
+    );
+  };
 
-      <Button
-        className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-        onClick={() => setStep(nextStep)}
-      >
-        최종 확인하기
-      </Button>
-    </div>
-  );
-
-  const renderFinalStep = ({ totalSteps }) => (
+  const renderFinalStep = () => (
     <div className="space-y-5">
       <StepHeader
         category={category}
-        stepLabel={`${step + 1}/${totalSteps}`}
-        title="이제 루트를 시작할 준비가 됐어요"
-        desc="마지막으로 이번 여정을 한 번 확인해볼까요?"
+        stepLabel={`${totalSteps}/${totalSteps}`}
+        title="이렇게 진행할까요?"
+        desc="마지막으로 이번 행동목표를 한 번 확인해볼까요?"
       />
 
       <div className="grid grid-cols-1 gap-2">
         <SummaryChip icon={<Flag className="w-4 h-4" />} label="카테고리" value={categoryNames[category]} />
-        <SummaryChip icon={<Target className="w-4 h-4" />} label="결과목표" value={resultSummary} />
+        {!isAddingActionOnly && (
+          <SummaryChip icon={<Target className="w-4 h-4" />} label="결과목표" value={resultSummary} />
+        )}
         <SummaryChip icon={<Sword className="w-4 h-4" />} label="행동목표" value={actionSummary} />
-        <SummaryChip icon={<CalendarDays className="w-4 h-4" />} label="기간 / D-day" value={isStudy && hasDDay ? dDay : `${resultDuration}일`} />
         <SummaryChip icon={<currentActionTypeMeta.icon className="w-4 h-4" />} label="행동유형" value={typeSummary} />
-        <SummaryChip icon={<Footprints className="w-4 h-4" />} label="퀘스트 빈도" value={frequencySummary} />
+        <SummaryChip
+          icon={actionType === 'one_time' ? <CalendarDays className="w-4 h-4" /> : <Footprints className="w-4 h-4" />}
+          label={actionType === 'one_time' ? '예정일' : '반복 / 기간'}
+          value={actionType === 'one_time' ? formatDateKorean(oneTimeDate) : `${frequencySummary} · ${duration}일`}
+        />
       </div>
 
-      <div
-        className="rounded-2xl px-4 py-3"
-        style={{
-          background: 'rgba(255,248,232,0.78)',
-          border: '1px solid rgba(160,120,64,0.16)',
-          color: '#7a5020',
-        }}
-      >
-        <div className="text-sm font-bold mb-1">시작 후 변화</div>
-        <div className="text-xs leading-relaxed" style={{ color: '#8f6a33' }}>
-          행동을 완료할 때마다 경험치가 쌓이고, 캐릭터가 마왕성을 향해 전진하게 돼요.
+      {actionType === 'one_time' && (
+        <div
+          className="rounded-2xl px-4 py-3"
+          style={{
+            background: 'rgba(255,248,232,0.78)',
+            border: '1px solid rgba(160,120,64,0.16)',
+            color: '#7a5020',
+          }}
+        >
+          <div className="text-sm font-bold mb-1">1회성 목표 안내</div>
+          <div className="text-xs leading-relaxed" style={{ color: '#8f6a33' }}>
+            완료하면 행동목표 목록에서는 사라지고 기록 타임라인에 남게 만들 수 있어요.
+          </div>
         </div>
-      </div>
+      )}
 
       <Button
         className="w-full h-12 rounded-2xl bg-amber-700 hover:bg-amber-800 text-amber-50 font-semibold"
-        disabled={
-          !actionTitle.trim() ||
-          !(isStudy && hasDDay ? examTitle.trim() : resultTitle.trim()) ||
-          createGoalMutation.isPending
-        }
+        disabled={!canSubmit || createGoalMutation.isPending}
         onClick={handleSubmit}
       >
-        {createGoalMutation.isPending ? '루트 생성 중...' : '이 루트 시작하기 🦊'}
+        {createGoalMutation.isPending ? '저장 중...' : '저장하기 🦊'}
       </Button>
     </div>
   );
 
   const renderStep = () => {
-    if (isAddingActionOnly) {
-      return renderAddActionOnlyMode();
-    }
-
-    if (isStudy) {
-      if (step === 0) return renderStudyDDaySelect();
-      if (step === 1) return renderStudyGoalStep();
-      if (step === 2) return renderActionTitleStep({ totalSteps: hasDDay ? 6 : 5, nextStep: 3 });
-      if (step === 3) return renderActionTypeStep({ totalSteps: hasDDay ? 6 : 5, nextStep: 4 });
-      if (step === 4) {
-        if (actionType === 'timer') {
-          return renderFrequencyStep({ totalSteps: hasDDay ? 6 : 5, nextStep: 5 });
-        }
-        return renderFinalStep({ totalSteps: hasDDay ? 6 : 5 });
-      }
-      if (step === 5) {
-        if (actionType === 'timer') {
-          return renderTimerStep({ totalSteps: hasDDay ? 6 : 5, nextStep: 6 });
-        }
-        return null;
-      }
-      if (step === 6 && actionType === 'timer') {
-        return renderFinalStep({ totalSteps: 6 });
-      }
-    } else {
-      if (step === 0) return renderGenericGoalStep();
-      if (step === 1) return renderActionTitleStep({ totalSteps: 5, nextStep: 2 });
-      if (step === 2) return renderActionTypeStep({ totalSteps: 5, nextStep: 3 });
-      if (step === 3) {
-        if (actionType === 'timer') {
-          return renderFrequencyStep({ totalSteps: 5, nextStep: 4 });
-        }
-        return renderFinalStep({ totalSteps: 5 });
-      }
-      if (step === 4 && actionType === 'timer') {
-        return renderFinalStep({ totalSteps: 5 });
-      }
-    }
-
+    if (step === 0) return renderGoalStep();
+    if (step === 1) return renderActionTitleStep();
+    if (step === 2) return renderActionTypeStep();
+    if (step === 3) return renderConfigStep();
+    if (step === 4) return renderFinalStep();
     return null;
   };
 
@@ -1166,6 +976,7 @@ export default function CreateGoalForm({ category }) {
       <div className="sticky top-0 z-20 px-4 pt-3 pb-2 bg-background/95 backdrop-blur">
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={handleBack}
             className="w-10 h-10 rounded-2xl flex items-center justify-center"
             style={{
@@ -1188,9 +999,7 @@ export default function CreateGoalForm({ category }) {
         </div>
       </div>
 
-      <div className="p-4 pb-8">
-        {renderStep()}
-      </div>
+      <div className="p-4 pb-8">{renderStep()}</div>
     </div>
   );
 }
