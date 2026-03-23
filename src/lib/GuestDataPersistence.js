@@ -4,7 +4,8 @@ function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
-  } catch {
+  } catch (error) {
+    console.error('GuestDataPersistence load error:', error);
     return {};
   }
 }
@@ -17,6 +18,10 @@ function save(data) {
     console.error('GuestDataPersistence save error:', error);
     return false;
   }
+}
+
+function ensureArray(value) {
+  return Array.isArray(value) ? value : [];
 }
 
 function normalizeKey(key) {
@@ -34,45 +39,89 @@ function normalizeKey(key) {
   }
 }
 
-function ensureArray(value) {
-  return Array.isArray(value) ? value : [];
+function normalizeLoadedData(current) {
+  const goalsFromArray = ensureArray(current.goals);
+  const actionGoalsFromArray = ensureArray(current.actionGoals);
+  const actionLogsFromArray = ensureArray(current.actionLogs);
+
+  const goals =
+    goalsFromArray.length > 0
+      ? goalsFromArray
+      : current.goalData
+        ? [current.goalData]
+        : [];
+
+  const actionGoals =
+    actionGoalsFromArray.length > 0
+      ? actionGoalsFromArray
+      : current.actionGoalData
+        ? [current.actionGoalData]
+        : [];
+
+  return {
+    ...current,
+    onboardingComplete: current.onboardingComplete === true,
+    nickname: current.nickname || '용사',
+    activeCategory:
+      current.activeCategory ||
+      current.goalData?.category ||
+      current.actionGoalData?.category ||
+      goals[0]?.category ||
+      actionGoals[0]?.category ||
+      'exercise',
+    goals,
+    actionGoals,
+    actionLogs: actionLogsFromArray,
+    goalData: goals[0] || null,
+    actionGoalData: actionGoals[0] || null,
+  };
 }
 
 export const guestDataPersistence = {
-  // 온보딩 저장
-  // 현재 앱 구조:
-  // saveOnboardingData({ goalData, actionGoalData, nickname, category })
-  // 예전 호환:
-  // saveOnboardingData(goalData, actionGoalData, nickname)
   saveOnboardingData(arg1, arg2, arg3) {
-    const current = load();
+    const currentRaw = load();
+    const current = normalizeLoadedData(currentRaw);
 
     let goalData = null;
     let actionGoalData = null;
     let nickname = '용사';
     let category = null;
 
+    // 새 방식: 객체 1개
     if (
       arg1 &&
       typeof arg1 === 'object' &&
-      (Object.prototype.hasOwnProperty.call(arg1, 'goalData') ||
+      (
+        Object.prototype.hasOwnProperty.call(arg1, 'goalData') ||
         Object.prototype.hasOwnProperty.call(arg1, 'actionGoalData') ||
-        Object.prototype.hasOwnProperty.call(arg1, 'nickname'))
+        Object.prototype.hasOwnProperty.call(arg1, 'nickname') ||
+        Object.prototype.hasOwnProperty.call(arg1, 'category')
+      )
     ) {
       goalData = arg1.goalData || null;
       actionGoalData = arg1.actionGoalData || null;
       nickname = arg1.nickname || '용사';
-      category = arg1.category || goalData?.category || actionGoalData?.category || null;
+      category =
+        arg1.category ||
+        goalData?.category ||
+        actionGoalData?.category ||
+        current.activeCategory ||
+        'exercise';
     } else {
+      // 예전 방식: 개별 파라미터
       goalData = arg1 || null;
       actionGoalData = arg2 || null;
       nickname = arg3 || '용사';
-      category = goalData?.category || actionGoalData?.category || null;
+      category =
+        goalData?.category ||
+        actionGoalData?.category ||
+        current.activeCategory ||
+        'exercise';
     }
 
-    const goals = ensureArray(current.goals);
-    const actionGoals = ensureArray(current.actionGoals);
-    const actionLogs = ensureArray(current.actionLogs);
+    const goals = [...current.goals];
+    const actionGoals = [...current.actionGoals];
+    const actionLogs = [...current.actionLogs];
 
     let newGoal = null;
     let newActionGoal = null;
@@ -82,7 +131,10 @@ export const guestDataPersistence = {
         ...goalData,
         id: goalData.id || `local_goal_${Date.now()}`,
         created_date: goalData.created_date || new Date().toISOString(),
+        updated_date: new Date().toISOString(),
         status: goalData.status || 'active',
+        goal_type: goalData.goal_type || 'result',
+        category: goalData.category || category || 'exercise',
       };
     }
 
@@ -90,113 +142,138 @@ export const guestDataPersistence = {
       newActionGoal = {
         ...actionGoalData,
         id: actionGoalData.id || `local_action_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-        goal_id: actionGoalData.goal_id || newGoal?.id || null,
+        goal_id: actionGoalData.goal_id || newGoal?.id || current.goalData?.id || null,
         created_date: actionGoalData.created_date || new Date().toISOString(),
+        updated_date: new Date().toISOString(),
         status: actionGoalData.status || 'active',
+        category: actionGoalData.category || category || newGoal?.category || 'exercise',
       };
     }
 
-    const updated = {
+    // 중복 방지: id 같으면 교체, 없으면 추가
+    const nextGoals = newGoal
+      ? [...goals.filter((g) => g.id !== newGoal.id), newGoal]
+      : goals;
+
+    const nextActionGoals = newActionGoal
+      ? [...actionGoals.filter((g) => g.id !== newActionGoal.id), newActionGoal]
+      : actionGoals;
+
+    const nextData = {
       ...current,
       onboardingComplete: true,
       nickname,
-      activeCategory: current.activeCategory || category || current.activeCategory || 'exercise',
-      goals: newGoal ? [...goals, newGoal] : goals,
-      actionGoals: newActionGoal ? [...actionGoals, newActionGoal] : actionGoals,
+      activeCategory: category || current.activeCategory || 'exercise',
+
+      // 새 구조
+      goals: nextGoals,
+      actionGoals: nextActionGoals,
       actionLogs,
+
+      // 예전 호환 구조도 같이 유지
+      goalData: newGoal || nextGoals[0] || current.goalData || null,
+      actionGoalData: newActionGoal || nextActionGoals[0] || current.actionGoalData || null,
     };
 
-    return save(updated);
+    return save(nextData);
   },
 
-  // 전체 데이터 읽기
   loadOnboardingData() {
     const current = load();
-
-    return {
-      ...current,
-      onboardingComplete: current.onboardingComplete === true,
-      nickname: current.nickname || '용사',
-      activeCategory: current.activeCategory || 'exercise',
-      goals: ensureArray(current.goals),
-      actionGoals: ensureArray(current.actionGoals),
-      actionLogs: ensureArray(current.actionLogs),
-    };
+    return normalizeLoadedData(current);
   },
 
-  // 행동 로그 1개 추가
+  saveData(key, value) {
+    const current = normalizeLoadedData(load());
+    const normalizedKey = normalizeKey(key);
+
+    const next = {
+      ...current,
+      [normalizedKey]: value,
+    };
+
+    // 호환용 동기화
+    if (normalizedKey === 'goals') {
+      next.goalData = ensureArray(value)[0] || null;
+    }
+
+    if (normalizedKey === 'actionGoals') {
+      next.actionGoalData = ensureArray(value)[0] || null;
+    }
+
+    return save(next);
+  },
+
   addActionLog(log) {
-    const current = load();
+    const current = normalizeLoadedData(load());
 
     const newLog = {
       ...log,
       id: log?.id || `local_log_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       created_date: log?.created_date || new Date().toISOString(),
+      updated_date: new Date().toISOString(),
     };
 
-    const updated = {
+    const next = {
       ...current,
-      actionLogs: [...ensureArray(current.actionLogs), newLog],
+      actionLogs: [...current.actionLogs, newLog],
     };
 
-    return save(updated);
+    return save(next);
   },
 
-  // 범용 저장
-  saveData(key, value) {
-    const current = load();
-    const normalizedKey = normalizeKey(key);
-
-    const updated = {
-      ...current,
-      [normalizedKey]: value,
-    };
-
-    return save(updated);
-  },
-
-  // 특정 행동목표 수정
   updateActionGoal(actionGoalId, patch) {
-    const current = load();
+    const current = normalizeLoadedData(load());
 
-    const updated = {
+    const nextActionGoals = current.actionGoals.map((goal) =>
+      goal.id === actionGoalId
+        ? { ...goal, ...patch, updated_date: new Date().toISOString() }
+        : goal
+    );
+
+    const next = {
       ...current,
-      actionGoals: ensureArray(current.actionGoals).map((goal) =>
-        goal.id === actionGoalId ? { ...goal, ...patch } : goal
-      ),
+      actionGoals: nextActionGoals,
+      actionGoalData: nextActionGoals[0] || null,
     };
 
-    return save(updated);
+    return save(next);
   },
 
-  // 특정 행동목표 삭제
   deleteActionGoal(actionGoalId) {
-    const current = load();
+    const current = normalizeLoadedData(load());
 
-    const updated = {
+    const nextActionGoals = current.actionGoals.filter((goal) => goal.id !== actionGoalId);
+    const nextActionLogs = current.actionLogs.filter((log) => log.action_goal_id !== actionGoalId);
+
+    const next = {
       ...current,
-      actionGoals: ensureArray(current.actionGoals).filter((goal) => goal.id !== actionGoalId),
-      actionLogs: ensureArray(current.actionLogs).filter((log) => log.action_goal_id !== actionGoalId),
+      actionGoals: nextActionGoals,
+      actionLogs: nextActionLogs,
+      actionGoalData: nextActionGoals[0] || null,
     };
 
-    return save(updated);
+    return save(next);
   },
 
-  // 특정 결과목표 수정
   updateGoal(goalId, patch) {
-    const current = load();
+    const current = normalizeLoadedData(load());
 
-    const updated = {
+    const nextGoals = current.goals.map((goal) =>
+      goal.id === goalId
+        ? { ...goal, ...patch, updated_date: new Date().toISOString() }
+        : goal
+    );
+
+    const next = {
       ...current,
-      goals: ensureArray(current.goals).map((goal) =>
-        goal.id === goalId ? { ...goal, ...patch } : goal
-      ),
+      goals: nextGoals,
+      goalData: nextGoals[0] || null,
     };
 
-    return save(updated);
+    return save(next);
   },
 
-  // 전체 초기화
   clear() {
     localStorage.removeItem(STORAGE_KEY);
   },
