@@ -726,10 +726,23 @@ export default function Home() {
         payload.equipped_title = titleId;
       }
 
-      await base44.auth.updateMe(payload);
+      const titleMeta = TITLES.find((t) => t.id === titleId);
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      await Promise.all([
+        base44.auth.updateMe(payload),
+        base44.entities.Badge.create({
+          title: titleMeta?.name || titleId,
+          description: titleMeta?.description || '',
+          category: titleMeta?.category || 'special',
+          badge_type: 'result',
+          earned_date: todayStr,
+        }),
+      ]);
 
       queryClient.removeQueries({ queryKey: ['me'] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
+      queryClient.invalidateQueries({ queryKey: ['badges'] });
 
       window.dispatchEvent(new Event('root-home-data-updated'));
 
