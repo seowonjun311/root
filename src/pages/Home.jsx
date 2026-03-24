@@ -317,7 +317,9 @@ function buildDerivedStats(logs = [], actionGoals = []) {
 
 function getUnlockedTitles(stats, ownedTitleIds = []) {
   const ownedSet = new Set(ownedTitleIds);
-  return TITLES.filter((title) => ownedSet.has(title.id) || Number(stats?.[title.metric] || 0) >= title.value);
+  return TITLES.filter(
+    (title) => ownedSet.has(title.id) || Number(stats?.[title.metric] || 0) >= title.value
+  );
 }
 
 function getNewlyUnlockedTitle(stats, ownedTitleIds = []) {
@@ -521,26 +523,27 @@ export default function Home() {
     return buildDerivedStats(sourceLogs, sourceGoals);
   }, [isGuest, guestData, allLogs, actionGoals]);
 
- const ownedTitleIds = useMemo(() => {
-  if (isGuest) {
-    const fromGuest = Array.isArray(guestData?.titles) ? guestData.titles : [];
-    const fromLocal = getStoredGuestTitles();
+  const ownedTitleIds = useMemo(() => {
+    if (isGuest) {
+      const fromGuest = Array.isArray(guestData?.titles) ? guestData.titles : [];
+      const fromLocal = getStoredGuestTitles();
+      return Array.from(new Set([...fromGuest, ...fromLocal]));
+    }
 
-    return Array.from(new Set([...fromGuest, ...fromLocal]));
-  }
-
-  const serverTitles = Array.isArray(user?.titles) ? user.titles : [];
-  return serverTitles;
-}, [isGuest, user, guestData, guestVersion]);
+    return Array.isArray(user?.titles) ? user.titles : [];
+  }, [isGuest, user, guestData, guestVersion]);
 
   const unlockedTitles = useMemo(() => {
     return getUnlockedTitles(derivedStats, ownedTitleIds);
   }, [derivedStats, ownedTitleIds]);
 
   const equippedTitle = useMemo(() => {
-    const equippedId = isGuest ? getStoredGuestEquippedTitle() : user?.equipped_title || '';
+    const equippedId = isGuest
+      ? (guestData?.equipped_title || getStoredGuestEquippedTitle())
+      : (user?.equipped_title || '');
+
     return unlockedTitles.find((title) => title.id === equippedId) || null;
-  }, [isGuest, user, unlockedTitles, guestVersion]);
+  }, [isGuest, user, guestData, unlockedTitles, guestVersion]);
 
   useEffect(() => {
     if (isUserLoading) return;
@@ -578,25 +581,25 @@ export default function Home() {
     }
   };
 
-const activeGoals = useMemo(() => {
-  const sourceGoals =
-    isGuest
-      ? (Array.isArray(guestData?.goals) && guestData.goals.length > 0
-          ? guestData.goals
-          : guestData?.goalData
-            ? [guestData.goalData]
-            : [])
-      : goals || [];
+  const activeGoals = useMemo(() => {
+    const sourceGoals =
+      isGuest
+        ? (Array.isArray(guestData?.goals) && guestData.goals.length > 0
+            ? guestData.goals
+            : guestData?.goalData
+              ? [guestData.goalData]
+              : [])
+        : goals || [];
 
-  return sourceGoals.filter((goal) => {
-    if (!goal) return false;
-    if (goal.category !== activeCategory) return false;
-    if (goal.status && goal.status !== 'active') return false;
-    return true;
-  });
-}, [isGuest, guestData, goals, activeCategory]);
+    return sourceGoals.filter((goal) => {
+      if (!goal) return false;
+      if (goal.category !== activeCategory) return false;
+      if (goal.status && goal.status !== 'active') return false;
+      return true;
+    });
+  }, [isGuest, guestData, goals, activeCategory]);
 
-const activeGoal = activeGoals[0] || (isGuest ? guestData?.goalData || null : null);
+  const activeGoal = activeGoals[0] || (isGuest ? guestData?.goalData || null : null);
 
   const activeActionGoals = useMemo(() => {
     const goalIds = new Set(activeGoals.map((goal) => goal.id));
@@ -643,21 +646,59 @@ const activeGoal = activeGoals[0] || (isGuest ? guestData?.goalData || null : nu
 
   const persistNewTitle = async (titleId) => {
     if (isGuest) {
-      const prev = getStoredGuestTitles();
-      const next = Array.from(new Set([...prev, titleId]));
-      setStoredGuestTitles(next);
-          guestDataPersistence.saveData('titles', next);
-      window.dispatchEvent(new Event('root-home-data-updated'));
-      return;
+      try {
+        const prevLocal = getStoredGuestTitles();
+        const prevGuest = Array.isArray(guestData?.titles) ? guestData.titles : [];
+        const next = Array.from(new Set([...prevLocal, ...prevGuest, titleId]));
+
+        setStoredGuestTitles(next);
+        guestDataPersistence.saveData('titles', next);
+
+        const equippedNow =
+          guestData?.equipped_title || getStoredGuestEquippedTitle() || '';
+
+        if (!equippedNow) {
+          setStoredGuestEquippedTitle(titleId);
+          guestDataPersistence.saveData('equipped_title', titleId);
+        }
+
+        queryClient.removeQueries({ queryKey: ['guest-home-data'] });
+        queryClient.removeQueries({ queryKey: ['guest-records-data'] });
+
+        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
+
+        window.dispatchEvent(new Event('root-home-data-updated'));
+        window.dispatchEvent(new Event('storage'));
+
+        setGuestVersion((v) => v + 1);
+
+        return next;
+      } catch (error) {
+        console.error('persistNewTitle guest error:', error);
+        return null;
+      }
     }
 
     try {
       const currentTitles = Array.isArray(user?.titles) ? user.titles : [];
       const nextTitles = Array.from(new Set([...currentTitles, titleId]));
+
       await base44.auth.updateMe({ titles: nextTitles });
+
+      if (!user?.equipped_title) {
+        await base44.auth.updateMe({ equipped_title: titleId });
+      }
+
+      queryClient.removeQueries({ queryKey: ['me'] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
+
+      window.dispatchEvent(new Event('root-home-data-updated'));
+
+      return nextTitles;
     } catch (error) {
-      console.error(error);
+      console.error('persistNewTitle server error:', error);
+      return null;
     }
   };
 
@@ -665,15 +706,32 @@ const activeGoal = activeGoals[0] || (isGuest ? guestData?.goalData || null : nu
     if (!title) return;
 
     if (isGuest) {
-      setStoredGuestEquippedTitle(title.id);
-      setNewTitle(null);
-      window.dispatchEvent(new Event('root-home-data-updated'));
-      toast.success(`대표 칭호가 "${title.name}"(으)로 설정되었어요.`);
-      return;
+      try {
+        setStoredGuestEquippedTitle(title.id);
+        guestDataPersistence.saveData('equipped_title', title.id);
+
+        queryClient.removeQueries({ queryKey: ['guest-home-data'] });
+        queryClient.removeQueries({ queryKey: ['guest-records-data'] });
+
+        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
+
+        setNewTitle(null);
+        window.dispatchEvent(new Event('root-home-data-updated'));
+        window.dispatchEvent(new Event('storage'));
+
+        toast.success(`대표 칭호가 "${title.name}"(으)로 설정되었어요.`);
+        return;
+      } catch (error) {
+        console.error(error);
+        toast.error('대표 칭호 설정에 실패했어요.');
+        return;
+      }
     }
 
     try {
       await base44.auth.updateMe({ equipped_title: title.id });
+      queryClient.removeQueries({ queryKey: ['me'] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
       setNewTitle(null);
       toast.success(`대표 칭호가 "${title.name}"(으)로 설정되었어요.`);
@@ -699,8 +757,9 @@ const activeGoal = activeGoals[0] || (isGuest ? guestData?.goalData || null : nu
         duration_minutes: Number(minutes || 0),
         gps_enabled: !!extra?.gpsEnabled,
         distance_km: extra?.distance ?? null,
-        coords: extra?.coords || null,
-        photo: extra?.photo || null,
+        route_coordinates: extra?.coords ? JSON.stringify(extra.coords) : null,
+        photo_url: extra?.photo || null,
+        memo: extra?.memo || '',
         meta_action_type: actionGoal.action_type || 'confirm',
         created_date: now,
         updated_date: now,
@@ -716,6 +775,11 @@ const activeGoal = activeGoals[0] || (isGuest ? guestData?.goalData || null : nu
             completed_date: todayStr,
           });
         }
+
+        queryClient.removeQueries({ queryKey: ['guest-home-data'] });
+        queryClient.removeQueries({ queryKey: ['guest-records-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
 
         window.dispatchEvent(new Event('root-home-data-updated'));
       } else {
@@ -733,19 +797,63 @@ const activeGoal = activeGoals[0] || (isGuest ? guestData?.goalData || null : nu
           queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
           queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
           queryClient.invalidateQueries({ queryKey: ['goals'] }),
+          queryClient.invalidateQueries({ queryKey: ['me'] }),
         ]);
       }
 
       setMoveTrigger((prev) => prev + 1);
       setExpPopup(earnedExp);
 
-      const nextLogs = [...(isGuest ? guestData?.actionLogs || [] : allLogs || []), logPayload];
-      const nextStats = buildDerivedStats(nextLogs, isGuest ? guestData?.actionGoals || [] : actionGoals || []);
-      const newlyUnlocked = getNewlyUnlockedTitle(nextStats, ownedTitleIds);
+      const currentLogs = isGuest
+        ? (Array.isArray(guestData?.actionLogs) ? guestData.actionLogs : [])
+        : (Array.isArray(allLogs) ? allLogs : []);
+
+      const currentActionGoals = isGuest
+        ? (Array.isArray(guestData?.actionGoals) ? guestData.actionGoals : [])
+        : (Array.isArray(actionGoals) ? actionGoals : []);
+
+      const nextLogs = [...currentLogs, logPayload];
+
+      const nextActionGoals =
+        actionGoal.action_type === 'one_time'
+          ? currentActionGoals.map((goal) =>
+              goal.id === actionGoal.id
+                ? {
+                    ...goal,
+                    status: 'completed',
+                    completed: true,
+                    completed_date: todayStr,
+                    updated_date: now,
+                  }
+                : goal
+            )
+          : currentActionGoals;
+
+      const nextStats = buildDerivedStats(nextLogs, nextActionGoals);
+
+      const mergedOwnedTitleIds = isGuest
+        ? Array.from(
+            new Set([
+              ...(Array.isArray(guestData?.titles) ? guestData.titles : []),
+              ...getStoredGuestTitles(),
+            ])
+          )
+        : (Array.isArray(user?.titles) ? user.titles : []);
+
+      const newlyUnlocked = getNewlyUnlockedTitle(nextStats, mergedOwnedTitleIds);
 
       if (newlyUnlocked) {
         await persistNewTitle(newlyUnlocked.id);
+        setGuestVersion((prev) => prev + 1);
         setNewTitle(newlyUnlocked);
+
+        queryClient.removeQueries({ queryKey: ['guest-home-data'] });
+        queryClient.removeQueries({ queryKey: ['guest-records-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
+
+        window.dispatchEvent(new Event('root-home-data-updated'));
+        window.dispatchEvent(new Event('storage'));
       }
 
       if (actionGoal.action_type === 'one_time') {
@@ -819,8 +927,6 @@ const activeGoal = activeGoals[0] || (isGuest ? guestData?.goalData || null : nu
       </div>
 
       <div className="px-4 pt-3">
-        
-
         {activeGoal ? (
           <GoalProgress goal={activeGoal} logs={goalLogs} />
         ) : (
