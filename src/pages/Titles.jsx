@@ -1,30 +1,32 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
 import { toast } from 'sonner';
 
 const TITLES = [
-  { id: 'common_first_step', name: '첫 걸음을 뗀 자', description: '첫 행동목표를 완료한 용사', category: 'common' },
-  { id: 'common_route_walker', name: '루트를 걷는 자', description: '전체 행동목표 100회 달성', category: 'common' },
+  { id: 'common_first_step', name: '첫 걸음을 뗀 자', description: '첫 행동목표를 완료한 용사', metric: 'total_actions', value: 1, category: 'common' },
+  { id: 'common_route_walker', name: '루트를 걷는 자', description: '전체 행동목표 100회 달성', metric: 'total_actions', value: 100, category: 'common' },
 
-  { id: 'exercise_001', name: '몸을 깨운 자', description: '운동 행동목표 10회 달성', category: 'exercise' },
-  { id: 'exercise_002', name: '꾸준함의 전사', description: '운동 행동목표 50회 달성', category: 'exercise' },
-  { id: 'exercise_003', name: '바람을 걷는 자', description: '러닝 거리 50km 누적', category: 'exercise' },
-  { id: 'exercise_004', name: '운동의 장인', description: '운동 행동목표 200회 달성', category: 'exercise' },
+  { id: 'exercise_001', name: '몸을 깨운 자', description: '운동 행동목표 10회 달성', metric: 'total_exercise_count', value: 10, category: 'exercise' },
+  { id: 'exercise_002', name: '꾸준함의 전사', description: '운동 행동목표 50회 달성', metric: 'total_exercise_count', value: 50, category: 'exercise' },
+  { id: 'exercise_003', name: '바람을 걷는 자', description: '러닝 거리 50km 누적', metric: 'total_running_km', value: 50, category: 'exercise' },
+  { id: 'exercise_004', name: '운동의 장인', description: '운동 행동목표 200회 달성', metric: 'total_exercise_count', value: 200, category: 'exercise' },
 
-  { id: 'study_001', name: '집중 입문자', description: '공부 10시간 누적', category: 'study' },
-  { id: 'study_002', name: '집중 수련생', description: '공부 30시간 누적', category: 'study' },
-  { id: 'study_003', name: '몰입의 실천가', description: '공부 100시간 누적', category: 'study' },
-  { id: 'study_004', name: '집중의 장인', description: '공부 300시간 누적', category: 'study' },
+  { id: 'study_001', name: '집중 입문자', description: '공부 10시간 누적', metric: 'total_study_minutes', value: 600, category: 'study' },
+  { id: 'study_002', name: '집중 수련생', description: '공부 30시간 누적', metric: 'total_study_minutes', value: 1800, category: 'study' },
+  { id: 'study_003', name: '몰입의 실천가', description: '공부 100시간 누적', metric: 'total_study_minutes', value: 6000, category: 'study' },
+  { id: 'study_004', name: '집중의 장인', description: '공부 300시간 누적', metric: 'total_study_minutes', value: 18000, category: 'study' },
 
-  { id: 'mental_001', name: '마음을 들여다본 자', description: '정신 행동목표 10회 달성', category: 'mental' },
-  { id: 'mental_002', name: '유혹 저항가', description: '금연/금주 7일 누적', category: 'mental' },
-  { id: 'mental_003', name: '절제의 기사', description: '금연/금주 30일 누적', category: 'mental' },
-  { id: 'mental_004', name: '내면의 관리자', description: '정신 행동목표 100회 달성', category: 'mental' },
+  { id: 'mental_001', name: '마음을 들여다본 자', description: '정신 행동목표 10회 달성', metric: 'total_mental_count', value: 10, category: 'mental' },
+  { id: 'mental_002', name: '유혹 저항가', description: '금연/금주 7일 누적', metric: 'total_no_smoking_days', value: 7, category: 'mental' },
+  { id: 'mental_003', name: '절제의 기사', description: '금연/금주 30일 누적', metric: 'total_no_smoking_days', value: 30, category: 'mental' },
+  { id: 'mental_004', name: '내면의 관리자', description: '정신 행동목표 100회 달성', metric: 'total_mental_count', value: 100, category: 'mental' },
 
-  { id: 'daily_001', name: '하루를 시작한 자', description: '일상 행동목표 5회 달성', category: 'daily' },
-  { id: 'daily_002', name: '생활의 입문자', description: '일상 행동목표 30회 달성', category: 'daily' },
-  { id: 'daily_003', name: '생활의 관리자', description: '일상 행동목표 100회 달성', category: 'daily' },
-  { id: 'daily_004', name: '삶을 다듬는 자', description: '일상 행동목표 200회 달성', category: 'daily' },
+  { id: 'daily_001', name: '하루를 시작한 자', description: '일상 행동목표 5회 달성', metric: 'total_daily_count', value: 5, category: 'daily' },
+  { id: 'daily_002', name: '생활의 입문자', description: '일상 행동목표 30회 달성', metric: 'total_daily_count', value: 30, category: 'daily' },
+  { id: 'daily_003', name: '생활의 관리자', description: '일상 행동목표 100회 달성', metric: 'total_daily_count', value: 100, category: 'daily' },
+  { id: 'daily_004', name: '삶을 다듬는 자', description: '일상 행동목표 200회 달성', metric: 'total_daily_count', value: 200, category: 'daily' },
 ];
 
 const CATEGORY_LABELS = {
@@ -36,6 +38,7 @@ const CATEGORY_LABELS = {
 };
 
 export default function Titles() {
+  const queryClient = useQueryClient();
   const [guestData, setGuestData] = useState(() => guestDataPersistence.getData());
 
   useEffect(() => {
@@ -52,37 +55,63 @@ export default function Titles() {
     return unsubscribe;
   }, []);
 
+  const { data: user, isLoading: isUserLoading } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => base44.auth.me().catch(() => null),
+    staleTime: 1000 * 30,
+  });
+
+  const isGuest = !user;
+
   const ownedTitleIds = useMemo(() => {
-    return Array.isArray(guestData?.titles) ? guestData.titles : [];
-  }, [guestData]);
+    if (isGuest) {
+      return Array.isArray(guestData?.titles) ? guestData.titles : [];
+    }
+    return Array.isArray(user?.titles) ? user.titles : [];
+  }, [isGuest, guestData, user]);
 
   const resolvedEquippedTitleId = useMemo(() => {
-    const equipped = typeof guestData?.equipped_title === 'string'
-      ? guestData.equipped_title
-      : '';
+    const rawEquipped = isGuest
+      ? (typeof guestData?.equipped_title === 'string' ? guestData.equipped_title : '')
+      : (typeof user?.equipped_title === 'string' ? user.equipped_title : '');
 
-    if (equipped && ownedTitleIds.includes(equipped)) {
-      return equipped;
+    if (rawEquipped && ownedTitleIds.includes(rawEquipped)) {
+      return rawEquipped;
     }
 
     return ownedTitleIds[0] || '';
-  }, [guestData, ownedTitleIds]);
+  }, [isGuest, guestData, user, ownedTitleIds]);
 
   useEffect(() => {
     if (!ownedTitleIds.length) return;
 
-    const equipped = typeof guestData?.equipped_title === 'string'
-      ? guestData.equipped_title
-      : '';
+    if (isGuest) {
+      const current = typeof guestData?.equipped_title === 'string' ? guestData.equipped_title : '';
 
-    if (!equipped || !ownedTitleIds.includes(equipped)) {
-      const fixed = guestDataPersistence.updateData((prev) => ({
-        ...prev,
-        equipped_title: ownedTitleIds[0] || '',
-      }));
-      setGuestData(fixed);
+      if (!current || !ownedTitleIds.includes(current)) {
+        const fixed = guestDataPersistence.updateData((prev) => ({
+          ...prev,
+          equipped_title: ownedTitleIds[0] || '',
+        }));
+        setGuestData(fixed);
+      }
+      return;
     }
-  }, [guestData, ownedTitleIds]);
+
+    if (!user) return;
+
+    const current = typeof user?.equipped_title === 'string' ? user.equipped_title : '';
+    if (!current || !ownedTitleIds.includes(current)) {
+      base44.auth
+        .updateMe({ equipped_title: ownedTitleIds[0] || '' })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['me'] });
+        })
+        .catch((error) => {
+          console.error('대표 칭호 자동 보정 실패:', error);
+        });
+    }
+  }, [isGuest, guestData, user, ownedTitleIds, queryClient]);
 
   const equippedTitle = useMemo(() => {
     return TITLES.find((title) => title.id === resolvedEquippedTitleId) || null;
@@ -104,17 +133,43 @@ export default function Titles() {
     return map;
   }, []);
 
-  const handleEquip = (title) => {
+  const handleEquip = async (title) => {
     if (!ownedTitleIds.includes(title.id)) return;
 
-    const next = guestDataPersistence.updateData((prev) => ({
-      ...prev,
-      equipped_title: title.id,
-    }));
+    if (isGuest) {
+      try {
+        const next = guestDataPersistence.updateData((prev) => ({
+          ...prev,
+          equipped_title: title.id,
+        }));
+        setGuestData(next);
+        toast.success(`"${title.name}" 장착`);
+      } catch (error) {
+        console.error(error);
+        toast.error('칭호 장착에 실패했어요.');
+      }
+      return;
+    }
 
-    setGuestData(next);
-    toast.success(`"${title.name}" 장착`);
+    try {
+      await base44.auth.updateMe({ equipped_title: title.id });
+      await queryClient.invalidateQueries({ queryKey: ['me'] });
+      toast.success(`"${title.name}" 장착`);
+    } catch (error) {
+      console.error(error);
+      toast.error('칭호 장착에 실패했어요.');
+    }
   };
+
+  if (isUserLoading) {
+    return (
+      <div className="min-h-full px-4 py-4 space-y-4">
+        <div className="h-24 rounded-2xl bg-secondary/60 animate-pulse" />
+        <div className="h-40 rounded-2xl bg-secondary/60 animate-pulse" />
+        <div className="h-40 rounded-2xl bg-secondary/60 animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full px-4 py-4 space-y-6">
