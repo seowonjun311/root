@@ -1,836 +1,989 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { Plus, RefreshCw } from 'lucide-react';
-
+import React, { useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Play, Square, Check, X, Pencil, Trash2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+} from '@/components/ui/drawer';
 import { base44 } from '@/api/base44Client';
-import CharacterBanner from '../components/home/CharacterBanner';
-import CategoryTabs from '../components/home/CategoryTabs';
-import GoalProgress from '../components/home/GoalProgress';
-import ActionGoalCard from '../components/home/ActionGoalCard';
-import EmptyGoalState from '../components/home/EmptyGoalState';
-import PhotoConfirmModal from '../components/home/PhotoConfirmModal';
-import BossVictoryModal from '../components/home/BossVictoryModal';
-import CelebrationToast from '../components/home/CelebrationToast';
-import { computeStreak, getBadgeForGoal, getStreakTrigger } from '../components/badgeUtils';
-import { usePullToRefresh } from '../hooks/usePullToRefresh';
-import { guestDataPersistence } from '../lib/GuestDataPersistence';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import WeekDays from './WeekDays';
 
-const CATEGORY_KEYS = ['exercise', 'study', 'mental', 'daily'];
-
-function isGoalComplete(goal) {
-  if (!goal?.start_date || !goal?.duration_days) return false;
-
-  const start = new Date(goal.start_date);
-  if (Number.isNaN(start.getTime())) return false;
-
-  const end = new Date(start);
-  end.setDate(start.getDate() + Number(goal.duration_days || 0));
-
-  return new Date() >= end;
-}
-
-function getGreeting() {
-  const hour = new Date().getHours();
-
-  if (hour < 6) return '늦은 밤에도 길은 이어지고 있어요.';
-  if (hour < 10) return '좋은 아침이에요. 오늘도 한 걸음 가볼까요?';
-  if (hour < 13) return '오늘의 루트를 차근차근 이어가봐요.';
-  if (hour < 18) return '오후에도 마왕성을 향해 전진 중이에요.';
-  if (hour < 22) return '오늘 하루도 꽤 잘 걸어오고 있어요.';
-  return '오늘도 수고했어요. 이제 마지막 한 걸음만 더.';
-}
-
-function normalizeGuestGoals(data) {
-  if (Array.isArray(data?.goals) && data.goals.length > 0) return data.goals;
-  if (data?.goalData) return [data.goalData];
-  return [];
-}
-
-function normalizeGuestActionGoals(data) {
-  if (Array.isArray(data?.actionGoals) && data.actionGoals.length > 0) return data.actionGoals;
-  if (data?.actionGoalData) return [data.actionGoalData];
-  return [];
-}
-
-function sortByCreatedDateDesc(items = []) {
-  return [...items].sort((a, b) => {
-    const aTime = new Date(a?.created_date || a?.updated_date || 0).getTime();
-    const bTime = new Date(b?.created_date || b?.updated_date || 0).getTime();
-    return bTime - aTime;
-  });
-}
-
-function buildGuestLevelStats(logs = []) {
-  const stats = {
-    exercise_xp: 0,
-    exercise_level: 1,
-    study_xp: 0,
-    study_level: 1,
-    mental_xp: 0,
-    mental_level: 1,
-    daily_xp: 0,
-    daily_level: 1,
-  };
-
-  CATEGORY_KEYS.forEach((category) => {
-    const xp = logs.filter((log) => log?.category === category && log?.completed).length;
-    const level = Math.floor(xp / 30) + 1;
-    stats[`${category}_xp`] = xp;
-    stats[`${category}_level`] = level;
-  });
-
-  return stats;
-}
+const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
+const TIMER_KEY = (id) => `timer_start_${id}`;
+const GPS_KEY = (id) => `gps_enabled_${id}`;
+const GPS_COORDS_KEY = (id) => `gps_coords_${id}`;
+const GUEST_STORAGE_KEY = 'root_guest_data';
 
 function getTodayString() {
   return new Date().toISOString().split('T')[0];
 }
 
-function getWeekStartString() {
-  const today = new Date();
-  const dayOfWeek = today.getDay();
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + mondayOffset);
-
-  return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(
-    monday.getDate()
-  ).padStart(2, '0')}`;
+function formatKoreanDate(dateString) {
+  if (!dateString) return '-';
+  const d = new Date(dateString);
+  if (Number.isNaN(d.getTime())) return dateString;
+  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
 }
 
-function getPagePathByCategory(category) {
-  const pageMap = {
-    exercise: 'CreateGoalExercise',
-    study: 'CreateGoalStudy',
-    mental: 'CreateGoalMental',
-    daily: 'CreateGoalDaily',
+function getDdayText(dateString) {
+  if (!dateString) return '-';
+
+  const today = new Date();
+  const target = new Date(dateString);
+
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+
+  const diff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diff === 0) return '오늘';
+  if (diff > 0) return `D-${diff}`;
+  return '기한 지남';
+}
+
+function getMonthDates(year, month) {
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const days = [];
+
+  for (let i = 0; i < startOffset; i += 1) days.push(null);
+  for (let d = 1; d <= lastDay.getDate(); d += 1) days.push(d);
+
+  return days;
+}
+
+function loadGuestData() {
+  try {
+    const raw = localStorage.getItem(GUEST_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveGuestData(data) {
+  localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(data));
+}
+
+function updateGuestActionGoal(actionGoalId, updateData) {
+  const current = loadGuestData();
+  const nextActionGoals = (current.actionGoals || []).map((goal) =>
+    goal.id === actionGoalId ? { ...goal, ...updateData } : goal
+  );
+
+  saveGuestData({
+    ...current,
+    actionGoals: nextActionGoals,
+  });
+
+  window.dispatchEvent(new Event('root-home-data-updated'));
+}
+
+function deleteGuestActionGoal(actionGoalId) {
+  const current = loadGuestData();
+
+  saveGuestData({
+    ...current,
+    actionGoals: (current.actionGoals || []).filter((goal) => goal.id !== actionGoalId),
+    actionLogs: (current.actionLogs || []).filter((log) => log.action_goal_id !== actionGoalId),
+  });
+
+  window.dispatchEvent(new Event('root-home-data-updated'));
+}
+
+function MonthCalendar({ logs = [], onClose }) {
+  const today = new Date();
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+
+  const todayStr = today.toISOString().split('T')[0];
+  const doneDates = new Set((logs || []).map((log) => log.date));
+  const days = getMonthDates(viewYear, viewMonth);
+
+  const prevMonth = () => {
+    if (viewMonth === 0) {
+      setViewYear((prev) => prev - 1);
+      setViewMonth(11);
+    } else {
+      setViewMonth((prev) => prev - 1);
+    }
   };
 
-  return `/${pageMap[category] || 'CreateGoalExercise'}`;
+  const nextMonth = () => {
+    if (viewMonth === 11) {
+      setViewYear((prev) => prev + 1);
+      setViewMonth(0);
+    } else {
+      setViewMonth((prev) => prev + 1);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 8, scale: 0.97 }}
+      transition={{ duration: 0.18 }}
+      className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl p-4 shadow-xl"
+      style={{
+        background: '#fffaf0',
+        border: '1px solid #e5d3a0',
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={prevMonth} className="px-2 py-1 rounded-lg text-sm" style={{ color: '#7a5020' }}>
+          ‹
+        </button>
+
+        <p className="text-sm font-bold" style={{ color: '#7a5020' }}>
+          {viewYear}년 {viewMonth + 1}월
+        </p>
+
+        <div className="flex items-center gap-1">
+          <button onClick={nextMonth} className="px-2 py-1 rounded-lg text-sm" style={{ color: '#7a5020' }}>
+            ›
+          </button>
+          <button onClick={onClose} className="p-1 rounded-lg">
+            <X className="w-4 h-4" style={{ color: '#7a5020' }} />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {DAY_LABELS.map((day) => (
+          <div
+            key={day}
+            className="text-center text-[10px] font-semibold py-1"
+            style={{ color: '#9a7b47' }}
+          >
+            {day}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((day, index) => {
+          if (!day) return <div key={`empty-${index}`} />;
+
+          const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const isDone = doneDates.has(dateStr);
+          const isToday = dateStr === todayStr;
+          const isFuture = dateStr > todayStr;
+
+          return (
+            <div
+              key={dateStr}
+              className="aspect-square rounded-lg flex items-center justify-center text-[11px] font-semibold"
+              style={{
+                background: isDone ? '#d29b38' : isToday ? '#fff1c7' : isFuture ? 'transparent' : '#f3ead7',
+                border: isToday ? '2px solid #d29b38' : '1px solid transparent',
+                color: isDone ? '#fff' : isFuture ? '#d0c4ad' : '#7a5020',
+              }}
+            >
+              {isDone ? '✓' : day}
+            </div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
 }
 
-export default function Home() {
-  const navigate = useNavigate();
-  const location = useLocation();
+export default function ActionGoalCard({
+  actionGoal,
+  weeklyLogs = [],
+  allLogs = [],
+  streak = 0,
+  onComplete,
+}) {
   const queryClient = useQueryClient();
 
-  const bannerRef = useRef(null);
-  const tabsRef = useRef(null);
-  const initializedRef = useRef(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [showGpsDialog, setShowGpsDialog] = useState(false);
 
-  const [activeCategory, setActiveCategory] = useState('exercise');
-  const [pendingLog, setPendingLog] = useState(null);
-  const [celebration, setCelebration] = useState(null);
-  const [victoryGoal, setVictoryGoal] = useState(null);
-  const [isPulling, setIsPulling] = useState(false);
-  const [bannerMoveTrigger, setBannerMoveTrigger] = useState(0);
-  const [bannerHeight, setBannerHeight] = useState(112);
-  const [tabsHeight, setTabsHeight] = useState(64);
+  const [editTitle, setEditTitle] = useState(actionGoal.title || '');
+  const [editFrequency, setEditFrequency] = useState(actionGoal.weekly_frequency || 5);
+  const [editMinutes, setEditMinutes] = useState(actionGoal.duration_minutes || 30);
+  const [editActionType, setEditActionType] = useState(actionGoal.action_type || 'confirm');
+  const [editScheduledDate, setEditScheduledDate] = useState(actionGoal.scheduled_date || '');
 
-  const [shownVictoryIds, setShownVictoryIds] = useState(() => {
+  const [gpsEnabled, setGpsEnabled] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('shownVictory') || '[]');
+      return JSON.parse(localStorage.getItem(GPS_KEY(actionGoal.id)) || 'false');
     } catch {
-      return [];
+      return false;
     }
   });
 
-  const categoryFromQuery = useMemo(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const value = searchParams.get('category');
-    return CATEGORY_KEYS.includes(value) ? value : null;
-  }, [location.search]);
+  const intervalRef = useRef(null);
+  const cardRef = useRef(null);
+  const watchIdRef = useRef(null);
 
-  useLayoutEffect(() => {
-    const updateHeights = () => {
-      if (bannerRef.current) {
-        setBannerHeight(Math.ceil(bannerRef.current.getBoundingClientRect().height));
-      }
-      if (tabsRef.current) {
-        setTabsHeight(Math.ceil(tabsRef.current.getBoundingClientRect().height));
-      }
-    };
-
-    updateHeights();
-    window.addEventListener('resize', updateHeights);
-    return () => window.removeEventListener('resize', updateHeights);
-  }, []);
-
-  useEffect(() => {
-    if (bannerMoveTrigger) {
-      requestAnimationFrame(() => {
-        if (bannerRef.current) {
-          setBannerHeight(Math.ceil(bannerRef.current.getBoundingClientRect().height));
-        }
-      });
-    }
-  }, [bannerMoveTrigger]);
-
-  const contentTopSpacer = bannerHeight + tabsHeight + 8;
-
-  const { pullProgress, onTouchStart: handlePullStart } = usePullToRefresh(async () => {
-    if (isPulling) return;
-    setIsPulling(true);
-
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['me'] }),
-      queryClient.invalidateQueries({ queryKey: ['goals'] }),
-      queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
-      queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
-    ]);
-
-    setIsPulling(false);
-  });
-
-  const { data: user, isLoading: isUserLoading } = useQuery({
+  const { data: user } = useQuery({
     queryKey: ['me'],
     queryFn: () => base44.auth.me().catch(() => null),
   });
 
-  const isGuest = !isUserLoading && !user;
+  const isGuest = !user;
+  const isOneTime = actionGoal.action_type === 'one_time';
 
-  const { data: goals = [] } = useQuery({
-    queryKey: ['goals', isGuest],
-    enabled: !isUserLoading,
-    staleTime: 1000 * 60,
-    queryFn: async () => {
-      if (isGuest) {
-        const guestData = guestDataPersistence.loadOnboardingData();
-        return normalizeGuestGoals(guestData);
-      }
-
-      const resultGoals = await base44.entities.Goal.filter({
-        status: 'active',
-        goal_type: 'result',
-      });
-
-      return Array.isArray(resultGoals) ? resultGoals : [];
-    },
-  });
-
-  const { data: actionGoals = [] } = useQuery({
-    queryKey: ['actionGoals', isGuest],
-    enabled: !isUserLoading,
-    staleTime: 1000 * 60,
-    queryFn: async () => {
-      if (isGuest) {
-        const guestData = guestDataPersistence.loadOnboardingData();
-        return normalizeGuestActionGoals(guestData);
-      }
-
-      const results = await base44.entities.ActionGoal.filter({ status: 'active' });
-      return Array.isArray(results) ? results : [];
-    },
-  });
-
-  const { data: allLogs = [] } = useQuery({
-    queryKey: ['allLogs', isGuest],
-    enabled: !isUserLoading,
-    staleTime: 1000 * 15,
-    queryFn: async () => {
-      if (isGuest) {
-        const guestData = guestDataPersistence.loadOnboardingData();
-        return Array.isArray(guestData?.actionLogs) ? guestData.actionLogs : [];
-      }
-
-      const results = await base44.entities.ActionLog.list('-created_date', 200);
-      return Array.isArray(results) ? results : [];
-    },
-  });
-
-  const createBadgeMutation = useMutation({
-    mutationFn: async (data) => {
-      if (isGuest) return null;
-      return base44.entities.Badge.create(data);
-    },
-  });
-
-  useEffect(() => {
-    if (isUserLoading) return;
-
-    if (user && !user.onboarding_complete) {
-      navigate('/Onboarding', { replace: true });
-      return;
-    }
-
-    if (!user) {
-      const guestData = guestDataPersistence.loadOnboardingData();
-      const guestCompleted = guestData?.onboardingComplete === true;
-
-      if (!guestCompleted) {
-        navigate('/Onboarding', { replace: true });
-        return;
-      }
-    }
-
-    if (!initializedRef.current && categoryFromQuery) {
-      setActiveCategory(categoryFromQuery);
-      initializedRef.current = true;
-
-      if (user) {
-        if (user.active_category !== categoryFromQuery) {
-          base44.auth.updateMe({ active_category: categoryFromQuery }).catch(() => {});
-        }
-      } else {
-        const guestData = guestDataPersistence.loadOnboardingData();
-        if (guestData?.activeCategory !== categoryFromQuery) {
-          guestDataPersistence.saveData('guest_active_category', categoryFromQuery);
-        }
-      }
-
-      navigate('/Home', { replace: true });
-      return;
-    }
-
-    if (initializedRef.current) return;
-
-    if (user) {
-      if (user.active_category && CATEGORY_KEYS.includes(user.active_category)) {
-        setActiveCategory(user.active_category);
-      }
-      initializedRef.current = true;
-      return;
-    }
-
-    const guestData = guestDataPersistence.loadOnboardingData();
-    const savedCategory = guestData?.activeCategory;
-
-    if (savedCategory && CATEGORY_KEYS.includes(savedCategory)) {
-      setActiveCategory(savedCategory);
-    }
-
-    initializedRef.current = true;
-  }, [isUserLoading, user, categoryFromQuery, navigate]);
-
-  useEffect(() => {
-    const refreshHomeData = async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['me'] }),
-        queryClient.invalidateQueries({ queryKey: ['goals'] }),
-        queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
-        queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
-      ]);
-    };
-
-    window.addEventListener('root-home-data-updated', refreshHomeData);
-    return () => window.removeEventListener('root-home-data-updated', refreshHomeData);
-  }, [queryClient]);
-
-  useEffect(() => {
-    if (!goals.length) return;
-
-    for (const goal of goals) {
-      if (goal?.status !== 'active') continue;
-      if (isGoalComplete(goal) && !shownVictoryIds.includes(goal.id)) {
-        setVictoryGoal(goal);
-        break;
-      }
-    }
-  }, [goals, shownVictoryIds]);
-
-  const guestData = useMemo(() => {
-    if (!isGuest) return null;
-    return guestDataPersistence.loadOnboardingData();
-  }, [isGuest, goals, actionGoals, allLogs]);
-
-  const guestLevels = useMemo(() => buildGuestLevelStats(allLogs), [allLogs]);
-
-  const userLevels = useMemo(() => {
-    if (isGuest) return guestLevels;
-
-    return {
-      exercise_xp: user?.exercise_xp || 0,
-      exercise_level: user?.exercise_level || 1,
-      study_xp: user?.study_xp || 0,
-      study_level: user?.study_level || 1,
-      mental_xp: user?.mental_xp || 0,
-      mental_level: user?.mental_level || 1,
-      daily_xp: user?.daily_xp || 0,
-      daily_level: user?.daily_level || 1,
-    };
-  }, [isGuest, guestLevels, user]);
-
-  const totalLevel = useMemo(() => {
-    return (
-      (userLevels.exercise_level || 1) +
-      (userLevels.study_level || 1) +
-      (userLevels.mental_level || 1) +
-      (userLevels.daily_level || 1)
-    );
-  }, [userLevels]);
-
-  const nickname = isGuest ? guestData?.nickname || '용사님' : user?.nickname || '용사님';
-
-  const activeGoal = useMemo(() => {
-    const filtered = sortByCreatedDateDesc(
-      goals.filter((goal) => goal?.category === activeCategory && goal?.status === 'active')
-    );
-    return filtered[0] || null;
-  }, [goals, activeCategory]);
-
-  const categoryActionGoals = useMemo(() => {
-    if (!activeGoal) return [];
-
-    return sortByCreatedDateDesc(
-      actionGoals.filter(
-        (actionGoal) =>
-          actionGoal?.goal_id === activeGoal.id &&
-          actionGoal?.category === activeCategory &&
-          actionGoal?.status === 'active'
-      )
-    );
-  }, [actionGoals, activeGoal, activeCategory]);
-
-  const getWeeklyLogs = (actionGoalId) => {
-    const weekStart = getWeekStartString();
-    return allLogs.filter(
-      (log) => log?.action_goal_id === actionGoalId && log?.date && log.date >= weekStart
-    );
-  };
-
-  const getLogsByActionGoalId = (actionGoalId) => {
-    return allLogs.filter((log) => log?.action_goal_id === actionGoalId);
-  };
+  const weeklyCount = weeklyLogs.length;
+  const targetFreq = actionGoal.weekly_frequency || 7;
 
   const todayStr = getTodayString();
+  const doneToday = isOneTime
+    ? actionGoal.status === 'completed' ||
+      allLogs.some((log) => log?.action_goal_id === actionGoal.id && log?.completed)
+    : weeklyLogs.some((log) => log.date === todayStr);
 
-  const todaysGoals = useMemo(() => {
-    return categoryActionGoals.filter((goal) => {
-      if (goal.action_type === 'one_time') {
-        return goal.status !== 'completed' && goal.scheduled_date === todayStr;
+  const progressPercent = isOneTime
+    ? actionGoal.status === 'completed'
+      ? 100
+      : getDdayText(actionGoal.scheduled_date) === '기한 지남'
+        ? 100
+        : 0
+    : Math.min(100, Math.round((weeklyCount / Math.max(1, targetFreq)) * 100));
+
+  const detailLogs = Array.isArray(allLogs) && allLogs.length > 0 ? allLogs : weeklyLogs;
+
+  const [isRunning, setIsRunning] = useState(() => !!localStorage.getItem(TIMER_KEY(actionGoal.id)));
+
+  useEffect(() => {
+    if (!isRunning) {
+      setElapsed(0);
+      clearInterval(intervalRef.current);
+      return undefined;
+    }
+
+    const tick = () => {
+      const start = parseInt(localStorage.getItem(TIMER_KEY(actionGoal.id)) || '0', 10);
+      setElapsed(Math.floor((Date.now() - start) / 1000));
+    };
+
+    tick();
+    intervalRef.current = setInterval(tick, 1000);
+
+    return () => clearInterval(intervalRef.current);
+  }, [isRunning, actionGoal.id]);
+
+  useEffect(() => {
+    localStorage.setItem(GPS_KEY(actionGoal.id), JSON.stringify(gpsEnabled));
+  }, [gpsEnabled, actionGoal.id]);
+
+  useEffect(() => {
+    return () => {
+      clearInterval(intervalRef.current);
+      if (watchIdRef.current !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
       }
+    };
+  }, []);
 
-      const logs = getLogsByActionGoalId(goal.id);
-      const doneToday = logs.some((log) => log?.date === todayStr);
-      return !doneToday;
-    });
-  }, [categoryActionGoals, allLogs, todayStr]);
+  useEffect(() => {
+    if (!showCalendar) return undefined;
 
-  const upcomingGoals = useMemo(() => {
-    return categoryActionGoals.filter(
-      (goal) =>
-        goal.action_type === 'one_time' &&
-        goal.status !== 'completed' &&
-        goal.scheduled_date &&
-        goal.scheduled_date > todayStr
+    const handler = (e) => {
+      if (cardRef.current && !cardRef.current.contains(e.target)) {
+        setShowCalendar(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showCalendar]);
+
+  const updateMutation = useMutation({
+    mutationFn: (updateData) => base44.entities.ActionGoal.update(actionGoal.id, updateData),
+    onSuccess: () => {
+      toast.success('행동 목표가 수정되었습니다.');
+      queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
+      setShowEdit(false);
+      window.dispatchEvent(new Event('root-home-data-updated'));
+    },
+    onError: () => {
+      toast.error('수정에 실패했습니다.');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => base44.entities.ActionGoal.delete(actionGoal.id),
+    onSuccess: () => {
+      toast.success('행동 목표가 삭제되었습니다.');
+      queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
+      setShowDelete(false);
+      window.dispatchEvent(new Event('root-home-data-updated'));
+    },
+    onError: () => {
+      toast.error('삭제에 실패했습니다.');
+    },
+  });
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remain = seconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(remain).padStart(2, '0')}`;
+  };
+
+  const startGpsTracking = () => {
+    if (actionGoal.category !== 'exercise') return;
+    if (!('geolocation' in navigator)) return;
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const coords = JSON.parse(localStorage.getItem(GPS_COORDS_KEY(actionGoal.id)) || '[]');
+        coords.push([latitude, longitude]);
+        localStorage.setItem(GPS_COORDS_KEY(actionGoal.id), JSON.stringify(coords));
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
-  }, [categoryActionGoals, todayStr]);
+  };
 
-  const overdueGoals = useMemo(() => {
-    return categoryActionGoals.filter(
-      (goal) =>
-        goal.action_type === 'one_time' &&
-        goal.status !== 'completed' &&
-        goal.scheduled_date &&
-        goal.scheduled_date < todayStr
-    );
-  }, [categoryActionGoals, todayStr]);
+  const stopGpsTracking = () => {
+    if (watchIdRef.current !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+  };
 
-  const completedOrFutureFilteredIds = useMemo(() => {
-    return new Set([
-      ...todaysGoals.map((g) => g.id),
-      ...upcomingGoals.map((g) => g.id),
-      ...overdueGoals.map((g) => g.id),
-    ]);
-  }, [todaysGoals, upcomingGoals, overdueGoals]);
+  const calculateDistance = (coords) => {
+    if (!coords || coords.length < 2) return 0;
 
-  const otherGoals = useMemo(() => {
-    return categoryActionGoals.filter((goal) => !completedOrFutureFilteredIds.has(goal.id));
-  }, [categoryActionGoals, completedOrFutureFilteredIds]);
+    let distance = 0;
 
-  const handleCategoryChange = (nextCategory) => {
-    if (!CATEGORY_KEYS.includes(nextCategory)) return;
-    if (nextCategory === activeCategory) return;
+    for (let i = 1; i < coords.length; i += 1) {
+      const [lat1, lng1] = coords[i - 1];
+      const [lat2, lng2] = coords[i];
+      const R = 6371;
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLng = ((lng2 - lng1) * Math.PI) / 180;
 
-    initializedRef.current = true;
-    setActiveCategory(nextCategory);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLng / 2) *
+          Math.sin(dLng / 2);
 
-    if (isGuest) {
-      guestDataPersistence.saveData('guest_active_category', nextCategory);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      distance += R * c;
+    }
+
+    return Math.round(distance * 100) / 100;
+  };
+
+  const handleTimerStart = (enableGps) => {
+    localStorage.setItem(TIMER_KEY(actionGoal.id), String(Date.now()));
+    setIsRunning(true);
+    setGpsEnabled(enableGps);
+
+    if (enableGps) {
+      localStorage.setItem(GPS_COORDS_KEY(actionGoal.id), JSON.stringify([]));
+      startGpsTracking();
+    }
+
+    setShowGpsDialog(false);
+  };
+
+  const handleTimerToggle = () => {
+    if (doneToday && !isRunning) {
+      toast.error('오늘 이미 완료했어요. 내일 다시 도전해 주세요! 💪');
       return;
     }
 
-    base44.auth.updateMe({ active_category: nextCategory }).catch(() => {});
+    if (isRunning) {
+      const start = parseInt(localStorage.getItem(TIMER_KEY(actionGoal.id)) || '0', 10);
+      const totalElapsed = Math.floor((Date.now() - start) / 1000);
+
+      localStorage.removeItem(TIMER_KEY(actionGoal.id));
+      clearInterval(intervalRef.current);
+      setIsRunning(false);
+      setElapsed(0);
+      stopGpsTracking();
+
+      const minutes = Math.round(totalElapsed / 60);
+
+      if (minutes > 0 || totalElapsed > 30) {
+        const coords = gpsEnabled
+          ? JSON.parse(localStorage.getItem(GPS_COORDS_KEY(actionGoal.id)) || '[]')
+          : [];
+        const distance = gpsEnabled ? calculateDistance(coords) : null;
+
+        localStorage.removeItem(GPS_COORDS_KEY(actionGoal.id));
+
+        onComplete(actionGoal, Math.max(1, minutes), {
+          gpsEnabled,
+          distance,
+          coords,
+        });
+      }
+    } else if (actionGoal.category === 'exercise' && actionGoal.action_type === 'timer') {
+      setShowGpsDialog(true);
+    } else {
+      handleTimerStart(false);
+    }
   };
 
-  const handleComplete = (actionGoal, minutes = 0, gpsData = {}) => {
-    setPendingLog({ actionGoal, minutes, gpsData });
+  const handleConfirm = () => {
+    if (isOneTime) {
+      onComplete(actionGoal, 0, { gpsEnabled: false });
+      return;
+    }
+
+    if (doneToday) {
+      toast.error('오늘 이미 완료했어요. 내일 다시 도전해 주세요! 💪');
+      return;
+    }
+
+    onComplete(actionGoal, actionGoal.duration_minutes || 0, { gpsEnabled: false });
   };
 
-  const handlePhotoSave = async (photoUrl, receivedGpsData) => {
-    if (!pendingLog?.actionGoal) return;
+  const handleEditOpen = () => {
+    setEditTitle(actionGoal.title || '');
+    setEditFrequency(actionGoal.weekly_frequency || 5);
+    setEditMinutes(actionGoal.duration_minutes || 30);
+    setEditActionType(actionGoal.action_type || 'confirm');
+    setEditScheduledDate(actionGoal.scheduled_date || '');
+    setShowMenu(false);
+    setShowEdit(true);
+  };
 
-    const { actionGoal, minutes, gpsData } = pendingLog;
-    const finalGpsData = receivedGpsData || gpsData || {};
-    const todayStrLocal = getTodayString();
-    const weekStart = getWeekStartString();
-    const isOneTime = actionGoal.action_type === 'one_time';
+  const handleDeleteOpen = () => {
+    setShowMenu(false);
+    setShowDelete(true);
+  };
 
-    const logData = {
-      action_goal_id: actionGoal.id,
-      goal_id: actionGoal.goal_id,
-      category: actionGoal.category,
-      date: todayStrLocal,
-      duration_minutes: minutes || 0,
-      completed: true,
-      photo_url: photoUrl || null,
-      gps_enabled: !!(finalGpsData?.gpsEnabled && finalGpsData?.distance),
+  const handleSave = () => {
+    const safeActionType = editActionType || 'confirm';
+
+    const updateData = {
+      title: editTitle.trim(),
+      weekly_frequency: safeActionType === 'one_time' ? 0 : editFrequency,
+      action_type: safeActionType,
+      scheduled_date: safeActionType === 'one_time' ? editScheduledDate || null : null,
+      frequency_mode: safeActionType === 'one_time' ? 'one_time' : 'weekly',
     };
 
-    if (finalGpsData?.gpsEnabled && finalGpsData?.distance) {
-      logData.distance_km = finalGpsData.distance;
-      logData.route_coordinates = JSON.stringify(finalGpsData.coords || []);
+    if (safeActionType === 'timer') {
+      updateData.duration_minutes = Math.max(1, Number(editMinutes) || 30);
+    } else {
+      updateData.duration_minutes = 0;
     }
 
     if (isGuest) {
-      const currentGuestData = guestDataPersistence.loadOnboardingData();
-      const existingLogs = Array.isArray(currentGuestData?.actionLogs)
-        ? currentGuestData.actionLogs
-        : [];
-
-      const savedLog = {
-        ...logData,
-        id: `local_log_${Date.now()}`,
-        created_date: new Date().toISOString(),
-      };
-
-      const currentActionGoals = Array.isArray(currentGuestData?.actionGoals)
-        ? currentGuestData.actionGoals
-        : [];
-
-      const nextActionGoals = currentActionGoals.map((goal) =>
-        goal.id === actionGoal.id
-          ? {
-              ...goal,
-              ...(isOneTime
-                ? {
-                    status: 'completed',
-                    completed: true,
-                    completed_date: todayStrLocal,
-                  }
-                : {}),
-            }
-          : goal
-      );
-
-      guestDataPersistence.saveData('local_action_logs', [...existingLogs, savedLog]);
-
-      if (isOneTime) {
-        guestDataPersistence.saveData('local_action_goals', nextActionGoals);
-      }
-    } else {
-      await base44.entities.ActionLog.create(logData);
-
-      if (isOneTime) {
-        await base44.entities.ActionGoal.update(actionGoal.id, {
-          status: 'completed',
-          completed: true,
-          completed_date: todayStrLocal,
-        });
-      }
-
-      const currentXp = user?.[`${actionGoal.category}_xp`] || 0;
-      const newXp = currentXp + 1;
-      const newLevel = Math.floor(newXp / 30) + 1;
-
-      await base44.auth
-        .updateMe({
-          [`${actionGoal.category}_xp`]: newXp,
-          [`${actionGoal.category}_level`]: newLevel,
-        })
-        .catch(() => {});
+      updateGuestActionGoal(actionGoal.id, updateData);
+      toast.success('행동 목표가 수정되었습니다.');
+      setShowEdit(false);
+      return;
     }
 
-    const optimisticLogs = [
-      ...allLogs,
-      {
-        ...logData,
-        id: `temp_${Date.now()}`,
-      },
-    ];
+    updateMutation.mutate(updateData);
+  };
 
-    if (!isOneTime) {
-      const streak = computeStreak(actionGoal.id, optimisticLogs);
-      const streakTrigger = getStreakTrigger(streak);
-
-      const thisWeekLogs = optimisticLogs.filter(
-        (log) => log?.action_goal_id === actionGoal.id && log?.date && log.date >= weekStart
-      );
-
-      const target = actionGoal.weekly_frequency || 7;
-      const weeklyComplete = thisWeekLogs.length >= target && thisWeekLogs.length - 1 < target;
-
-      if (streakTrigger) {
-        setCelebration(streakTrigger);
-
-        const badge = getBadgeForGoal({ title: actionGoal.title });
-        createBadgeMutation.mutate({
-          title: `${badge?.title || '칭호'} (${streak}일 연속)`,
-          description: `${actionGoal.title} ${streak}일 연속 성공`,
-          category: actionGoal.category,
-          badge_type: 'cumulative',
-          earned_date: todayStrLocal,
-          streak,
-        });
-      } else if (weeklyComplete) {
-        setCelebration('weekly_complete');
-      }
-    } else {
-      setCelebration('goal_complete');
+  const handleDelete = () => {
+    if (isGuest) {
+      deleteGuestActionGoal(actionGoal.id);
+      toast.success('행동 목표가 삭제되었습니다.');
+      setShowDelete(false);
+      return;
     }
 
-    setPendingLog(null);
-    setBannerMoveTrigger(Date.now());
-
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['me'] }),
-      queryClient.invalidateQueries({ queryKey: ['goals'] }),
-      queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
-      queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
-    ]);
-
-    window.dispatchEvent(new Event('root-home-data-updated'));
+    deleteMutation.mutate();
   };
 
-  const handleVictoryClose = () => {
-    if (!victoryGoal?.id) return;
-
-    const nextShown = [...shownVictoryIds, victoryGoal.id];
-    setShownVictoryIds(nextShown);
-    localStorage.setItem('shownVictory', JSON.stringify(nextShown));
-    setVictoryGoal(null);
-  };
-
-  const handleVictoryNewGoal = () => {
-    const category = victoryGoal?.category || activeCategory;
-    handleVictoryClose();
-    navigate(`/CreateGoal?category=${category}`);
-  };
-
-  const bannerNickname = `${nickname} · Lv.${totalLevel}`;
-  const bannerMessage = getGreeting();
-
-  if (isUserLoading) {
-    return (
-      <div className="bg-background min-h-full px-4 py-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-24 rounded-3xl bg-secondary/60" />
-          <div className="h-14 rounded-2xl bg-secondary/60" />
-          <div className="h-24 rounded-2xl bg-secondary/60" />
-          <div className="h-20 rounded-2xl bg-secondary/60" />
-          <div className="h-20 rounded-2xl bg-secondary/60" />
-        </div>
-      </div>
-    );
-  }
+  const typeLabel =
+    actionGoal.action_type === 'timer'
+      ? `${actionGoal.duration_minutes || 0}분`
+      : actionGoal.action_type === 'abstain'
+        ? '안하기형'
+        : actionGoal.action_type === 'one_time'
+          ? '1회성'
+          : '확인형';
 
   return (
-    <div className="bg-background" style={{ minHeight: '100%' }} onTouchStart={handlePullStart}>
-      <motion.div
-        className="fixed top-12 left-0 right-0 flex justify-center pt-2 z-50 pointer-events-none"
-        animate={{ opacity: pullProgress > 0 ? 1 : 0 }}
-      >
-        <motion.div
-          animate={{ rotate: pullProgress * 360 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+    <>
+      <div ref={cardRef} className="relative">
+        <div
+          onClick={() => setShowCalendar((prev) => !prev)}
+          className="rounded-2xl px-3 py-3 cursor-pointer"
+          style={{
+            background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 60%, #f0e0bc 100%)',
+            border: '1.5px solid #d7b97b',
+            boxShadow: '0 3px 8px rgba(80,50,10,0.12)',
+          }}
         >
-          <RefreshCw className="w-6 h-6 text-amber-600" />
-        </motion.div>
-      </motion.div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                style={{
+                  background: 'rgba(255,255,255,0.28)',
+                  border: '1px solid rgba(122,80,32,0.12)',
+                }}
+              >
+                {doneToday ? (
+                  <Check className="w-4 h-4" style={{ color: '#4ca86a' }} />
+                ) : (
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#d2b06a' }} />
+                )}
+              </div>
 
-      <div
-        ref={bannerRef}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 30,
-          background: 'hsl(var(--background))',
-        }}
-      >
-        <CharacterBanner
-          nickname={bannerNickname}
-          message={bannerMessage}
-          activeCategory={activeCategory}
-          moveTrigger={bannerMoveTrigger}
-          expText="+1 EXP"
-        />
-      </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="truncate text-sm font-bold" style={{ color: '#3a1f04' }}>
+                    {actionGoal.title}
+                  </span>
 
-      <div
-        ref={tabsRef}
-        style={{
-          position: 'fixed',
-          top: `${bannerHeight}px`,
-          left: 0,
-          right: 0,
-          zIndex: 29,
-          background: 'hsl(var(--background))',
-          paddingTop: '2px',
-          paddingBottom: '2px',
-        }}
-      >
-        <CategoryTabs active={activeCategory} onChange={handleCategoryChange} userLevels={userLevels} />
-      </div>
-
-      <div style={{ height: `${contentTopSpacer}px` }} />
-
-      <div className="px-4 pb-5">
-        {activeGoal ? (
-          <div className="space-y-3">
-            <GoalProgress
-              goal={activeGoal}
-              logs={allLogs.filter((log) => log?.goal_id === activeGoal.id)}
-            />
-
-            <div className="space-y-4">
-              {todaysGoals.length > 0 && (
-                <div>
-                  <div className="text-sm font-bold mb-2" style={{ color: '#7a5020' }}>
-                    🔥 오늘 해야 할 것
-                  </div>
-
-                  <div className="space-y-2">
-                    {todaysGoals.map((actionGoal) => (
-                      <ActionGoalCard
-                        key={actionGoal.id}
-                        actionGoal={actionGoal}
-                        weeklyLogs={getWeeklyLogs(actionGoal.id)}
-                        allLogs={getLogsByActionGoalId(actionGoal.id)}
-                        streak={computeStreak(actionGoal.id, getLogsByActionGoalId(actionGoal.id))}
-                        onComplete={handleComplete}
-                      />
-                    ))}
-                  </div>
+                  <span className="text-[11px] font-semibold shrink-0" style={{ color: '#8f6a33' }}>
+                    {typeLabel}
+                  </span>
                 </div>
-              )}
 
-              {upcomingGoals.length > 0 && (
-                <div>
-                  <div className="text-sm font-bold mb-2" style={{ color: '#9a7b47' }}>
-                    📅 예정된 목표
+                {!isOneTime && streak > 0 && (
+                  <div className="mt-1 flex items-center gap-2">
+                    <div
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-xl text-[11px] font-bold"
+                      style={{
+                        background: 'rgba(255,140,0,0.10)',
+                        color: '#b85c00',
+                        border: '1px solid rgba(184,92,0,0.16)',
+                      }}
+                    >
+                      <span>🔥</span>
+                      <span>{streak}일 연속</span>
+                    </div>
                   </div>
+                )}
 
-                  <div className="space-y-2">
-                    {upcomingGoals.map((actionGoal) => (
-                      <ActionGoalCard
-                        key={actionGoal.id}
-                        actionGoal={actionGoal}
-                        weeklyLogs={getWeeklyLogs(actionGoal.id)}
-                        allLogs={getLogsByActionGoalId(actionGoal.id)}
-                        streak={computeStreak(actionGoal.id, getLogsByActionGoalId(actionGoal.id))}
-                        onComplete={handleComplete}
-                      />
-                    ))}
-                  </div>
+                <div className="mt-1 flex items-center gap-2">
+                  {isOneTime ? (
+                    <>
+                      <div className="text-[11px] font-semibold" style={{ color: '#7a5020' }}>
+                        {actionGoal.scheduled_date
+                          ? `예정일: ${formatKoreanDate(actionGoal.scheduled_date)}`
+                          : '날짜 미지정'}
+                      </div>
+
+                      <span
+                        className="text-[11px] font-bold shrink-0 ml-auto"
+                        style={{
+                          color: doneToday
+                            ? '#4ca86a'
+                            : getDdayText(actionGoal.scheduled_date) === '기한 지남'
+                              ? '#b94030'
+                              : '#7a5020',
+                        }}
+                      >
+                        {doneToday ? '1/1' : '0/1'}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <div
+                        className="h-1.5 flex-1 overflow-hidden rounded-full"
+                        style={{ background: 'rgba(122,80,32,0.16)' }}
+                      >
+                        <div
+                          className="h-full rounded-full transition-all duration-300"
+                          style={{
+                            width: `${progressPercent}%`,
+                            background:
+                              'linear-gradient(90deg, #8b5a20 0%, #c98a2b 50%, #e1b44f 100%)',
+                          }}
+                        />
+                      </div>
+
+                      <span className="text-[11px] font-bold shrink-0" style={{ color: '#7a5020' }}>
+                        {weeklyCount}/{targetFreq}
+                      </span>
+                    </>
+                  )}
                 </div>
-              )}
 
-              {overdueGoals.length > 0 && (
-                <div>
-                  <div className="text-sm font-bold mb-2" style={{ color: '#b94030' }}>
-                    ⏰ 기한 지난 목표
+                {isOneTime && (
+                  <div className="mt-1 text-[11px] font-semibold" style={{ color: '#9a7b47' }}>
+                    {getDdayText(actionGoal.scheduled_date)}
                   </div>
-
-                  <div className="space-y-2">
-                    {overdueGoals.map((actionGoal) => (
-                      <ActionGoalCard
-                        key={actionGoal.id}
-                        actionGoal={actionGoal}
-                        weeklyLogs={getWeeklyLogs(actionGoal.id)}
-                        allLogs={getLogsByActionGoalId(actionGoal.id)}
-                        streak={computeStreak(actionGoal.id, getLogsByActionGoalId(actionGoal.id))}
-                        onComplete={handleComplete}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {otherGoals.length > 0 && (
-                <div>
-                  <div className="text-sm font-bold mb-2" style={{ color: '#9a7b47' }}>
-                    전체 목표
-                  </div>
-
-                  <div className="space-y-2">
-                    {otherGoals.map((actionGoal) => (
-                      <ActionGoalCard
-                        key={actionGoal.id}
-                        actionGoal={actionGoal}
-                        weeklyLogs={getWeeklyLogs(actionGoal.id)}
-                        allLogs={getLogsByActionGoalId(actionGoal.id)}
-                        streak={computeStreak(actionGoal.id, getLogsByActionGoalId(actionGoal.id))}
-                        onComplete={handleComplete}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {categoryActionGoals.length === 0 && (
-                <div
-                  className="rounded-2xl px-4 py-4 text-sm"
-                  style={{
-                    background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 60%, #f0e0bc 100%)',
-                    border: '1px solid #d7b97b',
-                    color: '#6e4a1a',
-                  }}
-                >
-                  아직 이 결과목표를 위한 행동목표가 없어요.
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
+            {isOneTime ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleConfirm();
+                }}
+                className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center gap-1 shrink-0"
+                style={{
+                  background: '#8b5a20',
+                  color: '#fff',
+                }}
+              >
+                <Check className="w-3 h-3" />
+                완료
+              </button>
+            ) : actionGoal.action_type === 'timer' ? (
+              doneToday && !isRunning ? (
+                <span
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center shrink-0"
+                  style={{
+                    background: 'rgba(122,80,32,0.12)',
+                    color: '#8f6a33',
+                    border: '1px solid rgba(122,80,32,0.15)',
+                  }}
+                >
+                  완료
+                </span>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTimerToggle();
+                  }}
+                  className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center gap-1 shrink-0"
+                  style={
+                    isRunning
+                      ? {
+                          background: '#b94030',
+                          color: '#fff',
+                        }
+                      : {
+                          background: '#8b5a20',
+                          color: '#fff',
+                        }
+                  }
+                >
+                  {isRunning ? (
+                    <>
+                      <Square className="w-3 h-3" />
+                      {formatTime(elapsed)}
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-3 h-3" />
+                      시작
+                    </>
+                  )}
+                </button>
+              )
+            ) : doneToday ? (
+              <span
+                onClick={(e) => e.stopPropagation()}
+                className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center shrink-0"
+                style={{
+                  background: 'rgba(122,80,32,0.12)',
+                  color: '#8f6a33',
+                  border: '1px solid rgba(122,80,32,0.15)',
+                }}
+              >
+                완료
+              </span>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleConfirm();
+                }}
+                className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center gap-1 shrink-0"
+                style={{
+                  background: '#8b5a20',
+                  color: '#fff',
+                }}
+              >
+                <Check className="w-3 h-3" />
+                {actionGoal.action_type === 'abstain' ? '성공' : '확인'}
+              </button>
+            )}
+
             <button
-              onClick={() => {
-                navigate(`${getPagePathByCategory(activeCategory)}?goalId=${activeGoal.id}`);
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(true);
               }}
-              className="w-full rounded-xl font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
               style={{
-                minHeight: '46px',
-                background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 60%, #f0e0bc 100%)',
-                border: '2px dashed #a07840',
+                background: 'rgba(122,80,32,0.08)',
                 color: '#7a5020',
               }}
+              aria-label="행동 목표 관리"
             >
-              <Plus className="w-4 h-4" />
-              행동목표 추가하기
+              <Pencil className="w-3.5 h-3.5" />
             </button>
           </div>
-        ) : (
-          <EmptyGoalState
-            category={activeCategory}
-            onCreateGoal={() => {
-              navigate(getPagePathByCategory(activeCategory));
-            }}
-          />
-        )}
+
+          {!isOneTime && (
+            <div className="mt-1">
+              <WeekDays
+                logs={weeklyLogs}
+                weeklyTarget={targetFreq}
+                category={actionGoal.category}
+              />
+            </div>
+          )}
+        </div>
+
+        <AnimatePresence>
+          {showCalendar && <MonthCalendar logs={detailLogs} onClose={() => setShowCalendar(false)} />}
+        </AnimatePresence>
       </div>
 
-      {pendingLog && (
-        <PhotoConfirmModal
-          actionGoal={pendingLog.actionGoal}
-          gpsData={pendingLog.gpsData}
-          onSave={handlePhotoSave}
-          onSkip={() => handlePhotoSave(null, pendingLog.gpsData)}
-          onCancel={() => setPendingLog(null)}
-        />
-      )}
+      <Drawer open={showMenu} onOpenChange={setShowMenu}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>행동 목표 관리</DrawerTitle>
+          </DrawerHeader>
 
-      {celebration && <CelebrationToast trigger={celebration} onDone={() => setCelebration(null)} />}
+          <div className="px-4 pb-6">
+            <div className="space-y-2">
+              <button onClick={handleEditOpen} className="w-full flex items-center gap-3 p-3 rounded-xl text-left">
+                <Pencil className="w-4 h-4 text-amber-600" />
+                <span className="text-sm font-semibold">목표 수정</span>
+              </button>
 
-      {victoryGoal && (
-        <BossVictoryModal
-          goal={victoryGoal}
-          badge={getBadgeForGoal(victoryGoal)?.title}
-          onClose={handleVictoryClose}
-          onNewGoal={handleVictoryNewGoal}
-        />
-      )}
-    </div>
+              <button onClick={handleDeleteOpen} className="w-full flex items-center gap-3 p-3 rounded-xl text-left">
+                <Trash2 className="w-4 h-4 text-red-500" />
+                <span className="text-sm font-semibold text-red-500">목표 삭제</span>
+              </button>
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer open={showEdit} onOpenChange={setShowEdit}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>행동 목표 수정</DrawerTitle>
+          </DrawerHeader>
+
+          <div className="px-4 space-y-4 pb-6">
+            <div>
+              <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
+                행동 목표 이름
+              </label>
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="h-11 rounded-xl"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
+                목표 유형
+              </label>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setEditActionType('confirm')}
+                  className="py-2 rounded-xl text-sm font-semibold"
+                  style={
+                    editActionType === 'confirm'
+                      ? { background: '#8b5a20', color: '#fff' }
+                      : { background: '#f3ead7', color: '#7a5020' }
+                  }
+                >
+                  확인형
+                </button>
+
+                <button
+                  onClick={() => setEditActionType('timer')}
+                  className="py-2 rounded-xl text-sm font-semibold"
+                  style={
+                    editActionType === 'timer'
+                      ? { background: '#8b5a20', color: '#fff' }
+                      : { background: '#f3ead7', color: '#7a5020' }
+                  }
+                >
+                  시간기록형
+                </button>
+
+                <button
+                  onClick={() => setEditActionType('abstain')}
+                  className="py-2 rounded-xl text-sm font-semibold"
+                  style={
+                    editActionType === 'abstain'
+                      ? { background: '#8b5a20', color: '#fff' }
+                      : { background: '#f3ead7', color: '#7a5020' }
+                  }
+                >
+                  안하기형
+                </button>
+
+                <button
+                  onClick={() => setEditActionType('one_time')}
+                  className="py-2 rounded-xl text-sm font-semibold"
+                  style={
+                    editActionType === 'one_time'
+                      ? { background: '#8b5a20', color: '#fff' }
+                      : { background: '#f3ead7', color: '#7a5020' }
+                  }
+                >
+                  1회성
+                </button>
+              </div>
+            </div>
+
+            {editActionType === 'one_time' ? (
+              <div>
+                <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
+                  예정 날짜
+                </label>
+                <Input
+                  type="date"
+                  min={getTodayString()}
+                  value={editScheduledDate}
+                  onChange={(e) => setEditScheduledDate(e.target.value)}
+                  className="h-11 rounded-xl"
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
+                  주 횟수
+                </label>
+                <div className="grid grid-cols-7 gap-1.5">
+                  {[1, 2, 3, 4, 5, 6, 7].map((freq) => (
+                    <button
+                      key={freq}
+                      onClick={() => setEditFrequency(freq)}
+                      className="py-2 rounded-xl text-sm font-semibold"
+                      style={
+                        editFrequency === freq
+                          ? { background: '#8b5a20', color: '#fff' }
+                          : { background: '#f3ead7', color: '#7a5020' }
+                      }
+                    >
+                      {freq}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs mt-1.5" style={{ color: '#9a7b47' }}>
+                  주 {editFrequency}회
+                </p>
+              </div>
+            )}
+
+            {editActionType === 'timer' && (
+              <div>
+                <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
+                  1회 시간
+                </label>
+
+                <div className="flex gap-2 mb-2">
+                  {[20, 30, 60].map((minute) => (
+                    <button
+                      key={minute}
+                      onClick={() => setEditMinutes(minute)}
+                      className="flex-1 py-2 rounded-xl text-sm font-semibold"
+                      style={
+                        editMinutes === minute
+                          ? { background: '#8b5a20', color: '#fff' }
+                          : { background: '#f3ead7', color: '#7a5020' }
+                      }
+                    >
+                      {minute}분
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="300"
+                    value={editMinutes}
+                    onChange={(e) => setEditMinutes(Number(e.target.value))}
+                    className="flex-1 h-10 rounded-xl border px-3 text-sm"
+                    style={{ borderColor: '#e1c98f' }}
+                  />
+                  <span className="text-sm font-semibold" style={{ color: '#7a5020' }}>
+                    분
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DrawerFooter className="flex gap-2 pt-4">
+            <Button variant="outline" onClick={() => setShowEdit(false)} className="flex-1 rounded-xl">
+              취소
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!editTitle.trim() || (editActionType === 'one_time' && !editScheduledDate) || updateMutation.isPending}
+              className="flex-1 rounded-xl"
+              style={{ background: '#8b5a20', color: '#fff' }}
+            >
+              {updateMutation.isPending ? '저장 중...' : '저장'}
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer open={showDelete} onOpenChange={setShowDelete}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>행동 목표를 삭제할까요?</DrawerTitle>
+          </DrawerHeader>
+
+          <p className="px-4 text-sm text-center text-muted-foreground">
+            "{actionGoal.title}" 목표와 관련 기록이 함께 삭제됩니다.
+          </p>
+
+          <DrawerFooter className="flex gap-2 pt-6">
+            <Button variant="outline" onClick={() => setShowDelete(false)} className="flex-1 rounded-xl">
+              취소
+            </Button>
+            <Button
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white"
+            >
+              {deleteMutation.isPending ? '삭제 중...' : '삭제'}
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer open={showGpsDialog} onOpenChange={setShowGpsDialog}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>GPS 추적을 사용할까요?</DrawerTitle>
+          </DrawerHeader>
+
+          <p className="px-4 text-sm text-center text-muted-foreground">
+            운동 경로와 거리를 기록하고 싶다면 GPS를 켜 주세요.
+          </p>
+
+          <DrawerFooter className="flex gap-2 pt-6">
+            <Button variant="outline" onClick={() => handleTimerStart(false)} className="flex-1 rounded-xl">
+              안 함
+            </Button>
+            <Button
+              onClick={() => handleTimerStart(true)}
+              className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              GPS 사용
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 }
