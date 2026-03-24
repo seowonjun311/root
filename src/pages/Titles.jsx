@@ -4,21 +4,29 @@ import { base44 } from '@/api/base44Client';
 import { guestDataPersistence } from '@/lib/GuestDataPersistence';
 import { toast } from 'sonner';
 
-/** 🔥 Home.jsx와 동일한 TITLES 사용 */
 const TITLES = [
-  { id: 'common_first_step', name: '첫 걸음을 뗀 자', description: '첫 행동목표 완료', metric: 'total_actions', value: 1, category: 'common' },
-  { id: 'common_route_walker', name: '루트를 걷는 자', description: '행동 100회', metric: 'total_actions', value: 100, category: 'common' },
+  { id: 'common_first_step', name: '첫 걸음을 뗀 자', description: '첫 행동목표를 완료한 용사', metric: 'total_actions', value: 1, category: 'common' },
+  { id: 'common_route_walker', name: '루트를 걷는 자', description: '전체 행동목표 100회 달성', metric: 'total_actions', value: 100, category: 'common' },
 
-  { id: 'exercise_001', name: '몸을 깨운 자', description: '운동 10회', metric: 'total_exercise_count', value: 10, category: 'exercise' },
-  { id: 'exercise_002', name: '꾸준함의 전사', description: '운동 50회', metric: 'total_exercise_count', value: 50, category: 'exercise' },
+  { id: 'exercise_001', name: '몸을 깨운 자', description: '운동 행동목표 10회 달성', metric: 'total_exercise_count', value: 10, category: 'exercise' },
+  { id: 'exercise_002', name: '꾸준함의 전사', description: '운동 행동목표 50회 달성', metric: 'total_exercise_count', value: 50, category: 'exercise' },
+  { id: 'exercise_003', name: '바람을 걷는 자', description: '러닝 거리 50km 누적', metric: 'total_running_km', value: 50, category: 'exercise' },
+  { id: 'exercise_004', name: '운동의 장인', description: '운동 행동목표 200회 달성', metric: 'total_exercise_count', value: 200, category: 'exercise' },
 
-  { id: 'study_001', name: '집중 입문자', description: '공부 10시간', metric: 'total_study_minutes', value: 600, category: 'study' },
-  { id: 'study_002', name: '집중 수련생', description: '공부 30시간', metric: 'total_study_minutes', value: 1800, category: 'study' },
+  { id: 'study_001', name: '집중 입문자', description: '공부 10시간 누적', metric: 'total_study_minutes', value: 600, category: 'study' },
+  { id: 'study_002', name: '집중 수련생', description: '공부 30시간 누적', metric: 'total_study_minutes', value: 1800, category: 'study' },
+  { id: 'study_003', name: '몰입의 실천가', description: '공부 100시간 누적', metric: 'total_study_minutes', value: 6000, category: 'study' },
+  { id: 'study_004', name: '집중의 장인', description: '공부 300시간 누적', metric: 'total_study_minutes', value: 18000, category: 'study' },
 
-  { id: 'mental_001', name: '마음을 들여다본 자', description: '정신 10회', metric: 'total_mental_count', value: 10, category: 'mental' },
-  { id: 'mental_003', name: '절제의 기사', description: '금연 30일', metric: 'total_no_smoking_days', value: 30, category: 'mental' },
+  { id: 'mental_001', name: '마음을 들여다본 자', description: '정신 행동목표 10회 달성', metric: 'total_mental_count', value: 10, category: 'mental' },
+  { id: 'mental_002', name: '유혹 저항가', description: '금연/금주 7일 누적', metric: 'total_no_smoking_days', value: 7, category: 'mental' },
+  { id: 'mental_003', name: '절제의 기사', description: '금연/금주 30일 누적', metric: 'total_no_smoking_days', value: 30, category: 'mental' },
+  { id: 'mental_004', name: '내면의 관리자', description: '정신 행동목표 100회 달성', metric: 'total_mental_count', value: 100, category: 'mental' },
 
-  { id: 'daily_001', name: '하루를 시작한 자', description: '일상 5회', metric: 'total_daily_count', value: 5, category: 'daily' },
+  { id: 'daily_001', name: '하루를 시작한 자', description: '일상 행동목표 5회 달성', metric: 'total_daily_count', value: 5, category: 'daily' },
+  { id: 'daily_002', name: '생활의 입문자', description: '일상 행동목표 30회 달성', metric: 'total_daily_count', value: 30, category: 'daily' },
+  { id: 'daily_003', name: '생활의 관리자', description: '일상 행동목표 100회 달성', metric: 'total_daily_count', value: 100, category: 'daily' },
+  { id: 'daily_004', name: '삶을 다듬는 자', description: '일상 행동목표 200회 달성', metric: 'total_daily_count', value: 200, category: 'daily' },
 ];
 
 const CATEGORY_LABELS = {
@@ -49,7 +57,7 @@ export default function Titles() {
   const [guestVersion, setGuestVersion] = useState(0);
 
   useEffect(() => {
-    const handle = () => setGuestVersion(v => v + 1);
+    const handle = () => setGuestVersion((v) => v + 1);
     window.addEventListener('root-home-data-updated', handle);
     return () => window.removeEventListener('root-home-data-updated', handle);
   }, []);
@@ -66,23 +74,22 @@ export default function Titles() {
     queryFn: () => guestDataPersistence.loadOnboardingData(),
   });
 
-  /** 🔥 보유 칭호 */
-const ownedTitles = useMemo(() => {
-  if (isGuest) {
-    return Array.isArray(guestData?.titles)
-      ? guestData.titles
-      : getGuestTitles();
-  }
-  return user?.titles || [];
-}, [isGuest, user, guestData, guestVersion]);
+  const ownedTitles = useMemo(() => {
+    if (!isGuest) return user?.titles || [];
 
-  /** 🔥 대표 칭호 */
+    const fromGuestData = Array.isArray(guestData?.titles) ? guestData.titles : [];
+    const fromLocal = getGuestTitles();
+
+    return Array.from(new Set([...fromGuestData, ...fromLocal]));
+  }, [isGuest, user, guestData, guestVersion]);
+
   const equippedTitleId = useMemo(() => {
-    if (isGuest) return getGuestEquipped();
+    if (isGuest) {
+      return guestData?.equipped_title || getGuestEquipped();
+    }
     return user?.equipped_title || '';
-  }, [isGuest, user, guestVersion]);
+  }, [isGuest, user, guestData, guestVersion]);
 
-  /** 🔥 장착 */
   const handleEquip = async (title) => {
     if (isGuest) {
       localStorage.setItem(GUEST_EQUIPPED_TITLE_KEY, title.id);
@@ -97,7 +104,6 @@ const ownedTitles = useMemo(() => {
     toast.success(`"${title.name}" 장착`);
   };
 
-  /** 🔥 카테고리별 그룹 */
   const grouped = useMemo(() => {
     const map = {
       common: [],
@@ -116,21 +122,16 @@ const ownedTitles = useMemo(() => {
 
   return (
     <div className="min-h-full px-4 py-4 space-y-6">
-
-      {/* 대표 칭호 */}
       <div className="rounded-2xl p-4 bg-yellow-50 border">
         <div className="text-sm mb-2 font-bold">대표 칭호</div>
         <div className="text-lg font-extrabold">
-          {TITLES.find(t => t.id === equippedTitleId)?.name || '없음'}
+          {TITLES.find((t) => t.id === equippedTitleId)?.name || '없음'}
         </div>
       </div>
 
-      {/* 칭호 리스트 */}
       {Object.keys(grouped).map((category) => (
         <div key={category}>
-          <div className="text-sm font-bold mb-2">
-            {CATEGORY_LABELS[category]}
-          </div>
+          <div className="text-sm font-bold mb-2">{CATEGORY_LABELS[category]}</div>
 
           <div className="grid grid-cols-2 gap-2">
             {grouped[category].map((title) => {
