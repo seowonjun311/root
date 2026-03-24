@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { guestDataPersistence } from '@/lib/GuestDataPersistence';
+import  guestDataPersistence  from '@/lib/GuestDataPersistence';
 import { toast } from 'sonner';
 
 import CharacterBanner from '@/components/home/CharacterBanner';
