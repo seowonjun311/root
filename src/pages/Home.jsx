@@ -186,11 +186,14 @@ function connectActionGoalsToGoals(goals = [], actionGoals = []) {
   const goalsById = new Map(safeGoals.map((goal) => [goal.id, goal]));
 
   const activeGoalByCategory = safeGoals.reduce((acc, goal) => {
-    const normalizedCategory = normalizeCategoryValue(goal?.category, '');
-    if (!goal?.id || !normalizedCategory) return acc;
+    const rawCategory =
+      typeof goal?.category === 'string' ? goal.category.trim() : '';
+    if (!goal?.id || !rawCategory) return acc;
+
+    const categoryKey = CATEGORY_ALIASES[rawCategory] || rawCategory;
     if (goal?.status && goal.status !== 'active') return acc;
-    if (!acc[normalizedCategory]) {
-      acc[normalizedCategory] = goal.id;
+    if (!acc[categoryKey]) {
+      acc[categoryKey] = goal.id;
     }
     return acc;
   }, {});
@@ -202,12 +205,14 @@ function connectActionGoalsToGoals(goals = [], actionGoals = []) {
       return actionGoal;
     }
 
-    const normalizedCategory = normalizeCategoryValue(actionGoal?.category, '');
-    const inferredGoalId = activeGoalByCategory[normalizedCategory] || safeGoals[0]?.id || null;
+    const rawCategory =
+      typeof actionGoal?.category === 'string' ? actionGoal.category.trim() : '';
+    const categoryKey = CATEGORY_ALIASES[rawCategory] || rawCategory || 'exercise';
+    const inferredGoalId = activeGoalByCategory[categoryKey] || safeGoals[0]?.id || null;
 
     return {
       ...actionGoal,
-      category: normalizedCategory || actionGoal?.category || 'exercise',
+      category: categoryKey,
       goal_id: inferredGoalId,
     };
   });
