@@ -23,6 +23,10 @@ const CreateGoalMental = lazy(() => import('./pages/CreateGoalMental'));
 const CreateGoalDaily = lazy(() => import('./pages/CreateGoalDaily'));
 const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const Home = lazy(() => import('./pages/Home'));
+const Records = lazy(() => import('./pages/Records'));
+const Titles = lazy(() => import('./pages/Titles'));
+const AppSettings = lazy(() => import('./pages/AppSettings'));
 
 const PageFallback = () => (
   <div className="fixed inset-0 flex items-center justify-center bg-background">
@@ -168,11 +172,43 @@ const AppRoutes = () => {
                 }
               />
 
-              <Route element={<AppLayout />}>
-                <Route path="/Home" element={<div />} />
-                <Route path="/Records" element={<div />} />
-                <Route path="/Badges" element={<div />} />
-                <Route path="/AppSettings" element={<div />} />
+         <Route element={<AppLayout />}>
+
+  <Route
+    path="/Home"
+    element={
+      <Suspense fallback={<PageFallback />}>
+        <Home />
+      </Suspense>
+    }
+  />
+
+  <Route
+    path="/Records"
+    element={
+      <Suspense fallback={<PageFallback />}>
+        <Records />
+      </Suspense>
+    }
+  />
+
+  <Route
+    path="/Badges"
+    element={
+      <Suspense fallback={<PageFallback />}>
+        <Titles />
+      </Suspense>
+    }
+  />
+
+  <Route
+    path="/AppSettings"
+    element={
+      <Suspense fallback={<PageFallback />}>
+        <AppSettings />
+      </Suspense>
+    }
+  />
 
                 {/* 예전 경로 호환 */}
                 <Route path="/Record" element={<Navigate to="/Records" replace />} />
