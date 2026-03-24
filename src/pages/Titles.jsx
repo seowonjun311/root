@@ -67,7 +67,7 @@ export default function Titles() {
   });
 
   /** 🔥 보유 칭호 */
-  const ownedTitles = useMemo(() => {
+const ownedTitles = useMemo(() => {
   if (isGuest) {
     return Array.isArray(guestData?.titles)
       ? guestData.titles
