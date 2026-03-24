@@ -522,12 +522,14 @@ export default function Home() {
   }, [isGuest, guestData, allLogs, actionGoals]);
 
   const ownedTitleIds = useMemo(() => {
-    if (isGuest) {
-      return getStoredGuestTitles();
-    }
-    const serverTitles = Array.isArray(user?.titles) ? user.titles : [];
-    return serverTitles;
-  }, [isGuest, user, guestVersion]);
+  if (isGuest) {
+    return Array.isArray(guestData?.titles)
+      ? guestData.titles
+      : getStoredGuestTitles();
+  }
+  const serverTitles = Array.isArray(user?.titles) ? user.titles : [];
+  return serverTitles;
+}, [isGuest, user, guestData, guestVersion]);
 
   const unlockedTitles = useMemo(() => {
     return getUnlockedTitles(derivedStats, ownedTitleIds);
