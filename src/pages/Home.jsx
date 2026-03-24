@@ -1,14 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { guestDataPersistence } from '@/lib/GuestDataPersistence';
+import { toast } from 'sonner';
 
+import CharacterBanner from '@/components/home/CharacterBanner';
 import CategoryTabs from '@/components/home/CategoryTabs';
 import GoalProgress from '@/components/home/GoalProgress';
 import ActionGoalCard from '@/components/home/ActionGoalCard';
 import EmptyGoalState from '@/components/home/EmptyGoalState';
-
-const GUEST_STORAGE_KEY = 'root_guest_data';
 
 const CATEGORY_ROUTE_MAP = {
   exercise: '/CreateGoalExercise',
@@ -24,35 +25,16 @@ const CATEGORY_LABELS = {
   daily: '일상',
 };
 
-function loadGuestData() {
-  try {
-    const raw = localStorage.getItem(GUEST_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (error) {
-    console.error('guest data load error:', error);
-    return {};
-  }
-}
-
-function saveGuestData(nextData) {
-  try {
-    localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(nextData));
-    window.dispatchEvent(new Event('root-home-data-updated'));
-  } catch (error) {
-    console.error('guest data save error:', error);
-  }
-}
-
 function getTodayString() {
   return new Date().toISOString().split('T')[0];
 }
 
 function normalizeDateOnly(value) {
   if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
-    date.getDate()
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+    d.getDate()
   ).padStart(2, '0')}`;
 }
 
@@ -64,18 +46,8 @@ function getGoalEndDate(goal) {
 
   const end = new Date(start);
   end.setDate(end.getDate() + Number(goal.duration_days || 0));
+  end.setHours(23, 59, 59, 999);
   return end;
-}
-
-function isGoalExpired(goal) {
-  const end = getGoalEndDate(goal);
-  if (!end) return false;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  end.setHours(0, 0, 0, 0);
-
-  return end < today;
 }
 
 function getMonday(date = new Date()) {
@@ -115,12 +87,13 @@ function getAllLogsForAction(logs, actionGoalId) {
 }
 
 function getStreakForAction(logs, actionGoalId) {
-  const filtered = (logs || [])
+  const completedDates = (logs || [])
     .filter((log) => log?.action_goal_id === actionGoalId && log?.completed && log?.date)
     .map((log) => normalizeDateOnly(log.date))
     .filter(Boolean);
 
-  const dateSet = new Set(filtered);
+  const dateSet = new Set(completedDates);
+
   let streak = 0;
   const cursor = new Date();
   cursor.setHours(0, 0, 0, 0);
@@ -136,7 +109,7 @@ function getStreakForAction(logs, actionGoalId) {
 }
 
 function getDefaultUserLevels(logs = []) {
-  const base = {
+  const result = {
     exercise_level: 1,
     exercise_xp: 0,
     study_level: 1,
@@ -147,34 +120,143 @@ function getDefaultUserLevels(logs = []) {
     daily_xp: 0,
   };
 
-  for (const log of logs) {
-    const cat = log?.category;
-    if (!cat || !Object.prototype.hasOwnProperty.call(base, `${cat}_xp`)) continue;
-    base[`${cat}_xp`] += 10;
-  }
-
-  ['exercise', 'study', 'mental', 'daily'].forEach((cat) => {
-    const xp = base[`${cat}_xp`];
-    base[`${cat}_level`] = Math.max(1, Math.floor(xp / 30) + 1);
+  (logs || []).forEach((log) => {
+    const category = log?.category;
+    if (!category) return;
+    if (!Object.prototype.hasOwnProperty.call(result, `${category}_xp`)) return;
+    result[`${category}_xp`] += 10;
   });
 
-  return base;
+  ['exercise', 'study', 'mental', 'daily'].forEach((category) => {
+    const xp = result[`${category}_xp`] || 0;
+    result[`${category}_level`] = Math.max(1, Math.floor(xp / 30) + 1);
+  });
+
+  return result;
+}
+
+function groupActionGoals(actionGoals, today) {
+  const todayItems = [];
+  const scheduledItems = [];
+  const overdueItems = [];
+
+  (actionGoals || []).forEach((actionGoal) => {
+    const isOneTime = actionGoal?.action_type === 'one_time';
+
+    if (isOneTime) {
+      const scheduledDate = normalizeDateOnly(actionGoal?.scheduled_date);
+
+      if (!scheduledDate) {
+        scheduledItems.push(actionGoal);
+        return;
+      }
+
+      const isCompleted =
+        actionGoal?.status === 'completed' || actionGoal?.completed === true;
+
+      if (isCompleted) {
+        scheduledItems.push(actionGoal);
+        return;
+      }
+
+      if (scheduledDate < today) {
+        overdueItems.push(actionGoal);
+        return;
+      }
+
+      if (scheduledDate === today) {
+        todayItems.push(actionGoal);
+        return;
+      }
+
+      scheduledItems.push(actionGoal);
+      return;
+    }
+
+    const endDate = getGoalEndDate(actionGoal);
+
+    if (endDate) {
+      const todayDate = new Date();
+      todayDate.setHours(0, 0, 0, 0);
+
+      const compareEnd = new Date(endDate);
+      compareEnd.setHours(0, 0, 0, 0);
+
+      if (compareEnd < todayDate) {
+        overdueItems.push(actionGoal);
+        return;
+      }
+    }
+
+    todayItems.push(actionGoal);
+  });
+
+  scheduledItems.sort((a, b) => {
+    const aDate = normalizeDateOnly(a?.scheduled_date) || '9999-12-31';
+    const bDate = normalizeDateOnly(b?.scheduled_date) || '9999-12-31';
+    return aDate.localeCompare(bDate);
+  });
+
+  overdueItems.sort((a, b) => {
+    const aDate = normalizeDateOnly(a?.scheduled_date) || '0000-01-01';
+    const bDate = normalizeDateOnly(b?.scheduled_date) || '0000-01-01';
+    return aDate.localeCompare(bDate);
+  });
+
+  return { todayItems, scheduledItems, overdueItems };
+}
+
+function Section({ title, count, emptyText, children }) {
+  const hasItems = React.Children.count(children) > 0;
+
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-[15px] font-extrabold" style={{ color: '#4a2c08' }}>
+          {title}
+        </h2>
+        <div
+          className="px-2 py-1 rounded-full text-[11px] font-bold"
+          style={{
+            background: 'rgba(196,154,74,0.14)',
+            color: '#8a5a17',
+            border: '1px solid rgba(196,154,74,0.18)',
+          }}
+        >
+          {count}개
+        </div>
+      </div>
+
+      {hasItems ? (
+        <div className="space-y-3">{children}</div>
+      ) : (
+        <div
+          className="rounded-2xl px-4 py-4 text-sm"
+          style={{
+            background: '#fffaf0',
+            border: '1px solid rgba(160,120,64,0.16)',
+            color: '#8f6a33',
+          }}
+        >
+          {emptyText}
+        </div>
+      )}
+    </section>
+  );
 }
 
 export default function Home() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   const [guestVersion, setGuestVersion] = useState(0);
   const [activeCategory, setActiveCategory] = useState('exercise');
+  const [moveTrigger, setMoveTrigger] = useState(0);
 
   useEffect(() => {
-    const handleGuestUpdate = () => {
-      setGuestVersion((prev) => prev + 1);
-    };
-
-    window.addEventListener('root-home-data-updated', handleGuestUpdate);
-    return () => {
-      window.removeEventListener('root-home-data-updated', handleGuestUpdate);
-    };
+    const handleUpdate = () => setGuestVersion((prev) => prev + 1);
+    window.addEventListener('root-home-data-updated', handleUpdate);
+    return () => window.removeEventListener('root-home-data-updated', handleUpdate);
   }, []);
 
   const { data: user, isLoading: isUserLoading } = useQuery({
@@ -187,45 +269,41 @@ export default function Home() {
 
   const { data: guestData = {} } = useQuery({
     queryKey: ['guest-home-data', guestVersion],
-    queryFn: () => loadGuestData(),
+    queryFn: () => guestDataPersistence.loadOnboardingData(),
     staleTime: 0,
   });
 
   const { data: goals = [] } = useQuery({
     queryKey: ['goals', isGuest, guestVersion],
+    enabled: !isUserLoading,
     queryFn: async () => {
       if (isGuest) return guestData?.goals || [];
       return base44.entities.Goal.list('-created_date', 100);
     },
-    enabled: !isUserLoading,
   });
 
   const { data: actionGoals = [] } = useQuery({
     queryKey: ['actionGoals', isGuest, guestVersion],
+    enabled: !isUserLoading,
     queryFn: async () => {
       if (isGuest) return guestData?.actionGoals || [];
       return base44.entities.ActionGoal.list('-created_date', 200);
     },
-    enabled: !isUserLoading,
   });
 
   const { data: allLogs = [] } = useQuery({
     queryKey: ['allLogs', isGuest, guestVersion],
+    enabled: !isUserLoading,
     queryFn: async () => {
       if (isGuest) return guestData?.actionLogs || [];
       return base44.entities.ActionLog.list('-date', 500);
     },
-    enabled: !isUserLoading,
   });
 
-  const { data: userLevels = {} } = useQuery({
-    queryKey: ['user-levels', isGuest, guestVersion],
-    queryFn: async () => {
-      if (isGuest) return getDefaultUserLevels(guestData?.actionLogs || []);
-      return getDefaultUserLevels(allLogs || []);
-    },
-    enabled: !isUserLoading,
-  });
+  const userLevels = useMemo(() => {
+    if (isGuest) return getDefaultUserLevels(guestData?.actionLogs || []);
+    return getDefaultUserLevels(allLogs || []);
+  }, [isGuest, guestData, allLogs]);
 
   useEffect(() => {
     if (isUserLoading) return;
@@ -242,32 +320,24 @@ export default function Home() {
       return;
     }
 
-    const serverCategory = user?.active_category || goals?.[0]?.category || 'exercise';
-    setActiveCategory(serverCategory);
+    setActiveCategory(user?.active_category || goals?.[0]?.category || 'exercise');
   }, [isUserLoading, isGuest, guestData, user, goals]);
 
-  const handleCategoryChange = async (nextCategory) => {
-    setActiveCategory(nextCategory);
+  const handleCategoryChange = async (category) => {
+    setActiveCategory(category);
 
     if (isGuest) {
-      const current = loadGuestData();
-      saveGuestData({
-        ...current,
-        activeCategory: nextCategory,
-      });
+      guestDataPersistence.saveData('guest_active_category', category);
+      window.dispatchEvent(new Event('root-home-data-updated'));
       return;
     }
 
     try {
-      await base44.auth.updateMe({ active_category: nextCategory });
+      await base44.auth.updateMe({ active_category: category });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
     } catch (error) {
-      console.error('active category update error:', error);
+      console.error(error);
     }
-  };
-
-  const handleCreateGoal = () => {
-    const route = CATEGORY_ROUTE_MAP[activeCategory] || '/CreateGoalExercise';
-    navigate(route);
   };
 
   const activeGoals = useMemo(() => {
@@ -279,131 +349,137 @@ export default function Home() {
     });
   }, [goals, activeCategory]);
 
-  const activeActionGoals = useMemo(() => {
-    return (actionGoals || []).filter((goal) => {
-      if (!goal) return false;
-      if (goal.category !== activeCategory) return false;
-      if (goal.status && goal.status !== 'active') return false;
-      return true;
-    });
-  }, [actionGoals, activeCategory]);
-
-  const activeGoalIds = useMemo(() => new Set(activeGoals.map((goal) => goal.id)), [activeGoals]);
-
-  const linkedActionGoals = useMemo(() => {
-    return activeActionGoals.filter((actionGoal) => {
-      if (!actionGoal.goal_id) return true;
-      if (activeGoalIds.size === 0) return true;
-      return activeGoalIds.has(actionGoal.goal_id);
-    });
-  }, [activeActionGoals, activeGoalIds]);
-
-  const today = getTodayString();
-
-  const groupedActionGoals = useMemo(() => {
-    const todayItems = [];
-    const scheduledItems = [];
-    const overdueItems = [];
-
-    linkedActionGoals.forEach((actionGoal) => {
-      const isOneTime = actionGoal.action_type === 'one_time';
-      const scheduledDate = actionGoal.scheduled_date || '';
-      const normalizedScheduledDate = scheduledDate ? normalizeDateOnly(scheduledDate) : '';
-
-      if (isOneTime) {
-        if (!normalizedScheduledDate) {
-          scheduledItems.push(actionGoal);
-          return;
-        }
-
-        if (normalizedScheduledDate < today) {
-          overdueItems.push(actionGoal);
-          return;
-        }
-
-        if (normalizedScheduledDate === today) {
-          todayItems.push(actionGoal);
-          return;
-        }
-
-        scheduledItems.push(actionGoal);
-        return;
-      }
-
-      if (isGoalExpired(actionGoal)) {
-        overdueItems.push(actionGoal);
-        return;
-      }
-
-      todayItems.push(actionGoal);
-    });
-
-    scheduledItems.sort((a, b) => {
-      const aDate = a?.scheduled_date ? normalizeDateOnly(a.scheduled_date) : '9999-12-31';
-      const bDate = b?.scheduled_date ? normalizeDateOnly(b.scheduled_date) : '9999-12-31';
-      return aDate.localeCompare(bDate);
-    });
-
-    overdueItems.sort((a, b) => {
-      const aDate = a?.scheduled_date ? normalizeDateOnly(a.scheduled_date) : '0000-01-01';
-      const bDate = b?.scheduled_date ? normalizeDateOnly(b.scheduled_date) : '0000-01-01';
-      return aDate.localeCompare(bDate);
-    });
-
-    return {
-      todayItems,
-      scheduledItems,
-      overdueItems,
-    };
-  }, [linkedActionGoals, today]);
-
   const activeGoal = activeGoals[0] || null;
-  const activeGoalLogs = useMemo(() => {
+
+  const activeActionGoals = useMemo(() => {
+    const goalIds = new Set(activeGoals.map((goal) => goal.id));
+
+    return (actionGoals || []).filter((actionGoal) => {
+      if (!actionGoal) return false;
+      if (actionGoal.category !== activeCategory) return false;
+      if (actionGoal.status && actionGoal.status !== 'active' && actionGoal.status !== 'completed') {
+        return false;
+      }
+
+      if (!actionGoal.goal_id) return true;
+      if (goalIds.size === 0) return true;
+
+      return goalIds.has(actionGoal.goal_id);
+    });
+  }, [actionGoals, activeCategory, activeGoals]);
+
+  const goalLogs = useMemo(() => {
     if (!activeGoal) return [];
     return (allLogs || []).filter((log) => log?.goal_id === activeGoal.id);
   }, [allLogs, activeGoal]);
 
+  const today = getTodayString();
+
+  const grouped = useMemo(() => {
+    return groupActionGoals(activeActionGoals, today);
+  }, [activeActionGoals, today]);
+
+  const nickname = isGuest
+    ? guestData?.nickname || '용사'
+    : user?.nickname || '용사';
+
+  const handleCreateGoal = () => {
+    const route = CATEGORY_ROUTE_MAP[activeCategory] || '/CreateGoalExercise';
+    navigate(route);
+  };
+
+  const handleActionComplete = async (actionGoal, minutes = 0, extra = {}) => {
+    try {
+      const now = new Date().toISOString();
+      const todayStr = getTodayString();
+
+      const logPayload = {
+        action_goal_id: actionGoal.id,
+        goal_id: actionGoal.goal_id || null,
+        category: actionGoal.category,
+        title: actionGoal.title || '',
+        completed: true,
+        date: todayStr,
+        duration_minutes: Number(minutes || 0),
+        gps_enabled: !!extra?.gpsEnabled,
+        distance_km: extra?.distance ?? null,
+        coords: extra?.coords || null,
+        created_date: now,
+        updated_date: now,
+      };
+
+      if (isGuest) {
+        guestDataPersistence.addActionLog(logPayload);
+
+        if (actionGoal.action_type === 'one_time') {
+          guestDataPersistence.updateActionGoal(actionGoal.id, {
+            status: 'completed',
+            completed: true,
+            completed_date: todayStr,
+          });
+        }
+
+        window.dispatchEvent(new Event('root-home-data-updated'));
+      } else {
+        await base44.entities.ActionLog.create(logPayload);
+
+        if (actionGoal.action_type === 'one_time') {
+          await base44.entities.ActionGoal.update(actionGoal.id, {
+            status: 'completed',
+            completed: true,
+            completed_date: todayStr,
+          });
+        }
+
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
+          queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
+          queryClient.invalidateQueries({ queryKey: ['goals'] }),
+        ]);
+      }
+
+      setMoveTrigger((prev) => prev + 1);
+
+      if (actionGoal.action_type === 'one_time') {
+        toast.success('1회성 목표를 완료했어요! 🎉');
+      } else if (actionGoal.action_type === 'timer') {
+        toast.success(`${Math.max(1, Number(minutes || 0))}분 기록 완료! ⏱️`);
+      } else if (actionGoal.action_type === 'abstain') {
+        toast.success('오늘도 잘 지켜냈어요! 🛡️');
+      } else {
+        toast.success('행동 목표를 완료했어요! ✨');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('완료 처리 중 문제가 생겼어요.');
+    }
+  };
+
   if (isUserLoading) {
     return (
-      <div className="min-h-full bg-background px-4 py-6">
-        <div className="h-28 rounded-2xl bg-secondary/60 animate-pulse mb-4" />
-        <div className="grid grid-cols-4 gap-2 mb-4">
-          {[1, 2, 3, 4].map((n) => (
-            <div key={n} className="h-14 rounded-xl bg-secondary/60 animate-pulse" />
+      <div className="min-h-full px-4 py-4 space-y-4">
+        <div className="h-28 rounded-3xl bg-secondary/60 animate-pulse" />
+        <div className="grid grid-cols-4 gap-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-14 rounded-2xl bg-secondary/60 animate-pulse" />
           ))}
         </div>
-        <div className="h-28 rounded-2xl bg-secondary/60 animate-pulse mb-3" />
-        <div className="h-24 rounded-2xl bg-secondary/60 animate-pulse mb-3" />
-        <div className="h-24 rounded-2xl bg-secondary/60 animate-pulse" />
+        <div className="h-32 rounded-3xl bg-secondary/60 animate-pulse" />
+        <div className="h-24 rounded-3xl bg-secondary/60 animate-pulse" />
+        <div className="h-24 rounded-3xl bg-secondary/60 animate-pulse" />
       </div>
     );
   }
 
   return (
     <div className="min-h-full bg-background pb-24">
-      <div className="px-4 pt-4 pb-2">
-        <div
-          className="rounded-2xl p-4 border"
-          style={{
-            background: 'linear-gradient(135deg, #f8edd2 0%, #f4e4bf 45%, #ead39c 100%)',
-            borderColor: '#d4b06a',
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl bg-amber-100 border border-amber-300">
-              🦊
-            </div>
-            <div className="min-w-0">
-              <p className="text-lg font-bold text-amber-950">
-                {isGuest ? guestData?.nickname || '용사' : user?.nickname || '용사'}님
-              </p>
-              <p className="text-sm text-amber-800">
-                오늘도 {CATEGORY_LABELS[activeCategory]} 루트를 이어가요
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <CharacterBanner
+        nickname={`${nickname}님`}
+        message={`${CATEGORY_LABELS[activeCategory]} 루트를 한 걸음씩 이어가고 있어요`}
+        activeCategory={activeCategory}
+        moveTrigger={moveTrigger}
+        expText="+10 EXP"
+      />
 
       <CategoryTabs
         active={activeCategory}
@@ -412,72 +488,77 @@ export default function Home() {
       />
 
       {activeGoal ? (
-        <div className="px-4 pt-3">
-          <GoalProgress goal={activeGoal} logs={activeGoalLogs} />
+        <div className="pt-3">
+          <GoalProgress goal={activeGoal} logs={goalLogs} />
         </div>
       ) : (
         <EmptyGoalState category={activeCategory} onCreateGoal={handleCreateGoal} />
       )}
 
-      {linkedActionGoals.length > 0 && (
-        <div className="px-4 pt-5 space-y-6">
-          <Section
-            title="오늘 해야 할 것"
-            count={groupedActionGoals.todayItems.length}
-            emptyText="오늘 해야 할 행동목표가 없습니다."
-          >
-            {groupedActionGoals.todayItems.map((actionGoal) => (
-              <ActionGoalCard
-                key={actionGoal.id}
-                actionGoal={actionGoal}
-                weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-                allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-                streak={getStreakForAction(allLogs, actionGoal.id)}
-              />
-            ))}
-          </Section>
+      <div className="px-4 pt-5 space-y-6">
+        <Section
+          title="오늘 해야 할 것"
+          count={grouped.todayItems.length}
+          emptyText="오늘 해야 할 행동목표가 없습니다."
+        >
+          {grouped.todayItems.map((actionGoal) => (
+            <ActionGoalCard
+              key={actionGoal.id}
+              actionGoal={actionGoal}
+              weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+              allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+              streak={getStreakForAction(allLogs, actionGoal.id)}
+              onComplete={handleActionComplete}
+            />
+          ))}
+        </Section>
 
-          <Section
-            title="예정된 목표"
-            count={groupedActionGoals.scheduledItems.length}
-            emptyText="예정된 목표가 없습니다."
-          >
-            {groupedActionGoals.scheduledItems.map((actionGoal) => (
-              <ActionGoalCard
-                key={actionGoal.id}
-                actionGoal={actionGoal}
-                weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-                allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-                streak={getStreakForAction(allLogs, actionGoal.id)}
-              />
-            ))}
-          </Section>
+        <Section
+          title="예정된 목표"
+          count={grouped.scheduledItems.length}
+          emptyText="예정된 목표가 없습니다."
+        >
+          {grouped.scheduledItems.map((actionGoal) => (
+            <ActionGoalCard
+              key={actionGoal.id}
+              actionGoal={actionGoal}
+              weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+              allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+              streak={getStreakForAction(allLogs, actionGoal.id)}
+              onComplete={handleActionComplete}
+            />
+          ))}
+        </Section>
 
-          <Section
-            title="기한 지난 목표"
-            count={groupedActionGoals.overdueItems.length}
-            emptyText="기한 지난 목표가 없습니다."
-          >
-            {groupedActionGoals.overdueItems.map((actionGoal) => (
-              <ActionGoalCard
-                key={actionGoal.id}
-                actionGoal={actionGoal}
-                weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-                allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-                streak={getStreakForAction(allLogs, actionGoal.id)}
-              />
-            ))}
-          </Section>
-        </div>
-      )}
+        <Section
+          title="기한 지난 목표"
+          count={grouped.overdueItems.length}
+          emptyText="기한 지난 목표가 없습니다."
+        >
+          {grouped.overdueItems.map((actionGoal) => (
+            <ActionGoalCard
+              key={actionGoal.id}
+              actionGoal={actionGoal}
+              weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+              allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+              streak={getStreakForAction(allLogs, actionGoal.id)}
+              onComplete={handleActionComplete}
+            />
+          ))}
+        </Section>
+      </div>
 
-      {!activeGoal && linkedActionGoals.length === 0 && (
+      {!activeGoal && activeActionGoals.length === 0 && (
         <div className="px-4 pt-4">
           <button
+            type="button"
             onClick={handleCreateGoal}
-            className="w-full rounded-2xl py-4 font-bold text-white"
+            className="w-full h-12 rounded-2xl font-bold text-sm"
             style={{
-              background: 'linear-gradient(180deg, #a76a1e 0%, #8d5816 100%)',
+              background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 50%, #8a6520 100%)',
+              border: '2px solid #6b4e15',
+              color: '#fff8e8',
+              boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 3px 6px rgba(60,35,5,0.3)',
             }}
           >
             {CATEGORY_LABELS[activeCategory]} 목표 만들기
@@ -485,28 +566,5 @@ export default function Home() {
         </div>
       )}
     </div>
-  );
-}
-
-function Section({ title, count, emptyText, children }) {
-  const hasChildren = React.Children.count(children) > 0;
-
-  return (
-    <section>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-bold text-amber-950">{title}</h2>
-        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-amber-100 text-amber-800">
-          {count}개
-        </span>
-      </div>
-
-      {hasChildren ? (
-        <div className="space-y-3">{children}</div>
-      ) : (
-        <div className="rounded-2xl border bg-card px-4 py-5 text-sm text-muted-foreground">
-          {emptyText}
-        </div>
-      )}
-    </section>
   );
 }
