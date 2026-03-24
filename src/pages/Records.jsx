@@ -172,7 +172,18 @@ export default function Records() {
   const guestLogs = Array.isArray(guestData?.actionLogs) ? guestData.actionLogs : [];
   const guestGoals = Array.isArray(guestData?.goals) ? guestData.goals : [];
   const guestActionGoals = Array.isArray(guestData?.actionGoals) ? guestData.actionGoals : [];
-  const guestTitles = Array.isArray(guestData?.titles) ? guestData.titles : [];
+  const guestTitles = Array.from(
+  new Set([
+    ...(Array.isArray(guestData?.titles) ? guestData.titles : []),
+    ...(() => {
+      try {
+        return JSON.parse(localStorage.getItem('root_guest_titles') || '[]');
+      } catch {
+        return [];
+      }
+    })(),
+  ])
+);
 
   const logs = guestLogs.length > 0 ? guestLogs : logsFromServer;
   const goals = guestGoals.length > 0 ? guestGoals : goalsFromServer;
