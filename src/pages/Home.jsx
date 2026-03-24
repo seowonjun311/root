@@ -521,12 +521,14 @@ export default function Home() {
     return buildDerivedStats(sourceLogs, sourceGoals);
   }, [isGuest, guestData, allLogs, actionGoals]);
 
-  const ownedTitleIds = useMemo(() => {
+ const ownedTitleIds = useMemo(() => {
   if (isGuest) {
-    return Array.isArray(guestData?.titles)
-      ? guestData.titles
-      : getStoredGuestTitles();
+    const fromGuest = Array.isArray(guestData?.titles) ? guestData.titles : [];
+    const fromLocal = getStoredGuestTitles();
+
+    return Array.from(new Set([...fromGuest, ...fromLocal]));
   }
+
   const serverTitles = Array.isArray(user?.titles) ? user.titles : [];
   return serverTitles;
 }, [isGuest, user, guestData, guestVersion]);
