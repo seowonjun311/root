@@ -478,27 +478,31 @@ export default function Home() {
 
   return (
     <div className="min-h-full bg-background pb-28">
-      <CharacterBanner
-        nickname={`${nickname}님`}
-        message={`${CATEGORY_LABELS[activeCategory]} 루트를 한 걸음씩 이어가고 있어요`}
-        activeCategory={activeCategory}
-        moveTrigger={moveTrigger}
-        expText="+10 EXP"
-      />
+      <div className="sticky top-0 z-30 bg-background">
+        <CharacterBanner
+          nickname={`${nickname}님`}
+          message={`${CATEGORY_LABELS[activeCategory]} 루트를 한 걸음씩 이어가고 있어요`}
+          activeCategory={activeCategory}
+          moveTrigger={moveTrigger}
+          expText="+10 EXP"
+        />
 
-      <CategoryTabs
-        active={activeCategory}
-        onChange={handleCategoryChange}
-        userLevels={userLevels}
-      />
-
-      {activeGoal ? (
-        <div className="pt-3">
-          <GoalProgress goal={activeGoal} logs={goalLogs} />
+        <div className="border-b bg-background/95 backdrop-blur">
+          <CategoryTabs
+            active={activeCategory}
+            onChange={handleCategoryChange}
+            userLevels={userLevels}
+          />
         </div>
-      ) : (
-        <EmptyGoalState category={activeCategory} onCreateGoal={handleCreateGoal} />
-      )}
+      </div>
+
+      <div className="pt-3">
+        {activeGoal ? (
+          <GoalProgress goal={activeGoal} logs={goalLogs} />
+        ) : (
+          <EmptyGoalState category={activeCategory} onCreateGoal={handleCreateGoal} />
+        )}
+      </div>
 
       <div className="px-4 pt-5 space-y-6">
         <Section
