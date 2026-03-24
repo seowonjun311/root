@@ -41,6 +41,48 @@ function uniqueTitles(list) {
   return [...new Set(list.filter(Boolean).map(String))];
 }
 
+function toArray(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (value && typeof value === 'object') return [value];
+  return [];
+}
+
+function ensureId(value, prefix) {
+  const raw = typeof value === 'string' ? value.trim() : '';
+  if (raw) return raw;
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeGoalActionChain(rawGoals, rawActionGoals, fallbackCategory = 'exercise') {
+  const goals = toArray(rawGoals).map((goal, index) => {
+    const goalId = ensureId(goal?.id, 'local_goal');
+    return {
+      ...(goal || {}),
+      id: goalId,
+      category: goal?.category || fallbackCategory,
+      status: goal?.status || 'active',
+    };
+  });
+
+  const fallbackGoalId = goals[0]?.id || '';
+  const actionGoals = toArray(rawActionGoals).map((actionGoal, index) => {
+    const linkedGoalId =
+      typeof actionGoal?.goal_id === 'string' && actionGoal.goal_id
+        ? actionGoal.goal_id
+        : fallbackGoalId || goals[index]?.id || '';
+
+    return {
+      ...(actionGoal || {}),
+      id: ensureId(actionGoal?.id, 'local_ag'),
+      category: actionGoal?.category || goals[0]?.category || fallbackCategory,
+      goal_id: linkedGoalId || null,
+      status: actionGoal?.status || 'active',
+    };
+  });
+
+  return { goals, actionGoals };
+}
+
 function normalizeGuestData(raw) {
   const data = raw && typeof raw === 'object' ? raw : {};
 
@@ -134,16 +176,27 @@ const guestDataPersistence = {
   },
 
   saveOnboardingData({ goalData, actionGoalData, nickname, category } = {}) {
+    const normalizedFlow = normalizeGoalActionChain(goalData, actionGoalData, category);
+    const primaryGoal = normalizedFlow.goals[0] || null;
+    const primaryActionGoal = normalizedFlow.actionGoals[0] || null;
+
     return this.updateData((prev) => ({
       ...prev,
       onboardingComplete: true,
       nickname: nickname ?? prev.nickname,
       category: category ?? prev.category,
-      goals: Array.isArray(goalData) ? goalData : prev.goals,
-      actionGoals: Array.isArray(actionGoalData)
-        ? actionGoalData
-        : prev.actionGoals,
+      activeCategory: category ?? prev.activeCategory ?? prev.category,
+      guest_active_category: category ?? prev.guest_active_category ?? prev.category,
+      goals: normalizedFlow.goals.length ? normalizedFlow.goals : prev.goals,
+      actionGoals: normalizedFlow.actionGoals.length ? normalizedFlow.actionGoals : prev.actionGoals,
+      // Keep legacy singular fields for compatibility with old selectors.
+      goalData: primaryGoal,
+      actionGoalData: primaryActionGoal,
     }));
+  },
+
+  loadOnboardingData() {
+    return this.getData();
   },
 
   getTitles() {

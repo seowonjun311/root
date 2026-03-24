@@ -2,6 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
+import {
+  ensureValidEquippedTitle,
+  getOwnedTitleIds,
+  resolveEquippedTitleId,
+  setEquippedTitle,
+} from '@/lib/titleStorage';
 import { toast } from 'sonner';
 
 const TITLES = [
@@ -73,53 +79,23 @@ export default function Titles() {
   const isGuest = !user;
 
   const ownedTitleIds = useMemo(() => {
-    if (isGuest) {
-      return Array.isArray(guestData?.titles) ? guestData.titles : [];
-    }
-    return Array.isArray(user?.titles) ? user.titles : [];
+    return getOwnedTitleIds({ isGuest, user, guestData });
   }, [isGuest, guestData, user]);
 
   const resolvedEquippedTitleId = useMemo(() => {
-    const rawEquipped = isGuest
-      ? (typeof guestData?.equipped_title === 'string' ? guestData.equipped_title : '')
-      : (typeof user?.equipped_title === 'string' ? user.equipped_title : '');
-
-    if (rawEquipped && ownedTitleIds.includes(rawEquipped)) {
-      return rawEquipped;
-    }
-
-    return ownedTitleIds[0] || '';
+    return resolveEquippedTitleId({ isGuest, user, guestData, ownedTitleIds });
   }, [isGuest, guestData, user, ownedTitleIds]);
 
   useEffect(() => {
-    if (!ownedTitleIds.length) return;
-
-    if (isGuest) {
-      const current = typeof guestData?.equipped_title === 'string' ? guestData.equipped_title : '';
-
-      if (!current || !ownedTitleIds.includes(current)) {
-        const fixed = guestDataPersistence.updateData((prev) => ({
-          ...prev,
-          equipped_title: ownedTitleIds[0] || '',
-        }));
-        setGuestData(fixed);
-      }
-      return;
-    }
-
-    if (!user) return;
-
-    const current = typeof user?.equipped_title === 'string' ? user.equipped_title : '';
-    if (!current || !ownedTitleIds.includes(current)) {
-      base44.auth
-        .updateMe({ equipped_title: ownedTitleIds[0] || '' })
-        .then(() => {
-          queryClient.invalidateQueries({ queryKey: ['me'] });
-        })
-        .catch((error) => {
-          console.error('대표 칭호 자동 보정 실패:', error);
-        });
-    }
+    ensureValidEquippedTitle({ isGuest, user, guestData, ownedTitleIds, queryClient })
+      .then((nextGuest) => {
+        if (isGuest && nextGuest) {
+          setGuestData(nextGuest);
+        }
+      })
+      .catch((error) => {
+        console.error('대표 칭호 자동 보정 실패:', error);
+      });
   }, [isGuest, guestData, user, ownedTitleIds, queryClient]);
 
   const equippedTitle = useMemo(() => {
@@ -145,24 +121,20 @@ export default function Titles() {
   const handleEquip = async (title) => {
     if (!ownedTitleIds.includes(title.id)) return;
 
-    if (isGuest) {
-      try {
-        const next = guestDataPersistence.updateData((prev) => ({
-          ...prev,
-          equipped_title: title.id,
-        }));
-        setGuestData(next);
-        toast.success(`"${title.name}" 장착`);
-      } catch (error) {
-        console.error(error);
-        toast.error('칭호 장착에 실패했어요.');
-      }
-      return;
-    }
-
     try {
-      await base44.auth.updateMe({ equipped_title: title.id });
-      await queryClient.invalidateQueries({ queryKey: ['me'] });
+      const next = await setEquippedTitle({
+        titleId: title.id,
+        isGuest,
+        user,
+        guestData,
+        queryClient,
+      });
+      if (isGuest && next) {
+        setGuestData((prev) => ({
+          ...(prev || {}),
+          equipped_title: next,
+        }));
+      }
       toast.success(`"${title.name}" 장착`);
     } catch (error) {
       console.error(error);
