@@ -1,7 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Play, Square, Check, X, Pencil, Trash2, Image as ImageIcon, Camera } from 'lucide-react';
+import {
+  Play,
+  Square,
+  Check,
+  X,
+  Pencil,
+  Trash2,
+  Image as ImageIcon,
+  Camera,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Drawer,
@@ -215,6 +224,10 @@ export default function ActionGoalCard({
   const [showGpsDialog, setShowGpsDialog] = useState(false);
   const [showPhotoConfirm, setShowPhotoConfirm] = useState(false);
 
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [selectedPhotoPreview, setSelectedPhotoPreview] = useState('');
+  const [pendingNoPhoto, setPendingNoPhoto] = useState(false);
+
   const [editTitle, setEditTitle] = useState(actionGoal.title || '');
   const [editFrequency, setEditFrequency] = useState(actionGoal.weekly_frequency || 5);
   const [editMinutes, setEditMinutes] = useState(actionGoal.duration_minutes || 30);
@@ -306,6 +319,25 @@ export default function ActionGoalCard({
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [showCalendar]);
+
+  useEffect(() => {
+    return () => {
+      if (selectedPhotoPreview) {
+        URL.revokeObjectURL(selectedPhotoPreview);
+      }
+    };
+  }, [selectedPhotoPreview]);
+
+  const resetPhotoState = () => {
+    if (selectedPhotoPreview) {
+      URL.revokeObjectURL(selectedPhotoPreview);
+    }
+    setSelectedPhoto(null);
+    setSelectedPhotoPreview('');
+    setPendingNoPhoto(false);
+    if (galleryInputRef.current) galleryInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+  };
 
   const updateMutation = useMutation({
     mutationFn: (updateData) => base44.entities.ActionGoal.update(actionGoal.id, updateData),
@@ -440,18 +472,20 @@ export default function ActionGoalCard({
     }
   };
 
-  const reallyCompleteConfirm = (photoInfo = null) => {
+  const finalizeConfirm = (photoInfo = null) => {
     if (isOneTime) {
       onComplete(actionGoal, 0, {
         gpsEnabled: false,
         photo: photoInfo,
       });
+      resetPhotoState();
       setShowPhotoConfirm(false);
       return;
     }
 
     if (doneToday) {
       toast.error('오늘 이미 완료했어요. 내일 다시 도전해 주세요! 💪');
+      resetPhotoState();
       setShowPhotoConfirm(false);
       return;
     }
@@ -460,11 +494,13 @@ export default function ActionGoalCard({
       gpsEnabled: false,
       photo: photoInfo,
     });
+    resetPhotoState();
     setShowPhotoConfirm(false);
   };
 
   const handleConfirm = () => {
     if (actionGoal.action_type === 'confirm' || actionGoal.action_type === 'abstain' || isOneTime) {
+      resetPhotoState();
       setShowPhotoConfirm(true);
       return;
     }
@@ -481,14 +517,49 @@ export default function ActionGoalCard({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    reallyCompleteConfirm({
+    if (selectedPhotoPreview) {
+      URL.revokeObjectURL(selectedPhotoPreview);
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+
+    setSelectedPhoto({
+      file,
       name: file.name,
       type: file.type,
       size: file.size,
       source,
     });
+    setSelectedPhotoPreview(previewUrl);
+    setPendingNoPhoto(false);
+  };
 
-    e.target.value = '';
+  const handleSavePhotoConfirm = () => {
+    if (pendingNoPhoto) {
+      finalizeConfirm(null);
+      return;
+    }
+
+    if (!selectedPhoto) {
+      toast.error('사진을 선택하거나 "사진 없이 저장"을 눌러 주세요.');
+      return;
+    }
+
+    finalizeConfirm({
+      name: selectedPhoto.name,
+      type: selectedPhoto.type,
+      size: selectedPhoto.size,
+      source: selectedPhoto.source,
+    });
+  };
+
+  const handleNoPhotoMode = () => {
+    if (selectedPhotoPreview) {
+      URL.revokeObjectURL(selectedPhotoPreview);
+    }
+    setSelectedPhoto(null);
+    setSelectedPhotoPreview('');
+    setPendingNoPhoto(true);
   };
 
   const handleEditOpen = () => {
@@ -799,7 +870,13 @@ export default function ActionGoalCard({
         </AnimatePresence>
       </div>
 
-      <Drawer open={showPhotoConfirm} onOpenChange={setShowPhotoConfirm}>
+      <Drawer
+        open={showPhotoConfirm}
+        onOpenChange={(open) => {
+          setShowPhotoConfirm(open);
+          if (!open) resetPhotoState();
+        }}
+      >
         <DrawerContent>
           <DrawerHeader className="text-center">
             <DrawerTitle>기록을 어떻게 남길까요?</DrawerTitle>
@@ -826,26 +903,76 @@ export default function ActionGoalCard({
               <Camera className="w-5 h-5 text-amber-700" />
               <div>
                 <div className="text-sm font-bold">사진 찍기</div>
-                <div className="text-xs text-muted-foreground">지금 바로 촬영해서 저장</div>
+                <div className="text-xs text-muted-foreground">지금 바로 촬영해서 선택</div>
               </div>
             </button>
 
             <button
-              onClick={() => reallyCompleteConfirm(null)}
+              onClick={handleNoPhotoMode}
               className="w-full flex items-center justify-center p-4 rounded-xl text-sm font-bold"
               style={{
-                background: '#8b5a20',
-                color: '#fff',
+                background: pendingNoPhoto ? '#a66c1f' : '#efe4c8',
+                color: pendingNoPhoto ? '#fff' : '#7a5020',
               }}
             >
               사진 없이 저장
             </button>
+
+            {(selectedPhoto || pendingNoPhoto) && (
+              <div
+                className="mt-3 rounded-2xl p-3"
+                style={{
+                  background: '#fffaf0',
+                  border: '1px solid #e5d3a0',
+                }}
+              >
+                {selectedPhoto ? (
+                  <>
+                    {selectedPhotoPreview ? (
+                      <img
+                        src={selectedPhotoPreview}
+                        alt="선택한 사진 미리보기"
+                        className="w-full h-40 object-cover rounded-xl mb-3"
+                      />
+                    ) : null}
+
+                    <div className="text-sm font-bold mb-1" style={{ color: '#4a2c08' }}>
+                      선택된 사진
+                    </div>
+                    <div className="text-xs" style={{ color: '#8f6a33' }}>
+                      {selectedPhoto.name}
+                    </div>
+                    <div className="text-xs mt-1" style={{ color: '#9a7b47' }}>
+                      {selectedPhoto.source === 'camera' ? '카메라로 촬영한 사진' : '갤러리에서 선택한 사진'}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-sm font-bold mb-1" style={{ color: '#4a2c08' }}>
+                      사진 없이 저장
+                    </div>
+                    <div className="text-xs" style={{ color: '#8f6a33' }}>
+                      사진 첨부 없이 오늘 기록을 저장합니다.
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <DrawerFooter className="pt-2">
-            <Button variant="outline" onClick={() => setShowPhotoConfirm(false)} className="rounded-xl">
-              취소
-            </Button>
+            <div className="flex gap-2 w-full">
+              <Button variant="outline" onClick={() => setShowPhotoConfirm(false)} className="flex-1 rounded-xl">
+                취소
+              </Button>
+              <Button
+                onClick={handleSavePhotoConfirm}
+                className="flex-1 rounded-xl"
+                style={{ background: '#8b5a20', color: '#fff' }}
+              >
+                저장
+              </Button>
+            </div>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
