@@ -189,7 +189,9 @@ function TimelineLogItem({ log, ag, onSelectPhoto }) {
     <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
       <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-[0.875rem] font-semibold truncate">{ag?.title || log.title || log.date}</p>
+        <p className="text-[0.875rem] font-semibold truncate">
+          {ag?.title || log.title || log.date}
+        </p>
         <p className="text-[0.75rem] text-muted-foreground">
           {log.date}
           {Number(log.duration_minutes) > 0 ? ` · ${log.duration_minutes}분` : ''}
@@ -359,6 +361,8 @@ export default function Records() {
     return Array.from(new Set([...fromGuestData, ...fromLocal]));
   }, [guestData, guestVersion]);
 
+  const hasGuestTitles = guestTitles.length > 0;
+
   const logs = guestLogs.length > 0 ? guestLogs : logsFromServer;
   const goals = guestGoals.length > 0 ? guestGoals : goalsFromServer;
   const actionGoals = guestActionGoals.length > 0 ? guestActionGoals : actionGoalsFromServer;
@@ -387,6 +391,7 @@ export default function Records() {
   );
 
   const guestBadges = useMemo(() => {
+    if (!hasGuestTitles) return [];
     return guestTitles.map((id) => ({
       id,
       earned_date: '',
@@ -396,7 +401,7 @@ export default function Records() {
         category: 'special',
       }),
     }));
-  }, [guestTitles]);
+  }, [guestTitles, hasGuestTitles]);
 
   const filteredBadges =
     catFilter === 'all'
