@@ -230,6 +230,22 @@ const guestDataPersistence = {
     });
   },
 
+  addActionLog(logPayload) {
+    return this.updateData((prev) => ({
+      ...prev,
+      actionLogs: [...(Array.isArray(prev.actionLogs) ? prev.actionLogs : []), logPayload],
+    }));
+  },
+
+  updateActionGoal(actionGoalId, patch = {}) {
+    return this.updateData((prev) => ({
+      ...prev,
+      actionGoals: (Array.isArray(prev.actionGoals) ? prev.actionGoals : []).map((goal) =>
+        goal.id === actionGoalId ? { ...goal, ...patch } : goal
+      ),
+    }));
+  },
+
   subscribe(callback) {
     if (!isBrowser()) return () => {};
 
@@ -247,10 +263,6 @@ const guestDataPersistence = {
       window.removeEventListener('storage', handler);
     };
   },
-};
-
-const guestDataPersistence = {
-  // 기존 내용 그대로
 };
 
 export default guestDataPersistence;
