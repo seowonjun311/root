@@ -22,8 +22,14 @@ export default function Records() {
   const [showSessions, setShowSessions] = useState(false);
   const [showDistance, setShowDistance] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [guestVersion, setGuestVersion] = useState(0);
   const queryClient = useQueryClient();
-
+React.useEffect(() => {
+  const handle = () => setGuestVersion((v) => v + 1);
+  window.addEventListener('root-home-data-updated', handle);
+  return () => window.removeEventListener('root-home-data-updated', handle);
+}, []);
+  
   const { pullProgress, onTouchStart: handlePullStart } = usePullToRefresh(async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
@@ -65,10 +71,119 @@ const { data: guestData = {} } = useQuery({
   ? guestData.titles
   : [];
 
+const titleMetaMap = {
+  common_first_step: {
+    title: '첫 걸음을 뗀 자',
+    description: '첫 행동목표 완료',
+    category: 'common',
+  },
+  common_route_walker: {
+    title: '루트를 걷는 자',
+    description: '행동 100회',
+    category: 'common',
+  },
+
+  exercise_001: {
+    title: '몸을 깨운 자',
+    description: '운동 10회',
+    category: 'exercise',
+  },
+  exercise_002: {
+    title: '꾸준함의 전사',
+    description: '운동 50회',
+    category: 'exercise',
+  },
+  exercise_003: {
+    title: '바람을 걷는 자',
+    description: '러닝 거리 50km 누적',
+    category: 'exercise',
+  },
+  exercise_004: {
+    title: '운동의 장인',
+    description: '운동 행동목표 200회 달성',
+    category: 'exercise',
+  },
+
+  study_001: {
+    title: '집중 입문자',
+    description: '공부 10시간 누적',
+    category: 'study',
+  },
+  study_002: {
+    title: '집중 수련생',
+    description: '공부 30시간 누적',
+    category: 'study',
+  },
+  study_003: {
+    title: '몰입의 실천가',
+    description: '공부 100시간 누적',
+    category: 'study',
+  },
+  study_004: {
+    title: '집중의 장인',
+    description: '공부 300시간 누적',
+    category: 'study',
+  },
+
+  mental_001: {
+    title: '마음을 들여다본 자',
+    description: '정신 행동목표 10회 달성',
+    category: 'mental',
+  },
+  mental_002: {
+    title: '유혹 저항가',
+    description: '금연/금주 7일 누적',
+    category: 'mental',
+  },
+  mental_003: {
+    title: '절제의 기사',
+    description: '금연/금주 30일 누적',
+    category: 'mental',
+  },
+  mental_004: {
+    title: '내면의 관리자',
+    description: '정신 행동목표 100회 달성',
+    category: 'mental',
+  },
+
+  daily_001: {
+    title: '하루를 시작한 자',
+    description: '일상 행동목표 5회 달성',
+    category: 'daily',
+  },
+  daily_002: {
+    title: '생활의 입문자',
+    description: '일상 행동목표 30회 달성',
+    category: 'daily',
+  },
+  daily_003: {
+    title: '생활의 관리자',
+    description: '일상 행동목표 100회 달성',
+    category: 'daily',
+  },
+  daily_004: {
+    title: '삶을 다듬는 자',
+    description: '일상 행동목표 200회 달성',
+    category: 'daily',
+  },
+};
+
+const guestTitles = Array.isArray(guestData?.titles) ? guestData.titles : [];
+
+const guestBadges = guestTitles.map((id) => ({
+  id,
+  earned_date: '',
+  ...(titleMetaMap[id] || {
+    title: id,
+    description: '',
+    category: 'special',
+  }),
+}));
+
 const filteredBadges =
   catFilter === 'all'
-    ? guestTitles
-    : guestTitles.filter((t) => t.startsWith(catFilter));
+    ? guestBadges
+    : guestBadges.filter((b) => b.category === catFilter);
 
   const catBreakdown = Object.entries(
     logs.reduce((acc, l) => {
@@ -180,7 +295,7 @@ const filteredBadges =
                     <p className="text-[0.75rem] font-bold text-amber-800 mb-2">{info.emoji} {info.label} ({catGoals.length}개)</p>
                     <div className="space-y-2">
                       {catGoals.map(g => {
-                        const relBadge = badges.find(b => b.goal_id === g.id);
+                        const relBadge = null;
                         return (
                           <div key={g.id} className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300/60">
                             <p className="text-[0.875rem] font-bold text-amber-900 mb-1">{g.title}</p>
