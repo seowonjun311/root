@@ -25,9 +25,6 @@ const CATEGORY_LABELS = {
   daily: '일상',
 };
 
-const GUEST_TITLES_KEY = 'root_guest_titles';
-const GUEST_EQUIPPED_TITLE_KEY = 'root_guest_equipped_title';
-
 const TITLES = [
   { id: 'common_first_step', name: '첫 걸음을 뗀 자', description: '첫 행동목표를 완료한 용사', metric: 'total_actions', value: 1, category: 'common' },
   { id: 'common_route_walker', name: '루트를 걷는 자', description: '전체 행동목표 100회 달성', metric: 'total_actions', value: 100, category: 'common' },
@@ -237,26 +234,6 @@ function groupActionGoals(actionGoals, today) {
   });
 
   return { todayItems, scheduledItems, overdueItems };
-}
-
-function getStoredGuestTitles() {
-  try {
-    return JSON.parse(localStorage.getItem(GUEST_TITLES_KEY) || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function setStoredGuestTitles(nextTitles) {
-  localStorage.setItem(GUEST_TITLES_KEY, JSON.stringify(nextTitles));
-}
-
-function getStoredGuestEquippedTitle() {
-  return localStorage.getItem(GUEST_EQUIPPED_TITLE_KEY) || '';
-}
-
-function setStoredGuestEquippedTitle(titleId) {
-  localStorage.setItem(GUEST_EQUIPPED_TITLE_KEY, titleId);
 }
 
 function calculateExp(actionGoal, minutes = 0) {
@@ -525,11 +502,8 @@ export default function Home() {
 
   const ownedTitleIds = useMemo(() => {
     if (isGuest) {
-      const fromGuest = Array.isArray(guestData?.titles) ? guestData.titles : [];
-      const fromLocal = getStoredGuestTitles();
-      return Array.from(new Set([...fromGuest, ...fromLocal]));
+      return Array.isArray(guestData?.titles) ? guestData.titles : [];
     }
-
     return Array.isArray(user?.titles) ? user.titles : [];
   }, [isGuest, user, guestData, guestVersion]);
 
@@ -539,7 +513,7 @@ export default function Home() {
 
   const equippedTitle = useMemo(() => {
     const equippedId = isGuest
-      ? (guestData?.equipped_title || getStoredGuestEquippedTitle())
+      ? (guestData?.equipped_title || '')
       : (user?.equipped_title || '');
 
     return unlockedTitles.find((title) => title.id === equippedId) || null;
@@ -647,18 +621,13 @@ export default function Home() {
   const persistNewTitle = async (titleId) => {
     if (isGuest) {
       try {
-        const prevLocal = getStoredGuestTitles();
         const prevGuest = Array.isArray(guestData?.titles) ? guestData.titles : [];
-        const next = Array.from(new Set([...prevLocal, ...prevGuest, titleId]));
+        const next = Array.from(new Set([...prevGuest, titleId]));
 
-        setStoredGuestTitles(next);
         guestDataPersistence.saveData('titles', next);
 
-        const equippedNow =
-          guestData?.equipped_title || getStoredGuestEquippedTitle() || '';
-
+        const equippedNow = guestData?.equipped_title || '';
         if (!equippedNow) {
-          setStoredGuestEquippedTitle(titleId);
           guestDataPersistence.saveData('equipped_title', titleId);
         }
 
@@ -669,8 +638,6 @@ export default function Home() {
         queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
 
         window.dispatchEvent(new Event('root-home-data-updated'));
-        window.dispatchEvent(new Event('storage'));
-
         setGuestVersion((v) => v + 1);
 
         return next;
@@ -707,7 +674,6 @@ export default function Home() {
 
     if (isGuest) {
       try {
-        setStoredGuestEquippedTitle(title.id);
         guestDataPersistence.saveData('equipped_title', title.id);
 
         queryClient.removeQueries({ queryKey: ['guest-home-data'] });
@@ -718,7 +684,6 @@ export default function Home() {
 
         setNewTitle(null);
         window.dispatchEvent(new Event('root-home-data-updated'));
-        window.dispatchEvent(new Event('storage'));
 
         toast.success(`대표 칭호가 "${title.name}"(으)로 설정되었어요.`);
         return;
@@ -831,16 +796,11 @@ export default function Home() {
 
       const nextStats = buildDerivedStats(nextLogs, nextActionGoals);
 
-      const mergedOwnedTitleIds = isGuest
-        ? Array.from(
-            new Set([
-              ...(Array.isArray(guestData?.titles) ? guestData.titles : []),
-              ...getStoredGuestTitles(),
-            ])
-          )
+      const currentOwnedTitleIds = isGuest
+        ? (Array.isArray(guestData?.titles) ? guestData.titles : [])
         : (Array.isArray(user?.titles) ? user.titles : []);
 
-      const newlyUnlocked = getNewlyUnlockedTitle(nextStats, mergedOwnedTitleIds);
+      const newlyUnlocked = getNewlyUnlockedTitle(nextStats, currentOwnedTitleIds);
 
       if (newlyUnlocked) {
         await persistNewTitle(newlyUnlocked.id);
@@ -853,7 +813,6 @@ export default function Home() {
         queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
 
         window.dispatchEvent(new Event('root-home-data-updated'));
-        window.dispatchEvent(new Event('storage'));
       }
 
       if (actionGoal.action_type === 'one_time') {
