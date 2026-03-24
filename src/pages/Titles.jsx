@@ -40,13 +40,17 @@ const CATEGORY_LABELS = {
 const GUEST_TITLES_KEY = 'root_guest_titles';
 const GUEST_EQUIPPED_TITLE_KEY = 'root_guest_equipped_title';
 
-function getGuestTitlesFromLocal() {
+function safeParseArray(raw) {
   try {
-    const parsed = JSON.parse(localStorage.getItem(GUEST_TITLES_KEY) || '[]');
+    const parsed = JSON.parse(raw || '[]');
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
+}
+
+function getGuestTitlesFromLocal() {
+  return safeParseArray(localStorage.getItem(GUEST_TITLES_KEY));
 }
 
 function getGuestEquippedFromLocal() {
@@ -81,23 +85,29 @@ export default function Titles() {
     return Array.from(new Set([...fromGuestData, ...fromLocal]));
   }, [guestData, guestVersion]);
 
-  // 핵심: 로컬 게스트 칭호가 하나라도 있으면 그걸 최우선으로 사용
+  const hasGuestTitles = localGuestTitles.length > 0;
+
   const ownedTitles = useMemo(() => {
-    if (localGuestTitles.length > 0) return localGuestTitles;
+    if (hasGuestTitles) return localGuestTitles;
     return Array.isArray(user?.titles) ? user.titles : [];
-  }, [localGuestTitles, user]);
+  }, [hasGuestTitles, localGuestTitles, user]);
 
   const equippedTitleId = useMemo(() => {
     const localEquipped = guestData?.equipped_title || getGuestEquippedFromLocal();
-    if (localGuestTitles.length > 0) return localEquipped;
+    if (hasGuestTitles) return localEquipped;
     return user?.equipped_title || localEquipped || '';
-  }, [guestData, guestVersion, localGuestTitles, user]);
+  }, [guestData, guestVersion, hasGuestTitles, user]);
 
   const handleEquip = async (title) => {
-    // 로컬 게스트 칭호가 있으면 무조건 로컬 장착으로 처리
-    if (localGuestTitles.length > 0) {
+    if (hasGuestTitles) {
       localStorage.setItem(GUEST_EQUIPPED_TITLE_KEY, title.id);
       guestDataPersistence.saveData('equipped_title', title.id);
+
+      queryClient.removeQueries({ queryKey: ['guest-home-data'] });
+      queryClient.removeQueries({ queryKey: ['guest-records-data'] });
+      queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
+      queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
+
       window.dispatchEvent(new Event('root-home-data-updated'));
       toast.success(`"${title.name}" 장착`);
       return;
@@ -122,8 +132,8 @@ export default function Titles() {
       daily: [],
     };
 
-    TITLES.forEach((t) => {
-      map[t.category].push(t);
+    TITLES.forEach((title) => {
+      map[title.category].push(title);
     });
 
     return map;
