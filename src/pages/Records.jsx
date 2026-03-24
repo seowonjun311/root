@@ -56,6 +56,8 @@ const { data: guestData = {} } = useQuery({
   });
 
   const { data: actionGoals = [] } = useQuery({
+  const logs = Array.isArray(guestData?.actionLogs) ? guestData.actionLogs : [];
+   const sourceGoals = Array.isArray(guestData?.goals) ? guestData.goals : goals;
     queryKey: ['actionGoalsAll'],
     queryFn: () => base44.entities.ActionGoal.list('-created_date', 200),
   });
@@ -65,7 +67,11 @@ const { data: guestData = {} } = useQuery({
   const totalHours = Math.round(totalMinutes / 60);
   const totalSessions = filteredLogs.length;
   const totalDistance = Math.round(filteredLogs.reduce((sum, l) => sum + (l.gps_enabled && l.distance_km ? l.distance_km : 0), 0) * 10) / 10;
-  const completedGoalsList = goals.filter(g => (g.status === 'completed' || g.status === 'failed') && (catFilter === 'all' || g.category === catFilter));
+  const completedGoalsList = sourceGoals.filter(
+  (g) =>
+    (g.status === 'completed' || g.status === 'failed') &&
+    (catFilter === 'all' || g.category === catFilter)
+);
   const guestTitles = Array.isArray(guestData?.titles)
   ? guestData.titles
   : [];
@@ -431,7 +437,7 @@ const filteredBadges =
         <TabsContent value="timeline" className="mt-4 space-y-3 pb-4">
           <CategoryFilter value={catFilter} onChange={setCatFilter} />
           {goals.filter(g => g.status === 'completed' && g.achievement_success && (catFilter === 'all' || g.category === catFilter)).map(g => {
-            const relBadge = badges.find(b => b.goal_id === g.id);
+          const relBadge = null;
             return (
               <div key={`goal-${g.id}`} className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300/60">
                 <div className="flex items-center gap-2 mb-1">
