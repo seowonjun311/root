@@ -40,7 +40,7 @@ const CATEGORY_LABELS = {
 const GUEST_TITLES_KEY = 'root_guest_titles';
 const GUEST_EQUIPPED_TITLE_KEY = 'root_guest_equipped_title';
 
-function getGuestTitles() {
+function getGuestTitlesFromLocal() {
   try {
     return JSON.parse(localStorage.getItem(GUEST_TITLES_KEY) || '[]');
   } catch {
@@ -48,7 +48,7 @@ function getGuestTitles() {
   }
 }
 
-function getGuestEquipped() {
+function getGuestEquippedFromLocal() {
   return localStorage.getItem(GUEST_EQUIPPED_TITLE_KEY) || '';
 }
 
@@ -62,9 +62,10 @@ export default function Titles() {
     return () => window.removeEventListener('root-home-data-updated', handle);
   }, []);
 
-  const { data: user } = useQuery({
+  const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: ['me'],
     queryFn: () => base44.auth.me().catch(() => null),
+    staleTime: 0,
   });
 
   const isGuest = !user;
@@ -72,22 +73,27 @@ export default function Titles() {
   const { data: guestData = {} } = useQuery({
     queryKey: ['guest-home-data', guestVersion],
     queryFn: () => guestDataPersistence.loadOnboardingData(),
+    enabled: !isUserLoading,
+    staleTime: 0,
   });
 
   const ownedTitles = useMemo(() => {
-    if (!isGuest) return user?.titles || [];
+    if (!isGuest) {
+      return Array.isArray(user?.titles) ? user.titles : [];
+    }
 
     const fromGuestData = Array.isArray(guestData?.titles) ? guestData.titles : [];
-    const fromLocal = getGuestTitles();
+    const fromLocal = getGuestTitlesFromLocal();
 
     return Array.from(new Set([...fromGuestData, ...fromLocal]));
   }, [isGuest, user, guestData, guestVersion]);
 
   const equippedTitleId = useMemo(() => {
-    if (isGuest) {
-      return guestData?.equipped_title || getGuestEquipped();
+    if (!isGuest) {
+      return user?.equipped_title || '';
     }
-    return user?.equipped_title || '';
+
+    return guestData?.equipped_title || getGuestEquippedFromLocal();
   }, [isGuest, user, guestData, guestVersion]);
 
   const handleEquip = async (title) => {
@@ -99,9 +105,14 @@ export default function Titles() {
       return;
     }
 
-    await base44.auth.updateMe({ equipped_title: title.id });
-    queryClient.invalidateQueries({ queryKey: ['me'] });
-    toast.success(`"${title.name}" 장착`);
+    try {
+      await base44.auth.updateMe({ equipped_title: title.id });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+      toast.success(`"${title.name}" 장착`);
+    } catch (error) {
+      console.error(error);
+      toast.error('칭호 장착에 실패했어요.');
+    }
   };
 
   const grouped = useMemo(() => {
@@ -126,6 +137,9 @@ export default function Titles() {
         <div className="text-sm mb-2 font-bold">대표 칭호</div>
         <div className="text-lg font-extrabold">
           {TITLES.find((t) => t.id === equippedTitleId)?.name || '없음'}
+        </div>
+        <div className="text-xs text-gray-500 mt-2">
+          보유 칭호 {ownedTitles.length}개
         </div>
       </div>
 
