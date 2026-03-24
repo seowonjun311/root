@@ -330,6 +330,14 @@ export default function Records() {
     ]);
   });
 
+  const { data: user } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => base44.auth.me().catch(() => null),
+    staleTime: 0,
+  });
+
+  const isGuest = !user;
+
   const { data: guestData = {} } = useQuery({
     queryKey: ['guest-records-data', guestVersion],
     queryFn: () => guestDataPersistence.loadOnboardingData(),
@@ -354,18 +362,11 @@ export default function Records() {
   const guestLogs = Array.isArray(guestData?.actionLogs) ? guestData.actionLogs : [];
   const guestGoals = Array.isArray(guestData?.goals) ? guestData.goals : [];
   const guestActionGoals = Array.isArray(guestData?.actionGoals) ? guestData.actionGoals : [];
+  const guestTitles = Array.isArray(guestData?.titles) ? guestData.titles : [];
 
-  const guestTitles = useMemo(() => {
-    const fromGuestData = Array.isArray(guestData?.titles) ? guestData.titles : [];
-    const fromLocal = safeParseArray(localStorage.getItem('root_guest_titles'), []);
-    return Array.from(new Set([...fromGuestData, ...fromLocal]));
-  }, [guestData, guestVersion]);
-
-  const hasGuestTitles = guestTitles.length > 0;
-
-  const logs = guestLogs.length > 0 ? guestLogs : logsFromServer;
-  const goals = guestGoals.length > 0 ? guestGoals : goalsFromServer;
-  const actionGoals = guestActionGoals.length > 0 ? guestActionGoals : actionGoalsFromServer;
+  const logs = isGuest ? guestLogs : logsFromServer;
+  const goals = isGuest ? guestGoals : goalsFromServer;
+  const actionGoals = isGuest ? guestActionGoals : actionGoalsFromServer;
 
   const filteredLogs =
     catFilter === 'all' ? logs : logs.filter((l) => l.category === catFilter);
@@ -390,23 +391,30 @@ export default function Records() {
       (catFilter === 'all' || g.category === catFilter)
   );
 
-  const guestBadges = useMemo(() => {
-    if (!hasGuestTitles) return [];
-    return guestTitles.map((id) => ({
-      id,
-      earned_date: '',
-      ...(TITLE_META_MAP[id] || {
-        title: id,
-        description: '',
-        category: 'special',
-      }),
-    }));
-  }, [guestTitles, hasGuestTitles]);
+  const badges = isGuest
+    ? guestTitles.map((id) => ({
+        id,
+        earned_date: '',
+        ...(TITLE_META_MAP[id] || {
+          title: id,
+          description: '',
+          category: 'special',
+        }),
+      }))
+    : (Array.isArray(user?.titles) ? user.titles : []).map((id) => ({
+        id,
+        earned_date: '',
+        ...(TITLE_META_MAP[id] || {
+          title: id,
+          description: '',
+          category: 'special',
+        }),
+      }));
 
   const filteredBadges =
     catFilter === 'all'
-      ? guestBadges
-      : guestBadges.filter((b) => b.category === catFilter);
+      ? badges
+      : badges.filter((b) => b.category === catFilter);
 
   const catBreakdown = Object.entries(
     logs.reduce((acc, l) => {
