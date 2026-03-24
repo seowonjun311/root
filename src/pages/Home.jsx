@@ -626,6 +626,11 @@ export default function Home() {
 
         guestDataPersistence.saveData('titles', next);
 
+// 🔥 핵심 추가 (이거 한 줄이 문제 해결)
+if (!guestData?.equipped_title) {
+  guestDataPersistence.saveData('equipped_title', titleId);
+}
+
         const equippedNow = guestData?.equipped_title || '';
         if (!equippedNow) {
           guestDataPersistence.saveData('equipped_title', titleId);
