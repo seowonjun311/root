@@ -50,6 +50,46 @@ const TITLES = [
   { id: 'daily_004', name: '삶을 다듬는 자', description: '일상 행동목표 200회 달성', metric: 'total_daily_count', value: 200, category: 'daily' },
 ];
 
+function readGuestData() {
+  try {
+    if (typeof guestDataPersistence?.getData === 'function') {
+      return guestDataPersistence.getData() || {};
+    }
+    if (typeof guestDataPersistence?.loadOnboardingData === 'function') {
+      return guestDataPersistence.loadOnboardingData() || {};
+    }
+    return {};
+  } catch (error) {
+    console.error('readGuestData error:', error);
+    return {};
+  }
+}
+
+function writeGuestDataPatch(patchOrUpdater) {
+  try {
+    if (typeof guestDataPersistence?.updateData === 'function') {
+      return guestDataPersistence.updateData(patchOrUpdater);
+    }
+
+    const prev = readGuestData();
+    const next =
+      typeof patchOrUpdater === 'function'
+        ? patchOrUpdater(prev)
+        : { ...prev, ...(patchOrUpdater || {}) };
+
+    Object.entries(next || {}).forEach(([key, value]) => {
+      if (typeof guestDataPersistence?.saveData === 'function') {
+        guestDataPersistence.saveData(key, value);
+      }
+    });
+
+    return next;
+  } catch (error) {
+    console.error('writeGuestDataPatch error:', error);
+    return readGuestData();
+  }
+}
+
 function getTodayString() {
   return new Date().toISOString().split('T')[0];
 }
@@ -458,7 +498,7 @@ export default function Home() {
 
   const { data: guestData = {} } = useQuery({
     queryKey: ['guest-home-data', guestVersion],
-    queryFn: () => guestDataPersistence.loadOnboardingData(),
+    queryFn: () => readGuestData(),
     staleTime: 0,
   });
 
@@ -512,12 +552,33 @@ export default function Home() {
   }, [derivedStats, ownedTitleIds]);
 
   const equippedTitle = useMemo(() => {
+    const fallbackId = ownedTitleIds[0] || '';
     const equippedId = isGuest
-      ? (guestData?.equipped_title || '')
-      : (user?.equipped_title || '');
+      ? (guestData?.equipped_title || fallbackId)
+      : (user?.equipped_title || fallbackId);
 
     return unlockedTitles.find((title) => title.id === equippedId) || null;
-  }, [isGuest, user, guestData, unlockedTitles, guestVersion]);
+  }, [isGuest, user, guestData, unlockedTitles, guestVersion, ownedTitleIds]);
+
+  useEffect(() => {
+    if (!isGuest) return;
+    if (!ownedTitleIds.length) return;
+
+    const currentEquipped = guestData?.equipped_title || '';
+    if (currentEquipped && ownedTitleIds.includes(currentEquipped)) return;
+
+    writeGuestDataPatch((prev) => ({
+      ...prev,
+      equipped_title: ownedTitleIds[0] || '',
+    }));
+
+    queryClient.removeQueries({ queryKey: ['guest-home-data'] });
+    queryClient.removeQueries({ queryKey: ['guest-records-data'] });
+    queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
+    queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
+    window.dispatchEvent(new Event('root-home-data-updated'));
+    setGuestVersion((v) => v + 1);
+  }, [isGuest, ownedTitleIds, guestData, queryClient]);
 
   useEffect(() => {
     if (isUserLoading) return;
@@ -542,7 +603,10 @@ export default function Home() {
     setActiveCategory(category);
 
     if (isGuest) {
-      guestDataPersistence.saveData('guest_active_category', category);
+      writeGuestDataPatch((prev) => ({
+        ...prev,
+        guest_active_category: category,
+      }));
       window.dispatchEvent(new Event('root-home-data-updated'));
       return;
     }
@@ -619,33 +683,34 @@ export default function Home() {
   };
 
   const persistNewTitle = async (titleId) => {
+    if (!titleId) return null;
+
     if (isGuest) {
       try {
-        const prevGuest = Array.isArray(guestData?.titles) ? guestData.titles : [];
-        const next = Array.from(new Set([...prevGuest, titleId]));
+        const latestGuest = readGuestData();
+        const prevTitles = Array.isArray(latestGuest?.titles) ? latestGuest.titles : [];
+        const nextTitles = Array.from(new Set([...prevTitles, titleId]));
 
-        guestDataPersistence.saveData('titles', next);
+        const nextEquipped =
+          latestGuest?.equipped_title && nextTitles.includes(latestGuest.equipped_title)
+            ? latestGuest.equipped_title
+            : nextTitles[0] || '';
 
-// 🔥 핵심 추가 (이거 한 줄이 문제 해결)
-if (!guestData?.equipped_title) {
-  guestDataPersistence.saveData('equipped_title', titleId);
-}
-
-        const equippedNow = guestData?.equipped_title || '';
-        if (!equippedNow) {
-          guestDataPersistence.saveData('equipped_title', titleId);
-        }
+        const nextGuest = writeGuestDataPatch((prev) => ({
+          ...prev,
+          titles: nextTitles,
+          equipped_title: nextEquipped,
+        }));
 
         queryClient.removeQueries({ queryKey: ['guest-home-data'] });
         queryClient.removeQueries({ queryKey: ['guest-records-data'] });
-
         queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
         queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
 
         window.dispatchEvent(new Event('root-home-data-updated'));
         setGuestVersion((v) => v + 1);
 
-        return next;
+        return nextGuest?.titles || nextTitles;
       } catch (error) {
         console.error('persistNewTitle guest error:', error);
         return null;
@@ -655,12 +720,13 @@ if (!guestData?.equipped_title) {
     try {
       const currentTitles = Array.isArray(user?.titles) ? user.titles : [];
       const nextTitles = Array.from(new Set([...currentTitles, titleId]));
-
-      await base44.auth.updateMe({ titles: nextTitles });
+      const payload = { titles: nextTitles };
 
       if (!user?.equipped_title) {
-        await base44.auth.updateMe({ equipped_title: titleId });
+        payload.equipped_title = titleId;
       }
+
+      await base44.auth.updateMe(payload);
 
       queryClient.removeQueries({ queryKey: ['me'] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
@@ -679,15 +745,31 @@ if (!guestData?.equipped_title) {
 
     if (isGuest) {
       try {
-        guestDataPersistence.saveData('equipped_title', title.id);
+        writeGuestDataPatch((prev) => {
+          const prevTitles = Array.isArray(prev?.titles) ? prev.titles : [];
+
+          if (!prevTitles.includes(title.id)) {
+            return {
+              ...prev,
+              titles: prevTitles,
+              equipped_title: prevTitles[0] || '',
+            };
+          }
+
+          return {
+            ...prev,
+            titles: prevTitles,
+            equipped_title: title.id,
+          };
+        });
 
         queryClient.removeQueries({ queryKey: ['guest-home-data'] });
         queryClient.removeQueries({ queryKey: ['guest-records-data'] });
-
         queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
         queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
 
         setNewTitle(null);
+        setGuestVersion((v) => v + 1);
         window.dispatchEvent(new Event('root-home-data-updated'));
 
         toast.success(`대표 칭호가 "${title.name}"(으)로 설정되었어요.`);
