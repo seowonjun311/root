@@ -32,10 +32,12 @@ export default function Records() {
     ]);
   });
 
-  const { data: logs = [] } = useQuery({
-    queryKey: ['allLogs'],
-    queryFn: () => base44.entities.ActionLog.list('-date', 500),
-  });
+  import { guestDataPersistence } from '@/lib/GuestDataPersistence';
+
+const { data: guestData = {} } = useQuery({
+  queryKey: ['guest-home-data'],
+  queryFn: () => guestDataPersistence.loadOnboardingData(),
+});
 
   const { data: goals = [] } = useQuery({
     queryKey: ['allGoals'],
@@ -58,7 +60,14 @@ export default function Records() {
   const totalSessions = filteredLogs.length;
   const totalDistance = Math.round(filteredLogs.reduce((sum, l) => sum + (l.gps_enabled && l.distance_km ? l.distance_km : 0), 0) * 10) / 10;
   const completedGoalsList = goals.filter(g => (g.status === 'completed' || g.status === 'failed') && (catFilter === 'all' || g.category === catFilter));
-  const filteredBadges = catFilter === 'all' ? badges : badges.filter(b => b.category === catFilter);
+  const guestTitles = Array.isArray(guestData?.titles)
+  ? guestData.titles
+  : [];
+
+const filteredBadges =
+  catFilter === 'all'
+    ? guestTitles
+    : guestTitles.filter((t) => t.startsWith(catFilter));
 
   const catBreakdown = Object.entries(
     logs.reduce((acc, l) => {
