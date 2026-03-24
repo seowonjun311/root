@@ -249,4 +249,8 @@ const guestDataPersistence = {
   },
 };
 
+export const guestDataPersistence = {
+  // 기존 내용 그대로
+};
+
 export default guestDataPersistence;
