@@ -167,8 +167,6 @@ const titleMetaMap = {
   },
 };
 
-const guestTitles = Array.isArray(guestData?.titles) ? guestData.titles : [];
-
 const guestBadges = guestTitles.map((id) => ({
   id,
   earned_date: '',
