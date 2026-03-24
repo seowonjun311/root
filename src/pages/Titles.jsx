@@ -69,9 +69,26 @@ export default function Titles() {
   }, [isGuest, guestData, user, guestVersion]);
 
   const equippedTitleId = useMemo(() => {
-    if (isGuest) return guestData?.equipped_title || '';
-    return user?.equipped_title || '';
-  }, [isGuest, user, guestData, guestVersion]);
+    if (isGuest) {
+      return guestData?.equipped_title || ownedTitles[0] || '';
+    }
+    return user?.equipped_title || ownedTitles[0] || '';
+  }, [isGuest, user, guestData, guestVersion, ownedTitles]);
+
+  // 명예의 전당 보정:
+  // 칭호는 있는데 대표 칭호가 비어 있으면 첫 칭호를 자동 대표 칭호로 저장
+  useEffect(() => {
+    if (!isGuest) return;
+    if (!ownedTitles.length) return;
+    if (guestData?.equipped_title) return;
+
+    guestDataPersistence.saveData('equipped_title', ownedTitles[0]);
+    queryClient.removeQueries({ queryKey: ['guest-home-data'] });
+    queryClient.removeQueries({ queryKey: ['guest-records-data'] });
+    queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
+    queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
+    window.dispatchEvent(new Event('root-home-data-updated'));
+  }, [isGuest, ownedTitles, guestData, queryClient]);
 
   const handleEquip = async (title) => {
     if (isGuest) {
@@ -113,13 +130,20 @@ export default function Titles() {
     return map;
   }, []);
 
+  const equippedTitle = TITLES.find((t) => t.id === equippedTitleId) || null;
+
   return (
     <div className="min-h-full px-4 py-4 space-y-6">
       <div className="rounded-2xl p-4 bg-yellow-50 border">
-        <div className="text-sm mb-2 font-bold">대표 칭호</div>
+        <div className="text-sm mb-2 font-bold">명예의 전당</div>
         <div className="text-lg font-extrabold">
-          {TITLES.find((t) => t.id === equippedTitleId)?.name || '없음'}
+          {equippedTitle?.name || '없음'}
         </div>
+        {equippedTitle?.description ? (
+          <div className="text-xs text-gray-600 mt-1">
+            {equippedTitle.description}
+          </div>
+        ) : null}
         <div className="text-xs text-gray-500 mt-2">
           보유 칭호 {ownedTitles.length}개
         </div>
