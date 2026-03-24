@@ -42,7 +42,8 @@ const GUEST_EQUIPPED_TITLE_KEY = 'root_guest_equipped_title';
 
 function getGuestTitlesFromLocal() {
   try {
-    return JSON.parse(localStorage.getItem(GUEST_TITLES_KEY) || '[]');
+    const parsed = JSON.parse(localStorage.getItem(GUEST_TITLES_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
@@ -62,42 +63,39 @@ export default function Titles() {
     return () => window.removeEventListener('root-home-data-updated', handle);
   }, []);
 
-  const { data: user, isLoading: isUserLoading } = useQuery({
+  const { data: user } = useQuery({
     queryKey: ['me'],
     queryFn: () => base44.auth.me().catch(() => null),
     staleTime: 0,
   });
 
-  const isGuest = !user;
-
   const { data: guestData = {} } = useQuery({
     queryKey: ['guest-home-data', guestVersion],
     queryFn: () => guestDataPersistence.loadOnboardingData(),
-    enabled: !isUserLoading,
     staleTime: 0,
   });
 
-  const ownedTitles = useMemo(() => {
-    if (!isGuest) {
-      return Array.isArray(user?.titles) ? user.titles : [];
-    }
-
+  const localGuestTitles = useMemo(() => {
     const fromGuestData = Array.isArray(guestData?.titles) ? guestData.titles : [];
     const fromLocal = getGuestTitlesFromLocal();
-
     return Array.from(new Set([...fromGuestData, ...fromLocal]));
-  }, [isGuest, user, guestData, guestVersion]);
+  }, [guestData, guestVersion]);
+
+  // 핵심: 로컬 게스트 칭호가 하나라도 있으면 그걸 최우선으로 사용
+  const ownedTitles = useMemo(() => {
+    if (localGuestTitles.length > 0) return localGuestTitles;
+    return Array.isArray(user?.titles) ? user.titles : [];
+  }, [localGuestTitles, user]);
 
   const equippedTitleId = useMemo(() => {
-    if (!isGuest) {
-      return user?.equipped_title || '';
-    }
-
-    return guestData?.equipped_title || getGuestEquippedFromLocal();
-  }, [isGuest, user, guestData, guestVersion]);
+    const localEquipped = guestData?.equipped_title || getGuestEquippedFromLocal();
+    if (localGuestTitles.length > 0) return localEquipped;
+    return user?.equipped_title || localEquipped || '';
+  }, [guestData, guestVersion, localGuestTitles, user]);
 
   const handleEquip = async (title) => {
-    if (isGuest) {
+    // 로컬 게스트 칭호가 있으면 무조건 로컬 장착으로 처리
+    if (localGuestTitles.length > 0) {
       localStorage.setItem(GUEST_EQUIPPED_TITLE_KEY, title.id);
       guestDataPersistence.saveData('equipped_title', title.id);
       window.dispatchEvent(new Event('root-home-data-updated'));
