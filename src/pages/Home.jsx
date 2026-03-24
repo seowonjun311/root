@@ -633,6 +633,7 @@ export default function Home() {
       const prev = getStoredGuestTitles();
       const next = Array.from(new Set([...prev, titleId]));
       setStoredGuestTitles(next);
+          guestDataPersistence.saveData('titles', next);
       window.dispatchEvent(new Event('root-home-data-updated'));
       return;
     }
