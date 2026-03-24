@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Play, Square, Check, X, Pencil, Trash2 } from 'lucide-react';
+import { Play, Square, Check, X, Pencil, Trash2, Image as ImageIcon, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Drawer,
@@ -213,6 +213,7 @@ export default function ActionGoalCard({
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showGpsDialog, setShowGpsDialog] = useState(false);
+  const [showPhotoConfirm, setShowPhotoConfirm] = useState(false);
 
   const [editTitle, setEditTitle] = useState(actionGoal.title || '');
   const [editFrequency, setEditFrequency] = useState(actionGoal.weekly_frequency || 5);
@@ -231,6 +232,8 @@ export default function ActionGoalCard({
   const intervalRef = useRef(null);
   const cardRef = useRef(null);
   const watchIdRef = useRef(null);
+  const galleryInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const { data: user } = useQuery({
     queryKey: ['me'],
@@ -258,7 +261,6 @@ export default function ActionGoalCard({
     : Math.min(100, Math.round((weeklyCount / Math.max(1, targetFreq)) * 100));
 
   const detailLogs = Array.isArray(allLogs) && allLogs.length > 0 ? allLogs : weeklyLogs;
-
   const [isRunning, setIsRunning] = useState(() => !!localStorage.getItem(TIMER_KEY(actionGoal.id)));
 
   useEffect(() => {
@@ -438,9 +440,32 @@ export default function ActionGoalCard({
     }
   };
 
-  const handleConfirm = () => {
+  const reallyCompleteConfirm = (photoInfo = null) => {
     if (isOneTime) {
-      onComplete(actionGoal, 0, { gpsEnabled: false });
+      onComplete(actionGoal, 0, {
+        gpsEnabled: false,
+        photo: photoInfo,
+      });
+      setShowPhotoConfirm(false);
+      return;
+    }
+
+    if (doneToday) {
+      toast.error('오늘 이미 완료했어요. 내일 다시 도전해 주세요! 💪');
+      setShowPhotoConfirm(false);
+      return;
+    }
+
+    onComplete(actionGoal, actionGoal.duration_minutes || 0, {
+      gpsEnabled: false,
+      photo: photoInfo,
+    });
+    setShowPhotoConfirm(false);
+  };
+
+  const handleConfirm = () => {
+    if (actionGoal.action_type === 'confirm' || actionGoal.action_type === 'abstain' || isOneTime) {
+      setShowPhotoConfirm(true);
       return;
     }
 
@@ -450,6 +475,20 @@ export default function ActionGoalCard({
     }
 
     onComplete(actionGoal, actionGoal.duration_minutes || 0, { gpsEnabled: false });
+  };
+
+  const handlePhotoSelected = (e, source) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    reallyCompleteConfirm({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      source,
+    });
+
+    e.target.value = '';
   };
 
   const handleEditOpen = () => {
@@ -516,6 +555,23 @@ export default function ActionGoalCard({
 
   return (
     <>
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => handlePhotoSelected(e, 'gallery')}
+      />
+
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => handlePhotoSelected(e, 'camera')}
+      />
+
       <div ref={cardRef} className="relative">
         <div
           onClick={() => setShowCalendar((prev) => !prev)}
@@ -742,6 +798,57 @@ export default function ActionGoalCard({
           {showCalendar && <MonthCalendar logs={detailLogs} onClose={() => setShowCalendar(false)} />}
         </AnimatePresence>
       </div>
+
+      <Drawer open={showPhotoConfirm} onOpenChange={setShowPhotoConfirm}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>기록을 어떻게 남길까요?</DrawerTitle>
+          </DrawerHeader>
+
+          <div className="px-4 pb-2 space-y-2">
+            <button
+              onClick={() => galleryInputRef.current?.click()}
+              className="w-full flex items-center gap-3 p-4 rounded-xl text-left"
+              style={{ background: '#f8f1df' }}
+            >
+              <ImageIcon className="w-5 h-5 text-amber-700" />
+              <div>
+                <div className="text-sm font-bold">사진 저장 갤러리</div>
+                <div className="text-xs text-muted-foreground">앨범에서 사진 선택</div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => cameraInputRef.current?.click()}
+              className="w-full flex items-center gap-3 p-4 rounded-xl text-left"
+              style={{ background: '#f8f1df' }}
+            >
+              <Camera className="w-5 h-5 text-amber-700" />
+              <div>
+                <div className="text-sm font-bold">사진 찍기</div>
+                <div className="text-xs text-muted-foreground">지금 바로 촬영해서 저장</div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => reallyCompleteConfirm(null)}
+              className="w-full flex items-center justify-center p-4 rounded-xl text-sm font-bold"
+              style={{
+                background: '#8b5a20',
+                color: '#fff',
+              }}
+            >
+              사진 없이 저장
+            </button>
+          </div>
+
+          <DrawerFooter className="pt-2">
+            <Button variant="outline" onClick={() => setShowPhotoConfirm(false)} className="rounded-xl">
+              취소
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       <Drawer open={showMenu} onOpenChange={setShowMenu}>
         <DrawerContent>
