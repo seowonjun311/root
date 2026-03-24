@@ -249,7 +249,7 @@ const guestDataPersistence = {
   },
 };
 
-export const guestDataPersistence = {
+const guestDataPersistence = {
   // 기존 내용 그대로
 };
 
