@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { guestDataPersistence } from '@/lib/GuestDataPersistence';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BarChart3, Clock, Target, Flame, RefreshCw } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import GPSMapPreview from '@/components/home/GPSMapPreview';
 import ImageWithBlurUp from '@/components/ImageWithBlurUp';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
@@ -123,6 +122,186 @@ const TITLE_META_MAP = {
   },
 };
 
+function safeParseArray(value, fallback = []) {
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function CategoryFilter({ value, onChange }) {
+  const items = [
+    { id: 'all', label: '전체', emoji: '✨' },
+    { id: 'exercise', label: '운동', emoji: '🏃' },
+    { id: 'study', label: '공부', emoji: '📚' },
+    { id: 'mental', label: '정신', emoji: '🧘' },
+    { id: 'daily', label: '일상', emoji: '🏠' },
+  ];
+
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-1">
+      {items.map((item) => {
+        const active = value === item.id;
+        return (
+          <button
+            key={item.id}
+            onClick={() => onChange(item.id)}
+            className={`shrink-0 px-3 py-2 rounded-xl text-sm font-semibold border transition ${
+              active
+                ? 'bg-amber-500 text-white border-amber-500'
+                : 'bg-white text-amber-900 border-amber-200'
+            }`}
+          >
+            <span className="mr-1">{item.emoji}</span>
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, onClick, clickable = false }) {
+  return (
+    <button
+      type="button"
+      className={`text-left p-4 rounded-2xl bg-card border border-border/60 shadow-sm ${
+        clickable
+          ? 'cursor-pointer hover:border-amber-400 hover:bg-amber-50/50 active:bg-amber-100/80 active:scale-[0.98] transition-all'
+          : ''
+      }`}
+      onClick={onClick}
+    >
+      <div className="mb-2">{icon}</div>
+      <p className="text-[0.75rem] text-muted-foreground">{label}</p>
+      <p className="text-[1.25rem] font-bold text-amber-900">{value}</p>
+      {clickable ? <p className="text-[0.625rem] text-amber-500 mt-1">탭하여 보기 →</p> : null}
+    </button>
+  );
+}
+
+function TimelineLogItem({ log, ag, onSelectPhoto }) {
+  const { containerRef, isVisible, onLoad } = useLazyLoadImage('1');
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
+      <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+      <div className="flex-1 min-w-0">
+        <p className="text-[0.875rem] font-semibold truncate">{ag?.title || log.title || log.date}</p>
+        <p className="text-[0.75rem] text-muted-foreground">
+          {log.date}
+          {Number(log.duration_minutes) > 0 ? ` · ${log.duration_minutes}분` : ''}
+        </p>
+        {log.memo ? (
+          <p className="text-[0.75rem] text-muted-foreground italic">"{log.memo}"</p>
+        ) : null}
+      </div>
+
+      {log.photo_url ? (
+        <button
+          ref={containerRef}
+          onClick={() => onSelectPhoto(log)}
+          className="shrink-0 active:opacity-70 rounded-lg w-12 h-12 flex items-center justify-center overflow-hidden"
+        >
+          {isVisible ? (
+            <ImageWithBlurUp
+              src={log.photo_url}
+              alt="수련 사진"
+              containerClassName="w-12 h-12"
+              className="w-12 h-12 rounded-lg object-cover"
+              onLoad={onLoad}
+            />
+          ) : null}
+        </button>
+      ) : null}
+
+      <span className="text-xs px-2 py-1 rounded-lg bg-amber-100/80 text-amber-700 shrink-0">
+        {CAT_LABELS[log.category] || '기타'}
+      </span>
+    </div>
+  );
+}
+
+function AlbumPhotoItem({ log, onSelectPhoto }) {
+  const { containerRef, isVisible, onLoad } = useLazyLoadImage('1');
+
+  return (
+    <button
+      ref={containerRef}
+      onClick={() => onSelectPhoto(log)}
+      className="aspect-square rounded-xl overflow-hidden relative group active:opacity-80 transition-opacity flex items-center justify-center"
+      aria-label={`${log.date} 사진 보기`}
+    >
+      {isVisible ? (
+        <>
+          <ImageWithBlurUp
+            src={log.photo_url}
+            alt={log.date}
+            containerClassName="w-full h-full"
+            className="w-full h-full object-cover"
+            onLoad={onLoad}
+          />
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
+            <span className="text-[10px] text-white font-semibold">{log.date}</span>
+          </div>
+        </>
+      ) : null}
+      <span className="absolute top-1 right-1 text-sm" aria-hidden="true">
+        {CAT_EMOJIS[log.category] || '✨'}
+      </span>
+    </button>
+  );
+}
+
+function AlbumTab({ logs, goals, catFilter, onCatFilterChange, onSelectPhoto }) {
+  const filteredLogs = (catFilter === 'all'
+    ? logs
+    : logs.filter((l) => l.category === catFilter)
+  ).filter((l) => l.photo_url);
+
+  const completedGoals = (catFilter === 'all'
+    ? goals
+    : goals.filter((g) => g.category === catFilter)
+  ).filter((g) => g.status === 'completed' && g.achievement_success);
+
+  return (
+    <div className="space-y-4">
+      <CategoryFilter value={catFilter} onChange={onCatFilterChange} />
+
+      {completedGoals.length > 0 ? (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-amber-100/70 border border-amber-200">
+          <h3 className="text-sm font-bold text-amber-900 mb-2">🏆 달성한 목표</h3>
+          <div className="space-y-2">
+            {completedGoals.map((goal) => (
+              <div key={goal.id} className="rounded-xl bg-white/70 border border-amber-200 px-3 py-2">
+                <p className="text-sm font-semibold text-amber-900">{goal.title}</p>
+                <p className="text-xs text-muted-foreground">
+                  {goal.end_date || goal.updated_date?.split('T')[0] || '기록됨'}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {filteredLogs.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <p className="text-[1.875rem] mb-3">🖼️</p>
+          <p>아직 저장된 사진이 없어요.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-2">
+          {filteredLogs.map((log) => (
+            <AlbumPhotoItem key={log.id} log={log} onSelectPhoto={onSelectPhoto} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Records() {
   const [catFilter, setCatFilter] = useState('all');
   const [showCompletedGoals, setShowCompletedGoals] = useState(false);
@@ -152,38 +331,33 @@ export default function Records() {
   const { data: guestData = {} } = useQuery({
     queryKey: ['guest-records-data', guestVersion],
     queryFn: () => guestDataPersistence.loadOnboardingData(),
+    staleTime: 0,
   });
 
   const { data: logsFromServer = [] } = useQuery({
     queryKey: ['allLogs'],
-    queryFn: () => base44.entities.ActionLog.list('-date', 500),
+    queryFn: () => base44.entities.ActionLog.list('-date', 500).catch(() => []),
   });
 
   const { data: goalsFromServer = [] } = useQuery({
     queryKey: ['allGoals'],
-    queryFn: () => base44.entities.Goal.list('-created_date', 100),
+    queryFn: () => base44.entities.Goal.list('-created_date', 100).catch(() => []),
   });
 
   const { data: actionGoalsFromServer = [] } = useQuery({
     queryKey: ['actionGoalsAll'],
-    queryFn: () => base44.entities.ActionGoal.list('-created_date', 200),
+    queryFn: () => base44.entities.ActionGoal.list('-created_date', 200).catch(() => []),
   });
 
   const guestLogs = Array.isArray(guestData?.actionLogs) ? guestData.actionLogs : [];
   const guestGoals = Array.isArray(guestData?.goals) ? guestData.goals : [];
   const guestActionGoals = Array.isArray(guestData?.actionGoals) ? guestData.actionGoals : [];
-  const guestTitles = Array.from(
-  new Set([
-    ...(Array.isArray(guestData?.titles) ? guestData.titles : []),
-    ...(() => {
-      try {
-        return JSON.parse(localStorage.getItem('root_guest_titles') || '[]');
-      } catch {
-        return [];
-      }
-    })(),
-  ])
-);
+
+  const guestTitles = useMemo(() => {
+    const fromGuestData = Array.isArray(guestData?.titles) ? guestData.titles : [];
+    const fromLocal = safeParseArray(localStorage.getItem('root_guest_titles'), []);
+    return Array.from(new Set([...fromGuestData, ...fromLocal]));
+  }, [guestData, guestVersion]);
 
   const logs = guestLogs.length > 0 ? guestLogs : logsFromServer;
   const goals = guestGoals.length > 0 ? guestGoals : goalsFromServer;
@@ -212,15 +386,17 @@ export default function Records() {
       (catFilter === 'all' || g.category === catFilter)
   );
 
-  const guestBadges = guestTitles.map((id) => ({
-    id,
-    earned_date: '',
-    ...(TITLE_META_MAP[id] || {
-      title: id,
-      description: '',
-      category: 'special',
-    }),
-  }));
+  const guestBadges = useMemo(() => {
+    return guestTitles.map((id) => ({
+      id,
+      earned_date: '',
+      ...(TITLE_META_MAP[id] || {
+        title: id,
+        description: '',
+        category: 'special',
+      }),
+    }));
+  }, [guestTitles]);
 
   const filteredBadges =
     catFilter === 'all'
@@ -334,7 +510,7 @@ export default function Records() {
                   >
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <p className="text-[0.875rem] font-semibold text-amber-900">
-                        {ag?.title || '기록'}
+                        {ag?.title || log.title || '기록'}
                       </p>
                       <span className="text-[0.625rem] px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 font-semibold">
                         {log.date}
@@ -354,7 +530,7 @@ export default function Records() {
 
                     {log.gps_enabled && log.route_coordinates ? (
                       <div className="mb-2 rounded-lg overflow-hidden bg-blue-50 border border-blue-200 h-20">
-                        <GPSMapPreview coords={JSON.parse(log.route_coordinates)} />
+                        <GPSMapPreview coords={safeParseArray(log.route_coordinates, [])} />
                       </div>
                     ) : null}
 
@@ -472,8 +648,9 @@ export default function Records() {
 
               return Object.entries(byCategory).map(([cat, catLogs]) => {
                 const catDistance =
-                  Math.round(catLogs.reduce((sum, l) => sum + (Number(l.distance_km) || 0), 0) * 10) /
-                  10;
+                  Math.round(
+                    catLogs.reduce((sum, l) => sum + (Number(l.distance_km) || 0), 0) * 10
+                  ) / 10;
 
                 return (
                   <div key={cat}>
@@ -492,7 +669,7 @@ export default function Records() {
                           >
                             <div className="flex items-center justify-between gap-2 mb-1">
                               <p className="text-[0.875rem] font-semibold text-amber-900">
-                                {ag?.title || '기록'}
+                                {ag?.title || log.title || '기록'}
                               </p>
                               <span className="text-[0.625rem] px-2 py-0.5 rounded-full bg-blue-200 text-blue-800 font-semibold">
                                 {Number(log.distance_km || 0).toFixed(2)}km
@@ -503,7 +680,7 @@ export default function Records() {
                             </span>
                             {log.route_coordinates ? (
                               <div className="mt-2 rounded-lg overflow-hidden bg-blue-50 border border-blue-200 h-16">
-                                <GPSMapPreview coords={JSON.parse(log.route_coordinates)} />
+                                <GPSMapPreview coords={safeParseArray(log.route_coordinates, [])} />
                               </div>
                             ) : null}
                           </button>
@@ -539,7 +716,7 @@ export default function Records() {
 
               {selectedPhoto.gps_enabled && selectedPhoto.route_coordinates ? (
                 <div className="rounded-xl overflow-hidden bg-blue-50 border-2 border-blue-200 h-32">
-                  <GPSMapPreview coords={JSON.parse(selectedPhoto.route_coordinates)} />
+                  <GPSMapPreview coords={safeParseArray(selectedPhoto.route_coordinates, [])} />
                 </div>
               ) : null}
 
@@ -710,228 +887,10 @@ export default function Records() {
             goals={goals}
             catFilter={catFilter}
             onCatFilterChange={setCatFilter}
+            onSelectPhoto={setSelectedPhoto}
           />
         </TabsContent>
       </Tabs>
-    </div>
-  );
-}
-
-function CategoryFilter({ value, onChange }) {
-  return (
-    <div className="flex gap-1.5 flex-wrap">
-      {['all', 'exercise', 'study', 'mental', 'daily'].map((cat) => (
-        <button
-          key={cat}
-          onClick={() => onChange(cat)}
-          className={`px-3 py-1.5 rounded-lg text-[0.75rem] font-semibold transition-all active:scale-95 ${
-            value === cat
-              ? 'bg-amber-700 text-amber-50'
-              : 'bg-secondary text-muted-foreground active:bg-secondary/70'
-          }`}
-        >
-          {cat === 'all' ? '전체' : CAT_LABELS[cat]}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function StatCard({ icon, label, value, onClick, clickable }) {
-  return (
-    <div
-      className={`p-4 rounded-2xl bg-card border border-border/60 select-none ${
-        clickable
-          ? 'cursor-pointer hover:border-amber-400 hover:bg-amber-50/50 active:bg-amber-100/80 active:scale-[0.98] transition-all'
-          : ''
-      }`}
-      onClick={onClick}
-    >
-      <div className="mb-2">{icon}</div>
-      <p className="text-[0.75rem] text-muted-foreground">{label}</p>
-      <p className="text-[1.25rem] font-bold text-amber-900">{value}</p>
-      {clickable ? <p className="text-[0.625rem] text-amber-500 mt-1">탭하여 보기 →</p> : null}
-    </div>
-  );
-}
-
-function TimelineLogItem({ log, ag, onSelectPhoto }) {
-  const { containerRef, isVisible, onLoad } = useLazyLoadImage('1');
-
-  return (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
-      <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-[0.875rem] font-semibold truncate">{ag?.title || log.date}</p>
-        <p className="text-[0.75rem] text-muted-foreground">
-          {log.date}
-          {Number(log.duration_minutes) > 0 ? ` · ${log.duration_minutes}분` : ''}
-        </p>
-        {log.memo ? <p className="text-[0.75rem] text-muted-foreground italic">"{log.memo}"</p> : null}
-      </div>
-
-      {log.photo_url ? (
-        <button
-          ref={containerRef}
-          onClick={() => onSelectPhoto(log)}
-          className="shrink-0 active:opacity-70 rounded-lg w-12 h-12 flex items-center justify-center overflow-hidden"
-        >
-          {isVisible ? (
-            <ImageWithBlurUp
-              src={log.photo_url}
-              alt="수련 사진"
-              containerClassName="w-12 h-12"
-              className="w-12 h-12 rounded-lg object-cover"
-              onLoad={onLoad}
-            />
-          ) : null}
-        </button>
-      ) : null}
-
-      <span className="text-xs px-2 py-1 rounded-lg bg-amber-100/80 text-amber-700 shrink-0">
-        {CAT_LABELS[log.category] || '기타'}
-      </span>
-    </div>
-  );
-}
-
-function AlbumPhotoItem({ log, onSelectPhoto }) {
-  const { containerRef, isVisible, onLoad } = useLazyLoadImage('1');
-
-  return (
-    <button
-      ref={containerRef}
-      onClick={() => onSelectPhoto(log)}
-      className="aspect-square rounded-xl overflow-hidden relative group active:opacity-80 transition-opacity flex items-center justify-center"
-      aria-label={`${log.date} 사진 보기`}
-    >
-      {isVisible ? (
-        <>
-          <ImageWithBlurUp
-            src={log.photo_url}
-            alt={log.date}
-            containerClassName="w-full h-full"
-            className="w-full h-full object-cover"
-            onLoad={onLoad}
-          />
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
-            <span className="text-[10px] text-white font-semibold">{log.date}</span>
-          </div>
-        </>
-      ) : null}
-      <span className="absolute top-1 right-1 text-sm" aria-hidden="true">
-        {CAT_EMOJIS[log.category] || '📝'}
-      </span>
-    </button>
-  );
-}
-
-function AlbumTab({ logs, goals, catFilter, onCatFilterChange }) {
-  const [selectedPhoto, setSelectedPhoto] = useState(null);
-
-  const photoLogs = logs.filter(
-    (l) => l.photo_url && (catFilter === 'all' || l.category === catFilter)
-  );
-
-  const completedGoals = goals.filter(
-    (g) =>
-      g.status === 'completed' &&
-      g.achievement_success &&
-      (catFilter === 'all' || g.category === catFilter)
-  );
-
-  return (
-    <div className="space-y-5">
-      <CategoryFilter value={catFilter} onChange={onCatFilterChange} />
-
-      {photoLogs.length === 0 && completedGoals.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <p className="text-[2.25rem] mb-3">🖼️</p>
-          <p className="text-[0.875rem] font-semibold">아직 앨범이 비어있어요.</p>
-          <p className="text-[0.75rem] mt-1">수련 완료 시 사진을 찍으면 여기에 쌓여요!</p>
-        </div>
-      ) : (
-        <>
-          {completedGoals.length > 0 ? (
-            <div>
-              <p className="text-[0.75rem] font-bold text-amber-800 mb-2">🏆 달성한 목표</p>
-              <div className="space-y-2">
-                {completedGoals.map((g) => (
-                  <div
-                    key={g.id}
-                    className="p-3 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300/60 flex items-center gap-3"
-                  >
-                    <span className="text-[1.5rem]">{CAT_EMOJIS[g.category] || '🎯'}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[0.875rem] font-bold text-amber-900 truncate">
-                        {g.title}
-                      </p>
-                      <p className="text-[0.75rem] text-muted-foreground">
-                        {g.duration_days}일 도전 완료 · {g.end_date || g.updated_date?.split('T')[0]}
-                      </p>
-                      {g.result_note ? (
-                        <p className="text-[0.75rem] text-amber-700 italic mt-0.5">
-                          "{g.result_note}"
-                        </p>
-                      ) : null}
-                    </div>
-                    <span className="text-lg">✨</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {photoLogs.length > 0 ? (
-            <div>
-              <p className="text-[0.75rem] font-bold text-amber-800 mb-2">
-                📸 수련 사진 ({photoLogs.length}장)
-              </p>
-              <div className="grid grid-cols-3 gap-1.5">
-                {photoLogs.map((log) => (
-                  <AlbumPhotoItem key={log.id} log={log} onSelectPhoto={setSelectedPhoto} />
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
-            <DialogContent className="max-w-sm rounded-2xl p-4">
-              <DialogHeader>
-                <DialogTitle className="text-center text-[0.875rem]">
-                  {CAT_EMOJIS[selectedPhoto?.category]} {selectedPhoto?.date}
-                </DialogTitle>
-              </DialogHeader>
-
-              {selectedPhoto ? (
-                <div className="space-y-3">
-                  <ImageWithBlurUp
-                    src={selectedPhoto.photo_url}
-                    alt={selectedPhoto.date}
-                    containerClassName="w-full rounded-xl overflow-hidden"
-                    className="w-full rounded-xl object-cover max-h-72"
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className="text-[0.75rem] px-2 py-1 rounded-lg bg-amber-100 text-amber-700 font-semibold">
-                      {CAT_LABELS[selectedPhoto.category] || '기타'}
-                    </span>
-                    {Number(selectedPhoto.duration_minutes) > 0 ? (
-                      <span className="text-[0.75rem] text-muted-foreground">
-                        {selectedPhoto.duration_minutes}분 수련
-                      </span>
-                    ) : null}
-                  </div>
-                  {selectedPhoto.memo ? (
-                    <p className="text-[0.875rem] text-amber-800 italic bg-amber-50/80 p-3 rounded-xl">
-                      "{selectedPhoto.memo}"
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-            </DialogContent>
-          </Dialog>
-        </>
-      )}
     </div>
   );
 }
