@@ -311,6 +311,7 @@ export default function Home() {
     if (isGuest) {
       const guestCategory =
         guestData?.activeCategory ||
+        guestData?.guest_active_category ||
         guestData?.goalData?.category ||
         guestData?.actionGoalData?.category ||
         guestData?.goals?.[0]?.category ||
@@ -357,7 +358,11 @@ export default function Home() {
     return (actionGoals || []).filter((actionGoal) => {
       if (!actionGoal) return false;
       if (actionGoal.category !== activeCategory) return false;
-      if (actionGoal.status && actionGoal.status !== 'active' && actionGoal.status !== 'completed') {
+      if (
+        actionGoal.status &&
+        actionGoal.status !== 'active' &&
+        actionGoal.status !== 'completed'
+      ) {
         return false;
       }
 
@@ -472,7 +477,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-full bg-background pb-24">
+    <div className="min-h-full bg-background pb-28">
       <CharacterBanner
         nickname={`${nickname}님`}
         message={`${CATEGORY_LABELS[activeCategory]} 루트를 한 걸음씩 이어가고 있어요`}
@@ -548,23 +553,22 @@ export default function Home() {
         </Section>
       </div>
 
-      {!activeGoal && activeActionGoals.length === 0 && (
-        <div className="px-4 pt-4">
-          <button
-            type="button"
-            onClick={handleCreateGoal}
-            className="w-full h-12 rounded-2xl font-bold text-sm"
-            style={{
-              background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 50%, #8a6520 100%)',
-              border: '2px solid #6b4e15',
-              color: '#fff8e8',
-              boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 3px 6px rgba(60,35,5,0.3)',
-            }}
-          >
-            {CATEGORY_LABELS[activeCategory]} 목표 만들기
-          </button>
-        </div>
-      )}
+      <div className="px-4 pt-5">
+        <button
+          type="button"
+          onClick={handleCreateGoal}
+          className="w-full h-12 rounded-2xl font-bold text-sm"
+          style={{
+            background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 50%, #8a6520 100%)',
+            border: '2px solid #6b4e15',
+            color: '#fff8e8',
+            boxShadow:
+              'inset 0 1px 2px rgba(255,220,120,0.4), 0 3px 6px rgba(60,35,5,0.3)',
+          }}
+        >
+          + 행동목표 추가
+        </button>
+      </div>
     </div>
   );
 }
