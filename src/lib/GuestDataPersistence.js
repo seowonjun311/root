@@ -1,277 +1,252 @@
 const STORAGE_KEY = 'root_guest_data';
+const UPDATE_EVENT = 'root-guest-data-updated';
 
-function load() {
+const defaultGuestData = {
+  onboardingComplete: false,
+  nickname: '',
+  category: 'exercise',
+
+  goals: [],
+  actionGoals: [],
+  actionLogs: [],
+  titles: [],
+  equipped_title: '',
+
+  userLevels: {
+    exercise_level: 1,
+    exercise_xp: 0,
+    study_level: 1,
+    study_xp: 0,
+    mental_level: 1,
+    mental_xp: 0,
+    daily_level: 1,
+    daily_xp: 0,
+  },
+};
+
+function isBrowser() {
+  return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+}
+
+function safeJsonParse(value, fallback) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    return JSON.parse(value);
   } catch (error) {
-    console.error('GuestDataPersistence load error:', error);
-    return {};
+    return fallback;
   }
 }
 
-function save(data) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    return true;
-  } catch (error) {
-    console.error('GuestDataPersistence save error:', error);
-    return false;
+function uniqueTitles(list) {
+  if (!Array.isArray(list)) return [];
+  return [...new Set(list.filter(Boolean).map(String))];
+}
+
+function normalizeGuestData(raw) {
+  const data = raw && typeof raw === 'object' ? raw : {};
+
+  const titles = uniqueTitles(data.titles);
+
+  let equippedTitle =
+    typeof data.equipped_title === 'string' ? data.equipped_title : '';
+
+  if (equippedTitle && !titles.includes(equippedTitle)) {
+    equippedTitle = '';
   }
-}
 
-function ensureArray(value) {
-  return Array.isArray(value) ? value : [];
-}
-
-function normalizeKey(key) {
-  switch (key) {
-    case 'guest_active_category':
-      return 'activeCategory';
-    case 'local_action_logs':
-      return 'actionLogs';
-    case 'local_action_goals':
-      return 'actionGoals';
-    case 'local_goals':
-      return 'goals';
-    default:
-      return key;
+  if (!equippedTitle && titles.length > 0) {
+    equippedTitle = titles[0];
   }
-}
-
-function normalizeLoadedData(current) {
-  const goalsFromArray = ensureArray(current.goals);
-  const actionGoalsFromArray = ensureArray(current.actionGoals);
-  const actionLogsFromArray = ensureArray(current.actionLogs);
-
-  const goals =
-    goalsFromArray.length > 0
-      ? goalsFromArray
-      : current.goalData
-        ? [current.goalData]
-        : [];
-
-  const actionGoals =
-    actionGoalsFromArray.length > 0
-      ? actionGoalsFromArray
-      : current.actionGoalData
-        ? [current.actionGoalData]
-        : [];
 
   return {
-    ...current,
-    onboardingComplete: current.onboardingComplete === true,
-    nickname: current.nickname || '용사',
-    activeCategory:
-      current.activeCategory ||
-      current.goalData?.category ||
-      current.actionGoalData?.category ||
-      goals[0]?.category ||
-      actionGoals[0]?.category ||
-      'exercise',
-    goals,
-    actionGoals,
-    actionLogs: actionLogsFromArray,
-    goalData: goals[0] || null,
-    actionGoalData: actionGoals[0] || null,
+    ...defaultGuestData,
+    ...data,
+    goals: Array.isArray(data.goals) ? data.goals : [],
+    actionGoals: Array.isArray(data.actionGoals) ? data.actionGoals : [],
+    actionLogs: Array.isArray(data.actionLogs) ? data.actionLogs : [],
+    titles,
+    equipped_title: equippedTitle,
+    userLevels: {
+      ...defaultGuestData.userLevels,
+      ...(data.userLevels || {}),
+    },
   };
 }
 
-export const guestDataPersistence = {
-  saveOnboardingData(arg1, arg2, arg3) {
-    const currentRaw = load();
-    const current = normalizeLoadedData(currentRaw);
+function emitUpdate() {
+  if (!isBrowser()) return;
 
-    let goalData = null;
-    let actionGoalData = null;
-    let nickname = '용사';
-    let category = null;
+  window.dispatchEvent(new Event(UPDATE_EVENT));
+  window.dispatchEvent(new Event('root-home-data-updated'));
+}
 
-    if (
-      arg1 &&
-      typeof arg1 === 'object' &&
-      (
-        Object.prototype.hasOwnProperty.call(arg1, 'goalData') ||
-        Object.prototype.hasOwnProperty.call(arg1, 'actionGoalData') ||
-        Object.prototype.hasOwnProperty.call(arg1, 'nickname') ||
-        Object.prototype.hasOwnProperty.call(arg1, 'category')
-      )
-    ) {
-      goalData = arg1.goalData || null;
-      actionGoalData = arg1.actionGoalData || null;
-      nickname = arg1.nickname || '용사';
-      category =
-        arg1.category ||
-        goalData?.category ||
-        actionGoalData?.category ||
-        current.activeCategory ||
-        'exercise';
-    } else {
-      goalData = arg1 || null;
-      actionGoalData = arg2 || null;
-      nickname = arg3 || '용사';
-      category =
-        goalData?.category ||
-        actionGoalData?.category ||
-        current.activeCategory ||
-        'exercise';
+const guestDataPersistence = {
+  STORAGE_KEY,
+  UPDATE_EVENT,
+
+  getData() {
+    if (!isBrowser()) return normalizeGuestData(defaultGuestData);
+
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return normalizeGuestData(defaultGuestData);
     }
 
-    const goals = [...current.goals];
-    const actionGoals = [...current.actionGoals];
-    const actionLogs = [...current.actionLogs];
-
-    let newGoal = null;
-    let newActionGoal = null;
-
-    if (goalData) {
-      newGoal = {
-        ...goalData,
-        id: goalData.id || `local_goal_${Date.now()}`,
-        created_date: goalData.created_date || new Date().toISOString(),
-        updated_date: new Date().toISOString(),
-        status: goalData.status || 'active',
-        goal_type: goalData.goal_type || 'result',
-        category: goalData.category || category || 'exercise',
-      };
-    }
-
-    if (actionGoalData) {
-      newActionGoal = {
-        ...actionGoalData,
-        id: actionGoalData.id || `local_action_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-
-        // 🔥🔥🔥 핵심 수정된 줄
-        goal_id: newGoal?.id || actionGoalData.goal_id || current.goalData?.id || null,
-
-        created_date: actionGoalData.created_date || new Date().toISOString(),
-        updated_date: new Date().toISOString(),
-        status: actionGoalData.status || 'active',
-        category: actionGoalData.category || category || newGoal?.category || 'exercise',
-      };
-    }
-
-    const nextGoals = newGoal
-      ? [...goals.filter((g) => g.id !== newGoal.id), newGoal]
-      : goals;
-
-    const nextActionGoals = newActionGoal
-      ? [...actionGoals.filter((g) => g.id !== newActionGoal.id), newActionGoal]
-      : actionGoals;
-
-    const nextData = {
-      ...current,
-      onboardingComplete: true,
-      nickname,
-      activeCategory: category || current.activeCategory || 'exercise',
-
-      goals: nextGoals,
-      actionGoals: nextActionGoals,
-      actionLogs,
-
-      goalData: newGoal || nextGoals[0] || current.goalData || null,
-      actionGoalData: newActionGoal || nextActionGoals[0] || current.actionGoalData || null,
-    };
-
-    return save(nextData);
+    const parsed = safeJsonParse(raw, defaultGuestData);
+    return normalizeGuestData(parsed);
   },
 
-  loadOnboardingData() {
-    const current = load();
-    return normalizeLoadedData(current);
+  setData(nextData) {
+    if (!isBrowser()) return normalizeGuestData(nextData);
+
+    const normalized = normalizeGuestData(nextData);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    emitUpdate();
+    return normalized;
+  },
+
+  updateData(updater) {
+    const prev = this.getData();
+
+    const draft =
+      typeof updater === 'function'
+        ? updater(prev)
+        : { ...prev, ...(updater || {}) };
+
+    const next = normalizeGuestData({
+      ...prev,
+      ...draft,
+    });
+
+    return this.setData(next);
   },
 
   saveData(key, value) {
-    const current = normalizeLoadedData(load());
-    const normalizedKey = normalizeKey(key);
-
-    const next = {
-      ...current,
-      [normalizedKey]: value,
-    };
-
-    if (normalizedKey === 'goals') {
-      next.goalData = ensureArray(value)[0] || null;
-    }
-
-    if (normalizedKey === 'actionGoals') {
-      next.actionGoalData = ensureArray(value)[0] || null;
-    }
-
-    return save(next);
+    return this.updateData((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   },
 
-  addActionLog(log) {
-    const current = normalizeLoadedData(load());
-
-    const newLog = {
-      ...log,
-      id: log?.id || `local_log_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      created_date: log?.created_date || new Date().toISOString(),
-      updated_date: new Date().toISOString(),
-    };
-
-    const next = {
-      ...current,
-      actionLogs: [...current.actionLogs, newLog],
-    };
-
-    return save(next);
-  },
-
-  updateActionGoal(actionGoalId, patch) {
-    const current = normalizeLoadedData(load());
-
-    const nextActionGoals = current.actionGoals.map((goal) =>
-      goal.id === actionGoalId
-        ? { ...goal, ...patch, updated_date: new Date().toISOString() }
-        : goal
-    );
-
-    const next = {
-      ...current,
-      actionGoals: nextActionGoals,
-      actionGoalData: nextActionGoals[0] || null,
-    };
-
-    return save(next);
-  },
-
-  deleteActionGoal(actionGoalId) {
-    const current = normalizeLoadedData(load());
-
-    const nextActionGoals = current.actionGoals.filter((goal) => goal.id !== actionGoalId);
-    const nextActionLogs = current.actionLogs.filter((log) => log.action_goal_id !== actionGoalId);
-
-    const next = {
-      ...current,
-      actionGoals: nextActionGoals,
-      actionLogs: nextActionLogs,
-      actionGoalData: nextActionGoals[0] || null,
-    };
-
-    return save(next);
-  },
-
-  updateGoal(goalId, patch) {
-    const current = normalizeLoadedData(load());
-
-    const nextGoals = current.goals.map((goal) =>
-      goal.id === goalId
-        ? { ...goal, ...patch, updated_date: new Date().toISOString() }
-        : goal
-    );
-
-    const next = {
-      ...current,
-      goals: nextGoals,
-      goalData: nextGoals[0] || null,
-    };
-
-    return save(next);
-  },
-
-  clear() {
+  clearAll() {
+    if (!isBrowser()) return;
     localStorage.removeItem(STORAGE_KEY);
+    emitUpdate();
+  },
+
+  saveOnboardingData({ goalData, actionGoalData, nickname, category } = {}) {
+    return this.updateData((prev) => ({
+      ...prev,
+      onboardingComplete: true,
+      nickname: nickname ?? prev.nickname,
+      category: category ?? prev.category,
+      goals: Array.isArray(goalData) ? goalData : prev.goals,
+      actionGoals: Array.isArray(actionGoalData)
+        ? actionGoalData
+        : prev.actionGoals,
+    }));
+  },
+
+  getTitles() {
+    return this.getData().titles || [];
+  },
+
+  ensureEquippedTitle(preferredTitle = '') {
+    return this.updateData((prev) => {
+      const titles = uniqueTitles(prev.titles);
+      let nextEquipped =
+        typeof prev.equipped_title === 'string' ? prev.equipped_title : '';
+
+      if (preferredTitle && titles.includes(preferredTitle)) {
+        nextEquipped = preferredTitle;
+      }
+
+      if (nextEquipped && titles.includes(nextEquipped)) {
+        return {
+          ...prev,
+          titles,
+          equipped_title: nextEquipped,
+        };
+      }
+
+      return {
+        ...prev,
+        titles,
+        equipped_title: titles[0] || '',
+      };
+    });
+  },
+
+  addTitle(titleName, options = {}) {
+    const { autoEquipIfEmpty = true, forceEquip = false } = options;
+    const nextTitle = typeof titleName === 'string' ? titleName.trim() : '';
+
+    if (!nextTitle) {
+      return this.getData();
+    }
+
+    return this.updateData((prev) => {
+      const prevTitles = uniqueTitles(prev.titles);
+      const alreadyOwned = prevTitles.includes(nextTitle);
+      const nextTitles = alreadyOwned ? prevTitles : [...prevTitles, nextTitle];
+
+      let nextEquipped =
+        typeof prev.equipped_title === 'string' ? prev.equipped_title : '';
+
+      if (forceEquip) {
+        nextEquipped = nextTitle;
+      } else if (!nextEquipped && autoEquipIfEmpty) {
+        nextEquipped = nextTitle;
+      } else if (nextEquipped && !nextTitles.includes(nextEquipped)) {
+        nextEquipped = nextTitles[0] || '';
+      }
+
+      return {
+        ...prev,
+        titles: nextTitles,
+        equipped_title: nextEquipped,
+      };
+    });
+  },
+
+  equipTitle(titleName) {
+    const nextTitle = typeof titleName === 'string' ? titleName.trim() : '';
+    if (!nextTitle) return this.getData();
+
+    return this.updateData((prev) => {
+      const titles = uniqueTitles(prev.titles);
+      if (!titles.includes(nextTitle)) {
+        return {
+          ...prev,
+          titles,
+          equipped_title: titles[0] || '',
+        };
+      }
+
+      return {
+        ...prev,
+        titles,
+        equipped_title: nextTitle,
+      };
+    });
+  },
+
+  subscribe(callback) {
+    if (!isBrowser()) return () => {};
+
+    const handler = () => {
+      if (typeof callback === 'function') {
+        callback(this.getData());
+      }
+    };
+
+    window.addEventListener(UPDATE_EVENT, handler);
+    window.addEventListener('storage', handler);
+
+    return () => {
+      window.removeEventListener(UPDATE_EVENT, handler);
+      window.removeEventListener('storage', handler);
+    };
   },
 };
+
+export default guestDataPersistence;
