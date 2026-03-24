@@ -58,7 +58,7 @@ export default function Titles() {
   const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: ['me'],
     queryFn: () => base44.auth.me().catch(() => null),
-    staleTime: 1000 * 30,
+    staleTime: 0,
   });
 
   const isGuest = !user;
