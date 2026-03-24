@@ -227,6 +227,7 @@ export default function ActionGoalCard({
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [selectedPhotoPreview, setSelectedPhotoPreview] = useState('');
   const [pendingNoPhoto, setPendingNoPhoto] = useState(false);
+  const [pendingTimerData, setPendingTimerData] = useState(null);
 
   const [editTitle, setEditTitle] = useState(actionGoal.title || '');
   const [editFrequency, setEditFrequency] = useState(actionGoal.weekly_frequency || 5);
@@ -335,6 +336,7 @@ export default function ActionGoalCard({
     setSelectedPhoto(null);
     setSelectedPhotoPreview('');
     setPendingNoPhoto(false);
+    setPendingTimerData(null);
     if (galleryInputRef.current) galleryInputRef.current.value = '';
     if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
@@ -459,11 +461,21 @@ export default function ActionGoalCard({
 
         localStorage.removeItem(GPS_COORDS_KEY(actionGoal.id));
 
-        onComplete(actionGoal, Math.max(1, minutes), {
+        if (selectedPhotoPreview) {
+          URL.revokeObjectURL(selectedPhotoPreview);
+        }
+        setSelectedPhoto(null);
+        setSelectedPhotoPreview('');
+        setPendingNoPhoto(false);
+
+        setPendingTimerData({
+          minutes: Math.max(1, minutes),
           gpsEnabled,
           distance,
           coords,
         });
+
+        setShowPhotoConfirm(true);
       }
     } else if (actionGoal.category === 'exercise' && actionGoal.action_type === 'timer') {
       setShowGpsDialog(true);
@@ -473,6 +485,18 @@ export default function ActionGoalCard({
   };
 
   const finalizeConfirm = (photoInfo = null) => {
+    if (pendingTimerData) {
+      onComplete(actionGoal, pendingTimerData.minutes, {
+        gpsEnabled: pendingTimerData.gpsEnabled,
+        distance: pendingTimerData.distance,
+        coords: pendingTimerData.coords,
+        photo: photoInfo,
+      });
+      resetPhotoState();
+      setShowPhotoConfirm(false);
+      return;
+    }
+
     if (isOneTime) {
       onComplete(actionGoal, 0, {
         gpsEnabled: false,
@@ -499,7 +523,12 @@ export default function ActionGoalCard({
   };
 
   const handleConfirm = () => {
-    if (actionGoal.action_type === 'confirm' || actionGoal.action_type === 'abstain' || isOneTime) {
+    if (
+      actionGoal.action_type === 'confirm' ||
+      actionGoal.action_type === 'abstain' ||
+      actionGoal.action_type === 'timer' ||
+      isOneTime
+    ) {
       resetPhotoState();
       setShowPhotoConfirm(true);
       return;
