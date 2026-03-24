@@ -399,19 +399,46 @@ export default function Home() {
   const todaysGoals = useMemo(() => {
     return categoryActionGoals.filter((goal) => {
       if (goal.action_type === 'one_time') {
-        return goal.status !== 'completed';
+        return goal.status !== 'completed' && goal.scheduled_date === todayStr;
       }
 
       const logs = getLogsByActionGoalId(goal.id);
       const doneToday = logs.some((log) => log?.date === todayStr);
-
       return !doneToday;
     });
   }, [categoryActionGoals, allLogs, todayStr]);
 
+  const upcomingGoals = useMemo(() => {
+    return categoryActionGoals.filter(
+      (goal) =>
+        goal.action_type === 'one_time' &&
+        goal.status !== 'completed' &&
+        goal.scheduled_date &&
+        goal.scheduled_date > todayStr
+    );
+  }, [categoryActionGoals, todayStr]);
+
+  const overdueGoals = useMemo(() => {
+    return categoryActionGoals.filter(
+      (goal) =>
+        goal.action_type === 'one_time' &&
+        goal.status !== 'completed' &&
+        goal.scheduled_date &&
+        goal.scheduled_date < todayStr
+    );
+  }, [categoryActionGoals, todayStr]);
+
+  const completedOrFutureFilteredIds = useMemo(() => {
+    return new Set([
+      ...todaysGoals.map((g) => g.id),
+      ...upcomingGoals.map((g) => g.id),
+      ...overdueGoals.map((g) => g.id),
+    ]);
+  }, [todaysGoals, upcomingGoals, overdueGoals]);
+
   const otherGoals = useMemo(() => {
-    return categoryActionGoals.filter((goal) => !todaysGoals.some((item) => item.id === goal.id));
-  }, [categoryActionGoals, todaysGoals]);
+    return categoryActionGoals.filter((goal) => !completedOrFutureFilteredIds.has(goal.id));
+  }, [categoryActionGoals, completedOrFutureFilteredIds]);
 
   const handleCategoryChange = (nextCategory) => {
     if (!CATEGORY_KEYS.includes(nextCategory)) return;
@@ -668,6 +695,48 @@ export default function Home() {
 
                   <div className="space-y-2">
                     {todaysGoals.map((actionGoal) => (
+                      <ActionGoalCard
+                        key={actionGoal.id}
+                        actionGoal={actionGoal}
+                        weeklyLogs={getWeeklyLogs(actionGoal.id)}
+                        allLogs={getLogsByActionGoalId(actionGoal.id)}
+                        streak={computeStreak(actionGoal.id, getLogsByActionGoalId(actionGoal.id))}
+                        onComplete={handleComplete}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {upcomingGoals.length > 0 && (
+                <div>
+                  <div className="text-sm font-bold mb-2" style={{ color: '#9a7b47' }}>
+                    📅 예정된 목표
+                  </div>
+
+                  <div className="space-y-2">
+                    {upcomingGoals.map((actionGoal) => (
+                      <ActionGoalCard
+                        key={actionGoal.id}
+                        actionGoal={actionGoal}
+                        weeklyLogs={getWeeklyLogs(actionGoal.id)}
+                        allLogs={getLogsByActionGoalId(actionGoal.id)}
+                        streak={computeStreak(actionGoal.id, getLogsByActionGoalId(actionGoal.id))}
+                        onComplete={handleComplete}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {overdueGoals.length > 0 && (
+                <div>
+                  <div className="text-sm font-bold mb-2" style={{ color: '#b94030' }}>
+                    ⏰ 기한 지난 목표
+                  </div>
+
+                  <div className="space-y-2">
+                    {overdueGoals.map((actionGoal) => (
                       <ActionGoalCard
                         key={actionGoal.id}
                         actionGoal={actionGoal}
