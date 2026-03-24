@@ -39,7 +39,6 @@ React.useEffect(() => {
     ]);
   });
 
-  import { guestDataPersistence } from '@/lib/GuestDataPersistence';
 
 const { data: guestData = {} } = useQuery({
   queryKey: ['guest-home-data'],
