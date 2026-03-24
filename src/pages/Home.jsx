@@ -576,16 +576,25 @@ export default function Home() {
     }
   };
 
-  const activeGoals = useMemo(() => {
-    return (goals || []).filter((goal) => {
-      if (!goal) return false;
-      if (goal.category !== activeCategory) return false;
-      if (goal.status && goal.status !== 'active') return false;
-      return true;
-    });
-  }, [goals, activeCategory]);
+const activeGoals = useMemo(() => {
+  const sourceGoals =
+    isGuest
+      ? (Array.isArray(guestData?.goals) && guestData.goals.length > 0
+          ? guestData.goals
+          : guestData?.goalData
+            ? [guestData.goalData]
+            : [])
+      : goals || [];
 
-  const activeGoal = activeGoals[0] || null;
+  return sourceGoals.filter((goal) => {
+    if (!goal) return false;
+    if (goal.category !== activeCategory) return false;
+    if (goal.status && goal.status !== 'active') return false;
+    return true;
+  });
+}, [isGuest, guestData, goals, activeCategory]);
+
+const activeGoal = activeGoals[0] || (isGuest ? guestData?.goalData || null : null);
 
   const activeActionGoals = useMemo(() => {
     const goalIds = new Set(activeGoals.map((goal) => goal.id));
@@ -808,25 +817,7 @@ export default function Home() {
       </div>
 
       <div className="px-4 pt-3">
-        {equippedTitle ? (
-          <div
-            className="rounded-2xl px-4 py-3 mb-3"
-            style={{
-              background: 'linear-gradient(180deg, #fff6df 0%, #f2e1b5 100%)',
-              border: '1px solid rgba(160,120,64,0.18)',
-            }}
-          >
-            <div className="text-[11px] font-bold mb-1" style={{ color: '#8a5a17' }}>
-              대표 칭호
-            </div>
-            <div className="text-sm font-extrabold" style={{ color: '#4a2c08' }}>
-              {equippedTitle.name}
-            </div>
-            <div className="text-xs mt-1" style={{ color: '#8f6a33' }}>
-              {equippedTitle.description}
-            </div>
-          </div>
-        ) : null}
+        
 
         {activeGoal ? (
           <GoalProgress goal={activeGoal} logs={goalLogs} />
