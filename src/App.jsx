@@ -9,7 +9,7 @@ import { NavigationProvider } from '@/lib/NavigationContext';
 import { AnimationStateProvider, useAnimationState } from '@/lib/AnimationStateContext';
 import { TabNavigationProvider } from '@/lib/TabNavigationContext';
 import { navigationStackManager } from '@/lib/NavigationStackManager';
-import { guestDataPersistence } from '@/lib/GuestDataPersistence';
+import guestDataPersistence from '@/lib/GuestDataPersistence';
 import AppLayout from './components/layout/AppLayout.jsx';
 import Header from './components/layout/Header.jsx';
 import PageTransition from './components/layout/PageTransition';
