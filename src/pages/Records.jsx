@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { guestDataPersistence } from '@/lib/GuestDataPersistence';
@@ -24,7 +24,7 @@ export default function Records() {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [guestVersion, setGuestVersion] = useState(0);
   const queryClient = useQueryClient();
-React.useEffect(() => {
+useEffect(() => {
   const handle = () => setGuestVersion((v) => v + 1);
   window.addEventListener('root-home-data-updated', handle);
   return () => window.removeEventListener('root-home-data-updated', handle);
