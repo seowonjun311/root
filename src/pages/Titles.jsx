@@ -68,9 +68,13 @@ export default function Titles() {
 
   /** 🔥 보유 칭호 */
   const ownedTitles = useMemo(() => {
-    if (isGuest) return getGuestTitles();
-    return user?.titles || [];
-  }, [isGuest, user, guestVersion]);
+  if (isGuest) {
+    return Array.isArray(guestData?.titles)
+      ? guestData.titles
+      : getGuestTitles();
+  }
+  return user?.titles || [];
+}, [isGuest, user, guestData, guestVersion]);
 
   /** 🔥 대표 칭호 */
   const equippedTitleId = useMemo(() => {
