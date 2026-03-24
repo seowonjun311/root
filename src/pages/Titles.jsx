@@ -52,8 +52,17 @@ export default function Titles() {
       setGuestData(latest);
     });
 
-    return unsubscribe;
-  }, []);
+    const handleServerUpdate = () => {
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    };
+
+    window.addEventListener('root-home-data-updated', handleServerUpdate);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('root-home-data-updated', handleServerUpdate);
+    };
+  }, [queryClient]);
 
   const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: ['me'],
