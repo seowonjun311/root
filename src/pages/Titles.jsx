@@ -37,26 +37,6 @@ const CATEGORY_LABELS = {
   daily: '일상',
 };
 
-const GUEST_TITLES_KEY = 'root_guest_titles';
-const GUEST_EQUIPPED_TITLE_KEY = 'root_guest_equipped_title';
-
-function safeParseArray(raw) {
-  try {
-    const parsed = JSON.parse(raw || '[]');
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function getGuestTitlesFromLocal() {
-  return safeParseArray(localStorage.getItem(GUEST_TITLES_KEY));
-}
-
-function getGuestEquippedFromLocal() {
-  return localStorage.getItem(GUEST_EQUIPPED_TITLE_KEY) || '';
-}
-
 export default function Titles() {
   const queryClient = useQueryClient();
   const [guestVersion, setGuestVersion] = useState(0);
@@ -79,28 +59,22 @@ export default function Titles() {
     staleTime: 0,
   });
 
-  const localGuestTitles = useMemo(() => {
-    const fromGuestData = Array.isArray(guestData?.titles) ? guestData.titles : [];
-    const fromLocal = getGuestTitlesFromLocal();
-    return Array.from(new Set([...fromGuestData, ...fromLocal]));
-  }, [guestData, guestVersion]);
-
-  const hasGuestTitles = localGuestTitles.length > 0;
+  const isGuest = !user;
 
   const ownedTitles = useMemo(() => {
-    if (hasGuestTitles) return localGuestTitles;
+    if (isGuest) {
+      return Array.isArray(guestData?.titles) ? guestData.titles : [];
+    }
     return Array.isArray(user?.titles) ? user.titles : [];
-  }, [hasGuestTitles, localGuestTitles, user]);
+  }, [isGuest, guestData, user, guestVersion]);
 
   const equippedTitleId = useMemo(() => {
-    const localEquipped = guestData?.equipped_title || getGuestEquippedFromLocal();
-    if (hasGuestTitles) return localEquipped;
-    return user?.equipped_title || localEquipped || '';
-  }, [guestData, guestVersion, hasGuestTitles, user]);
+    if (isGuest) return guestData?.equipped_title || '';
+    return user?.equipped_title || '';
+  }, [isGuest, user, guestData, guestVersion]);
 
   const handleEquip = async (title) => {
-    if (hasGuestTitles) {
-      localStorage.setItem(GUEST_EQUIPPED_TITLE_KEY, title.id);
+    if (isGuest) {
       guestDataPersistence.saveData('equipped_title', title.id);
 
       queryClient.removeQueries({ queryKey: ['guest-home-data'] });
@@ -132,8 +106,8 @@ export default function Titles() {
       daily: [],
     };
 
-    TITLES.forEach((title) => {
-      map[title.category].push(title);
+    TITLES.forEach((t) => {
+      map[t.category].push(t);
     });
 
     return map;
