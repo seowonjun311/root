@@ -131,6 +131,13 @@ function normalizeCategoryValue(category, fallback = 'exercise') {
   return fallback;
 }
 
+function resolveCategoryKey(category, fallback = '') {
+  const rawCategory =
+    typeof category === 'string' ? category.trim() : '';
+  if (!rawCategory) return fallback;
+  return CATEGORY_ALIASES[rawCategory] || rawCategory;
+}
+
 function getGoalEndDate(goal) {
   if (!goal?.start_date || !goal?.duration_days) return null;
 
@@ -186,11 +193,8 @@ function connectActionGoalsToGoals(goals = [], actionGoals = []) {
   const goalsById = new Map(safeGoals.map((goal) => [goal.id, goal]));
 
   const activeGoalByCategory = safeGoals.reduce((acc, goal) => {
-    const rawCategory =
-      typeof goal?.category === 'string' ? goal.category.trim() : '';
-    if (!goal?.id || !rawCategory) return acc;
-
-    const categoryKey = CATEGORY_ALIASES[rawCategory] || rawCategory;
+    const categoryKey = resolveCategoryKey(goal?.category, '');
+    if (!goal?.id || !categoryKey) return acc;
     if (goal?.status && goal.status !== 'active') return acc;
     if (!acc[categoryKey]) {
       acc[categoryKey] = goal.id;
@@ -205,9 +209,7 @@ function connectActionGoalsToGoals(goals = [], actionGoals = []) {
       return actionGoal;
     }
 
-    const rawCategory =
-      typeof actionGoal?.category === 'string' ? actionGoal.category.trim() : '';
-    const categoryKey = CATEGORY_ALIASES[rawCategory] || rawCategory || 'exercise';
+    const categoryKey = resolveCategoryKey(actionGoal?.category, 'exercise');
     const inferredGoalId = activeGoalByCategory[categoryKey] || safeGoals[0]?.id || null;
 
     return {
