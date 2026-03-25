@@ -3,6 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import  guestDataPersistence  from '@/lib/GuestDataPersistence';
+import {
+  addOwnedTitle,
+  ensureValidEquippedTitle,
+  getOwnedTitleIds,
+  resolveEquippedTitleId,
+  setEquippedTitle,
+} from '@/lib/titleStorage';
 import { toast } from 'sonner';
 
 import CharacterBanner from '@/components/home/CharacterBanner';
@@ -24,6 +31,19 @@ const CATEGORY_LABELS = {
   mental: '정신',
   daily: '일상',
 };
+
+const CATEGORY_ALIASES = {
+  exercise: 'exercise',
+  study: 'study',
+  mental: 'mental',
+  daily: 'daily',
+  운동: 'exercise',
+  공부: 'study',
+  정신: 'mental',
+  일상: 'daily',
+};
+
+const VALID_CATEGORIES = Object.keys(CATEGORY_LABELS);
 
 const TITLES = [
   { id: 'common_first_step', name: '첫 걸음을 뗀 자', description: '첫 행동목표를 완료한 용사', metric: 'total_actions', value: 1, category: 'common' },
@@ -103,6 +123,21 @@ function normalizeDateOnly(value) {
   ).padStart(2, '0')}`;
 }
 
+function normalizeCategoryValue(category, fallback = 'exercise') {
+  const normalized = CATEGORY_ALIASES[category];
+  if (normalized && VALID_CATEGORIES.includes(normalized)) {
+    return normalized;
+  }
+  return fallback;
+}
+
+function resolveCategoryKey(category, fallback = '') {
+  const rawCategory =
+    typeof category === 'string' ? category.trim() : '';
+  if (!rawCategory) return fallback;
+  return CATEGORY_ALIASES[rawCategory] || rawCategory;
+}
+
 function getGoalEndDate(goal) {
   if (!goal?.start_date || !goal?.duration_days) return null;
 
@@ -149,6 +184,66 @@ function getWeeklyLogsForAction(logs, actionGoalId) {
 
 function getAllLogsForAction(logs, actionGoalId) {
   return (logs || []).filter((log) => log?.action_goal_id === actionGoalId);
+}
+
+function connectActionGoalsToGoals(goals = [], actionGoals = []) {
+  const safeGoals = Array.isArray(goals) ? goals.filter(Boolean) : [];
+  const safeActionGoals = Array.isArray(actionGoals) ? actionGoals.filter(Boolean) : [];
+
+  const goalsById = new Map(safeGoals.map((goal) => [goal.id, goal]));
+
+  const activeGoalByCategory = safeGoals.reduce((acc, goal) => {
+    const categoryKey = resolveCategoryKey(goal?.category, '');
+    if (!goal?.id || !categoryKey) return acc;
+    if (goal?.status && goal.status !== 'active') return acc;
+    if (!acc[categoryKey]) {
+      acc[categoryKey] = goal.id;
+    }
+    return acc;
+  }, {});
+
+  return safeActionGoals.map((actionGoal) => {
+    if (!actionGoal) return actionGoal;
+
+    if (actionGoal.goal_id && goalsById.has(actionGoal.goal_id)) {
+      return actionGoal;
+    }
+
+    const categoryKey = resolveCategoryKey(actionGoal?.category, 'exercise');
+    const inferredGoalId = activeGoalByCategory[categoryKey] || safeGoals[0]?.id || null;
+
+    return {
+      ...actionGoal,
+      category: categoryKey,
+      goal_id: inferredGoalId,
+    };
+  });
+}
+
+function normalizeGuestGoals(rawGoals, fallbackCategory = 'exercise') {
+  return (Array.isArray(rawGoals) ? rawGoals : [])
+    .filter(Boolean)
+    .map((goal, index) => ({
+      ...goal,
+      id: goal?.id || `local_goal_${index + 1}`,
+      category: normalizeCategoryValue(goal?.category, fallbackCategory),
+      status: goal?.status || 'active',
+    }));
+}
+
+function normalizeGuestActionGoals(rawActionGoals, goals = [], fallbackCategory = 'exercise') {
+  const safeActionGoals = Array.isArray(rawActionGoals) ? rawActionGoals : [];
+  const firstGoalId = goals[0]?.id || null;
+
+  return safeActionGoals
+    .filter(Boolean)
+    .map((actionGoal, index) => ({
+      ...actionGoal,
+      id: actionGoal?.id || `local_ag_${index + 1}`,
+      category: normalizeCategoryValue(actionGoal?.category, fallbackCategory),
+      status: actionGoal?.status || 'active',
+      goal_id: actionGoal?.goal_id || firstGoalId,
+    }));
 }
 
 function getStreakForAction(logs, actionGoalId) {
@@ -472,6 +567,7 @@ export default function Home() {
   const [moveTrigger, setMoveTrigger] = useState(0);
   const [expPopup, setExpPopup] = useState(null);
   const [newTitle, setNewTitle] = useState(null);
+  const hasCategoryInteractionRef = useRef(false);
 
   const expPopupTimerRef = useRef(null);
 
@@ -506,7 +602,15 @@ export default function Home() {
     queryKey: ['goals', isGuest, guestVersion],
     enabled: !isUserLoading,
     queryFn: async () => {
-      if (isGuest) return guestData?.goals || [];
+      if (isGuest) {
+        const rawGoals =
+          Array.isArray(guestData?.goals) && guestData.goals.length > 0
+            ? guestData.goals
+            : guestData?.goalData
+              ? [guestData.goalData]
+              : [];
+        return normalizeGuestGoals(rawGoals, guestData?.category || 'exercise');
+      }
       return base44.entities.Goal.list('-created_date', 100);
     },
   });
@@ -515,7 +619,29 @@ export default function Home() {
     queryKey: ['actionGoals', isGuest, guestVersion],
     enabled: !isUserLoading,
     queryFn: async () => {
-      if (isGuest) return guestData?.actionGoals || [];
+      if (isGuest) {
+        const normalizedGoals = normalizeGuestGoals(
+          Array.isArray(guestData?.goals) && guestData.goals.length > 0
+            ? guestData.goals
+            : guestData?.goalData
+              ? [guestData.goalData]
+              : [],
+          guestData?.category || 'exercise'
+        );
+
+        const rawActionGoals =
+          Array.isArray(guestData?.actionGoals) && guestData.actionGoals.length > 0
+            ? guestData.actionGoals
+            : guestData?.actionGoalData
+              ? [guestData.actionGoalData]
+              : [];
+
+        return normalizeGuestActionGoals(
+          rawActionGoals,
+          normalizedGoals,
+          guestData?.category || normalizedGoals[0]?.category || 'exercise'
+        );
+      }
       return base44.entities.ActionGoal.list('-created_date', 200);
     },
   });
@@ -529,6 +655,10 @@ export default function Home() {
     },
   });
 
+  const connectedActionGoals = useMemo(() => {
+    return connectActionGoalsToGoals(goals, actionGoals);
+  }, [goals, actionGoals]);
+
   const userLevels = useMemo(() => {
     if (isGuest) return getDefaultUserLevels(guestData?.actionLogs || []);
     return getDefaultUserLevels(allLogs || []);
@@ -536,15 +666,11 @@ export default function Home() {
 
   const derivedStats = useMemo(() => {
     const sourceLogs = isGuest ? guestData?.actionLogs || [] : allLogs || [];
-    const sourceGoals = isGuest ? guestData?.actionGoals || [] : actionGoals || [];
-    return buildDerivedStats(sourceLogs, sourceGoals);
-  }, [isGuest, guestData, allLogs, actionGoals]);
+    return buildDerivedStats(sourceLogs, connectedActionGoals || []);
+  }, [isGuest, guestData, allLogs, connectedActionGoals]);
 
   const ownedTitleIds = useMemo(() => {
-    if (isGuest) {
-      return Array.isArray(guestData?.titles) ? guestData.titles : [];
-    }
-    return Array.isArray(user?.titles) ? user.titles : [];
+    return getOwnedTitleIds({ isGuest, user, guestData });
   }, [isGuest, user, guestData, guestVersion]);
 
   const unlockedTitles = useMemo(() => {
@@ -552,67 +678,72 @@ export default function Home() {
   }, [derivedStats, ownedTitleIds]);
 
   const equippedTitle = useMemo(() => {
-    const fallbackId = ownedTitleIds[0] || '';
-    const equippedId = isGuest
-      ? (guestData?.equipped_title || fallbackId)
-      : (user?.equipped_title || fallbackId);
-
+    const equippedId = resolveEquippedTitleId({ isGuest, user, guestData, ownedTitleIds });
     return unlockedTitles.find((title) => title.id === equippedId) || null;
   }, [isGuest, user, guestData, unlockedTitles, guestVersion, ownedTitleIds]);
 
   useEffect(() => {
-    if (!isGuest) return;
-    if (!ownedTitleIds.length) return;
-
-    const currentEquipped = guestData?.equipped_title || '';
-    if (currentEquipped && ownedTitleIds.includes(currentEquipped)) return;
-
-    writeGuestDataPatch((prev) => ({
-      ...prev,
-      equipped_title: ownedTitleIds[0] || '',
-    }));
-
-    queryClient.removeQueries({ queryKey: ['guest-home-data'] });
-    queryClient.removeQueries({ queryKey: ['guest-records-data'] });
-    queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
-    queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
-    window.dispatchEvent(new Event('root-home-data-updated'));
-    setGuestVersion((v) => v + 1);
+    ensureValidEquippedTitle({ isGuest, user, guestData, ownedTitleIds, queryClient })
+      .then((nextGuest) => {
+        if (!isGuest || !nextGuest) return;
+        queryClient.removeQueries({ queryKey: ['guest-home-data'] });
+        queryClient.removeQueries({ queryKey: ['guest-records-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
+        window.dispatchEvent(new Event('root-home-data-updated'));
+        setGuestVersion((v) => v + 1);
+      })
+      .catch((error) => {
+        console.error('ensureValidEquippedTitle error:', error);
+      });
   }, [isGuest, ownedTitleIds, guestData, queryClient]);
 
   useEffect(() => {
     if (isUserLoading) return;
 
-    if (isGuest) {
-      const guestCategory =
-        guestData?.activeCategory ||
-        guestData?.guest_active_category ||
-        guestData?.goalData?.category ||
-        guestData?.actionGoalData?.category ||
-        guestData?.goals?.[0]?.category ||
-        'exercise';
+    const current = normalizeCategoryValue(activeCategory, 'exercise');
 
-      setActiveCategory(guestCategory);
+    if (isGuest) {
+      const guestCategory = normalizeCategoryValue(
+        guestData?.activeCategory ||
+          guestData?.guest_active_category ||
+          guestData?.category ||
+          guestData?.goalData?.category ||
+          guestData?.actionGoalData?.category ||
+          guestData?.goals?.[0]?.category,
+        'exercise'
+      );
+
+      if (!hasCategoryInteractionRef.current || !VALID_CATEGORIES.includes(current)) {
+        setActiveCategory(guestCategory);
+      }
       return;
     }
 
-    setActiveCategory(user?.active_category || goals?.[0]?.category || 'exercise');
-  }, [isUserLoading, isGuest, guestData, user, goals]);
+    const userCategory = normalizeCategoryValue(user?.active_category || goals?.[0]?.category, 'exercise');
+    if (!hasCategoryInteractionRef.current || !VALID_CATEGORIES.includes(current)) {
+      setActiveCategory(userCategory);
+    }
+  }, [isUserLoading, isGuest, guestData, user, goals, activeCategory]);
 
   const handleCategoryChange = async (category) => {
-    setActiveCategory(category);
+    const normalizedCategory = normalizeCategoryValue(category, 'exercise');
+    hasCategoryInteractionRef.current = true;
+    setActiveCategory(normalizedCategory);
 
     if (isGuest) {
       writeGuestDataPatch((prev) => ({
         ...prev,
-        guest_active_category: category,
+        category: normalizedCategory,
+        activeCategory: normalizedCategory,
+        guest_active_category: normalizedCategory,
       }));
       window.dispatchEvent(new Event('root-home-data-updated'));
       return;
     }
 
     try {
-      await base44.auth.updateMe({ active_category: category });
+      await base44.auth.updateMe({ active_category: normalizedCategory });
       queryClient.invalidateQueries({ queryKey: ['me'] });
     } catch (error) {
       console.error(error);
@@ -620,31 +751,26 @@ export default function Home() {
   };
 
   const activeGoals = useMemo(() => {
-    const sourceGoals =
-      isGuest
-        ? (Array.isArray(guestData?.goals) && guestData.goals.length > 0
-            ? guestData.goals
-            : guestData?.goalData
-              ? [guestData.goalData]
-              : [])
-        : goals || [];
+    const sourceGoals = goals || [];
 
     return sourceGoals.filter((goal) => {
       if (!goal) return false;
-      if (goal.category !== activeCategory) return false;
+      const goalCategory = normalizeCategoryValue(goal.category, '');
+      if (goalCategory !== activeCategory) return false;
       if (goal.status && goal.status !== 'active') return false;
       return true;
     });
-  }, [isGuest, guestData, goals, activeCategory]);
+  }, [goals, activeCategory]);
 
-  const activeGoal = activeGoals[0] || (isGuest ? guestData?.goalData || null : null);
+  const activeGoal = activeGoals[0] || null;
 
   const activeActionGoals = useMemo(() => {
     const goalIds = new Set(activeGoals.map((goal) => goal.id));
 
-    return (actionGoals || []).filter((actionGoal) => {
+    return (connectedActionGoals || []).filter((actionGoal) => {
       if (!actionGoal) return false;
-      if (actionGoal.category !== activeCategory) return false;
+      const actionCategory = normalizeCategoryValue(actionGoal.category, '');
+      if (actionCategory !== activeCategory) return false;
       if (
         actionGoal.status &&
         actionGoal.status !== 'active' &&
@@ -658,7 +784,7 @@ export default function Home() {
 
       return goalIds.has(actionGoal.goal_id);
     });
-  }, [actionGoals, activeCategory, activeGoals]);
+  }, [connectedActionGoals, activeCategory, activeGoals]);
 
   const goalLogs = useMemo(() => {
     if (!activeGoal) return [];
@@ -687,20 +813,7 @@ export default function Home() {
 
     if (isGuest) {
       try {
-        const latestGuest = readGuestData();
-        const prevTitles = Array.isArray(latestGuest?.titles) ? latestGuest.titles : [];
-        const nextTitles = Array.from(new Set([...prevTitles, titleId]));
-
-        const nextEquipped =
-          latestGuest?.equipped_title && nextTitles.includes(latestGuest.equipped_title)
-            ? latestGuest.equipped_title
-            : nextTitles[0] || '';
-
-        const nextGuest = writeGuestDataPatch((prev) => ({
-          ...prev,
-          titles: nextTitles,
-          equipped_title: nextEquipped,
-        }));
+        const nextTitles = await addOwnedTitle({ titleId, isGuest, user, queryClient });
 
         queryClient.removeQueries({ queryKey: ['guest-home-data'] });
         queryClient.removeQueries({ queryKey: ['guest-records-data'] });
@@ -710,7 +823,7 @@ export default function Home() {
         window.dispatchEvent(new Event('root-home-data-updated'));
         setGuestVersion((v) => v + 1);
 
-        return nextGuest?.titles || nextTitles;
+        return nextTitles;
       } catch (error) {
         console.error('persistNewTitle guest error:', error);
         return null;
@@ -718,30 +831,19 @@ export default function Home() {
     }
 
     try {
-      const currentTitles = Array.isArray(user?.titles) ? user.titles : [];
-      const nextTitles = Array.from(new Set([...currentTitles, titleId]));
-      const payload = { titles: nextTitles };
-
-      if (!user?.equipped_title) {
-        payload.equipped_title = titleId;
-      }
+      const nextTitles = await addOwnedTitle({ titleId, isGuest, user, queryClient });
 
       const titleMeta = TITLES.find((t) => t.id === titleId);
       const todayStr = new Date().toISOString().split('T')[0];
 
-      await Promise.all([
-        base44.auth.updateMe(payload),
-        base44.entities.Badge.create({
-          title: titleMeta?.name || titleId,
-          description: titleMeta?.description || '',
-          category: titleMeta?.category || 'special',
-          badge_type: 'result',
-          earned_date: todayStr,
-        }),
-      ]);
+      await base44.entities.Badge.create({
+        title: titleMeta?.name || titleId,
+        description: titleMeta?.description || '',
+        category: titleMeta?.category || 'special',
+        badge_type: 'result',
+        earned_date: todayStr,
+      });
 
-      queryClient.removeQueries({ queryKey: ['me'] });
-      queryClient.invalidateQueries({ queryKey: ['me'] });
       queryClient.invalidateQueries({ queryKey: ['badges'] });
 
       window.dispatchEvent(new Event('root-home-data-updated'));
@@ -758,22 +860,12 @@ export default function Home() {
 
     if (isGuest) {
       try {
-        writeGuestDataPatch((prev) => {
-          const prevTitles = Array.isArray(prev?.titles) ? prev.titles : [];
-
-          if (!prevTitles.includes(title.id)) {
-            return {
-              ...prev,
-              titles: prevTitles,
-              equipped_title: prevTitles[0] || '',
-            };
-          }
-
-          return {
-            ...prev,
-            titles: prevTitles,
-            equipped_title: title.id,
-          };
+        await setEquippedTitle({
+          titleId: title.id,
+          isGuest,
+          user,
+          guestData,
+          queryClient,
         });
 
         queryClient.removeQueries({ queryKey: ['guest-home-data'] });
@@ -795,9 +887,13 @@ export default function Home() {
     }
 
     try {
-      await base44.auth.updateMe({ equipped_title: title.id });
-      queryClient.removeQueries({ queryKey: ['me'] });
-      queryClient.invalidateQueries({ queryKey: ['me'] });
+      await setEquippedTitle({
+        titleId: title.id,
+        isGuest,
+        user,
+        guestData,
+        queryClient,
+      });
       setNewTitle(null);
       toast.success(`대표 칭호가 "${title.name}"(으)로 설정되었어요.`);
     } catch (error) {
@@ -814,7 +910,7 @@ export default function Home() {
 
       const logPayload = {
         action_goal_id: actionGoal.id,
-        goal_id: actionGoal.goal_id || null,
+        goal_id: actionGoal.goal_id || activeGoal?.id || null,
         category: actionGoal.category,
         title: actionGoal.title || '',
         completed: true,
@@ -874,8 +970,8 @@ export default function Home() {
         : (Array.isArray(allLogs) ? allLogs : []);
 
       const currentActionGoals = isGuest
-        ? (Array.isArray(guestData?.actionGoals) ? guestData.actionGoals : [])
-        : (Array.isArray(actionGoals) ? actionGoals : []);
+        ? (Array.isArray(guestData?.actionGoals) ? connectActionGoalsToGoals(goals, guestData.actionGoals) : [])
+        : (Array.isArray(connectedActionGoals) ? connectedActionGoals : []);
 
       const nextLogs = [...currentLogs, logPayload];
 
@@ -897,8 +993,8 @@ export default function Home() {
       const nextStats = buildDerivedStats(nextLogs, nextActionGoals);
 
       const currentOwnedTitleIds = isGuest
-        ? (Array.isArray(guestData?.titles) ? guestData.titles : [])
-        : (Array.isArray(user?.titles) ? user.titles : []);
+        ? getOwnedTitleIds({ isGuest: true, user: null, guestData })
+        : getOwnedTitleIds({ isGuest: false, user, guestData: null });
 
       const newlyUnlocked = getNewlyUnlockedTitle(nextStats, currentOwnedTitleIds);
 

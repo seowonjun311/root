@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import  guestDataPersistence  from '@/lib/GuestDataPersistence';
+import { getOwnedTitleIds } from '@/lib/titleStorage';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BarChart3, Clock, Target, Flame, RefreshCw } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
@@ -362,7 +363,9 @@ export default function Records() {
   const guestLogs = Array.isArray(guestData?.actionLogs) ? guestData.actionLogs : [];
   const guestGoals = Array.isArray(guestData?.goals) ? guestData.goals : [];
   const guestActionGoals = Array.isArray(guestData?.actionGoals) ? guestData.actionGoals : [];
-  const guestTitles = Array.isArray(guestData?.titles) ? guestData.titles : [];
+  const ownedTitleIds = useMemo(() => {
+    return getOwnedTitleIds({ isGuest, user, guestData });
+  }, [isGuest, user, guestData]);
 
   const logs = isGuest ? guestLogs : logsFromServer;
   const goals = isGuest ? guestGoals : goalsFromServer;
@@ -391,25 +394,15 @@ export default function Records() {
       (catFilter === 'all' || g.category === catFilter)
   );
 
-  const badges = isGuest
-    ? guestTitles.map((id) => ({
-        id,
-        earned_date: '',
-        ...(TITLE_META_MAP[id] || {
-          title: id,
-          description: '',
-          category: 'special',
-        }),
-      }))
-    : (Array.isArray(user?.titles) ? user.titles : []).map((id) => ({
-        id,
-        earned_date: '',
-        ...(TITLE_META_MAP[id] || {
-          title: id,
-          description: '',
-          category: 'special',
-        }),
-      }));
+  const badges = ownedTitleIds.map((id) => ({
+    id,
+    earned_date: '',
+    ...(TITLE_META_MAP[id] || {
+      title: id,
+      description: '',
+      category: 'special',
+    }),
+  }));
 
   const filteredBadges =
     catFilter === 'all'
