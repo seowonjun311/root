@@ -215,6 +215,10 @@ function connectActionGoalsToGoals(goals = [], actionGoals = []) {
     return {
       ...actionGoal,
       category: categoryKey,
+    const inferredGoalId = activeGoalByCategory[actionGoal.category] || safeGoals[0]?.id || null;
+
+    return {
+      ...actionGoal,
       goal_id: inferredGoalId,
     };
   });
@@ -227,6 +231,7 @@ function normalizeGuestGoals(rawGoals, fallbackCategory = 'exercise') {
       ...goal,
       id: goal?.id || `local_goal_${index + 1}`,
       category: normalizeCategoryValue(goal?.category, fallbackCategory),
+      category: goal?.category || fallbackCategory,
       status: goal?.status || 'active',
     }));
 }
@@ -241,6 +246,7 @@ function normalizeGuestActionGoals(rawActionGoals, goals = [], fallbackCategory 
       ...actionGoal,
       id: actionGoal?.id || `local_ag_${index + 1}`,
       category: normalizeCategoryValue(actionGoal?.category, fallbackCategory),
+      category: actionGoal?.category || fallbackCategory,
       status: actionGoal?.status || 'active',
       goal_id: actionGoal?.goal_id || firstGoalId,
     }));
