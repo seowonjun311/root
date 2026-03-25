@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import  guestDataPersistence  from '@/lib/GuestDataPersistence';
+import guestDataPersistence from '@/lib/GuestDataPersistence';
 import {
   addOwnedTitle,
   ensureValidEquippedTitle,
@@ -88,7 +88,21 @@ function readGuestData() {
 function writeGuestDataPatch(patchOrUpdater) {
   try {
     if (typeof guestDataPersistence?.updateData === 'function') {
-      return guestDataPersistence.updateData(patchOrUpdater);
+      return guestDataPersistence.updateData((prev) => {
+        const draft =
+          typeof patchOrUpdater === 'function'
+            ? patchOrUpdater(prev)
+            : { ...prev, ...(patchOrUpdater || {}) };
+
+        const normalizedDraft = { ...(draft || {}) };
+
+        if (Object.prototype.hasOwnProperty.call(normalizedDraft, 'local_action_logs')) {
+          normalizedDraft.actionLogs = normalizedDraft.local_action_logs;
+          delete normalizedDraft.local_action_logs;
+        }
+
+        return normalizedDraft;
+      });
     }
 
     const prev = readGuestData();
@@ -98,8 +112,9 @@ function writeGuestDataPatch(patchOrUpdater) {
         : { ...prev, ...(patchOrUpdater || {}) };
 
     Object.entries(next || {}).forEach(([key, value]) => {
+      const normalizedKey = key === 'local_action_logs' ? 'actionLogs' : key;
       if (typeof guestDataPersistence?.saveData === 'function') {
-        guestDataPersistence.saveData(key, value);
+        guestDataPersistence.saveData(normalizedKey, value);
       }
     });
 
@@ -132,8 +147,7 @@ function normalizeCategoryValue(category, fallback = 'exercise') {
 }
 
 function resolveCategoryKey(category, fallback = '') {
-  const rawCategory =
-    typeof category === 'string' ? category.trim() : '';
+  const rawCategory = typeof category === 'string' ? category.trim() : '';
   if (!rawCategory) return fallback;
   return CATEGORY_ALIASES[rawCategory] || rawCategory;
 }
@@ -186,36 +200,36 @@ function getAllLogsForAction(logs, actionGoalId) {
   return (logs || []).filter((log) => log?.action_goal_id === actionGoalId);
 }
 
+function resolveGoalIdForActionGoal(actionGoal, goals = [], fallbackCategory = 'exercise') {
+  if (actionGoal?.goal_id) return actionGoal.goal_id;
+
+  const categoryKey = resolveCategoryKey(actionGoal?.category, fallbackCategory);
+  const safeGoals = Array.isArray(goals) ? goals.filter(Boolean) : [];
+
+  const byCategory = safeGoals.find((goal) => {
+    if (!goal?.id) return false;
+    if (goal?.status && goal.status !== 'active') return false;
+    return resolveCategoryKey(goal?.category, '') === categoryKey;
+  });
+
+  if (byCategory?.id) return byCategory.id;
+  return safeGoals[0]?.id || null;
+}
+
 function connectActionGoalsToGoals(goals = [], actionGoals = []) {
   const safeGoals = Array.isArray(goals) ? goals.filter(Boolean) : [];
   const safeActionGoals = Array.isArray(actionGoals) ? actionGoals.filter(Boolean) : [];
 
-  const goalsById = new Map(safeGoals.map((goal) => [goal.id, goal]));
-
-  const activeGoalByCategory = safeGoals.reduce((acc, goal) => {
-    const categoryKey = resolveCategoryKey(goal?.category, '');
-    if (!goal?.id || !categoryKey) return acc;
-    if (goal?.status && goal.status !== 'active') return acc;
-    if (!acc[categoryKey]) {
-      acc[categoryKey] = goal.id;
-    }
-    return acc;
-  }, {});
-
   return safeActionGoals.map((actionGoal) => {
     if (!actionGoal) return actionGoal;
 
-    if (actionGoal.goal_id && goalsById.has(actionGoal.goal_id)) {
-      return actionGoal;
-    }
-
     const categoryKey = resolveCategoryKey(actionGoal?.category, 'exercise');
-    const inferredGoalId = activeGoalByCategory[categoryKey] || safeGoals[0]?.id || null;
+    const resolvedGoalId = resolveGoalIdForActionGoal(actionGoal, safeGoals, categoryKey);
 
     return {
       ...actionGoal,
       category: categoryKey,
-      goal_id: inferredGoalId,
+      goal_id: resolvedGoalId,
     };
   });
 }
@@ -233,17 +247,22 @@ function normalizeGuestGoals(rawGoals, fallbackCategory = 'exercise') {
 
 function normalizeGuestActionGoals(rawActionGoals, goals = [], fallbackCategory = 'exercise') {
   const safeActionGoals = Array.isArray(rawActionGoals) ? rawActionGoals : [];
-  const firstGoalId = goals[0]?.id || null;
 
   return safeActionGoals
     .filter(Boolean)
-    .map((actionGoal, index) => ({
-      ...actionGoal,
-      id: actionGoal?.id || `local_ag_${index + 1}`,
-      category: normalizeCategoryValue(actionGoal?.category, fallbackCategory),
-      status: actionGoal?.status || 'active',
-      goal_id: actionGoal?.goal_id || firstGoalId,
-    }));
+    .map((actionGoal, index) => {
+      const category = normalizeCategoryValue(actionGoal?.category, fallbackCategory);
+      const tempGoalId =
+        actionGoal?.goal_id || goals.find((goal) => normalizeCategoryValue(goal?.category, '') === category)?.id || goals[0]?.id || null;
+
+      return {
+        ...actionGoal,
+        id: actionGoal?.id || `local_ag_${index + 1}`,
+        category,
+        status: actionGoal?.status || 'active',
+        goal_id: tempGoalId,
+      };
+    });
 }
 
 function getStreakForAction(logs, actionGoalId) {
@@ -441,6 +460,27 @@ function getNewlyUnlockedTitle(stats, ownedTitleIds = []) {
   );
 }
 
+function validateGoalActionLogChain(goals = [], actionGoals = [], logs = []) {
+  const goalIds = new Set((goals || []).map((goal) => goal?.id).filter(Boolean));
+  const actionGoalIds = new Set((actionGoals || []).map((goal) => goal?.id).filter(Boolean));
+
+  const actionGoalsWithoutGoalId = (actionGoals || []).filter((goal) => !goal?.goal_id).length;
+  const logsWithoutGoalId = (logs || []).filter((log) => !log?.goal_id).length;
+  const logsWithUnknownActionGoal = (logs || []).filter(
+    (log) => log?.action_goal_id && !actionGoalIds.has(log.action_goal_id)
+  ).length;
+  const actionGoalsWithUnknownGoal = (actionGoals || []).filter(
+    (goal) => goal?.goal_id && !goalIds.has(goal.goal_id)
+  ).length;
+
+  return {
+    actionGoalsWithoutGoalId,
+    logsWithoutGoalId,
+    logsWithUnknownActionGoal,
+    actionGoalsWithUnknownGoal,
+  };
+}
+
 function Section({ title, count, emptyText, children }) {
   const hasItems = React.Children.count(children) > 0;
 
@@ -568,6 +608,7 @@ export default function Home() {
   const [expPopup, setExpPopup] = useState(null);
   const [newTitle, setNewTitle] = useState(null);
   const hasCategoryInteractionRef = useRef(false);
+  const chainRepairOnceRef = useRef(false);
 
   const expPopupTimerRef = useRef(null);
 
@@ -658,6 +699,74 @@ export default function Home() {
   const connectedActionGoals = useMemo(() => {
     return connectActionGoalsToGoals(goals, actionGoals);
   }, [goals, actionGoals]);
+
+  useEffect(() => {
+    if (!Array.isArray(actionGoals) || actionGoals.length === 0) return;
+    if (chainRepairOnceRef.current) return;
+
+    const needsRepair = actionGoals.some((goal) => {
+      if (!goal?.id) return false;
+      const resolved = resolveGoalIdForActionGoal(goal, goals, activeCategory);
+      return !goal?.goal_id || goal.goal_id !== resolved;
+    });
+
+    if (!needsRepair) return;
+
+    chainRepairOnceRef.current = true;
+
+    if (isGuest) {
+      writeGuestDataPatch((prev) => {
+        const prevActionGoals = Array.isArray(prev?.actionGoals) ? prev.actionGoals : [];
+        const repaired = prevActionGoals.map((goal) => ({
+          ...goal,
+          goal_id: resolveGoalIdForActionGoal(goal, goals, prev?.category || activeCategory || 'exercise'),
+        }));
+        return {
+          ...prev,
+          actionGoals: repaired,
+          actionGoalData: repaired[0] || prev?.actionGoalData || null,
+        };
+      });
+      window.dispatchEvent(new Event('root-home-data-updated'));
+      return;
+    }
+
+    const updates = actionGoals
+      .map((goal) => ({
+        id: goal?.id,
+        currentGoalId: goal?.goal_id || null,
+        nextGoalId: resolveGoalIdForActionGoal(goal, goals, user?.active_category || activeCategory || 'exercise'),
+      }))
+      .filter((item) => item.id && item.nextGoalId && item.currentGoalId !== item.nextGoalId);
+
+    if (updates.length === 0) return;
+
+    Promise.all(
+      updates.map((item) =>
+        base44.entities.ActionGoal.update(item.id, {
+          goal_id: item.nextGoalId,
+        })
+      )
+    )
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
+      })
+      .catch((error) => {
+        console.error('Failed to repair actionGoal.goal_id:', error);
+      });
+  }, [actionGoals, goals, isGuest, activeCategory, queryClient, user]);
+
+  useEffect(() => {
+    const report = validateGoalActionLogChain(goals, connectedActionGoals, allLogs);
+    if (
+      report.actionGoalsWithoutGoalId > 0 ||
+      report.logsWithoutGoalId > 0 ||
+      report.logsWithUnknownActionGoal > 0 ||
+      report.actionGoalsWithUnknownGoal > 0
+    ) {
+      console.warn('[Home] goal→actionGoal→log chain issue detected:', report);
+    }
+  }, [goals, connectedActionGoals, allLogs]);
 
   const userLevels = useMemo(() => {
     if (isGuest) return getDefaultUserLevels(guestData?.actionLogs || []);
@@ -779,8 +888,8 @@ export default function Home() {
         return false;
       }
 
-      if (!actionGoal.goal_id) return true;
-      if (goalIds.size === 0) return true;
+      if (!actionGoal.goal_id) return false;
+      if (goalIds.size === 0) return false;
 
       return goalIds.has(actionGoal.goal_id);
     });
@@ -813,7 +922,7 @@ export default function Home() {
 
     if (isGuest) {
       try {
-        const nextTitles = await addOwnedTitle({ titleId, isGuest, user, queryClient });
+        await addOwnedTitle({ titleId, isGuest, user, queryClient });
 
         queryClient.removeQueries({ queryKey: ['guest-home-data'] });
         queryClient.removeQueries({ queryKey: ['guest-records-data'] });
@@ -822,82 +931,38 @@ export default function Home() {
 
         window.dispatchEvent(new Event('root-home-data-updated'));
         setGuestVersion((v) => v + 1);
-
-        return nextTitles;
       } catch (error) {
         console.error('persistNewTitle guest error:', error);
-        return null;
       }
+      return titleId;
     }
 
     try {
-      const nextTitles = await addOwnedTitle({ titleId, isGuest, user, queryClient });
-
-      const titleMeta = TITLES.find((t) => t.id === titleId);
-      const todayStr = new Date().toISOString().split('T')[0];
-
-      await base44.entities.Badge.create({
-        title: titleMeta?.name || titleId,
-        description: titleMeta?.description || '',
-        category: titleMeta?.category || 'special',
-        badge_type: 'result',
-        earned_date: todayStr,
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['badges'] });
-
-      window.dispatchEvent(new Event('root-home-data-updated'));
-
-      return nextTitles;
+      await addOwnedTitle({ titleId, isGuest, user, queryClient });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
     } catch (error) {
-      console.error('persistNewTitle server error:', error);
-      return null;
+      console.error('persistNewTitle user error:', error);
     }
+    return titleId;
   };
 
-  const handleEquipTitle = async (title) => {
-    if (!title) return;
+  const handleEquipTitle = async (titleId) => {
+    try {
+      await setEquippedTitle({ titleId, isGuest, user, queryClient });
+      setNewTitle(null);
 
-    if (isGuest) {
-      try {
-        await setEquippedTitle({
-          titleId: title.id,
-          isGuest,
-          user,
-          guestData,
-          queryClient,
-        });
-
-        queryClient.removeQueries({ queryKey: ['guest-home-data'] });
-        queryClient.removeQueries({ queryKey: ['guest-records-data'] });
+      if (isGuest) {
         queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
         queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
-
-        setNewTitle(null);
-        setGuestVersion((v) => v + 1);
         window.dispatchEvent(new Event('root-home-data-updated'));
-
-        toast.success(`대표 칭호가 "${title.name}"(으)로 설정되었어요.`);
-        return;
-      } catch (error) {
-        console.error(error);
-        toast.error('대표 칭호 설정에 실패했어요.');
-        return;
+        setGuestVersion((v) => v + 1);
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['me'] });
       }
-    }
 
-    try {
-      await setEquippedTitle({
-        titleId: title.id,
-        isGuest,
-        user,
-        guestData,
-        queryClient,
-      });
-      setNewTitle(null);
-      toast.success(`대표 칭호가 "${title.name}"(으)로 설정되었어요.`);
+      toast.success('대표 칭호가 설정되었어요.');
     } catch (error) {
-      console.error(error);
+      console.error('handleEquipTitle error:', error);
       toast.error('대표 칭호 설정에 실패했어요.');
     }
   };
@@ -908,9 +973,20 @@ export default function Home() {
       const todayStr = getTodayString();
       const earnedExp = calculateExp(actionGoal, minutes);
 
+      const safeGoalId =
+        actionGoal?.goal_id ||
+        resolveGoalIdForActionGoal(actionGoal, goals, activeCategory);
+
+      if (!safeGoalId) {
+        console.error('goal_id를 찾지 못해 로그 생성을 중단했습니다.', actionGoal);
+        toast.error('행동목표와 결과목표 연결이 끊어졌어요. 새로고침 후 다시 시도해 주세요.');
+        return;
+      }
+
       const logPayload = {
+        id: `local_log_${Date.now()}`,
         action_goal_id: actionGoal.id,
-        goal_id: actionGoal.goal_id || activeGoal?.id || null,
+        goal_id: safeGoalId,
         category: actionGoal.category,
         title: actionGoal.title || '',
         completed: true,
@@ -934,6 +1010,7 @@ export default function Home() {
             status: 'completed',
             completed: true,
             completed_date: todayStr,
+            updated_date: now,
           });
         }
 
@@ -944,13 +1021,17 @@ export default function Home() {
 
         window.dispatchEvent(new Event('root-home-data-updated'));
       } else {
-        await base44.entities.ActionLog.create(logPayload);
+        await base44.entities.ActionLog.create({
+          ...logPayload,
+          id: undefined,
+        });
 
         if (actionGoal.action_type === 'one_time') {
           await base44.entities.ActionGoal.update(actionGoal.id, {
             status: 'completed',
             completed: true,
             completed_date: todayStr,
+            updated_date: now,
           });
         }
 
@@ -993,170 +1074,118 @@ export default function Home() {
       const nextStats = buildDerivedStats(nextLogs, nextActionGoals);
 
       const currentOwnedTitleIds = isGuest
-        ? getOwnedTitleIds({ isGuest: true, user: null, guestData })
+        ? getOwnedTitleIds({ isGuest: true, user: null, guestData: readGuestData() })
         : getOwnedTitleIds({ isGuest: false, user, guestData: null });
 
-      const newlyUnlocked = getNewlyUnlockedTitle(nextStats, currentOwnedTitleIds);
+      const unlocked = getNewlyUnlockedTitle(nextStats, currentOwnedTitleIds);
 
-      if (newlyUnlocked) {
-        await persistNewTitle(newlyUnlocked.id);
-        setGuestVersion((prev) => prev + 1);
-        setNewTitle(newlyUnlocked);
-
-        queryClient.removeQueries({ queryKey: ['guest-home-data'] });
-        queryClient.removeQueries({ queryKey: ['guest-records-data'] });
-        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
-        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
-
-        window.dispatchEvent(new Event('root-home-data-updated'));
+      if (unlocked) {
+        await persistNewTitle(unlocked.id);
+        setNewTitle(unlocked);
       }
 
-      if (actionGoal.action_type === 'one_time') {
-        toast.success(`1회성 목표 완료! +${earnedExp} EXP`);
-      } else if (actionGoal.action_type === 'timer') {
-        toast.success(`${Math.max(1, Number(minutes || 0))}분 기록 완료! +${earnedExp} EXP`);
-      } else if (actionGoal.action_type === 'abstain') {
-        toast.success(`오늘도 잘 지켜냈어요! +${earnedExp} EXP`);
-      } else {
-        toast.success(`행동 목표를 완료했어요! +${earnedExp} EXP`);
-      }
+      toast.success('행동목표를 완료했어요!');
     } catch (error) {
-      console.error(error);
-      toast.error('완료 처리 중 문제가 생겼어요.');
+      console.error('handleActionComplete error:', error);
+      toast.error('행동목표 완료 처리 중 오류가 발생했어요.');
     }
   };
 
-  if (isUserLoading) {
-    return (
-      <div className="min-h-full px-4 py-4 space-y-4">
-        <div className="h-28 rounded-3xl bg-secondary/60 animate-pulse" />
-        <div className="grid grid-cols-4 gap-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-14 rounded-2xl bg-secondary/60 animate-pulse" />
-          ))}
-        </div>
-        <div className="h-32 rounded-3xl bg-secondary/60 animate-pulse" />
-        <div className="h-24 rounded-3xl bg-secondary/60 animate-pulse" />
-        <div className="h-24 rounded-3xl bg-secondary/60 animate-pulse" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-full bg-background pb-28">
-      <style>{`
-        @keyframes fadeInOut {
-          0% { opacity: 0; transform: translate(-50%, -8px); }
-          15% { opacity: 1; transform: translate(-50%, 0); }
-          80% { opacity: 1; transform: translate(-50%, 0); }
-          100% { opacity: 0; transform: translate(-50%, -10px); }
-        }
-      `}</style>
-
+    <div
+      className="min-h-screen pb-28"
+      style={{
+        background:
+          'linear-gradient(180deg, #f8f1df 0%, #f5e8c9 38%, #f2e1bc 68%, #ebd6a9 100%)',
+      }}
+    >
       {expPopup ? <ExpPopup exp={expPopup} /> : null}
 
       {newTitle ? (
         <TitleUnlockModal
           title={newTitle}
           onClose={() => setNewTitle(null)}
-          onEquip={() => handleEquipTitle(newTitle)}
+          onEquip={() => handleEquipTitle(newTitle.id)}
         />
       ) : null}
 
-      <div className="sticky top-0 z-30 bg-background">
+      <div className="px-4 pt-4 space-y-4">
         <CharacterBanner
-          nickname={`${nickname}님`}
+          nickname={nickname}
+          title={equippedTitle?.name || ''}
           message={bannerMessage}
-          activeCategory={activeCategory}
           moveTrigger={moveTrigger}
-          expText={expPopup ? `+${expPopup} EXP` : ''}
         />
 
-        <div className="border-b bg-background/95 backdrop-blur">
-          <CategoryTabs
-            active={activeCategory}
-            onChange={handleCategoryChange}
-            userLevels={userLevels}
-          />
-        </div>
-      </div>
+        <CategoryTabs
+          active={activeCategory}
+          onChange={handleCategoryChange}
+          userLevels={userLevels}
+        />
 
-      <div className="px-4 pt-3">
         {activeGoal ? (
           <GoalProgress goal={activeGoal} logs={goalLogs} />
         ) : (
-          <EmptyGoalState category={activeCategory} onCreateGoal={handleCreateGoal} />
+          <EmptyGoalState
+            category={activeCategory}
+            onCreateGoal={handleCreateGoal}
+          />
         )}
-      </div>
 
-      <div className="px-4 pt-5 space-y-6">
-        <Section
-          title="오늘 해야 할 것"
-          count={grouped.todayItems.length}
-          emptyText="오늘 해야 할 행동목표가 없습니다."
-        >
-          {grouped.todayItems.map((actionGoal) => (
-            <ActionGoalCard
-              key={actionGoal.id}
-              actionGoal={actionGoal}
-              weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-              allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-              streak={getStreakForAction(allLogs, actionGoal.id)}
-              onComplete={handleActionComplete}
-            />
-          ))}
-        </Section>
+        {activeGoal ? (
+          <div className="space-y-6">
+            <Section
+              title="오늘 해야 할 것"
+              count={grouped.todayItems.length}
+              emptyText="오늘 해야 할 행동목표가 없어요."
+            >
+              {grouped.todayItems.map((actionGoal) => (
+                <ActionGoalCard
+                  key={actionGoal.id}
+                  actionGoal={actionGoal}
+                  weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+                  allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+                  streak={getStreakForAction(allLogs, actionGoal.id)}
+                  onComplete={handleActionComplete}
+                />
+              ))}
+            </Section>
 
-        <Section
-          title="예정된 목표"
-          count={grouped.scheduledItems.length}
-          emptyText="예정된 목표가 없습니다."
-        >
-          {grouped.scheduledItems.map((actionGoal) => (
-            <ActionGoalCard
-              key={actionGoal.id}
-              actionGoal={actionGoal}
-              weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-              allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-              streak={getStreakForAction(allLogs, actionGoal.id)}
-              onComplete={handleActionComplete}
-            />
-          ))}
-        </Section>
+            <Section
+              title="예정된 목표"
+              count={grouped.scheduledItems.length}
+              emptyText="예정된 목표가 없어요."
+            >
+              {grouped.scheduledItems.map((actionGoal) => (
+                <ActionGoalCard
+                  key={actionGoal.id}
+                  actionGoal={actionGoal}
+                  weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+                  allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+                  streak={getStreakForAction(allLogs, actionGoal.id)}
+                  onComplete={handleActionComplete}
+                />
+              ))}
+            </Section>
 
-        <Section
-          title="기한 지난 목표"
-          count={grouped.overdueItems.length}
-          emptyText="기한 지난 목표가 없습니다."
-        >
-          {grouped.overdueItems.map((actionGoal) => (
-            <ActionGoalCard
-              key={actionGoal.id}
-              actionGoal={actionGoal}
-              weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-              allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-              streak={getStreakForAction(allLogs, actionGoal.id)}
-              onComplete={handleActionComplete}
-            />
-          ))}
-        </Section>
-      </div>
-
-      <div className="px-4 pt-5">
-        <button
-          type="button"
-          onClick={handleCreateGoal}
-          className="w-full h-12 rounded-2xl font-bold text-sm"
-          style={{
-            background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 50%, #8a6520 100%)',
-            border: '2px solid #6b4e15',
-            color: '#fff8e8',
-            boxShadow:
-              'inset 0 1px 2px rgba(255,220,120,0.4), 0 3px 6px rgba(60,35,5,0.3)',
-          }}
-        >
-          + 행동목표 추가
-        </button>
+            <Section
+              title="기한 지난 목표"
+              count={grouped.overdueItems.length}
+              emptyText="기한 지난 목표가 없어요."
+            >
+              {grouped.overdueItems.map((actionGoal) => (
+                <ActionGoalCard
+                  key={actionGoal.id}
+                  actionGoal={actionGoal}
+                  weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+                  allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+                  streak={getStreakForAction(allLogs, actionGoal.id)}
+                  onComplete={handleActionComplete}
+                />
+              ))}
+            </Section>
+          </div>
+        ) : null}
       </div>
     </div>
   );
