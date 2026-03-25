@@ -20,18 +20,15 @@ import {
   DrawerFooter,
 } from '@/components/ui/drawer';
 import { base44 } from '@/api/base44Client';
-import guestDataPersistence from '@/lib/GuestDataPersistence';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import WeekDays from './WeekDays';
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
-
-const DEFAULT_RUNTIME_STATE = {
-  timerStart: 0,
-  gpsEnabled: false,
-  gpsCoords: [],
-};
+const TIMER_KEY = (id) => `timer_start_${id}`;
+const GPS_KEY = (id) => `gps_enabled_${id}`;
+const GPS_COORDS_KEY = (id) => `gps_coords_${id}`;
+const GUEST_STORAGE_KEY = 'root_guest_data';
 
 function getTodayString() {
   return new Date().toISOString().split('T')[0];
@@ -74,66 +71,15 @@ function getMonthDates(year, month) {
 
 function loadGuestData() {
   try {
-    return guestDataPersistence.getData() || {};
+    const raw = localStorage.getItem(GUEST_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
   }
 }
 
 function saveGuestData(data) {
-  return guestDataPersistence.setData(data);
-}
-
-function getActionRuntimeState(actionGoalId) {
-  const data = loadGuestData();
-  const runtime = data?.actionRuntime || {};
-  const current = runtime[actionGoalId] || {};
-
-  return {
-    ...DEFAULT_RUNTIME_STATE,
-    ...current,
-    gpsCoords: Array.isArray(current?.gpsCoords) ? current.gpsCoords : [],
-  };
-}
-
-function updateActionRuntimeState(actionGoalId, patchOrUpdater) {
-  return guestDataPersistence.updateData((prev) => {
-    const runtime = { ...(prev?.actionRuntime || {}) };
-    const current = {
-      ...DEFAULT_RUNTIME_STATE,
-      ...(runtime[actionGoalId] || {}),
-      gpsCoords: Array.isArray(runtime[actionGoalId]?.gpsCoords)
-        ? runtime[actionGoalId].gpsCoords
-        : [],
-    };
-
-    const nextForGoal =
-      typeof patchOrUpdater === 'function'
-        ? patchOrUpdater(current)
-        : { ...current, ...(patchOrUpdater || {}) };
-
-    runtime[actionGoalId] = {
-      ...DEFAULT_RUNTIME_STATE,
-      ...nextForGoal,
-      gpsCoords: Array.isArray(nextForGoal?.gpsCoords) ? nextForGoal.gpsCoords : [],
-    };
-
-    return {
-      ...prev,
-      actionRuntime: runtime,
-    };
-  });
-}
-
-function clearActionRuntimeState(actionGoalId) {
-  return guestDataPersistence.updateData((prev) => {
-    const runtime = { ...(prev?.actionRuntime || {}) };
-    delete runtime[actionGoalId];
-    return {
-      ...prev,
-      actionRuntime: runtime,
-    };
-  });
+  localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(data));
 }
 
 function updateGuestActionGoal(actionGoalId, updateData) {
@@ -145,7 +91,6 @@ function updateGuestActionGoal(actionGoalId, updateData) {
   saveGuestData({
     ...current,
     actionGoals: nextActionGoals,
-    actionGoalData: nextActionGoals[0] || current.actionGoalData || null,
   });
 
   window.dispatchEvent(new Event('root-home-data-updated'));
@@ -154,17 +99,12 @@ function updateGuestActionGoal(actionGoalId, updateData) {
 function deleteGuestActionGoal(actionGoalId) {
   const current = loadGuestData();
 
-  const nextActionGoals = (current.actionGoals || []).filter((goal) => goal.id !== actionGoalId);
-  const nextActionLogs = (current.actionLogs || []).filter((log) => log.action_goal_id !== actionGoalId);
-
   saveGuestData({
     ...current,
-    actionGoals: nextActionGoals,
-    actionLogs: nextActionLogs,
-    actionGoalData: nextActionGoals[0] || null,
+    actionGoals: (current.actionGoals || []).filter((goal) => goal.id !== actionGoalId),
+    actionLogs: (current.actionLogs || []).filter((log) => log.action_goal_id !== actionGoalId),
   });
 
-  clearActionRuntimeState(actionGoalId);
   window.dispatchEvent(new Event('root-home-data-updated'));
 }
 
@@ -221,7 +161,7 @@ function MonthCalendar({ logs = [], onClose }) {
           <button onClick={nextMonth} className="px-2 py-1 rounded-lg text-sm" style={{ color: '#7a5020' }}>
             ›
           </button>
-          <button onClick={onClose} className="p-1 rounded-lg" type="button">
+          <button onClick={onClose} className="p-1 rounded-lg">
             <X className="w-4 h-4" style={{ color: '#7a5020' }} />
           </button>
         </div>
@@ -296,7 +236,11 @@ export default function ActionGoalCard({
   const [editScheduledDate, setEditScheduledDate] = useState(actionGoal.scheduled_date || '');
 
   const [gpsEnabled, setGpsEnabled] = useState(() => {
-    return !!getActionRuntimeState(actionGoal.id).gpsEnabled;
+    try {
+      return JSON.parse(localStorage.getItem(GPS_KEY(actionGoal.id)) || 'false');
+    } catch {
+      return false;
+    }
   });
 
   const intervalRef = useRef(null);
@@ -331,10 +275,7 @@ export default function ActionGoalCard({
     : Math.min(100, Math.round((weeklyCount / Math.max(1, targetFreq)) * 100));
 
   const detailLogs = Array.isArray(allLogs) && allLogs.length > 0 ? allLogs : weeklyLogs;
-
-  const [isRunning, setIsRunning] = useState(() => {
-    return Number(getActionRuntimeState(actionGoal.id).timerStart) > 0;
-  });
+  const [isRunning, setIsRunning] = useState(() => !!localStorage.getItem(TIMER_KEY(actionGoal.id)));
 
   useEffect(() => {
     if (!isRunning) {
@@ -344,11 +285,7 @@ export default function ActionGoalCard({
     }
 
     const tick = () => {
-      const start = Number(getActionRuntimeState(actionGoal.id).timerStart || 0);
-      if (!start) {
-        setElapsed(0);
-        return;
-      }
+      const start = parseInt(localStorage.getItem(TIMER_KEY(actionGoal.id)) || '0', 10);
       setElapsed(Math.floor((Date.now() - start) / 1000));
     };
 
@@ -359,7 +296,7 @@ export default function ActionGoalCard({
   }, [isRunning, actionGoal.id]);
 
   useEffect(() => {
-    updateActionRuntimeState(actionGoal.id, { gpsEnabled });
+    localStorage.setItem(GPS_KEY(actionGoal.id), JSON.stringify(gpsEnabled));
   }, [gpsEnabled, actionGoal.id]);
 
   useEffect(() => {
@@ -400,7 +337,6 @@ export default function ActionGoalCard({
     setSelectedPhotoPreview('');
     setPendingNoPhoto(false);
     setPendingTimerData(null);
-
     if (galleryInputRef.current) galleryInputRef.current.value = '';
     if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
@@ -444,13 +380,9 @@ export default function ActionGoalCard({
     watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        updateActionRuntimeState(actionGoal.id, (current) => ({
-          ...current,
-          gpsCoords: [
-            ...(Array.isArray(current.gpsCoords) ? current.gpsCoords : []),
-            [latitude, longitude],
-          ],
-        }));
+        const coords = JSON.parse(localStorage.getItem(GPS_COORDS_KEY(actionGoal.id)) || '[]');
+        coords.push([latitude, longitude]);
+        localStorage.setItem(GPS_COORDS_KEY(actionGoal.id), JSON.stringify(coords));
       },
       () => {},
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
@@ -491,16 +423,12 @@ export default function ActionGoalCard({
   };
 
   const handleTimerStart = (enableGps) => {
-    updateActionRuntimeState(actionGoal.id, {
-      timerStart: Date.now(),
-      gpsEnabled: enableGps,
-      gpsCoords: enableGps ? [] : getActionRuntimeState(actionGoal.id).gpsCoords,
-    });
-
+    localStorage.setItem(TIMER_KEY(actionGoal.id), String(Date.now()));
     setIsRunning(true);
     setGpsEnabled(enableGps);
 
     if (enableGps) {
+      localStorage.setItem(GPS_COORDS_KEY(actionGoal.id), JSON.stringify([]));
       startGpsTracking();
     }
 
@@ -514,10 +442,10 @@ export default function ActionGoalCard({
     }
 
     if (isRunning) {
-      const start = Number(getActionRuntimeState(actionGoal.id).timerStart || 0);
-      const totalElapsed = start ? Math.floor((Date.now() - start) / 1000) : 0;
+      const start = parseInt(localStorage.getItem(TIMER_KEY(actionGoal.id)) || '0', 10);
+      const totalElapsed = Math.floor((Date.now() - start) / 1000);
 
-      updateActionRuntimeState(actionGoal.id, { timerStart: 0 });
+      localStorage.removeItem(TIMER_KEY(actionGoal.id));
       clearInterval(intervalRef.current);
       setIsRunning(false);
       setElapsed(0);
@@ -527,13 +455,11 @@ export default function ActionGoalCard({
 
       if (minutes > 0 || totalElapsed > 30) {
         const coords = gpsEnabled
-          ? (Array.isArray(getActionRuntimeState(actionGoal.id).gpsCoords)
-              ? getActionRuntimeState(actionGoal.id).gpsCoords
-              : [])
+          ? JSON.parse(localStorage.getItem(GPS_COORDS_KEY(actionGoal.id)) || '[]')
           : [];
         const distance = gpsEnabled ? calculateDistance(coords) : null;
 
-        updateActionRuntimeState(actionGoal.id, { gpsCoords: [] });
+        localStorage.removeItem(GPS_COORDS_KEY(actionGoal.id));
 
         if (selectedPhotoPreview) {
           URL.revokeObjectURL(selectedPhotoPreview);
@@ -550,8 +476,6 @@ export default function ActionGoalCard({
         });
 
         setShowPhotoConfirm(true);
-      } else {
-        clearActionRuntimeState(actionGoal.id);
       }
     } else if (actionGoal.category === 'exercise' && actionGoal.action_type === 'timer') {
       setShowGpsDialog(true);
@@ -569,7 +493,6 @@ export default function ActionGoalCard({
         photo: photoInfo,
       });
       resetPhotoState();
-      clearActionRuntimeState(actionGoal.id);
       setShowPhotoConfirm(false);
       return;
     }
@@ -866,7 +789,6 @@ export default function ActionGoalCard({
                   background: '#8b5a20',
                   color: '#fff',
                 }}
-                type="button"
               >
                 <Check className="w-3 h-3" />
                 완료
@@ -902,7 +824,6 @@ export default function ActionGoalCard({
                           color: '#fff',
                         }
                   }
-                  type="button"
                 >
                   {isRunning ? (
                     <>
@@ -940,7 +861,6 @@ export default function ActionGoalCard({
                   background: '#8b5a20',
                   color: '#fff',
                 }}
-                type="button"
               >
                 <Check className="w-3 h-3" />
                 {actionGoal.action_type === 'abstain' ? '성공' : '확인'}
@@ -958,7 +878,6 @@ export default function ActionGoalCard({
                 color: '#7a5020',
               }}
               aria-label="행동 목표 관리"
-              type="button"
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
@@ -997,7 +916,6 @@ export default function ActionGoalCard({
               onClick={() => galleryInputRef.current?.click()}
               className="w-full flex items-center gap-3 p-4 rounded-xl text-left"
               style={{ background: '#f8f1df' }}
-              type="button"
             >
               <ImageIcon className="w-5 h-5 text-amber-700" />
               <div>
@@ -1010,7 +928,6 @@ export default function ActionGoalCard({
               onClick={() => cameraInputRef.current?.click()}
               className="w-full flex items-center gap-3 p-4 rounded-xl text-left"
               style={{ background: '#f8f1df' }}
-              type="button"
             >
               <Camera className="w-5 h-5 text-amber-700" />
               <div>
@@ -1026,7 +943,6 @@ export default function ActionGoalCard({
                 background: pendingNoPhoto ? '#a66c1f' : '#efe4c8',
                 color: pendingNoPhoto ? '#fff' : '#7a5020',
               }}
-              type="button"
             >
               사진 없이 저장
             </button>
@@ -1049,52 +965,41 @@ export default function ActionGoalCard({
                       />
                     ) : null}
 
-                    <div className="text-sm font-bold" style={{ color: '#7a5020' }}>
+                    <div className="text-sm font-bold mb-1" style={{ color: '#4a2c08' }}>
+                      선택된 사진
+                    </div>
+                    <div className="text-xs" style={{ color: '#8f6a33' }}>
                       {selectedPhoto.name}
                     </div>
                     <div className="text-xs mt-1" style={{ color: '#9a7b47' }}>
-                      {selectedPhoto.source === 'camera' ? '카메라 촬영' : '갤러리 선택'}
+                      {selectedPhoto.source === 'camera' ? '카메라로 촬영한 사진' : '갤러리에서 선택한 사진'}
                     </div>
                   </>
                 ) : (
-                  <div className="text-sm font-bold text-center" style={{ color: '#7a5020' }}>
-                    사진 없이 저장합니다.
-                  </div>
+                  <>
+                    <div className="text-sm font-bold mb-1" style={{ color: '#4a2c08' }}>
+                      사진 없이 저장
+                    </div>
+                    <div className="text-xs" style={{ color: '#8f6a33' }}>
+                      사진 첨부 없이 오늘 기록을 저장합니다.
+                    </div>
+                  </>
                 )}
               </div>
             )}
           </div>
 
-          <DrawerFooter>
-            <div className="grid grid-cols-2 gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowPhotoConfirm(false)}>
+          <DrawerFooter className="pt-2">
+            <div className="flex gap-2 w-full">
+              <Button variant="outline" onClick={() => setShowPhotoConfirm(false)} className="flex-1 rounded-xl">
                 취소
               </Button>
-              <Button type="button" onClick={handleSavePhotoConfirm}>
+              <Button
+                onClick={handleSavePhotoConfirm}
+                className="flex-1 rounded-xl"
+                style={{ background: '#8b5a20', color: '#fff' }}
+              >
                 저장
-              </Button>
-            </div>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-
-      <Drawer open={showGpsDialog} onOpenChange={setShowGpsDialog}>
-        <DrawerContent>
-          <DrawerHeader className="text-center">
-            <DrawerTitle>GPS를 함께 기록할까요?</DrawerTitle>
-          </DrawerHeader>
-
-          <div className="px-4 pb-2 text-sm text-center" style={{ color: '#7a5020' }}>
-            운동 타이머를 시작하면서 GPS 이동거리도 함께 기록할 수 있어요.
-          </div>
-
-          <DrawerFooter>
-            <div className="grid grid-cols-2 gap-2">
-              <Button type="button" variant="outline" onClick={() => handleTimerStart(false)}>
-                타이머만 시작
-              </Button>
-              <Button type="button" onClick={() => handleTimerStart(true)}>
-                GPS 함께 시작
               </Button>
             </div>
           </DrawerFooter>
@@ -1107,18 +1012,19 @@ export default function ActionGoalCard({
             <DrawerTitle>행동 목표 관리</DrawerTitle>
           </DrawerHeader>
 
-          <DrawerFooter>
-            <div className="grid grid-cols-2 gap-2">
-              <Button type="button" variant="outline" onClick={handleEditOpen}>
-                <Pencil className="w-4 h-4 mr-1" />
-                수정
-              </Button>
-              <Button type="button" variant="destructive" onClick={handleDeleteOpen}>
-                <Trash2 className="w-4 h-4 mr-1" />
-                삭제
-              </Button>
+          <div className="px-4 pb-6">
+            <div className="space-y-2">
+              <button onClick={handleEditOpen} className="w-full flex items-center gap-3 p-3 rounded-xl text-left">
+                <Pencil className="w-4 h-4 text-amber-600" />
+                <span className="text-sm font-semibold">목표 수정</span>
+              </button>
+
+              <button onClick={handleDeleteOpen} className="w-full flex items-center gap-3 p-3 rounded-xl text-left">
+                <Trash2 className="w-4 h-4 text-red-500" />
+                <span className="text-sm font-semibold text-red-500">목표 삭제</span>
+              </button>
             </div>
-          </DrawerFooter>
+          </div>
         </DrawerContent>
       </Drawer>
 
@@ -1128,86 +1034,167 @@ export default function ActionGoalCard({
             <DrawerTitle>행동 목표 수정</DrawerTitle>
           </DrawerHeader>
 
-          <div className="px-4 pb-4 space-y-3">
+          <div className="px-4 space-y-4 pb-6">
             <div>
-              <div className="text-sm font-bold mb-2" style={{ color: '#7a5020' }}>
-                목표 제목
-              </div>
+              <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
+                행동 목표 이름
+              </label>
               <Input
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                placeholder="행동 목표 제목"
+                className="h-11 rounded-xl"
               />
             </div>
 
             <div>
-              <div className="text-sm font-bold mb-2" style={{ color: '#7a5020' }}>
+              <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
                 목표 유형
+              </label>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setEditActionType('confirm')}
+                  className="py-2 rounded-xl text-sm font-semibold"
+                  style={
+                    editActionType === 'confirm'
+                      ? { background: '#8b5a20', color: '#fff' }
+                      : { background: '#f3ead7', color: '#7a5020' }
+                  }
+                >
+                  확인형
+                </button>
+
+                <button
+                  onClick={() => setEditActionType('timer')}
+                  className="py-2 rounded-xl text-sm font-semibold"
+                  style={
+                    editActionType === 'timer'
+                      ? { background: '#8b5a20', color: '#fff' }
+                      : { background: '#f3ead7', color: '#7a5020' }
+                  }
+                >
+                  시간기록형
+                </button>
+
+                <button
+                  onClick={() => setEditActionType('abstain')}
+                  className="py-2 rounded-xl text-sm font-semibold"
+                  style={
+                    editActionType === 'abstain'
+                      ? { background: '#8b5a20', color: '#fff' }
+                      : { background: '#f3ead7', color: '#7a5020' }
+                  }
+                >
+                  안하기형
+                </button>
+
+                <button
+                  onClick={() => setEditActionType('one_time')}
+                  className="py-2 rounded-xl text-sm font-semibold"
+                  style={
+                    editActionType === 'one_time'
+                      ? { background: '#8b5a20', color: '#fff' }
+                      : { background: '#f3ead7', color: '#7a5020' }
+                  }
+                >
+                  1회성
+                </button>
               </div>
-              <select
-                value={editActionType}
-                onChange={(e) => setEditActionType(e.target.value)}
-                className="w-full h-10 rounded-md border px-3 text-sm bg-white"
-              >
-                <option value="confirm">확인형</option>
-                <option value="timer">시간형</option>
-                <option value="abstain">안하기형</option>
-                <option value="one_time">1회성</option>
-              </select>
             </div>
 
-            {editActionType !== 'one_time' && (
+            {editActionType === 'one_time' ? (
               <div>
-                <div className="text-sm font-bold mb-2" style={{ color: '#7a5020' }}>
-                  주간 횟수
-                </div>
+                <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
+                  예정 날짜
+                </label>
                 <Input
-                  type="number"
-                  min={1}
-                  max={7}
-                  value={editFrequency}
-                  onChange={(e) => setEditFrequency(Number(e.target.value))}
+                  type="date"
+                  min={getTodayString()}
+                  value={editScheduledDate}
+                  onChange={(e) => setEditScheduledDate(e.target.value)}
+                  className="h-11 rounded-xl"
                 />
+              </div>
+            ) : (
+              <div>
+                <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
+                  주 횟수
+                </label>
+                <div className="grid grid-cols-7 gap-1.5">
+                  {[1, 2, 3, 4, 5, 6, 7].map((freq) => (
+                    <button
+                      key={freq}
+                      onClick={() => setEditFrequency(freq)}
+                      className="py-2 rounded-xl text-sm font-semibold"
+                      style={
+                        editFrequency === freq
+                          ? { background: '#8b5a20', color: '#fff' }
+                          : { background: '#f3ead7', color: '#7a5020' }
+                      }
+                    >
+                      {freq}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs mt-1.5" style={{ color: '#9a7b47' }}>
+                  주 {editFrequency}회
+                </p>
               </div>
             )}
 
             {editActionType === 'timer' && (
               <div>
-                <div className="text-sm font-bold mb-2" style={{ color: '#7a5020' }}>
-                  목표 시간(분)
-                </div>
-                <Input
-                  type="number"
-                  min={1}
-                  value={editMinutes}
-                  onChange={(e) => setEditMinutes(Number(e.target.value))}
-                />
-              </div>
-            )}
+                <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
+                  1회 시간
+                </label>
 
-            {editActionType === 'one_time' && (
-              <div>
-                <div className="text-sm font-bold mb-2" style={{ color: '#7a5020' }}>
-                  예정일
+                <div className="flex gap-2 mb-2">
+                  {[20, 30, 60].map((minute) => (
+                    <button
+                      key={minute}
+                      onClick={() => setEditMinutes(minute)}
+                      className="flex-1 py-2 rounded-xl text-sm font-semibold"
+                      style={
+                        editMinutes === minute
+                          ? { background: '#8b5a20', color: '#fff' }
+                          : { background: '#f3ead7', color: '#7a5020' }
+                      }
+                    >
+                      {minute}분
+                    </button>
+                  ))}
                 </div>
-                <Input
-                  type="date"
-                  value={editScheduledDate}
-                  onChange={(e) => setEditScheduledDate(e.target.value)}
-                />
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="300"
+                    value={editMinutes}
+                    onChange={(e) => setEditMinutes(Number(e.target.value))}
+                    className="flex-1 h-10 rounded-xl border px-3 text-sm"
+                    style={{ borderColor: '#e1c98f' }}
+                  />
+                  <span className="text-sm font-semibold" style={{ color: '#7a5020' }}>
+                    분
+                  </span>
+                </div>
               </div>
             )}
           </div>
 
-          <DrawerFooter>
-            <div className="grid grid-cols-2 gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowEdit(false)}>
-                취소
-              </Button>
-              <Button type="button" onClick={handleSave}>
-                저장
-              </Button>
-            </div>
+          <DrawerFooter className="flex gap-2 pt-4">
+            <Button variant="outline" onClick={() => setShowEdit(false)} className="flex-1 rounded-xl">
+              취소
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!editTitle.trim() || (editActionType === 'one_time' && !editScheduledDate) || updateMutation.isPending}
+              className="flex-1 rounded-xl"
+              style={{ background: '#8b5a20', color: '#fff' }}
+            >
+              {updateMutation.isPending ? '저장 중...' : '저장'}
+            </Button>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -1218,19 +1205,45 @@ export default function ActionGoalCard({
             <DrawerTitle>행동 목표를 삭제할까요?</DrawerTitle>
           </DrawerHeader>
 
-          <div className="px-4 pb-2 text-sm text-center" style={{ color: '#7a5020' }}>
-            삭제하면 이 행동목표와 연결된 기록도 함께 정리돼요.
-          </div>
+          <p className="px-4 text-sm text-center text-muted-foreground">
+            "{actionGoal.title}" 목표와 관련 기록이 함께 삭제됩니다.
+          </p>
 
-          <DrawerFooter>
-            <div className="grid grid-cols-2 gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowDelete(false)}>
-                취소
-              </Button>
-              <Button type="button" variant="destructive" onClick={handleDelete}>
-                삭제
-              </Button>
-            </div>
+          <DrawerFooter className="flex gap-2 pt-6">
+            <Button variant="outline" onClick={() => setShowDelete(false)} className="flex-1 rounded-xl">
+              취소
+            </Button>
+            <Button
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white"
+            >
+              {deleteMutation.isPending ? '삭제 중...' : '삭제'}
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer open={showGpsDialog} onOpenChange={setShowGpsDialog}>
+        <DrawerContent>
+          <DrawerHeader className="text-center">
+            <DrawerTitle>GPS 추적을 사용할까요?</DrawerTitle>
+          </DrawerHeader>
+
+          <p className="px-4 text-sm text-center text-muted-foreground">
+            운동 경로와 거리를 기록하고 싶다면 GPS를 켜 주세요.
+          </p>
+
+          <DrawerFooter className="flex gap-2 pt-6">
+            <Button variant="outline" onClick={() => handleTimerStart(false)} className="flex-1 rounded-xl">
+              안 함
+            </Button>
+            <Button
+              onClick={() => handleTimerStart(true)}
+              className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              GPS 사용
+            </Button>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
