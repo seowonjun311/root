@@ -215,10 +215,6 @@ function connectActionGoalsToGoals(goals = [], actionGoals = []) {
     return {
       ...actionGoal,
       category: categoryKey,
-    const inferredGoalId = activeGoalByCategory[actionGoal.category] || safeGoals[0]?.id || null;
-
-    return {
-      ...actionGoal,
       goal_id: inferredGoalId,
     };
   });
