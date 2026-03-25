@@ -227,7 +227,6 @@ function normalizeGuestGoals(rawGoals, fallbackCategory = 'exercise') {
       ...goal,
       id: goal?.id || `local_goal_${index + 1}`,
       category: normalizeCategoryValue(goal?.category, fallbackCategory),
-      category: goal?.category || fallbackCategory,
       status: goal?.status || 'active',
     }));
 }
