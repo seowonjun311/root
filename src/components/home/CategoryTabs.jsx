@@ -7,7 +7,24 @@ const categories = [
   { id: 'daily', label: '일상', emoji: '🏠' },
 ];
 
+const categoryAliases = {
+  exercise: 'exercise',
+  study: 'study',
+  mental: 'mental',
+  daily: 'daily',
+  운동: 'exercise',
+  공부: 'study',
+  정신: 'mental',
+  일상: 'daily',
+};
+
+function normalizeCategory(category) {
+  return categoryAliases[category] || 'exercise';
+}
+
 export default function CategoryTabs({ active, onChange, userLevels = {} }) {
+  const normalizedActive = normalizeCategory(active);
+
   return (
     <div className="px-4 py-1">
       <div className="grid grid-cols-4 gap-2">
@@ -16,10 +33,11 @@ export default function CategoryTabs({ active, onChange, userLevels = {} }) {
           const xp = userLevels[`${id}_xp`] || 0;
           const currentXp = xp % 30;
           const xpPercent = Math.max(8, Math.min(100, (currentXp / 30) * 100));
-          const isActive = active === id;
+          const isActive = normalizedActive === id;
 
           return (
             <button
+              type="button"
               key={id}
               onClick={() => onChange(id)}
               className="flex flex-col justify-center gap-1 px-2 py-1.5 rounded-xl text-[11px] font-bold transition-all duration-200"

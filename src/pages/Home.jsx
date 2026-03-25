@@ -32,6 +32,19 @@ const CATEGORY_LABELS = {
   daily: '일상',
 };
 
+const CATEGORY_ALIASES = {
+  exercise: 'exercise',
+  study: 'study',
+  mental: 'mental',
+  daily: 'daily',
+  운동: 'exercise',
+  공부: 'study',
+  정신: 'mental',
+  일상: 'daily',
+};
+
+const VALID_CATEGORIES = Object.keys(CATEGORY_LABELS);
+
 const TITLES = [
   { id: 'common_first_step', name: '첫 걸음을 뗀 자', description: '첫 행동목표를 완료한 용사', metric: 'total_actions', value: 1, category: 'common' },
   { id: 'common_route_walker', name: '루트를 걷는 자', description: '전체 행동목표 100회 달성', metric: 'total_actions', value: 100, category: 'common' },
@@ -110,6 +123,21 @@ function normalizeDateOnly(value) {
   ).padStart(2, '0')}`;
 }
 
+function normalizeCategoryValue(category, fallback = 'exercise') {
+  const normalized = CATEGORY_ALIASES[category];
+  if (normalized && VALID_CATEGORIES.includes(normalized)) {
+    return normalized;
+  }
+  return fallback;
+}
+
+function resolveCategoryKey(category, fallback = '') {
+  const rawCategory =
+    typeof category === 'string' ? category.trim() : '';
+  if (!rawCategory) return fallback;
+  return CATEGORY_ALIASES[rawCategory] || rawCategory;
+}
+
 function getGoalEndDate(goal) {
   if (!goal?.start_date || !goal?.duration_days) return null;
 
@@ -165,10 +193,11 @@ function connectActionGoalsToGoals(goals = [], actionGoals = []) {
   const goalsById = new Map(safeGoals.map((goal) => [goal.id, goal]));
 
   const activeGoalByCategory = safeGoals.reduce((acc, goal) => {
-    if (!goal?.id || !goal?.category) return acc;
+    const categoryKey = resolveCategoryKey(goal?.category, '');
+    if (!goal?.id || !categoryKey) return acc;
     if (goal?.status && goal.status !== 'active') return acc;
-    if (!acc[goal.category]) {
-      acc[goal.category] = goal.id;
+    if (!acc[categoryKey]) {
+      acc[categoryKey] = goal.id;
     }
     return acc;
   }, {});
@@ -180,6 +209,12 @@ function connectActionGoalsToGoals(goals = [], actionGoals = []) {
       return actionGoal;
     }
 
+    const categoryKey = resolveCategoryKey(actionGoal?.category, 'exercise');
+    const inferredGoalId = activeGoalByCategory[categoryKey] || safeGoals[0]?.id || null;
+
+    return {
+      ...actionGoal,
+      category: categoryKey,
     const inferredGoalId = activeGoalByCategory[actionGoal.category] || safeGoals[0]?.id || null;
 
     return {
@@ -195,6 +230,7 @@ function normalizeGuestGoals(rawGoals, fallbackCategory = 'exercise') {
     .map((goal, index) => ({
       ...goal,
       id: goal?.id || `local_goal_${index + 1}`,
+      category: normalizeCategoryValue(goal?.category, fallbackCategory),
       category: goal?.category || fallbackCategory,
       status: goal?.status || 'active',
     }));
@@ -209,6 +245,7 @@ function normalizeGuestActionGoals(rawActionGoals, goals = [], fallbackCategory 
     .map((actionGoal, index) => ({
       ...actionGoal,
       id: actionGoal?.id || `local_ag_${index + 1}`,
+      category: normalizeCategoryValue(actionGoal?.category, fallbackCategory),
       category: actionGoal?.category || fallbackCategory,
       status: actionGoal?.status || 'active',
       goal_id: actionGoal?.goal_id || firstGoalId,
@@ -536,6 +573,7 @@ export default function Home() {
   const [moveTrigger, setMoveTrigger] = useState(0);
   const [expPopup, setExpPopup] = useState(null);
   const [newTitle, setNewTitle] = useState(null);
+  const hasCategoryInteractionRef = useRef(false);
 
   const expPopupTimerRef = useRef(null);
 
@@ -669,36 +707,49 @@ export default function Home() {
   useEffect(() => {
     if (isUserLoading) return;
 
-    if (isGuest) {
-      const guestCategory =
-        guestData?.activeCategory ||
-        guestData?.guest_active_category ||
-        guestData?.goalData?.category ||
-        guestData?.actionGoalData?.category ||
-        guestData?.goals?.[0]?.category ||
-        'exercise';
+    const current = normalizeCategoryValue(activeCategory, 'exercise');
 
-      setActiveCategory(guestCategory);
+    if (isGuest) {
+      const guestCategory = normalizeCategoryValue(
+        guestData?.activeCategory ||
+          guestData?.guest_active_category ||
+          guestData?.category ||
+          guestData?.goalData?.category ||
+          guestData?.actionGoalData?.category ||
+          guestData?.goals?.[0]?.category,
+        'exercise'
+      );
+
+      if (!hasCategoryInteractionRef.current || !VALID_CATEGORIES.includes(current)) {
+        setActiveCategory(guestCategory);
+      }
       return;
     }
 
-    setActiveCategory(user?.active_category || goals?.[0]?.category || 'exercise');
-  }, [isUserLoading, isGuest, guestData, user, goals]);
+    const userCategory = normalizeCategoryValue(user?.active_category || goals?.[0]?.category, 'exercise');
+    if (!hasCategoryInteractionRef.current || !VALID_CATEGORIES.includes(current)) {
+      setActiveCategory(userCategory);
+    }
+  }, [isUserLoading, isGuest, guestData, user, goals, activeCategory]);
 
   const handleCategoryChange = async (category) => {
-    setActiveCategory(category);
+    const normalizedCategory = normalizeCategoryValue(category, 'exercise');
+    hasCategoryInteractionRef.current = true;
+    setActiveCategory(normalizedCategory);
 
     if (isGuest) {
       writeGuestDataPatch((prev) => ({
         ...prev,
-        guest_active_category: category,
+        category: normalizedCategory,
+        activeCategory: normalizedCategory,
+        guest_active_category: normalizedCategory,
       }));
       window.dispatchEvent(new Event('root-home-data-updated'));
       return;
     }
 
     try {
-      await base44.auth.updateMe({ active_category: category });
+      await base44.auth.updateMe({ active_category: normalizedCategory });
       queryClient.invalidateQueries({ queryKey: ['me'] });
     } catch (error) {
       console.error(error);
@@ -710,7 +761,8 @@ export default function Home() {
 
     return sourceGoals.filter((goal) => {
       if (!goal) return false;
-      if (goal.category !== activeCategory) return false;
+      const goalCategory = normalizeCategoryValue(goal.category, '');
+      if (goalCategory !== activeCategory) return false;
       if (goal.status && goal.status !== 'active') return false;
       return true;
     });
@@ -723,7 +775,8 @@ export default function Home() {
 
     return (connectedActionGoals || []).filter((actionGoal) => {
       if (!actionGoal) return false;
-      if (actionGoal.category !== activeCategory) return false;
+      const actionCategory = normalizeCategoryValue(actionGoal.category, '');
+      if (actionCategory !== activeCategory) return false;
       if (
         actionGoal.status &&
         actionGoal.status !== 'active' &&
