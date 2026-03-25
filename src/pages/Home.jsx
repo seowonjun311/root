@@ -241,7 +241,6 @@ function normalizeGuestActionGoals(rawActionGoals, goals = [], fallbackCategory 
       ...actionGoal,
       id: actionGoal?.id || `local_ag_${index + 1}`,
       category: normalizeCategoryValue(actionGoal?.category, fallbackCategory),
-      category: actionGoal?.category || fallbackCategory,
       status: actionGoal?.status || 'active',
       goal_id: actionGoal?.goal_id || firstGoalId,
     }));
