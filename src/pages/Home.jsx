@@ -328,7 +328,15 @@ function groupActionGoals(actionGoals, today) {
     const isOneTime = actionGoal?.action_type === 'one_time';
 
     if (isOneTime) {
-      const scheduledDate = normalizeDateOnly(actionGoal?.scheduled_date);
+      const scheduledDate = normalizeDateOnly(
+  actionGoal?.scheduled_date ||
+  actionGoal?.scheduledDate ||
+  actionGoal?.date ||
+  actionGoal?.target_date ||
+  actionGoal?.targetDate ||
+  actionGoal?.selected_date ||
+  actionGoal?.selectedDate
+);
 
       if (!scheduledDate) {
         scheduledItems.push(actionGoal);
@@ -376,16 +384,56 @@ function groupActionGoals(actionGoals, today) {
   });
 
   scheduledItems.sort((a, b) => {
-    const aDate = normalizeDateOnly(a?.scheduled_date) || '9999-12-31';
-    const bDate = normalizeDateOnly(b?.scheduled_date) || '9999-12-31';
-    return aDate.localeCompare(bDate);
-  });
+  const aDate =
+    normalizeDateOnly(
+      a?.scheduled_date ||
+      a?.scheduledDate ||
+      a?.date ||
+      a?.target_date ||
+      a?.targetDate ||
+      a?.selected_date ||
+      a?.selectedDate
+    ) || '9999-12-31';
 
-  overdueItems.sort((a, b) => {
-    const aDate = normalizeDateOnly(a?.scheduled_date) || '0000-01-01';
-    const bDate = normalizeDateOnly(b?.scheduled_date) || '0000-01-01';
-    return aDate.localeCompare(bDate);
-  });
+  const bDate =
+    normalizeDateOnly(
+      b?.scheduled_date ||
+      b?.scheduledDate ||
+      b?.date ||
+      b?.target_date ||
+      b?.targetDate ||
+      b?.selected_date ||
+      b?.selectedDate
+    ) || '9999-12-31';
+
+  return aDate.localeCompare(bDate);
+});
+
+overdueItems.sort((a, b) => {
+  const aDate =
+    normalizeDateOnly(
+      a?.scheduled_date ||
+      a?.scheduledDate ||
+      a?.date ||
+      a?.target_date ||
+      a?.targetDate ||
+      a?.selected_date ||
+      a?.selectedDate
+    ) || '0000-01-01';
+
+  const bDate =
+    normalizeDateOnly(
+      b?.scheduled_date ||
+      b?.scheduledDate ||
+      b?.date ||
+      b?.target_date ||
+      b?.targetDate ||
+      b?.selected_date ||
+      b?.selectedDate
+    ) || '0000-01-01';
+
+  return aDate.localeCompare(bDate);
+});
 
   return { todayItems, scheduledItems, overdueItems };
 }
