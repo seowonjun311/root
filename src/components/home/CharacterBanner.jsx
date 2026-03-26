@@ -125,7 +125,7 @@ export default function CharacterBanner({
           <motion.img
             src={castleImg}
             alt="마왕성"
-            className="absolute right-[7%] top-[36%] z-20 h-[62px] w-auto object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.24)] sm:h-[76px]"
+            className="absolute right-[7%] top-[36%] z-20 h-[100px] w-auto object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.24)] sm:h-[76px]"
             draggable={false}
             animate={{
               y: [0, -2, 0],
