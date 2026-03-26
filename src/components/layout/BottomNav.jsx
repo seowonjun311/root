@@ -56,7 +56,7 @@ export default function BottomNav() {
 
       <div
         className="flex justify-around items-center max-w-lg mx-auto px-2"
-        style={{ height: '64px' }}
+        style={{ height: '44px' }}
       >
         {navItems.map(({ path, label, icon: Icon }) => {
           const active = isActive(path);
