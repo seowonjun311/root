@@ -34,6 +34,28 @@ function getTodayString() {
   return new Date().toISOString().split('T')[0];
 }
 
+function normalizeDateOnly(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+    d.getDate()
+  ).padStart(2, '0')}`;
+}
+
+function getScheduledDateValue(actionGoal) {
+  return (
+    actionGoal?.scheduled_date ||
+    actionGoal?.scheduledDate ||
+    actionGoal?.date ||
+    actionGoal?.target_date ||
+    actionGoal?.targetDate ||
+    actionGoal?.selected_date ||
+    actionGoal?.selectedDate ||
+    ''
+  );
+}
+
 function formatKoreanDate(dateString) {
   if (!dateString) return '-';
   const d = new Date(dateString);
@@ -44,8 +66,11 @@ function formatKoreanDate(dateString) {
 function getDdayText(dateString) {
   if (!dateString) return '-';
 
+  const normalized = normalizeDateOnly(dateString);
+  if (!normalized) return '-';
+
   const today = new Date();
-  const target = new Date(dateString);
+  const target = new Date(normalized);
 
   today.setHours(0, 0, 0, 0);
   target.setHours(0, 0, 0, 0);
@@ -229,11 +254,13 @@ export default function ActionGoalCard({
   const [pendingNoPhoto, setPendingNoPhoto] = useState(false);
   const [pendingTimerData, setPendingTimerData] = useState(null);
 
+  const resolvedScheduledDate = normalizeDateOnly(getScheduledDateValue(actionGoal));
+
   const [editTitle, setEditTitle] = useState(actionGoal.title || '');
   const [editFrequency, setEditFrequency] = useState(actionGoal.weekly_frequency || 5);
   const [editMinutes, setEditMinutes] = useState(actionGoal.duration_minutes || 30);
   const [editActionType, setEditActionType] = useState(actionGoal.action_type || 'confirm');
-  const [editScheduledDate, setEditScheduledDate] = useState(actionGoal.scheduled_date || '');
+  const [editScheduledDate, setEditScheduledDate] = useState(resolvedScheduledDate || '');
 
   const [gpsEnabled, setGpsEnabled] = useState(() => {
     try {
@@ -269,7 +296,7 @@ export default function ActionGoalCard({
   const progressPercent = isOneTime
     ? actionGoal.status === 'completed'
       ? 100
-      : getDdayText(actionGoal.scheduled_date) === '기한 지남'
+      : getDdayText(resolvedScheduledDate) === '기한 지남'
         ? 100
         : 0
     : Math.min(100, Math.round((weeklyCount / Math.max(1, targetFreq)) * 100));
@@ -596,7 +623,7 @@ export default function ActionGoalCard({
     setEditFrequency(actionGoal.weekly_frequency || 5);
     setEditMinutes(actionGoal.duration_minutes || 30);
     setEditActionType(actionGoal.action_type || 'confirm');
-    setEditScheduledDate(actionGoal.scheduled_date || '');
+    setEditScheduledDate(normalizeDateOnly(getScheduledDateValue(actionGoal)) || '');
     setShowMenu(false);
     setShowEdit(true);
   };
@@ -729,8 +756,8 @@ export default function ActionGoalCard({
                   {isOneTime ? (
                     <>
                       <div className="text-[11px] font-semibold" style={{ color: '#7a5020' }}>
-                        {actionGoal.scheduled_date
-                          ? `예정일: ${formatKoreanDate(actionGoal.scheduled_date)}`
+                        {resolvedScheduledDate
+                          ? `예정일: ${formatKoreanDate(resolvedScheduledDate)}`
                           : '날짜 미지정'}
                       </div>
 
@@ -739,7 +766,7 @@ export default function ActionGoalCard({
                         style={{
                           color: doneToday
                             ? '#4ca86a'
-                            : getDdayText(actionGoal.scheduled_date) === '기한 지남'
+                            : getDdayText(resolvedScheduledDate) === '기한 지남'
                               ? '#b94030'
                               : '#7a5020',
                         }}
@@ -772,7 +799,7 @@ export default function ActionGoalCard({
 
                 {isOneTime && (
                   <div className="mt-1 text-[11px] font-semibold" style={{ color: '#9a7b47' }}>
-                    {getDdayText(actionGoal.scheduled_date)}
+                    {getDdayText(resolvedScheduledDate)}
                   </div>
                 )}
               </div>
