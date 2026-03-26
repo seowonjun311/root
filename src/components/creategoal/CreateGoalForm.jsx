@@ -365,8 +365,8 @@ export default function CreateGoalForm({ category }) {
           category,
           title: actionTitle.trim(),
           action_type: actionType,
-          weekly_frequency: actionType === 'one_time' ? 0 : frequencyMode === 'daily' ? 7 : frequency,
-          frequency_mode: actionType === 'one_time' ? 'one_time' : frequencyMode,
+          weekly_frequency: actionType === 'one_time' ? 0 : frequency,
+          frequency_mode: actionType === 'one_time' ? 'one_time' : 'weekly',
           duration_minutes: actionType === 'timer' ? Number(minutes) : 0,
           duration_days: actionType === 'one_time' ? null : duration,
           scheduled_date: actionType === 'one_time' ? oneTimeDate : null,
@@ -393,8 +393,8 @@ export default function CreateGoalForm({ category }) {
         category,
         title: actionTitle.trim(),
         action_type: actionType,
-        weekly_frequency: actionType === 'one_time' ? 0 : frequencyMode === 'daily' ? 7 : frequency,
-        frequency_mode: actionType === 'one_time' ? 'one_time' : frequencyMode,
+        weekly_frequency: actionType === 'one_time' ? 0 : frequency,
+        frequency_mode: actionType === 'one_time' ? 'one_time' : 'weekly',
         duration_minutes: actionType === 'timer' ? Number(minutes) : 0,
         duration_days: actionType === 'one_time' ? null : duration,
         scheduled_date: actionType === 'one_time' ? oneTimeDate : null,
@@ -774,129 +774,28 @@ export default function CreateGoalForm({ category }) {
 
         <div>
           <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
-            반복 방식
+            주 몇 회 할까요?
           </label>
-
-          <div className="grid grid-cols-3 gap-2 mb-2">
-            <SelectCard
-              selected={frequencyMode === 'daily'}
-              onClick={() => {
-                setFrequencyMode('daily');
-                setFrequency(7);
-              }}
-              label="매일"
-              desc="매일 실천"
-            />
-            <SelectCard
-              selected={frequencyMode === 'weekly'}
-              onClick={() => {
-                setFrequencyMode('weekly');
-                if (frequency === 7) setFrequency(3);
-              }}
-              label="주 n회"
-              desc="주마다 반복"
-            />
-            <SelectCard
-              selected={frequencyMode === 'monthly'}
-              onClick={() => {
-                setFrequencyMode('monthly');
-                if (frequency === 7) setFrequency(4);
-              }}
-              label="월 n회"
-              desc="한 달 기준"
-            />
-          </div>
-
-          {frequencyMode === 'weekly' && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                {frequencyPresets.map((item) => (
-                  <SelectCard
-                    key={item.value}
-                    selected={frequency === item.value}
-                    onClick={() => setFrequency(item.value)}
-                    label={item.label}
-                    desc={item.desc}
-                  />
-                ))}
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
-                  직접 선택
-                </label>
-                <div className="grid grid-cols-7 gap-1.5">
-                  {[1, 2, 3, 4, 5, 6, 7].map((f) => (
-                    <button
-                      type="button"
-                      key={f}
-                      onClick={() => setFrequency(f)}
-                      className="py-2.5 rounded-xl text-sm font-semibold transition-all"
-                      style={
-                        frequency === f
-                          ? { background: '#8b5a20', color: '#fff' }
-                          : { background: '#f3ead7', color: '#7a5020' }
-                      }
-                    >
-                      {f}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {frequencyMode === 'monthly' && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-5 gap-2">
-                {[1, 2, 4, 8, 12].map((f) => (
-                  <button
-                    type="button"
-                    key={f}
-                    onClick={() => setFrequency(f)}
-                    className="py-3 rounded-2xl text-sm font-semibold transition-all"
-                    style={
-                      frequency === f
-                        ? { background: '#8b5a20', color: '#fff' }
-                        : { background: '#f3ead7', color: '#7a5020' }
-                    }
-                  >
-                    {f}회
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="1"
-                  max="31"
-                  value={frequency}
-                  onChange={(e) => setFrequency(Number(e.target.value))}
-                  className="flex-1 h-11 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 text-sm text-amber-900 font-medium"
-                />
-                <span className="text-sm font-semibold" style={{ color: '#7a5020' }}>
-                  회 / 월
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div>
-          <label className="text-sm font-semibold mb-2 block" style={{ color: '#7a5020' }}>
-            기간
-          </label>
-          <div className="grid grid-cols-4 gap-2">
-            {durationPresets.map((item) => (
-              <SelectCard
-                key={item.days}
-                selected={duration === item.days}
-                onClick={() => setDuration(item.days)}
-                label={item.label}
-              />
+          <div className="grid grid-cols-7 gap-1.5">
+            {[1, 2, 3, 4, 5, 6, 7].map((f) => (
+              <button
+                type="button"
+                key={f}
+                onClick={() => setFrequency(f)}
+                className="py-3 rounded-2xl text-sm font-semibold transition-all"
+                style={
+                  frequency === f
+                    ? { background: '#8b5a20', color: '#fff' }
+                    : { background: '#f3ead7', color: '#7a5020' }
+                }
+              >
+                {f}
+              </button>
             ))}
           </div>
+          <p className="text-xs mt-1.5" style={{ color: '#9a7b47' }}>
+            주 {frequency}회 · {frequency === 7 ? '매일' : `일주일에 ${frequency}번`}
+          </p>
         </div>
 
         <Button
