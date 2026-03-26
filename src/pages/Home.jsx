@@ -598,6 +598,44 @@ function TitleUnlockModal({ title, onClose, onEquip }) {
   );
 }
 
+function AddActionGoalButton({ onClick, categoryLabel }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full rounded-2xl px-4 py-3 text-left"
+      style={{
+        background: 'linear-gradient(180deg, #fff7e8 0%, #f6e4bd 100%)',
+        border: '1px solid rgba(160,120,64,0.22)',
+        boxShadow: '0 8px 18px rgba(80,50,10,0.08)',
+      }}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
+            + 행동목표 추가
+          </div>
+          <div className="mt-1 text-[12px]" style={{ color: '#8a5a17' }}>
+            {categoryLabel} 루트에 새로운 행동목표를 추가해요
+          </div>
+        </div>
+
+        <div
+          className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-extrabold"
+          style={{
+            background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
+            color: '#fff8e8',
+            border: '2px solid #6b4e15',
+            flexShrink: 0,
+          }}
+        >
+          +
+        </div>
+      </div>
+    </button>
+  );
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -1163,7 +1201,14 @@ export default function Home() {
 
         <div className="space-y-4 pt-3">
           {activeGoal ? (
-            <GoalProgress goal={activeGoal} logs={goalLogs} />
+            <>
+              <GoalProgress goal={activeGoal} logs={goalLogs} />
+
+              <AddActionGoalButton
+                onClick={handleCreateGoal}
+                categoryLabel={CATEGORY_LABELS[activeCategory]}
+              />
+            </>
           ) : (
             <EmptyGoalState
               category={activeCategory}
