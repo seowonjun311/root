@@ -1204,10 +1204,7 @@ export default function Home() {
             <>
               <GoalProgress goal={activeGoal} logs={goalLogs} />
 
-              <AddActionGoalButton
-                onClick={handleCreateGoal}
-                categoryLabel={CATEGORY_LABELS[activeCategory]}
-              />
+              
             </>
           ) : (
             <EmptyGoalState
