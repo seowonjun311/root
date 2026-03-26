@@ -24,18 +24,7 @@ export default function Header() {
   const canGoBack = !isTabPage && location.key !== 'default';
 
   if (isTabPage) {
-    return (
-      <div
-        className="flex items-center justify-center px-4 shrink-0"
-        style={{
-          height: 'calc(52px + env(safe-area-inset-top))',
-          paddingTop: 'env(safe-area-inset-top)',
-          borderBottom: '1px solid hsl(var(--border) / 0.4)',
-        }}
-      >
-        <span className="text-base font-bold text-amber-900">퀘스트로그</span>
-      </div>
-    );
+    return null;
   }
 
   return (
