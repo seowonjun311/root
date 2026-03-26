@@ -49,6 +49,8 @@ export default function Memo() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
 
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
+
   const todayStr = useMemo(() => {
     const now = new Date();
     const yyyy = now.getFullYear();
@@ -141,10 +143,18 @@ export default function Memo() {
     );
   };
 
-  const handleDelete = (id) => {
-    const ok = window.confirm('이 메모를 삭제할까요?');
-    if (!ok) return;
-    setMemos((prev) => prev.filter((memo) => memo.id !== id));
+  const askDelete = (id) => {
+    setDeleteTargetId(id);
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTargetId) return;
+    setMemos((prev) => prev.filter((memo) => memo.id !== deleteTargetId));
+    setDeleteTargetId(null);
+  };
+
+  const cancelDelete = () => {
+    setDeleteTargetId(null);
   };
 
   const startEdit = (memo) => {
@@ -302,7 +312,7 @@ export default function Memo() {
                                 수정
                               </button>
                               <button
-                                onClick={() => handleDelete(memo.id)}
+                                onClick={() => askDelete(memo.id)}
                                 className="rounded-xl border border-[#ead2d2] px-3 py-1.5 text-xs font-medium text-[#a14d4d]"
                               >
                                 삭제
@@ -332,71 +342,71 @@ export default function Memo() {
       </button>
 
       {showCreateModal && (
-  <div className="fixed inset-0 z-[9999] bg-black/40">
-    <div className="absolute inset-0 flex items-end justify-center sm:items-center">
-      <div className="flex h-[100dvh] w-full flex-col bg-white sm:h-auto sm:max-h-[85vh] sm:max-w-lg sm:rounded-[28px]">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#eee5d8] bg-white px-5 py-4">
-          <button
-            onClick={() => setShowCreateModal(false)}
-            className="rounded-xl px-2 py-1 text-sm font-medium text-[#7a6f63]"
-          >
-            취소
-          </button>
+        <div className="fixed inset-0 z-[9999] bg-black/40">
+          <div className="absolute inset-0 flex items-end justify-center sm:items-center">
+            <div className="flex h-[100dvh] w-full flex-col bg-white sm:h-auto sm:max-h-[85vh] sm:max-w-lg sm:rounded-[28px]">
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#eee5d8] bg-white px-5 py-4">
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="rounded-xl px-2 py-1 text-sm font-medium text-[#7a6f63]"
+                >
+                  취소
+                </button>
 
-          <h3 className="text-lg font-bold">메모 추가</h3>
+                <h3 className="text-lg font-bold">메모 추가</h3>
 
-          <button
-            onClick={handleCreate}
-            className="rounded-xl bg-[#2f2a24] px-4 py-2 text-sm font-semibold text-white"
-          >
-            저장
-          </button>
-        </div>
+                <button
+                  onClick={handleCreate}
+                  className="rounded-xl bg-[#2f2a24] px-4 py-2 text-sm font-semibold text-white"
+                >
+                  저장
+                </button>
+              </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4 pb-8">
-          <div className="space-y-4">
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-[#5f564c]">
-                날짜
-              </label>
-              <input
-                type="date"
-                value={draftDate}
-                onChange={(e) => setDraftDate(e.target.value)}
-                className="w-full rounded-2xl border border-[#ddd3c2] bg-white px-3 py-3 outline-none focus:border-[#cbb892]"
-              />
-            </div>
+              <div className="flex-1 overflow-y-auto px-5 py-4 pb-8">
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-[#5f564c]">
+                      날짜
+                    </label>
+                    <input
+                      type="date"
+                      value={draftDate}
+                      onChange={(e) => setDraftDate(e.target.value)}
+                      className="w-full rounded-2xl border border-[#ddd3c2] bg-white px-3 py-3 outline-none focus:border-[#cbb892]"
+                    />
+                  </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-[#5f564c]">
-                내용
-              </label>
-              <textarea
-                value={draftText}
-                onChange={(e) => setDraftText(e.target.value)}
-                rows={10}
-                className="w-full rounded-2xl border border-[#ddd3c2] bg-white px-3 py-3 text-sm outline-none focus:border-[#cbb892]"
-                placeholder={`한 줄에 하나씩 입력하세요\n예)\n7시 수업 준비\n학부모 상담 전화`}
-              />
-              <p className="mt-2 text-xs text-[#8a7f73]">
-                여러 줄로 입력하면 한 줄마다 하나의 메모로 저장돼요
-              </p>
-            </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-[#5f564c]">
+                      내용
+                    </label>
+                    <textarea
+                      value={draftText}
+                      onChange={(e) => setDraftText(e.target.value)}
+                      rows={10}
+                      className="w-full rounded-2xl border border-[#ddd3c2] bg-white px-3 py-3 text-sm outline-none focus:border-[#cbb892]"
+                      placeholder={`한 줄에 하나씩 입력하세요\n예)\n7시 수업 준비\n학부모 상담 전화`}
+                    />
+                    <p className="mt-2 text-xs text-[#8a7f73]">
+                      여러 줄로 입력하면 한 줄마다 하나의 메모로 저장돼요
+                    </p>
+                  </div>
 
-            <div className="pt-2">
-              <button
-                onClick={handleCreate}
-                className="w-full rounded-2xl bg-[#2f2a24] px-4 py-3 text-sm font-semibold text-white"
-              >
-                저장
-              </button>
+                  <div className="pt-2">
+                    <button
+                      onClick={handleCreate}
+                      className="w-full rounded-2xl bg-[#2f2a24] px-4 py-3 text-sm font-semibold text-white"
+                    >
+                      저장
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
       {showCalendarModal && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/35 sm:items-center">
@@ -455,6 +465,37 @@ export default function Memo() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTargetId && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 px-5">
+          <div className="w-full max-w-sm rounded-[28px] border border-[#eadfcd] bg-[#fffaf2] p-5 shadow-2xl">
+            <div className="text-center">
+              <div className="text-3xl">🗑️</div>
+              <h3 className="mt-3 text-lg font-bold text-[#2f2a24]">메모 삭제</h3>
+              <p className="mt-2 text-sm leading-6 text-[#7a6f63]">
+                이 메모를 삭제할까요?
+                <br />
+                삭제하면 다시 되돌릴 수 없어요.
+              </p>
+            </div>
+
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={cancelDelete}
+                className="flex-1 rounded-2xl border border-[#ddd3c2] bg-white px-4 py-3 text-sm font-medium text-[#6e6458]"
+              >
+                취소
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 rounded-2xl bg-[#8f4a32] px-4 py-3 text-sm font-semibold text-white"
+              >
+                삭제
+              </button>
             </div>
           </div>
         </div>
