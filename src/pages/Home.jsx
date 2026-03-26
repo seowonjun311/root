@@ -1217,59 +1217,66 @@ export default function Home() {
           )}
 
           {activeGoal ? (
-            <div className="space-y-6">
-              <Section
-                title="오늘 해야 할 것"
-                count={grouped.todayItems.length}
-                emptyText="오늘 해야 할 행동목표가 없어요."
-              >
-                {grouped.todayItems.map((actionGoal) => (
-                  <ActionGoalCard
-                    key={actionGoal.id}
-                    actionGoal={actionGoal}
-                    weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-                    allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-                    streak={getStreakForAction(allLogs, actionGoal.id)}
-                    onComplete={handleActionComplete}
-                  />
-                ))}
-              </Section>
+  <div className="space-y-6">
+    <Section
+      title="오늘 해야 할 것"
+      count={grouped.todayItems.length}
+      emptyText="오늘 해야 할 행동목표가 없어요."
+    >
+      {grouped.todayItems.map((actionGoal) => (
+        <ActionGoalCard
+          key={actionGoal.id}
+          actionGoal={actionGoal}
+          weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+          allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+          streak={getStreakForAction(allLogs, actionGoal.id)}
+          onComplete={handleActionComplete}
+        />
+      ))}
+    </Section>
 
-              <Section
-                title="예정된 목표"
-                count={grouped.scheduledItems.length}
-                emptyText="예정된 목표가 없어요."
-              >
-                {grouped.scheduledItems.map((actionGoal) => (
-                  <ActionGoalCard
-                    key={actionGoal.id}
-                    actionGoal={actionGoal}
-                    weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-                    allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-                    streak={getStreakForAction(allLogs, actionGoal.id)}
-                    onComplete={handleActionComplete}
-                  />
-                ))}
-              </Section>
+    <Section
+      title="예정된 목표"
+      count={grouped.scheduledItems.length}
+      emptyText="예정된 목표가 없어요."
+    >
+      {grouped.scheduledItems.map((actionGoal) => (
+        <ActionGoalCard
+          key={actionGoal.id}
+          actionGoal={actionGoal}
+          weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+          allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+          streak={getStreakForAction(allLogs, actionGoal.id)}
+          onComplete={handleActionComplete}
+        />
+      ))}
+    </Section>
 
-              <Section
-                title="기한 지난 목표"
-                count={grouped.overdueItems.length}
-                emptyText="기한 지난 목표가 없어요."
-              >
-                {grouped.overdueItems.map((actionGoal) => (
-                  <ActionGoalCard
-                    key={actionGoal.id}
-                    actionGoal={actionGoal}
-                    weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-                    allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-                    streak={getStreakForAction(allLogs, actionGoal.id)}
-                    onComplete={handleActionComplete}
-                  />
-                ))}
-              </Section>
-            </div>
-          ) : null}
+    <Section
+      title="기한 지난 목표"
+      count={grouped.overdueItems.length}
+      emptyText="기한 지난 목표가 없어요."
+    >
+      {grouped.overdueItems.map((actionGoal) => (
+        <ActionGoalCard
+          key={actionGoal.id}
+          actionGoal={actionGoal}
+          weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+          allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+          streak={getStreakForAction(allLogs, actionGoal.id)}
+          onComplete={handleActionComplete}
+        />
+      ))}
+    </Section>
+
+    <div className="pt-1">
+      <AddActionGoalButton
+        onClick={handleCreateGoal}
+        categoryLabel={CATEGORY_LABELS[activeCategory]}
+      />
+    </div>
+  </div>
+) : null}
         </div>
       </div>
     </div>
