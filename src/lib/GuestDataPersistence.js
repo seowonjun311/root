@@ -65,20 +65,29 @@ function normalizeGoalActionChain(rawGoals, rawActionGoals, fallbackCategory = '
   });
 
   const fallbackGoalId = goals[0]?.id || '';
-  const actionGoals = toArray(rawActionGoals).map((actionGoal, index) => {
-    const linkedGoalId =
-      typeof actionGoal?.goal_id === 'string' && actionGoal.goal_id
-        ? actionGoal.goal_id
-        : fallbackGoalId || goals[index]?.id || '';
+ const actionGoals = toArray(rawActionGoals).map((actionGoal, index) => {
+  const linkedGoalId =
+    typeof actionGoal?.goal_id === 'string' && actionGoal.goal_id
+      ? actionGoal.goal_id
+      : fallbackGoalId || goals[index]?.id || '';
 
-    return {
-      ...(actionGoal || {}),
-      id: ensureId(actionGoal?.id, 'local_ag'),
-      category: actionGoal?.category || goals[0]?.category || fallbackCategory,
-      goal_id: linkedGoalId || null,
-      status: actionGoal?.status || 'active',
-    };
-  });
+  return {
+    ...(actionGoal || {}),
+    id: ensureId(actionGoal?.id, 'local_ag'),
+    category: actionGoal?.category || goals[0]?.category || fallbackCategory,
+    goal_id: linkedGoalId || null,
+    status: actionGoal?.status || 'active',
+    scheduled_date:
+      actionGoal?.scheduled_date ||
+      actionGoal?.scheduledDate ||
+      actionGoal?.date ||
+      actionGoal?.target_date ||
+      actionGoal?.targetDate ||
+      actionGoal?.selected_date ||
+      actionGoal?.selectedDate ||
+      null,
+  };
+});
 
   return { goals, actionGoals };
 }
@@ -291,13 +300,28 @@ const guestDataPersistence = {
   },
 
   updateActionGoal(actionGoalId, patch = {}) {
-    return this.updateData((prev) => ({
-      ...prev,
-      actionGoals: (Array.isArray(prev.actionGoals) ? prev.actionGoals : []).map((goal) =>
-        goal.id === actionGoalId ? { ...goal, ...patch } : goal
-      ),
-    }));
-  },
+  return this.updateData((prev) => ({
+    ...prev,
+    actionGoals: (Array.isArray(prev.actionGoals) ? prev.actionGoals : []).map((goal) =>
+      goal.id === actionGoalId
+        ? {
+            ...goal,
+            ...patch,
+            scheduled_date:
+              patch?.scheduled_date ||
+              goal?.scheduled_date ||
+              goal?.scheduledDate ||
+              goal?.date ||
+              goal?.target_date ||
+              goal?.targetDate ||
+              goal?.selected_date ||
+              goal?.selectedDate ||
+              null,
+          }
+        : goal
+    ),
+  }));
+},
 
   subscribe(callback) {
     if (!isBrowser()) return () => {};
