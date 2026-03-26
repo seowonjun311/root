@@ -55,7 +55,7 @@ export default function CharacterBanner({
   activeCategory = 'daily',
   moveTrigger = 0,
   expText = '+1 EXP',
-  progress = 18, // 0 ~ 100
+  progress = 18,
 }) {
   const [showReward, setShowReward] = useState(false);
 
@@ -65,11 +65,9 @@ export default function CharacterBanner({
 
   const safeProgress = clamp(Number(progress) || 0, 0, 100);
 
-  // 캐릭터가 이동할 수 있는 실제 범위
-  // 너무 왼쪽/오른쪽 끝으로 안 가게 여유를 둠
   const characterLeftPercent = useMemo(() => {
     const start = 8;
-    const end = 72; // 마왕성 직전까지만 이동
+    const end = 72;
     return start + ((end - start) * safeProgress) / 100;
   }, [safeProgress]);
 
@@ -82,13 +80,13 @@ export default function CharacterBanner({
   }, [moveTrigger]);
 
   return (
-    <div className="px-4 pt-2 pb-2">
+    <div className="px-4 pt-0 pb-0">
       <div
-        className="relative overflow-hidden rounded-[28px] px-4 pt-4 pb-4"
+        className="relative overflow-hidden rounded-[26px] px-3 pt-3 pb-3"
         style={{
           background: theme.sky,
           border: '1.5px solid rgba(145,115,60,0.18)',
-          boxShadow: '0 10px 22px rgba(60,35,10,0.10)',
+          boxShadow: '0 8px 18px rgba(60,35,10,0.08)',
         }}
       >
         <div
@@ -96,7 +94,7 @@ export default function CharacterBanner({
           style={{ background: theme.glow, filter: 'blur(10px)' }}
         />
 
-        <div className="relative h-[190px] overflow-hidden rounded-[28px] sm:h-[220px]">
+        <div className="relative h-[182px] overflow-hidden rounded-[24px] sm:h-[210px]">
           <img
             src={pathImg}
             alt="루트 길"
@@ -104,12 +102,11 @@ export default function CharacterBanner({
             draggable={false}
           />
 
-          <div className="absolute inset-0 bg-gradient-to-b from-[#fff5df]/12 via-transparent to-[#00000008]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#fff5df]/10 via-transparent to-[#00000008]" />
 
-          {/* 아이디 + 칭호 */}
-          <div className="absolute left-4 right-4 top-4 z-30 flex flex-wrap items-start gap-2">
+          <div className="absolute left-3 right-3 top-3 z-30 flex flex-wrap items-start gap-2">
             <div
-              className="inline-flex max-w-full items-center rounded-full px-3 py-1.5 text-[12px] font-bold shadow-sm sm:text-[13px]"
+              className="inline-flex max-w-full items-center rounded-full px-3 py-1 text-[11px] font-bold shadow-sm sm:text-[12px]"
               style={{
                 background: theme.badgeBg,
                 color: theme.badgeText,
@@ -122,7 +119,7 @@ export default function CharacterBanner({
 
             {title ? (
               <div
-                className="inline-flex max-w-full items-center rounded-full px-3 py-1.5 text-[12px] font-semibold shadow-sm sm:text-[13px]"
+                className="inline-flex max-w-full items-center rounded-full px-3 py-1 text-[11px] font-semibold shadow-sm sm:text-[12px]"
                 style={{
                   background: theme.titleBg,
                   color: theme.badgeText,
@@ -135,11 +132,10 @@ export default function CharacterBanner({
             ) : null}
           </div>
 
-          {/* 마왕성 */}
           <motion.img
             src={castleImg}
             alt="마왕성"
-            className="absolute right-[7%] top-[36%] z-20 h-[80px] w-auto object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.24)] sm:h-[100px]"
+            className="absolute right-[7%] top-[35%] z-20 h-[88px] w-auto object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.24)] sm:h-[108px]"
             draggable={false}
             animate={{
               y: [0, -2, 0],
@@ -152,10 +148,9 @@ export default function CharacterBanner({
             }}
           />
 
-          {/* 캐릭터: progress에 따라 길 따라 이동 */}
           <motion.div
             key={`${moveTrigger}-${safeProgress}`}
-            className="absolute bottom-[10px] z-30"
+            className="absolute bottom-[6px] z-30"
             initial={{
               left: `${characterLeftPercent}%`,
               x: '-50%',
@@ -181,12 +176,11 @@ export default function CharacterBanner({
             <img
               src={characterImg}
               alt="캐릭터"
-              className="h-[72px] w-auto object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.18)] sm:h-[90px]"
+              className="h-[78px] w-auto object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.18)] sm:h-[96px]"
               draggable={false}
             />
           </motion.div>
 
-          {/* EXP 팝업 */}
           <AnimatePresence>
             {showReward && (
               <motion.div
@@ -194,11 +188,11 @@ export default function CharacterBanner({
                 animate={{ opacity: 1, y: -10, scale: 1 }}
                 exit={{ opacity: 0, y: -18, scale: 0.95 }}
                 transition={{ duration: 0.6 }}
-                className="absolute bottom-[76px] z-40"
-                style={{ left: `calc(${characterLeftPercent}% + 14px)` }}
+                className="absolute bottom-[78px] z-40"
+                style={{ left: `calc(${characterLeftPercent}% + 12px)` }}
               >
                 <div
-                  className="rounded-full px-2.5 py-1 text-[11px] font-extrabold"
+                  className="rounded-full px-2.5 py-1 text-[10px] font-extrabold"
                   style={{
                     background: 'rgba(255,255,255,0.92)',
                     color: theme.badgeText,
@@ -212,8 +206,7 @@ export default function CharacterBanner({
             )}
           </AnimatePresence>
 
-          {/* 진행 바 */}
-          <div className="absolute bottom-3 left-[10%] right-[12%] z-20">
+          <div className="absolute bottom-2 left-[10%] right-[12%] z-20">
             <div
               className="h-2.5 overflow-hidden rounded-full"
               style={{ background: theme.progressBg }}
