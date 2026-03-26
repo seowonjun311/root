@@ -45,18 +45,33 @@ const CATEGORY_THEME = {
   },
 };
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
 export default function CharacterBanner({
   nickname = '귀여운이수',
   title = '첫 걸음을 뗀 자',
   activeCategory = 'daily',
   moveTrigger = 0,
   expText = '+1 EXP',
+  progress = 18, // 0 ~ 100
 }) {
   const [showReward, setShowReward] = useState(false);
 
   const theme = useMemo(() => {
     return CATEGORY_THEME[activeCategory] || CATEGORY_THEME.daily;
   }, [activeCategory]);
+
+  const safeProgress = clamp(Number(progress) || 0, 0, 100);
+
+  // 캐릭터가 이동할 수 있는 실제 범위
+  // 너무 왼쪽/오른쪽 끝으로 안 가게 여유를 둠
+  const characterLeftPercent = useMemo(() => {
+    const start = 8;
+    const end = 72; // 마왕성 직전까지만 이동
+    return start + ((end - start) * safeProgress) / 100;
+  }, [safeProgress]);
 
   useEffect(() => {
     if (!moveTrigger) return;
@@ -81,8 +96,7 @@ export default function CharacterBanner({
           style={{ background: theme.glow, filter: 'blur(10px)' }}
         />
 
-        {/* 길 이미지 영역 크게 */}
-        <div className="relative h-[190px] sm:h-[220px] overflow-hidden rounded-[28px]">
+        <div className="relative h-[190px] overflow-hidden rounded-[28px] sm:h-[220px]">
           <img
             src={pathImg}
             alt="루트 길"
@@ -92,10 +106,10 @@ export default function CharacterBanner({
 
           <div className="absolute inset-0 bg-gradient-to-b from-[#fff5df]/12 via-transparent to-[#00000008]" />
 
-          {/* 상단 아이디 + 칭호 */}
+          {/* 아이디 + 칭호 */}
           <div className="absolute left-4 right-4 top-4 z-30 flex flex-wrap items-start gap-2">
             <div
-              className="inline-flex max-w-full items-center rounded-full px-4 py-2 text-[9px] font-bold shadow-sm"
+              className="inline-flex max-w-full items-center rounded-full px-3 py-1.5 text-[12px] font-bold shadow-sm sm:text-[13px]"
               style={{
                 background: theme.badgeBg,
                 color: theme.badgeText,
@@ -108,7 +122,7 @@ export default function CharacterBanner({
 
             {title ? (
               <div
-                className="inline-flex max-w-full items-center rounded-full px-4 py-2 text-[9px] font-semibold shadow-sm"
+                className="inline-flex max-w-full items-center rounded-full px-3 py-1.5 text-[12px] font-semibold shadow-sm sm:text-[13px]"
                 style={{
                   background: theme.titleBg,
                   color: theme.badgeText,
@@ -125,7 +139,7 @@ export default function CharacterBanner({
           <motion.img
             src={castleImg}
             alt="마왕성"
-            className="absolute right-[7%] top-[36%] z-20 h-[100px] w-auto object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.24)] sm:h-[76px]"
+            className="absolute right-[7%] top-[36%] z-20 h-[80px] w-auto object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.24)] sm:h-[100px]"
             draggable={false}
             animate={{
               y: [0, -2, 0],
@@ -138,32 +152,36 @@ export default function CharacterBanner({
             }}
           />
 
-          {/* 캐릭터 */}
+          {/* 캐릭터: progress에 따라 길 따라 이동 */}
           <motion.div
-            key={moveTrigger}
-            className="absolute bottom-[16px] left-[10%] z-30"
-            initial={{ x: 0, y: 0, scale: 1 }}
-            animate={
-              moveTrigger
-                ? {
-                    x: [0, 10, 18, 16],
-                    y: [0, -1, -3, 0],
-                    scale: [1, 1.02, 1.05, 1],
-                  }
-                : {
-                    y: [0, -1.5, 0],
-                  }
-            }
-            transition={
-              moveTrigger
-                ? { duration: 0.85, ease: 'easeOut' }
-                : { duration: 2.2, repeat: Infinity, ease: 'easeInOut' }
-            }
+            key={`${moveTrigger}-${safeProgress}`}
+            className="absolute bottom-[10px] z-30"
+            initial={{
+              left: `${characterLeftPercent}%`,
+              x: '-50%',
+              y: 0,
+              scale: 1,
+            }}
+            animate={{
+              left: `${characterLeftPercent}%`,
+              x: '-50%',
+              y: moveTrigger ? [0, -2, 0] : [0, -1.5, 0],
+              scale: moveTrigger ? [1, 1.04, 1] : 1,
+            }}
+            transition={{
+              left: { duration: 0.9, ease: 'easeOut' },
+              y: {
+                duration: moveTrigger ? 0.5 : 2.2,
+                repeat: moveTrigger ? 0 : Infinity,
+                ease: 'easeInOut',
+              },
+              scale: { duration: 0.5, ease: 'easeOut' },
+            }}
           >
             <img
               src={characterImg}
               alt="캐릭터"
-              className="h-[72px] w-auto object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.18)] sm:h-[72px]"
+              className="h-[72px] w-auto object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.18)] sm:h-[90px]"
               draggable={false}
             />
           </motion.div>
@@ -176,7 +194,8 @@ export default function CharacterBanner({
                 animate={{ opacity: 1, y: -10, scale: 1 }}
                 exit={{ opacity: 0, y: -18, scale: 0.95 }}
                 transition={{ duration: 0.6 }}
-                className="absolute bottom-[66px] left-[24%] z-40"
+                className="absolute bottom-[76px] z-40"
+                style={{ left: `calc(${characterLeftPercent}% + 14px)` }}
               >
                 <div
                   className="rounded-full px-2.5 py-1 text-[11px] font-extrabold"
@@ -201,12 +220,7 @@ export default function CharacterBanner({
             >
               <motion.div
                 className="h-full rounded-full"
-                initial={{ width: '18%' }}
-                animate={
-                  moveTrigger
-                    ? { width: ['18%', '26%', '33%'] }
-                    : { width: '18%' }
-                }
+                animate={{ width: `${safeProgress}%` }}
                 transition={{ duration: 0.9, ease: 'easeOut' }}
                 style={{
                   background: theme.progressFill,
