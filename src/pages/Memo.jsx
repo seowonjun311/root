@@ -125,12 +125,11 @@ export default function Memo() {
     }));
   }, [memos]);
 
-  const memoDates = useMemo(() => grouped.map((g) => g.date), [grouped]);
-
-  const memoCountMap = useMemo(() => {
+  const pendingMemoCountMap = useMemo(() => {
     const map = {};
     for (const memo of memos) {
       if (!memo?.date) continue;
+      if (memo.completed) continue;
       map[memo.date] = (map[memo.date] || 0) + 1;
     }
     return map;
@@ -140,6 +139,9 @@ export default function Memo() {
     return memos
       .filter((memo) => memo.date === selectedCalendarDate)
       .sort((a, b) => {
+        if (a.completed !== b.completed) {
+          return a.completed ? 1 : -1;
+        }
         const aTime = new Date(a.createdAt || 0).getTime();
         const bTime = new Date(b.createdAt || 0).getTime();
         return aTime - bTime;
@@ -496,8 +498,8 @@ export default function Memo() {
                       const inCurrentMonth = date.getMonth() === calendarMonth;
                       const selected = dateStr === selectedCalendarDate;
                       const today = dateStr === todayStr;
-                      const memoCount = memoCountMap[dateStr] || 0;
-                      const hasMemo = memoCount > 0;
+                      const pendingCount = pendingMemoCountMap[dateStr] || 0;
+                      const hasPending = pendingCount > 0;
 
                       return (
                         <button
@@ -515,7 +517,7 @@ export default function Memo() {
                             {date.getDate()}
                           </span>
 
-                          {hasMemo && (
+                          {hasPending && (
                             <span
                               className={`mt-1 min-w-[16px] rounded-full px-1 text-[10px] leading-4 font-bold ${
                                 selected
@@ -523,7 +525,7 @@ export default function Memo() {
                                   : 'bg-[#f3dfc7] text-[#8f4a32]'
                               }`}
                             >
-                              {memoCount === 1 ? '•' : memoCount > 9 ? '9+' : memoCount}
+                              {pendingCount === 1 ? '•' : pendingCount > 9 ? '9+' : pendingCount}
                             </span>
                           )}
                         </button>
