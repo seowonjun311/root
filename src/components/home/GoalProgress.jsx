@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { CalendarDays, Flag, Target, Pencil, Trash2 } from 'lucide-react';
+import { CalendarDays, Flag, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,13 +12,6 @@ import {
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-
-const CATEGORY_LABELS = {
-  exercise: '운동',
-  study: '공부',
-  mental: '정신',
-  daily: '일상',
-};
 
 const GUEST_STORAGE_KEY = 'root_guest_data';
 
@@ -241,7 +234,6 @@ export default function GoalProgress({ goal, logs = [] }) {
     },
   });
 
-  const categoryLabel = CATEGORY_LABELS[goal.category] || '목표';
   const title = goal.title || goal.goal_title || '결과 목표';
   const displayPercent = Math.max(dateInfo.percent, logInfo.logPercent);
 
@@ -312,60 +304,38 @@ export default function GoalProgress({ goal, logs = [] }) {
           boxShadow: '0 6px 16px rgba(84, 55, 14, 0.12)',
         }}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <div
-                className="h-7 px-2.5 rounded-full text-[11px] font-bold flex items-center"
-                style={{
-                  background: 'rgba(139, 90, 32, 0.12)',
-                  color: '#7a5020',
-                  border: '1px solid rgba(139, 90, 32, 0.15)',
-                }}
-              >
-                <Flag className="w-3.5 h-3.5 mr-1" />
-                결과목표
-              </div>
-
-              <div
-                className="h-7 px-2.5 rounded-full text-[11px] font-bold flex items-center"
-                style={{
-                  background: 'rgba(210, 155, 56, 0.16)',
-                  color: '#8a5a17',
-                  border: '1px solid rgba(210, 155, 56, 0.18)',
-                }}
-              >
-                {categoryLabel}
-              </div>
-            </div>
-
-            <h2
-              className="text-[17px] leading-snug font-bold break-words"
-              style={{ color: '#3d2408' }}
-            >
-              {title}
-            </h2>
+        <div className="flex items-center gap-2">
+          <div
+            className="h-9 px-3 rounded-full text-[12px] font-bold flex items-center shrink-0"
+            style={{
+              background: 'rgba(139, 90, 32, 0.12)',
+              color: '#7a5020',
+              border: '1px solid rgba(139, 90, 32, 0.15)',
+            }}
+          >
+            <Flag className="w-3.5 h-3.5 mr-1.5" />
+            결과목표
           </div>
 
-          <div className="shrink-0 flex items-start gap-2">
+          <div className="ml-auto flex items-center gap-2 shrink-0">
             <div
-              className="rounded-2xl px-3 py-2 text-center min-w-[72px]"
+              className="h-9 min-w-[84px] rounded-2xl px-3 flex flex-col items-center justify-center"
               style={{
                 background: 'rgba(255,255,255,0.52)',
                 border: '1px solid rgba(139, 90, 32, 0.14)',
               }}
             >
-              <div className="text-[10px] font-semibold mb-0.5" style={{ color: '#9a7b47' }}>
+              <div className="text-[10px] font-semibold leading-none" style={{ color: '#9a7b47' }}>
                 진행률
               </div>
-              <div className="text-base font-extrabold" style={{ color: '#7a5020' }}>
+              <div className="text-[15px] font-extrabold mt-1 leading-none" style={{ color: '#7a5020' }}>
                 {displayPercent}%
               </div>
             </div>
 
             <button
               onClick={handleOpenEdit}
-              className="h-10 w-10 rounded-2xl flex items-center justify-center shrink-0"
+              className="h-9 w-9 rounded-2xl flex items-center justify-center"
               style={{
                 background: 'rgba(255,255,255,0.52)',
                 border: '1px solid rgba(139, 90, 32, 0.14)',
@@ -378,7 +348,7 @@ export default function GoalProgress({ goal, logs = [] }) {
 
             <button
               onClick={() => setShowDelete(true)}
-              className="h-10 w-10 rounded-2xl flex items-center justify-center shrink-0"
+              className="h-9 w-9 rounded-2xl flex items-center justify-center"
               style={{
                 background: 'rgba(255,255,255,0.52)',
                 border: '1px solid rgba(139, 90, 32, 0.14)',
@@ -391,9 +361,16 @@ export default function GoalProgress({ goal, logs = [] }) {
           </div>
         </div>
 
-        <div className="mt-4">
+        <h2
+          className="mt-3 text-[17px] leading-snug font-extrabold break-words"
+          style={{ color: '#3d2408' }}
+        >
+          {title}
+        </h2>
+
+        <div className="mt-4 flex items-center gap-3">
           <div
-            className="h-3 rounded-full overflow-hidden"
+            className="h-3 w-1/2 min-w-[130px] max-w-[220px] rounded-full overflow-hidden"
             style={{ background: 'rgba(122, 80, 32, 0.14)' }}
           >
             <div
@@ -404,52 +381,28 @@ export default function GoalProgress({ goal, logs = [] }) {
               }}
             />
           </div>
+
+          <div
+            className="text-[13px] font-bold whitespace-nowrap"
+            style={{ color: '#7a5020' }}
+          >
+            총 {logInfo.doneCount}회 수행
+          </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-2">
-          <div
-            className="rounded-2xl px-3 py-3 flex items-center gap-3"
-            style={{
-              background: 'rgba(255,255,255,0.45)',
-              border: '1px solid rgba(139, 90, 32, 0.12)',
-            }}
-          >
-            <CalendarDays className="w-4 h-4 shrink-0" style={{ color: '#8b5a20' }} />
-            <div className="min-w-0">
-              <div className="text-[11px] font-semibold" style={{ color: '#9a7b47' }}>
-                {isStudyGoal ? 'D-day' : '도전 기간'}
-              </div>
-              <div className="text-sm font-bold" style={{ color: '#4d2f0f' }}>
-                {isStudyGoal
-                  ? formatDate(dateInfo.endDate)
-                  : `${formatDate(goal.start_date)} ~ ${formatDate(dateInfo.endDate)}`}
-              </div>
-            </div>
+        <div
+          className="mt-4 rounded-2xl px-3 py-3 flex items-center gap-2 flex-wrap"
+          style={{
+            background: 'rgba(255,255,255,0.45)',
+            border: '1px solid rgba(139, 90, 32, 0.12)',
+          }}
+        >
+          <CalendarDays className="w-4 h-4 shrink-0" style={{ color: '#8b5a20' }} />
+          <div className="text-[13px] font-semibold" style={{ color: '#7a5020' }}>
+            언제까지 {formatDate(dateInfo.endDate)}
           </div>
-
-          <div
-            className="rounded-2xl px-3 py-3 flex items-center gap-3"
-            style={{
-              background: 'rgba(255,255,255,0.45)',
-              border: '1px solid rgba(139, 90, 32, 0.12)',
-            }}
-          >
-            <Target className="w-4 h-4 shrink-0" style={{ color: '#8b5a20' }} />
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold" style={{ color: '#9a7b47' }}>
-                현재 상태
-              </div>
-
-              {dateInfo.isComplete ? (
-                <div className="text-sm font-bold" style={{ color: '#4d2f0f' }}>
-                  도전 기간이 종료되었어요
-                </div>
-              ) : (
-                <div className="text-sm font-bold" style={{ color: '#4d2f0f' }}>
-                  {dateInfo.remainingDays}일 남음 · {logInfo.doneCount}회 기록
-                </div>
-              )}
-            </div>
+          <div className="text-[13px] font-extrabold" style={{ color: '#4d2f0f' }}>
+            · {dateInfo.isComplete ? '기간 종료' : `${dateInfo.remainingDays}일 남음`}
           </div>
         </div>
       </div>
