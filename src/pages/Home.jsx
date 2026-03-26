@@ -486,12 +486,12 @@ function Section({ title, count, emptyText, children }) {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3 flex items-center justify-between">
         <h2 className="text-[15px] font-extrabold" style={{ color: '#4a2c08' }}>
           {title}
         </h2>
         <div
-          className="px-2 py-1 rounded-full text-[11px] font-bold"
+          className="rounded-full px-2 py-1 text-[11px] font-bold"
           style={{
             background: 'rgba(196,154,74,0.14)',
             color: '#8a5a17',
@@ -523,7 +523,7 @@ function Section({ title, count, emptyText, children }) {
 function ExpPopup({ exp }) {
   return (
     <div
-      className="fixed left-1/2 top-24 -translate-x-1/2 z-[70] px-4 py-2 rounded-full text-sm font-extrabold shadow-lg animate-[fadeInOut_1.4s_ease-in-out_forwards]"
+      className="animate-[fadeInOut_1.4s_ease-in-out_forwards] fixed left-1/2 top-24 z-[70] -translate-x-1/2 rounded-full px-4 py-2 text-sm font-extrabold shadow-lg"
       style={{
         background: 'linear-gradient(180deg, #f6d98c 0%, #d9a83e 100%)',
         color: '#4a2c08',
@@ -546,12 +546,12 @@ function TitleUnlockModal({ title, onClose, onEquip }) {
         }}
       >
         <div className="text-center">
-          <div className="text-sm font-bold mb-2" style={{ color: '#8a5a17' }}>
+          <div className="mb-2 text-sm font-bold" style={{ color: '#8a5a17' }}>
             ✨ 새로운 칭호 획득
           </div>
 
           <div
-            className="inline-flex px-4 py-2 rounded-full text-lg font-extrabold mb-3"
+            className="mb-3 inline-flex rounded-full px-4 py-2 text-lg font-extrabold"
             style={{
               background: 'rgba(255,255,255,0.55)',
               color: '#4a2c08',
@@ -561,7 +561,7 @@ function TitleUnlockModal({ title, onClose, onEquip }) {
             {title.name}
           </div>
 
-          <p className="text-sm mb-5" style={{ color: '#7a5020' }}>
+          <p className="mb-5 text-sm" style={{ color: '#7a5020' }}>
             {title.description}
           </p>
 
@@ -569,7 +569,7 @@ function TitleUnlockModal({ title, onClose, onEquip }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 h-11 rounded-2xl font-bold text-sm"
+              className="h-11 flex-1 rounded-2xl text-sm font-bold"
               style={{
                 background: '#fff',
                 border: '1px solid #d8c08e',
@@ -582,7 +582,7 @@ function TitleUnlockModal({ title, onClose, onEquip }) {
             <button
               type="button"
               onClick={onEquip}
-              className="flex-1 h-11 rounded-2xl font-bold text-sm"
+              className="h-11 flex-1 rounded-2xl text-sm font-bold"
               style={{
                 background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
                 color: '#fff8e8',
@@ -1125,86 +1125,107 @@ export default function Home() {
         />
       ) : null}
 
-      <div className="px-4 pt-4 space-y-4">
-        <CharacterBanner
-          nickname={nickname}
-          title={equippedTitle?.name || ''}
-          message={bannerMessage}
-          activeCategory={activeCategory}
-          moveTrigger={moveTrigger}
-          expText={expPopup ? `+${expPopup} EXP` : '+1 EXP'}
-          progress={bannerProgress}
-        />
-
-        <CategoryTabs
-          active={activeCategory}
-          onChange={handleCategoryChange}
-          userLevels={userLevels}
-        />
-
-        {activeGoal ? (
-          <GoalProgress goal={activeGoal} logs={goalLogs} />
-        ) : (
-          <EmptyGoalState
-            category={activeCategory}
-            onCreateGoal={handleCreateGoal}
+      <div className="px-4">
+        <div
+          className="sticky top-0 z-40 -mx-4 px-4 pt-4 pb-3"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 78%, rgba(245,232,201,0.86) 100%)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+          }}
+        >
+          <CharacterBanner
+            nickname={nickname}
+            title={equippedTitle?.name || ''}
+            message={bannerMessage}
+            activeCategory={activeCategory}
+            moveTrigger={moveTrigger}
+            expText={expPopup ? `+${expPopup} EXP` : '+1 EXP'}
+            progress={bannerProgress}
           />
-        )}
 
-        {activeGoal ? (
-          <div className="space-y-6">
-            <Section
-              title="오늘 해야 할 것"
-              count={grouped.todayItems.length}
-              emptyText="오늘 해야 할 행동목표가 없어요."
-            >
-              {grouped.todayItems.map((actionGoal) => (
-                <ActionGoalCard
-                  key={actionGoal.id}
-                  actionGoal={actionGoal}
-                  weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-                  allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-                  streak={getStreakForAction(allLogs, actionGoal.id)}
-                  onComplete={handleActionComplete}
-                />
-              ))}
-            </Section>
-
-            <Section
-              title="예정된 목표"
-              count={grouped.scheduledItems.length}
-              emptyText="예정된 목표가 없어요."
-            >
-              {grouped.scheduledItems.map((actionGoal) => (
-                <ActionGoalCard
-                  key={actionGoal.id}
-                  actionGoal={actionGoal}
-                  weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-                  allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-                  streak={getStreakForAction(allLogs, actionGoal.id)}
-                  onComplete={handleActionComplete}
-                />
-              ))}
-            </Section>
-
-            <Section
-              title="기한 지난 목표"
-              count={grouped.overdueItems.length}
-              emptyText="기한 지난 목표가 없어요."
-            >
-              {grouped.overdueItems.map((actionGoal) => (
-                <ActionGoalCard
-                  key={actionGoal.id}
-                  actionGoal={actionGoal}
-                  weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-                  allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-                  streak={getStreakForAction(allLogs, actionGoal.id)}
-                  onComplete={handleActionComplete}
-                />
-              ))}
-            </Section>
+          <div className="mt-3">
+            <CategoryTabs
+              active={activeCategory}
+              onChange={handleCategoryChange}
+              userLevels={userLevels}
+            />
           </div>
-        ) : null}
+
+          <div
+            className="mt-3 h-[1px] w-full"
+            style={{
+              background: 'linear-gradient(90deg, rgba(120,90,40,0) 0%, rgba(120,90,40,0.18) 20%, rgba(120,90,40,0.18) 80%, rgba(120,90,40,0) 100%)',
+            }}
+          />
+        </div>
+
+        <div className="space-y-4 pt-3">
+          {activeGoal ? (
+            <GoalProgress goal={activeGoal} logs={goalLogs} />
+          ) : (
+            <EmptyGoalState
+              category={activeCategory}
+              onCreateGoal={handleCreateGoal}
+            />
+          )}
+
+          {activeGoal ? (
+            <div className="space-y-6">
+              <Section
+                title="오늘 해야 할 것"
+                count={grouped.todayItems.length}
+                emptyText="오늘 해야 할 행동목표가 없어요."
+              >
+                {grouped.todayItems.map((actionGoal) => (
+                  <ActionGoalCard
+                    key={actionGoal.id}
+                    actionGoal={actionGoal}
+                    weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+                    allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+                    streak={getStreakForAction(allLogs, actionGoal.id)}
+                    onComplete={handleActionComplete}
+                  />
+                ))}
+              </Section>
+
+              <Section
+                title="예정된 목표"
+                count={grouped.scheduledItems.length}
+                emptyText="예정된 목표가 없어요."
+              >
+                {grouped.scheduledItems.map((actionGoal) => (
+                  <ActionGoalCard
+                    key={actionGoal.id}
+                    actionGoal={actionGoal}
+                    weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+                    allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+                    streak={getStreakForAction(allLogs, actionGoal.id)}
+                    onComplete={handleActionComplete}
+                  />
+                ))}
+              </Section>
+
+              <Section
+                title="기한 지난 목표"
+                count={grouped.overdueItems.length}
+                emptyText="기한 지난 목표가 없어요."
+              >
+                {grouped.overdueItems.map((actionGoal) => (
+                  <ActionGoalCard
+                    key={actionGoal.id}
+                    actionGoal={actionGoal}
+                    weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+                    allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+                    streak={getStreakForAction(allLogs, actionGoal.id)}
+                    onComplete={handleActionComplete}
+                  />
+                ))}
+              </Section>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
