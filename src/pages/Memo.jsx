@@ -51,6 +51,9 @@ export default function Memo() {
 
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
+  const [editingMemoId, setEditingMemoId] = useState(null);
+  const [editingText, setEditingText] = useState('');
+
   const todayStr = useMemo(() => {
     const now = new Date();
     const yyyy = now.getFullYear();
@@ -61,9 +64,6 @@ export default function Memo() {
 
   const [draftDate, setDraftDate] = useState(todayStr);
   const [draftText, setDraftText] = useState('');
-
-  const [editingMemoId, setEditingMemoId] = useState(null);
-  const [editingText, setEditingText] = useState('');
 
   const sectionRefs = useRef({});
 
@@ -245,84 +245,54 @@ export default function Memo() {
                 </div>
 
                 <div className="space-y-2">
-                  {group.items.map((memo) => {
-                    const isEditing = editingMemoId === memo.id;
+                  {group.items.map((memo) => (
+                    <div
+                      key={memo.id}
+                      className="rounded-2xl border border-[#f0eadf] bg-[#fcfbf8] px-3 py-3"
+                    >
+                      <div className="flex items-start gap-3">
+                        <button
+                          onClick={() => handleToggle(memo.id)}
+                          className={`mt-[2px] flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-sm ${
+                            memo.completed
+                              ? 'border-[#8dbb7d] bg-[#8dbb7d] text-white'
+                              : 'border-[#cfc4b2] bg-white text-transparent'
+                          }`}
+                          aria-label={memo.completed ? '체크 해제' : '체크'}
+                          title={memo.completed ? '체크 해제' : '체크'}
+                        >
+                          ✓
+                        </button>
 
-                    return (
-                      <div
-                        key={memo.id}
-                        className="rounded-2xl border border-[#f0eadf] bg-[#fcfbf8] px-3 py-3"
-                      >
-                        {isEditing ? (
-                          <div className="space-y-3">
-                            <textarea
-                              value={editingText}
-                              onChange={(e) => setEditingText(e.target.value)}
-                              rows={3}
-                              className="w-full rounded-2xl border border-[#ddd3c2] bg-white px-3 py-3 text-sm outline-none focus:border-[#cbb892]"
-                              placeholder="메모를 수정하세요"
-                            />
-                            <div className="flex justify-end gap-2">
-                              <button
-                                onClick={cancelEdit}
-                                className="rounded-xl border border-[#ddd3c2] px-4 py-2 text-sm font-medium text-[#6e6458]"
-                              >
-                                취소
-                              </button>
-                              <button
-                                onClick={saveEdit}
-                                className="rounded-xl bg-[#2f2a24] px-4 py-2 text-sm font-semibold text-white"
-                              >
-                                저장
-                              </button>
-                            </div>
+                        <div className="min-w-0 flex-1">
+                          <div
+                            className={`whitespace-pre-wrap break-words text-[15px] leading-6 ${
+                              memo.completed
+                                ? 'text-[#a79b8d] line-through'
+                                : 'text-[#2f2a24]'
+                            }`}
+                          >
+                            {memo.text}
                           </div>
-                        ) : (
-                          <div className="flex items-start gap-3">
-                            <button
-                              onClick={() => handleToggle(memo.id)}
-                              className={`mt-[2px] flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-sm ${
-                                memo.completed
-                                  ? 'border-[#8dbb7d] bg-[#8dbb7d] text-white'
-                                  : 'border-[#cfc4b2] bg-white text-transparent'
-                              }`}
-                              aria-label={memo.completed ? '체크 해제' : '체크'}
-                              title={memo.completed ? '체크 해제' : '체크'}
-                            >
-                              ✓
-                            </button>
+                        </div>
 
-                            <div className="min-w-0 flex-1">
-                              <div
-                                className={`whitespace-pre-wrap break-words text-[15px] leading-6 ${
-                                  memo.completed
-                                    ? 'text-[#a79b8d] line-through'
-                                    : 'text-[#2f2a24]'
-                                }`}
-                              >
-                                {memo.text}
-                              </div>
-                            </div>
-
-                            <div className="flex shrink-0 items-center gap-2">
-                              <button
-                                onClick={() => startEdit(memo)}
-                                className="rounded-xl border border-[#ddd3c2] px-3 py-1.5 text-xs font-medium text-[#6e6458]"
-                              >
-                                수정
-                              </button>
-                              <button
-                                onClick={() => askDelete(memo.id)}
-                                className="rounded-xl border border-[#ead2d2] px-3 py-1.5 text-xs font-medium text-[#a14d4d]"
-                              >
-                                삭제
-                              </button>
-                            </div>
-                          </div>
-                        )}
+                        <div className="flex shrink-0 items-center gap-2">
+                          <button
+                            onClick={() => startEdit(memo)}
+                            className="rounded-xl border border-[#ddd3c2] px-3 py-1.5 text-xs font-medium text-[#6e6458]"
+                          >
+                            수정
+                          </button>
+                          <button
+                            onClick={() => askDelete(memo.id)}
+                            className="rounded-xl border border-[#ead2d2] px-3 py-1.5 text-xs font-medium text-[#a14d4d]"
+                          >
+                            삭제
+                          </button>
+                        </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               </section>
             ))}
@@ -495,6 +465,45 @@ export default function Memo() {
                 className="flex-1 rounded-2xl bg-[#8f4a32] px-4 py-3 text-sm font-semibold text-white"
               >
                 삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingMemoId && (
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/40 px-5">
+          <div className="w-full max-w-md rounded-[28px] border border-[#eadfcd] bg-[#fffaf2] p-5 shadow-2xl">
+            <div className="text-center">
+              <div className="text-3xl">✏️</div>
+              <h3 className="mt-3 text-lg font-bold text-[#2f2a24]">메모 수정</h3>
+              <p className="mt-2 text-sm leading-6 text-[#7a6f63]">
+                메모 내용을 수정해보세요.
+              </p>
+            </div>
+
+            <div className="mt-4">
+              <textarea
+                value={editingText}
+                onChange={(e) => setEditingText(e.target.value)}
+                rows={5}
+                className="w-full rounded-2xl border border-[#ddd3c2] bg-white px-4 py-3 text-sm outline-none focus:border-[#cbb892]"
+                placeholder="메모를 입력하세요"
+              />
+            </div>
+
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={cancelEdit}
+                className="flex-1 rounded-2xl border border-[#ddd3c2] bg-white px-4 py-3 text-sm font-medium text-[#6e6458]"
+              >
+                취소
+              </button>
+              <button
+                onClick={saveEdit}
+                className="flex-1 rounded-2xl bg-[#2f2a24] px-4 py-3 text-sm font-semibold text-white"
+              >
+                저장
               </button>
             </div>
           </div>
