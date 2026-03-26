@@ -1,9 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import pathImg from '../../assets/root/path.png';
-import characterImg from '../../assets/root/character.png';
-import castleImg from '../../assets/root/castle.png';
+import { characterImg, pathImg, castleImg } from '../../assets/root/index.js';
 
 const CATEGORY_THEME = {
   exercise: {
