@@ -95,7 +95,7 @@ export default function CharacterBanner({
           {/* 상단 아이디 + 칭호 */}
           <div className="absolute left-4 right-4 top-4 z-30 flex flex-wrap items-start gap-2">
             <div
-              className="inline-flex max-w-full items-center rounded-full px-4 py-2 text-[15px] font-bold shadow-sm"
+              className="inline-flex max-w-full items-center rounded-full px-4 py-2 text-[9px] font-bold shadow-sm"
               style={{
                 background: theme.badgeBg,
                 color: theme.badgeText,
@@ -108,7 +108,7 @@ export default function CharacterBanner({
 
             {title ? (
               <div
-                className="inline-flex max-w-full items-center rounded-full px-4 py-2 text-[15px] font-semibold shadow-sm"
+                className="inline-flex max-w-full items-center rounded-full px-4 py-2 text-[9px] font-semibold shadow-sm"
                 style={{
                   background: theme.titleBg,
                   color: theme.badgeText,
@@ -163,7 +163,7 @@ export default function CharacterBanner({
             <img
               src={characterImg}
               alt="캐릭터"
-              className="h-[58px] w-auto object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.18)] sm:h-[72px]"
+              className="h-[72px] w-auto object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.18)] sm:h-[72px]"
               draggable={false}
             />
           </motion.div>
