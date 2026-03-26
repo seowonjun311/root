@@ -297,7 +297,7 @@ export default function GoalProgress({ goal, logs = [] }) {
   return (
     <>
       <div
-        className="rounded-3xl px-4 py-4"
+        className="rounded-3xl px-4 py-2"
         style={{
           background: 'linear-gradient(135deg, #fff5de 0%, #f6e7bf 58%, #f0deb0 100%)',
           border: '1.5px solid #d8b978',
@@ -362,7 +362,7 @@ export default function GoalProgress({ goal, logs = [] }) {
         </div>
 
         <h2
-          className="mt-3 text-[17px] leading-snug font-extrabold break-words"
+          className="mt-2 text-[17px] leading-snug font-extrabold break-words"
           style={{ color: '#3d2408' }}
         >
           {title}
@@ -391,7 +391,7 @@ export default function GoalProgress({ goal, logs = [] }) {
         </div>
 
         <div
-          className="mt-4 rounded-2xl px-3 py-3 flex items-center gap-2 flex-wrap"
+          className="mt-4 rounded-2xl px-3 py-2 flex items-center gap-2 flex-wrap"
           style={{
             background: 'rgba(255,255,255,0.45)',
             border: '1px solid rgba(139, 90, 32, 0.12)',
