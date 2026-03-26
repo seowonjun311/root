@@ -102,7 +102,15 @@ export default function Memo() {
       .map((line) => line.trim())
       .filter(Boolean);
 
-    if (!draftDate || lines.length === 0) return;
+    if (!draftDate) {
+      alert('날짜를 선택해주세요.');
+      return;
+    }
+
+    if (lines.length === 0) {
+      alert('메모 내용을 입력해주세요.');
+      return;
+    }
 
     const createdAt = new Date().toISOString();
     const newItems = lines.map((line) => ({
@@ -151,7 +159,10 @@ export default function Memo() {
 
   const saveEdit = () => {
     const nextText = editingText.trim();
-    if (!nextText) return;
+    if (!nextText) {
+      alert('수정할 내용을 입력해주세요.');
+      return;
+    }
 
     setMemos((prev) =>
       prev.map((memo) =>
@@ -321,9 +332,9 @@ export default function Memo() {
       </button>
 
       {showCreateModal && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/35 sm:items-center">
-          <div className="w-full max-w-lg rounded-t-[28px] bg-white p-5 shadow-2xl sm:rounded-[28px]">
-            <div className="mb-4 flex items-center justify-between">
+        <div className="fixed inset-0 z-40 bg-black/35">
+          <div className="absolute inset-x-0 bottom-0 mx-auto flex max-h-[88vh] w-full max-w-lg flex-col rounded-t-[28px] bg-white shadow-2xl sm:inset-0 sm:m-auto sm:max-h-[80vh] sm:rounded-[28px]">
+            <div className="flex items-center justify-between border-b border-[#eee5d8] px-5 py-4">
               <h3 className="text-lg font-bold">메모 추가</h3>
               <button
                 onClick={() => setShowCreateModal(false)}
@@ -333,45 +344,49 @@ export default function Memo() {
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[#5f564c]">
-                  날짜
-                </label>
-                <input
-                  type="date"
-                  value={draftDate}
-                  onChange={(e) => setDraftDate(e.target.value)}
-                  className="w-full rounded-2xl border border-[#ddd3c2] bg-white px-3 py-3 outline-none focus:border-[#cbb892]"
-                />
-              </div>
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-[#5f564c]">
+                    날짜
+                  </label>
+                  <input
+                    type="date"
+                    value={draftDate}
+                    onChange={(e) => setDraftDate(e.target.value)}
+                    className="w-full rounded-2xl border border-[#ddd3c2] bg-white px-3 py-3 outline-none focus:border-[#cbb892]"
+                  />
+                </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[#5f564c]">
-                  내용
-                </label>
-                <textarea
-                  value={draftText}
-                  onChange={(e) => setDraftText(e.target.value)}
-                  rows={7}
-                  className="w-full rounded-2xl border border-[#ddd3c2] bg-white px-3 py-3 text-sm outline-none focus:border-[#cbb892]"
-                  placeholder={`한 줄에 하나씩 입력하세요\n예)\n7시 수업 준비\n학부모 상담 전화`}
-                />
-                <p className="mt-2 text-xs text-[#8a7f73]">
-                  여러 줄로 입력하면 한 줄마다 하나의 메모로 저장돼요
-                </p>
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-[#5f564c]">
+                    내용
+                  </label>
+                  <textarea
+                    value={draftText}
+                    onChange={(e) => setDraftText(e.target.value)}
+                    rows={8}
+                    className="w-full rounded-2xl border border-[#ddd3c2] bg-white px-3 py-3 text-sm outline-none focus:border-[#cbb892]"
+                    placeholder={`한 줄에 하나씩 입력하세요\n예)\n7시 수업 준비\n학부모 상담 전화`}
+                  />
+                  <p className="mt-2 text-xs text-[#8a7f73]">
+                    여러 줄로 입력하면 한 줄마다 하나의 메모로 저장돼요
+                  </p>
+                </div>
               </div>
+            </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+            <div className="border-t border-[#eee5d8] bg-white px-5 py-4">
+              <div className="flex gap-2">
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="rounded-2xl border border-[#ddd3c2] px-4 py-2.5 text-sm font-medium text-[#6e6458]"
+                  className="flex-1 rounded-2xl border border-[#ddd3c2] px-4 py-3 text-sm font-medium text-[#6e6458]"
                 >
                   취소
                 </button>
                 <button
                   onClick={handleCreate}
-                  className="rounded-2xl bg-[#2f2a24] px-4 py-2.5 text-sm font-semibold text-white"
+                  className="flex-1 rounded-2xl bg-[#2f2a24] px-4 py-3 text-sm font-semibold text-white"
                 >
                   저장
                 </button>
