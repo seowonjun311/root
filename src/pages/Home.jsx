@@ -1127,7 +1127,7 @@ export default function Home() {
 
       <div className="px-4">
         <div
-          className="sticky top-0 z-40 -mx-4 px-4 pt-1 pb-2"
+          className="sticky top-0 z-40 -mx-4 px-4 pt-1 pb-1"
           style={{
             background:
               'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 78%, rgba(245,232,201,0.86) 100%)',
@@ -1154,7 +1154,7 @@ export default function Home() {
           </div>
 
           <div
-            className="mt-1 h-[1px] w-full"
+            className="mt-0 h-[1px] w-full"
             style={{
               background: 'linear-gradient(90deg, rgba(120,90,40,0) 0%, rgba(120,90,40,0.18) 20%, rgba(120,90,40,0.18) 80%, rgba(120,90,40,0) 100%)',
             }}
