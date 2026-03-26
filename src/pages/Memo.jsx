@@ -44,6 +44,32 @@ function makeId() {
   return `memo_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
+function toDateString(date) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function getMonthMatrix(year, month) {
+  const firstDay = new Date(year, month, 1);
+  const startDay = firstDay.getDay();
+  const startDate = new Date(year, month, 1 - startDay);
+
+  const cells = [];
+  for (let i = 0; i < 42; i += 1) {
+    const current = new Date(startDate);
+    current.setDate(startDate.getDate() + i);
+    cells.push(current);
+  }
+
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7));
+  }
+  return weeks;
+}
+
 export default function Memo() {
   const [memos, setMemos] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -56,14 +82,17 @@ export default function Memo() {
 
   const todayStr = useMemo(() => {
     const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
+    return toDateString(now);
   }, []);
+
+  const todayDate = useMemo(() => new Date(`${todayStr}T00:00:00`), [todayStr]);
 
   const [draftDate, setDraftDate] = useState(todayStr);
   const [draftText, setDraftText] = useState('');
+
+  const [calendarYear, setCalendarYear] = useState(todayDate.getFullYear());
+  const [calendarMonth, setCalendarMonth] = useState(todayDate.getMonth());
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(todayStr);
 
   const sectionRefs = useRef({});
 
@@ -97,6 +126,24 @@ export default function Memo() {
   }, [memos]);
 
   const memoDates = useMemo(() => grouped.map((g) => g.date), [grouped]);
+
+  const memoDateSet = useMemo(() => new Set(memoDates), [memoDates]);
+
+  const selectedCalendarMemos = useMemo(() => {
+    return memos
+      .filter((memo) => memo.date === selectedCalendarDate)
+      .sort((a, b) => {
+        const aTime = new Date(a.createdAt || 0).getTime();
+        const bTime = new Date(b.createdAt || 0).getTime();
+        return aTime - bTime;
+      });
+  }, [memos, selectedCalendarDate]);
+
+  const calendarWeeks = useMemo(() => {
+    return getMonthMatrix(calendarYear, calendarMonth);
+  }, [calendarYear, calendarMonth]);
+
+  const calendarTitle = `${calendarYear}년 ${calendarMonth + 1}월`;
 
   const handleCreate = () => {
     const lines = draftText
@@ -194,6 +241,32 @@ export default function Memo() {
     }, 50);
   };
 
+  const openCalendar = () => {
+    const selected = selectedCalendarDate || todayStr;
+    const date = new Date(`${selected}T00:00:00`);
+    setCalendarYear(date.getFullYear());
+    setCalendarMonth(date.getMonth());
+    setShowCalendarModal(true);
+  };
+
+  const goPrevMonth = () => {
+    if (calendarMonth === 0) {
+      setCalendarYear((prev) => prev - 1);
+      setCalendarMonth(11);
+    } else {
+      setCalendarMonth((prev) => prev - 1);
+    }
+  };
+
+  const goNextMonth = () => {
+    if (calendarMonth === 11) {
+      setCalendarYear((prev) => prev + 1);
+      setCalendarMonth(0);
+    } else {
+      setCalendarMonth((prev) => prev + 1);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f8f6ef] text-[#2f2a24] pb-28">
       <div className="sticky top-0 z-20 border-b border-[#e7e0d2] bg-[#f8f6ef]/95 backdrop-blur">
@@ -206,7 +279,7 @@ export default function Memo() {
           </div>
 
           <button
-            onClick={() => setShowCalendarModal(true)}
+            onClick={openCalendar}
             className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#ddd3c2] bg-white text-xl shadow-sm active:scale-[0.98]"
             aria-label="캘린더 열기"
             title="캘린더"
@@ -379,69 +452,133 @@ export default function Memo() {
       )}
 
       {showCalendarModal && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/35 sm:items-center">
-          <div className="w-full max-w-md rounded-t-[28px] bg-white p-5 shadow-2xl sm:rounded-[28px]">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold">날짜로 보기</h3>
+        <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/40 sm:items-center">
+          <div className="w-full max-w-md rounded-t-[28px] bg-[#fffaf2] shadow-2xl sm:rounded-[28px]">
+            <div className="flex items-center justify-between border-b border-[#eee1cf] px-5 py-4">
               <button
-                onClick={() => setShowCalendarModal(false)}
-                className="rounded-xl px-2 py-1 text-sm text-[#7a6f63]"
+                onClick={goPrevMonth}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#ddd3c2] bg-white text-base font-bold text-[#6e6458]"
               >
-                닫기
+                ‹
+              </button>
+
+              <h3 className="text-lg font-bold text-[#2f2a24]">{calendarTitle}</h3>
+
+              <button
+                onClick={goNextMonth}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#ddd3c2] bg-white text-base font-bold text-[#6e6458]"
+              >
+                ›
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-[#eee5d8] bg-[#fcfbf8] p-3">
-                <div className="mb-2 text-sm font-semibold text-[#5f564c]">
-                  날짜 선택
-                </div>
-                <input
-                  type="date"
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (!value) return;
-                    jumpToDate(value);
-                  }}
-                  className="w-full rounded-2xl border border-[#ddd3c2] bg-white px-3 py-3 outline-none focus:border-[#cbb892]"
-                />
+            <div className="px-4 pt-4">
+              <div className="mb-2 grid grid-cols-7 text-center text-xs font-semibold text-[#8a7f73]">
+                {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
+                  <div key={day} className="py-2">
+                    {day}
+                  </div>
+                ))}
               </div>
 
-              <div>
-                <div className="mb-2 text-sm font-semibold text-[#5f564c]">
-                  메모가 있는 날짜
+              <div className="space-y-1">
+                {calendarWeeks.map((week, weekIndex) => (
+                  <div key={weekIndex} className="grid grid-cols-7 gap-1">
+                    {week.map((date) => {
+                      const dateStr = toDateString(date);
+                      const inCurrentMonth = date.getMonth() === calendarMonth;
+                      const selected = dateStr === selectedCalendarDate;
+                      const today = dateStr === todayStr;
+                      const hasMemo = memoDateSet.has(dateStr);
+
+                      return (
+                        <button
+                          key={dateStr}
+                          onClick={() => setSelectedCalendarDate(dateStr)}
+                          className={`relative flex h-12 flex-col items-center justify-center rounded-2xl text-sm transition ${
+                            selected
+                              ? 'bg-[#2f2a24] text-white'
+                              : inCurrentMonth
+                              ? 'bg-white text-[#2f2a24]'
+                              : 'bg-[#f5efe4] text-[#b5aa9d]'
+                          }`}
+                        >
+                          <span className={`${today && !selected ? 'font-bold text-[#8a6500]' : ''}`}>
+                            {date.getDate()}
+                          </span>
+
+                          {hasMemo && (
+                            <span
+                              className={`mt-1 h-1.5 w-1.5 rounded-full ${
+                                selected ? 'bg-[#ffe8a0]' : 'bg-[#8f4a32]'
+                              }`}
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 border-t border-[#eee1cf] px-5 py-4">
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-[#5f564c]">선택한 날짜</div>
+                  <div className="mt-1 text-base font-bold text-[#2f2a24]">
+                    {formatDateLabel(selectedCalendarDate)}
+                  </div>
                 </div>
 
-                {memoDates.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-[#ddd3c2] px-4 py-6 text-center text-sm text-[#8a7f73]">
-                    메모가 있는 날짜가 아직 없어요
+                <button
+                  onClick={() => jumpToDate(selectedCalendarDate)}
+                  className="rounded-2xl bg-[#2f2a24] px-4 py-2 text-sm font-semibold text-white"
+                >
+                  이동
+                </button>
+              </div>
+
+              <div className="max-h-48 overflow-y-auto rounded-2xl border border-[#eadfcd] bg-white p-3">
+                {selectedCalendarMemos.length === 0 ? (
+                  <div className="py-6 text-center text-sm text-[#8a7f73]">
+                    이 날짜에는 저장된 메모가 없어요
                   </div>
                 ) : (
-                  <div className="max-h-72 space-y-2 overflow-y-auto">
-                    {memoDates.map((date) => (
-                      <button
-                        key={date}
-                        onClick={() => jumpToDate(date)}
-                        className="flex w-full items-center justify-between rounded-2xl border border-[#eee5d8] bg-[#fcfbf8] px-4 py-3 text-left"
+                  <div className="space-y-2">
+                    {selectedCalendarMemos.map((memo) => (
+                      <div
+                        key={memo.id}
+                        className="rounded-2xl border border-[#f0eadf] bg-[#fcfbf8] px-3 py-2"
                       >
-                        <span className="font-medium">{formatDateLabel(date)}</span>
-                        {isToday(date) && (
-                          <span className="rounded-full bg-[#fff0c2] px-2 py-1 text-xs font-semibold text-[#8a6500]">
-                            오늘
-                          </span>
-                        )}
-                      </button>
+                        <div
+                          className={`text-sm leading-6 ${
+                            memo.completed
+                              ? 'text-[#a79b8d] line-through'
+                              : 'text-[#2f2a24]'
+                          }`}
+                        >
+                          {memo.text}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
               </div>
+
+              <button
+                onClick={() => setShowCalendarModal(false)}
+                className="mt-4 w-full rounded-2xl border border-[#ddd3c2] bg-white px-4 py-3 text-sm font-medium text-[#6e6458]"
+              >
+                닫기
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {deleteTargetId && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 px-5">
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/40 px-5">
           <div className="w-full max-w-sm rounded-[28px] border border-[#eadfcd] bg-[#fffaf2] p-5 shadow-2xl">
             <div className="text-center">
               <div className="text-3xl">🗑️</div>
@@ -472,7 +609,7 @@ export default function Memo() {
       )}
 
       {editingMemoId && (
-        <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/40 px-5">
+        <div className="fixed inset-0 z-[10002] flex items-center justify-center bg-black/40 px-5">
           <div className="w-full max-w-md rounded-[28px] border border-[#eadfcd] bg-[#fffaf2] p-5 shadow-2xl">
             <div className="text-center">
               <div className="text-3xl">✏️</div>
