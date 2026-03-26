@@ -127,7 +127,14 @@ export default function Memo() {
 
   const memoDates = useMemo(() => grouped.map((g) => g.date), [grouped]);
 
-  const memoDateSet = useMemo(() => new Set(memoDates), [memoDates]);
+  const memoCountMap = useMemo(() => {
+    const map = {};
+    for (const memo of memos) {
+      if (!memo?.date) continue;
+      map[memo.date] = (map[memo.date] || 0) + 1;
+    }
+    return map;
+  }, [memos]);
 
   const selectedCalendarMemos = useMemo(() => {
     return memos
@@ -489,7 +496,8 @@ export default function Memo() {
                       const inCurrentMonth = date.getMonth() === calendarMonth;
                       const selected = dateStr === selectedCalendarDate;
                       const today = dateStr === todayStr;
-                      const hasMemo = memoDateSet.has(dateStr);
+                      const memoCount = memoCountMap[dateStr] || 0;
+                      const hasMemo = memoCount > 0;
 
                       return (
                         <button
@@ -509,10 +517,14 @@ export default function Memo() {
 
                           {hasMemo && (
                             <span
-                              className={`mt-1 h-1.5 w-1.5 rounded-full ${
-                                selected ? 'bg-[#ffe8a0]' : 'bg-[#8f4a32]'
+                              className={`mt-1 min-w-[16px] rounded-full px-1 text-[10px] leading-4 font-bold ${
+                                selected
+                                  ? 'bg-[#ffe8a0] text-[#5a3510]'
+                                  : 'bg-[#f3dfc7] text-[#8f4a32]'
                               }`}
-                            />
+                            >
+                              {memoCount === 1 ? '•' : memoCount > 9 ? '9+' : memoCount}
+                            </span>
                           )}
                         </button>
                       );
