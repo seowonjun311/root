@@ -436,8 +436,11 @@ export default function GoalProgress({ goal, logs = [] }) {
                   type="date"
                   value={editTargetDate}
                   onChange={(e) => setEditTargetDate(e.target.value)}
-                  className="w-full h-11 rounded-xl border px-3 text-sm"
-                  style={{ borderColor: '#e1c98f' }}
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  data-vaul-no-drag
+                  className="w-full h-11 rounded-xl border px-3 text-sm cursor-pointer"
+                  style={{ borderColor: '#e1c98f', background: '#fff', color: '#4a2c08' }}
                 />
 
                 <p className="text-xs mt-1.5" style={{ color: '#9a7b47' }}>
