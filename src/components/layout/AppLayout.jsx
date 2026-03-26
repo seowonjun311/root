@@ -7,7 +7,7 @@ import BottomNav from './BottomNav.jsx';
 import Header from './Header.jsx';
 import Home from '../../pages/Home.jsx';
 import Records from '../../pages/Records.jsx';
-import Badges from '../../pages/Badges';
+import Memo from '../../pages/Memo.jsx';
 import AppSettings from '../../pages/AppSettings';
 
 function TabSkeleton() {
@@ -29,7 +29,7 @@ function TabSkeleton() {
 const TAB_PAGES = [
   { path: '/Home', component: Home },
   { path: '/Records', component: Records },
-  { path: '/Badges', component: Badges },
+  { path: '/Memo', component: Memo },
   { path: '/AppSettings', component: AppSettings },
 ];
 
