@@ -25,7 +25,7 @@ const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Home = lazy(() => import('./pages/Home'));
 const Records = lazy(() => import('./pages/Records'));
-const Titles = lazy(() => import('./pages/Titles'));
+const Memo = lazy(() => import('./pages/Memo'));
 const AppSettings = lazy(() => import('./pages/AppSettings'));
 
 const PageFallback = () => (
@@ -172,47 +172,47 @@ const AppRoutes = () => {
                 }
               />
 
-         <Route element={<AppLayout />}>
+              <Route element={<AppLayout />}>
+                <Route
+                  path="/Home"
+                  element={
+                    <Suspense fallback={<PageFallback />}>
+                      <Home />
+                    </Suspense>
+                  }
+                />
 
-  <Route
-    path="/Home"
-    element={
-      <Suspense fallback={<PageFallback />}>
-        <Home />
-      </Suspense>
-    }
-  />
+                <Route
+                  path="/Records"
+                  element={
+                    <Suspense fallback={<PageFallback />}>
+                      <Records />
+                    </Suspense>
+                  }
+                />
 
-  <Route
-    path="/Records"
-    element={
-      <Suspense fallback={<PageFallback />}>
-        <Records />
-      </Suspense>
-    }
-  />
+                <Route
+                  path="/Memo"
+                  element={
+                    <Suspense fallback={<PageFallback />}>
+                      <Memo />
+                    </Suspense>
+                  }
+                />
 
-  <Route
-    path="/Badges"
-    element={
-      <Suspense fallback={<PageFallback />}>
-        <Titles />
-      </Suspense>
-    }
-  />
-
-  <Route
-    path="/AppSettings"
-    element={
-      <Suspense fallback={<PageFallback />}>
-        <AppSettings />
-      </Suspense>
-    }
-  />
+                <Route
+                  path="/AppSettings"
+                  element={
+                    <Suspense fallback={<PageFallback />}>
+                      <AppSettings />
+                    </Suspense>
+                  }
+                />
 
                 {/* 예전 경로 호환 */}
                 <Route path="/Record" element={<Navigate to="/Records" replace />} />
-                <Route path="/Badge" element={<Navigate to="/Badges" replace />} />
+                <Route path="/Badge" element={<Navigate to="/Memo" replace />} />
+                <Route path="/Badges" element={<Navigate to="/Memo" replace />} />
                 <Route path="/Settings" element={<Navigate to="/AppSettings" replace />} />
               </Route>
 
@@ -252,10 +252,12 @@ function App() {
     const apply = (dark) => document.documentElement.classList.toggle('dark', dark);
 
     apply(mq.matches);
-    mq.addEventListener('change', (e) => apply(e.matches));
+
+    const handleChange = (e) => apply(e.matches);
+    mq.addEventListener('change', handleChange);
 
     return () => {
-      mq.removeEventListener('change', (e) => apply(e.matches));
+      mq.removeEventListener('change', handleChange);
     };
   }, []);
 
