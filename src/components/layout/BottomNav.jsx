@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
-import { BookOpen, Trophy, Settings } from 'lucide-react';
+import { BookOpen, Settings } from 'lucide-react';
 
 const RouteIcon = () => <span className="text-lg leading-none">🛤️</span>;
+const MemoIcon = () => <span className="text-lg leading-none">📝</span>;
 
 const navItems = [
   { path: '/Home', label: '길', icon: RouteIcon },
   { path: '/Records', label: '기록', icon: BookOpen },
-  { path: '/Badges', label: '칭호', icon: Trophy },
+  { path: '/Memo', label: '메모', icon: MemoIcon },
   { path: '/AppSettings', label: '설정', icon: Settings },
 ];
 
@@ -52,6 +53,7 @@ export default function BottomNav() {
           opacity: 0.6,
         }}
       />
+
       <div
         className="flex justify-around items-center max-w-lg mx-auto px-2"
         style={{ height: '64px' }}
@@ -75,9 +77,19 @@ export default function BottomNav() {
                 minWidth: '64px',
                 minHeight: '48px',
                 transition: 'transform 0.1s ease, color 0.15s ease',
-                transform: isPressed ? 'scale(0.88)' : active ? 'scale(1.05)' : 'scale(1)',
-                color: active ? '#ffe8a0' : isPressed ? '#d4b060' : 'rgba(220,180,100,0.7)',
-                textShadow: active ? '0 0 8px rgba(255,200,80,0.6)' : 'none',
+                transform: isPressed
+                  ? 'scale(0.88)'
+                  : active
+                  ? 'scale(1.05)'
+                  : 'scale(1)',
+                color: active
+                  ? '#ffe8a0'
+                  : isPressed
+                  ? '#d4b060'
+                  : 'rgba(220,180,100,0.7)',
+                textShadow: active
+                  ? '0 0 8px rgba(255,200,80,0.6)'
+                  : 'none',
               }}
               aria-label={`${label} 탭으로 이동`}
               aria-current={active ? 'page' : undefined}
