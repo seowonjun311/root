@@ -912,6 +912,22 @@ export default function Home() {
     ? `${equippedTitle.name} · ${CATEGORY_LABELS[activeCategory]} 루트를 이어가고 있어요`
     : `${CATEGORY_LABELS[activeCategory]} 루트를 한 걸음씩 이어가고 있어요`;
 
+  const bannerProgress = useMemo(() => {
+    const safeActionGoals = Array.isArray(activeActionGoals) ? activeActionGoals : [];
+
+    if (safeActionGoals.length === 0) return 0;
+
+    const completedCount = safeActionGoals.filter((goal) => {
+      if (!goal) return false;
+      if (goal.completed === true) return true;
+      if (goal.status === 'complete' || goal.status === 'completed') return true;
+      if (Number(goal.completion_rate || 0) >= 100) return true;
+      return false;
+    }).length;
+
+    return Math.max(0, Math.min(100, Math.round((completedCount / safeActionGoals.length) * 100)));
+  }, [activeActionGoals]);
+
   const handleCreateGoal = () => {
     const route = CATEGORY_ROUTE_MAP[activeCategory] || '/CreateGoalExercise';
     navigate(route);
@@ -1114,7 +1130,10 @@ export default function Home() {
           nickname={nickname}
           title={equippedTitle?.name || ''}
           message={bannerMessage}
+          activeCategory={activeCategory}
           moveTrigger={moveTrigger}
+          expText={expPopup ? `+${expPopup} EXP` : '+1 EXP'}
+          progress={bannerProgress}
         />
 
         <CategoryTabs
