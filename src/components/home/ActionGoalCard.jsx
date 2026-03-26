@@ -1134,13 +1134,21 @@ export default function ActionGoalCard({
                 <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#7a5020' }}>
                   예정 날짜
                 </label>
-                <Input
-                  type="date"
-                  min={getTodayString()}
-                  value={editScheduledDate}
-                  onChange={(e) => setEditScheduledDate(e.target.value)}
-                  className="h-11 rounded-xl"
-                />
+                <input
+  type="date"
+  min={getTodayString()}
+  value={editScheduledDate}
+  onChange={(e) => setEditScheduledDate(e.target.value)}
+  onClick={(e) => e.stopPropagation()}
+  className="w-full h-11 rounded-xl border px-3 text-sm"
+  style={{
+    borderColor: '#e1c98f',
+    background: '#fff',
+    color: '#4a2c08',
+    WebkitAppearance: 'none',
+    appearance: 'none',
+  }}
+/>
               </div>
             ) : (
               <div>
