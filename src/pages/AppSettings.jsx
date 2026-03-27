@@ -167,15 +167,23 @@ export default function AppSettings() {
              desc="알림 시간과 요일을 설정합니다"
            />
          </Link>
-         {!isGuest && (
+         <SettingItem
+           icon={<User className="w-5 h-5 text-amber-600" />}
+           label="닉네임 변경"
+           desc={`현재: ${isGuest ? '게스트' : (user?.nickname || '용사')}님`}
+           onClick={() => { setNewNickname(isGuest ? '' : (user?.nickname || '')); setShowNickname(true); }}
+         />
+         {isGuest ? (
            <SettingItem
-             icon={<User className="w-5 h-5 text-amber-600" />}
-             label="닉네임 변경"
-             desc={`현재: ${user?.nickname || '용사'}님`}
-             onClick={() => { setNewNickname(user?.nickname || ''); setShowNickname(true); }}
+             icon={<LogIn className="w-5 h-5 text-amber-600" />}
+             label="로그인 / 회원가입"
+             desc="기록을 안전하게 저장하고 여러 기기에서 사용"
+             onClick={() => {
+               triggerHaptic('impact', 'medium');
+               base44.auth.redirectToLogin(window.location.href);
+             }}
            />
-         )}
-         {!isGuest && (
+         ) : (
            <SettingItem
              icon={<LogOut className="w-5 h-5 text-amber-600" />}
              label="로그아웃"
@@ -186,18 +194,16 @@ export default function AppSettings() {
              }}
            />
          )}
-         {!isGuest && (
-           <SettingItem
-             icon={<Trash2 className="w-5 h-5 text-red-600" />}
-             label="계정 삭제"
-             desc="모든 데이터가 영구 삭제됩니다"
-             onClick={() => {
-               triggerHaptic('impact', 'light');
-               setShowDelete(true);
-               setDeleteError(null);
-             }}
-           />
-         )}
+         <SettingItem
+           icon={<Trash2 className="w-5 h-5 text-red-600" />}
+           label="계정 삭제"
+           desc="모든 데이터가 영구 삭제됩니다"
+           onClick={() => {
+             triggerHaptic('impact', 'light');
+             setShowDelete(true);
+             setDeleteError(null);
+           }}
+         />
          <Link to="/PrivacyPolicy" className="block">
            <SettingItem
              icon={<Shield className="w-5 h-5 text-amber-600" />}
