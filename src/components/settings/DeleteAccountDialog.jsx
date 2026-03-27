@@ -42,8 +42,8 @@ export default function DeleteAccountDialog({ open, onOpenChange, userEmail, onC
       return;
     }
     triggerHaptic('impact', 'light');
-    setStep(3);
     setError(null);
+    handleFinalConfirm();
   };
 
   const handleFinalConfirm = async () => {
