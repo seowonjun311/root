@@ -79,6 +79,7 @@ export default function DeleteAccountDialog({ open, onOpenChange, userEmail, onC
           aria-modal="true"
           aria-labelledby="delete-dialog-title"
           aria-describedby="delete-dialog-desc"
+          data-vaul-no-drag
         >
           {/* STEP 1: Warning & Data Loss Information */}
           {step === 1 && (

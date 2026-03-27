@@ -10,7 +10,6 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { usePullToRefreshTabbed } from '../hooks/usePullToRefreshTabbed';
 import { motion } from 'framer-motion';
-import FocusLock from 'react-focus-lock';
 import DeleteAccountDialog from '@/components/settings/DeleteAccountDialog';
 
 export default function AppSettings() {
@@ -149,11 +148,10 @@ export default function AppSettings() {
 
       {/* Nickname Drawer */}
       <Drawer open={showNickname} onOpenChange={setShowNickname}>
-        <FocusLock disabled={!showNickname}>
-          <DrawerContent role="dialog" aria-modal="true" aria-labelledby="nickname-title">
-            <DrawerHeader className="text-center">
-              <DrawerTitle id="nickname-title">🦊 닉네임 변경</DrawerTitle>
-            </DrawerHeader>
+        <DrawerContent role="dialog" aria-modal="true" aria-labelledby="nickname-title">
+          <DrawerHeader className="text-center">
+            <DrawerTitle id="nickname-title">🦊 닉네임 변경</DrawerTitle>
+          </DrawerHeader>
           <div className="px-4 py-2 space-y-2">
             <Input
               id="nickname-input"
@@ -169,20 +167,18 @@ export default function AppSettings() {
             </p>
           </div>
           <DrawerFooter className="flex gap-2 pt-4">
-            <Button variant="outline" onClick={() => setShowNickname(false)} className="flex-1 rounded-xl" aria-label="닉네임 변경 취소">취소</Button>
-            <Button onClick={handleNicknameChange} disabled={nicknameUpdateMutation.isPending} className="flex-1 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50" aria-label="닉네임 변경 확인">{nicknameUpdateMutation.isPending ? '변경 중...' : '확인'}</Button>
+            <Button variant="outline" onClick={() => setShowNickname(false)} className="flex-1 rounded-xl">취소</Button>
+            <Button onClick={handleNicknameChange} disabled={nicknameUpdateMutation.isPending} className="flex-1 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50">{nicknameUpdateMutation.isPending ? '변경 중...' : '확인'}</Button>
           </DrawerFooter>
-          </DrawerContent>
-          </FocusLock>
-          </Drawer>
+        </DrawerContent>
+      </Drawer>
 
-          {/* Logout Drawer */}
-          <Drawer open={showLogout} onOpenChange={setShowLogout}>
-          <FocusLock disabled={!showLogout}>
-          <DrawerContent role="dialog" aria-modal="true" aria-labelledby="logout-title">
-            <DrawerHeader className="text-center">
-              <DrawerTitle id="logout-title">로그아웃할까요?</DrawerTitle>
-            </DrawerHeader>
+      {/* Logout Drawer */}
+      <Drawer open={showLogout} onOpenChange={setShowLogout}>
+        <DrawerContent role="dialog" aria-modal="true" aria-labelledby="logout-title">
+          <DrawerHeader className="text-center">
+            <DrawerTitle id="logout-title">로그아웃할까요?</DrawerTitle>
+          </DrawerHeader>
           <p className="px-4 text-sm text-muted-foreground text-center">
             이 기기에서는 로그인이 해제됩니다.<br />
             기록은 계정에 안전하게 저장됩니다.
@@ -191,9 +187,8 @@ export default function AppSettings() {
             <Button variant="outline" onClick={() => setShowLogout(false)} className="flex-1 rounded-xl">취소</Button>
             <Button onClick={handleLogout} className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white">로그아웃</Button>
           </DrawerFooter>
-          </DrawerContent>
-          </FocusLock>
-          </Drawer>
+        </DrawerContent>
+      </Drawer>
 
           {/* Delete Account Dialog - Multi-step */}
           <DeleteAccountDialog
