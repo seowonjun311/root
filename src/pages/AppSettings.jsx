@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
-import { ChevronRight, Bell, User, LogOut, Trash2, RefreshCw, Shield } from 'lucide-react';
+import { ChevronRight, Bell, User, LogOut, Trash2, RefreshCw, Shield, LogIn } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { usePullToRefreshTabbed } from '../hooks/usePullToRefreshTabbed';
 import { motion } from 'framer-motion';
 import DeleteAccountDialog from '@/components/settings/DeleteAccountDialog';
+import { migrateGuestDataToAccount } from '@/lib/migrateGuestData';
+import guestDataPersistence from '@/lib/GuestDataPersistence';
 
 export default function AppSettings() {
   const queryClient = useQueryClient();
@@ -20,6 +22,7 @@ export default function AppSettings() {
   const [showLogout, setShowLogout] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [isMigrating, setIsMigrating] = useState(false);
 
   const nicknameUpdateMutation = useMutation({
     mutationFn: (nickname) => base44.auth.updateMe({ nickname: nickname.trim(), nickname_changed_at: new Date().toISOString() }),
@@ -54,8 +57,34 @@ export default function AppSettings() {
 
   const { data: user } = useQuery({
     queryKey: ['me'],
-    queryFn: () => base44.auth.me(),
+    queryFn: () => base44.auth.me().catch(() => null),
   });
+
+  const isGuest = !user;
+
+  // 로그인 후 돌아왔을 때 게스트 데이터 마이그레이션
+  useEffect(() => {
+    if (!user) return;
+    const guestData = guestDataPersistence.getData();
+    if (!guestData?.onboardingComplete) return;
+
+    const runMigration = async () => {
+      setIsMigrating(true);
+      try {
+        const migrated = await migrateGuestDataToAccount();
+        if (migrated) {
+          queryClient.invalidateQueries();
+          toast.success('기존 기록이 계정에 저장되었어요! 🦊');
+        }
+      } catch (e) {
+        console.warn('Guest data migration failed:', e);
+      } finally {
+        setIsMigrating(false);
+      }
+    };
+
+    runMigration();
+  }, [user?.email]);
 
   const handleNicknameChange = () => {
     if (!newNickname.trim()) return;
@@ -99,10 +128,36 @@ export default function AppSettings() {
           🦊
         </div>
         <div>
-          <p className="font-bold text-lg">{user?.nickname || '용사'}님</p>
-          <p className="text-xs text-muted-foreground">{user?.email}</p>
+          <p className="font-bold text-lg">{isGuest ? '게스트' : (user?.nickname || '용사')}님</p>
+          <p className="text-xs text-muted-foreground">{isGuest ? '로그인하면 기록이 안전하게 저장돼요' : user?.email}</p>
         </div>
       </div>
+
+      {/* 게스트 로그인 배너 */}
+      {isGuest && (
+        <div className="mx-4 mb-4 p-4 rounded-2xl border-2 border-amber-400/60 bg-amber-50 dark:bg-amber-950/30 flex items-center gap-3">
+          <div className="text-2xl">🔐</div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-amber-900 dark:text-amber-100">로그인하면 기록이 유지돼요</p>
+            <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">지금까지의 목표와 기록이 계정에 저장됩니다</p>
+          </div>
+          <Button
+            onClick={() => {
+              triggerHaptic('impact', 'medium');
+              base44.auth.redirectToLogin(window.location.href);
+            }}
+            className="shrink-0 h-9 px-4 rounded-xl bg-amber-700 hover:bg-amber-800 text-amber-50 text-sm font-bold"
+          >
+            로그인
+          </Button>
+        </div>
+      )}
+
+      {isMigrating && (
+        <div className="mx-4 mb-4 p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 text-center">
+          <p className="text-sm text-blue-800 dark:text-blue-200">기존 기록을 계정으로 옮기는 중...</p>
+        </div>
+      )}
 
       <div className="mx-4 space-y-1.5">
          <Link to="/NotificationSettings" className="block">
@@ -112,31 +167,48 @@ export default function AppSettings() {
              desc="알림 시간과 요일을 설정합니다"
            />
          </Link>
-         <SettingItem
-           icon={<User className="w-5 h-5 text-amber-600" />}
-           label="닉네임 변경"
-           desc={`현재: ${user?.nickname || '용사'}님`}
-           onClick={() => { setNewNickname(user?.nickname || ''); setShowNickname(true); }}
-         />
-         <SettingItem
-           icon={<LogOut className="w-5 h-5 text-amber-600" />}
-           label="로그아웃"
-           desc="이 기기에서 로그인이 해제됩니다"
-           onClick={() => {
-             triggerHaptic('impact', 'light');
-             setShowLogout(true);
-           }}
-         />
-         <SettingItem
-           icon={<Trash2 className="w-5 h-5 text-red-600" />}
-           label="계정 삭제"
-           desc="모든 데이터가 영구 삭제됩니다"
-           onClick={() => {
-             triggerHaptic('impact', 'light');
-             setShowDelete(true);
-             setDeleteError(null);
-           }}
-         />
+         {!isGuest && (
+           <SettingItem
+             icon={<User className="w-5 h-5 text-amber-600" />}
+             label="닉네임 변경"
+             desc={`현재: ${user?.nickname || '용사'}님`}
+             onClick={() => { setNewNickname(user?.nickname || ''); setShowNickname(true); }}
+           />
+         )}
+         {!isGuest && (
+           <SettingItem
+             icon={<LogOut className="w-5 h-5 text-amber-600" />}
+             label="로그아웃"
+             desc="이 기기에서 로그인이 해제됩니다"
+             onClick={() => {
+               triggerHaptic('impact', 'light');
+               setShowLogout(true);
+             }}
+           />
+         )}
+         {!isGuest && (
+           <SettingItem
+             icon={<Trash2 className="w-5 h-5 text-red-600" />}
+             label="계정 삭제"
+             desc="모든 데이터가 영구 삭제됩니다"
+             onClick={() => {
+               triggerHaptic('impact', 'light');
+               setShowDelete(true);
+               setDeleteError(null);
+             }}
+           />
+         )}
+         {isGuest && (
+           <SettingItem
+             icon={<LogIn className="w-5 h-5 text-amber-600" />}
+             label="로그인 / 회원가입"
+             desc="기록을 안전하게 저장하고 여러 기기에서 사용"
+             onClick={() => {
+               triggerHaptic('impact', 'medium');
+               base44.auth.redirectToLogin(window.location.href);
+             }}
+           />
+         )}
          <Link to="/PrivacyPolicy" className="block">
            <SettingItem
              icon={<Shield className="w-5 h-5 text-amber-600" />}
