@@ -689,7 +689,17 @@ export default function Home() {
   const queryClient = useQueryClient();
 
   const [guestVersion, setGuestVersion] = useState(0);
-  const [activeCategory, setActiveCategory] = useState('exercise');
+
+  // 초기 카테고리를 로컬스토리지에서 바로 읽어 깜빡임 방지
+  const [activeCategory, setActiveCategory] = useState(() => {
+    try {
+      const raw = guestDataPersistence.getData();
+      const cat = raw?.activeCategory || raw?.guest_active_category || raw?.category || raw?.goals?.[0]?.category;
+      return normalizeCategoryValue(cat, 'exercise');
+    } catch {
+      return 'exercise';
+    }
+  });
   const [moveTrigger, setMoveTrigger] = useState(0);
   const [expPopup, setExpPopup] = useState(null);
   const [newTitle, setNewTitle] = useState(null);
