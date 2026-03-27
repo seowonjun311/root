@@ -198,17 +198,6 @@ export default function AppSettings() {
              }}
            />
          )}
-         {isGuest && (
-           <SettingItem
-             icon={<LogIn className="w-5 h-5 text-amber-600" />}
-             label="로그인 / 회원가입"
-             desc="기록을 안전하게 저장하고 여러 기기에서 사용"
-             onClick={() => {
-               triggerHaptic('impact', 'medium');
-               base44.auth.redirectToLogin(window.location.href);
-             }}
-           />
-         )}
          <Link to="/PrivacyPolicy" className="block">
            <SettingItem
              icon={<Shield className="w-5 h-5 text-amber-600" />}
