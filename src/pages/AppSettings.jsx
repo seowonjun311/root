@@ -35,7 +35,7 @@ export default function AppSettings() {
   });
 
   const deleteAccountMutation = useMutation({
-    mutationFn: () => base44.auth.deleteAccount(),
+    mutationFn: () => base44.functions.invoke('deleteAccount', {}),
     onSuccess: () => {
       triggerHaptic('impact', 'heavy');
       toast.success('계정이 삭제되었습니다. 감사합니다!');
