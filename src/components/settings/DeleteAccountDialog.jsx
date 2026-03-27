@@ -35,17 +35,6 @@ export default function DeleteAccountDialog({ open, onOpenChange, userEmail, onC
     setError(null);
   };
 
-  const handleEmailConfirmContinue = () => {
-    if (confirmEmail.trim() !== userEmail) {
-      triggerHaptic('impact', 'medium');
-      setError('이메일이 일치하지 않습니다. 다시 확인해 주세요.');
-      return;
-    }
-    triggerHaptic('impact', 'light');
-    setError(null);
-    handleFinalConfirm();
-  };
-
   const handleFinalConfirm = async () => {
     triggerHaptic('impact', 'heavy');
     setStep(4);
@@ -62,6 +51,17 @@ export default function DeleteAccountDialog({ open, onOpenChange, userEmail, onC
       triggerHaptic('impact', 'medium');
       if (onError) onError(errorMsg);
     }
+  };
+
+  const handleEmailConfirmContinue = () => {
+    if (confirmEmail.trim() !== userEmail) {
+      triggerHaptic('impact', 'medium');
+      setError('이메일이 일치하지 않습니다. 다시 확인해 주세요.');
+      return;
+    }
+    triggerHaptic('impact', 'light');
+    setError(null);
+    handleFinalConfirm();
   };
 
   const handleBackStep = () => {
