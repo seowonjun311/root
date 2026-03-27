@@ -4,7 +4,6 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
-import FocusLock from 'react-focus-lock';
 
 /**
  * DeleteAccountDialog - Multi-step account deletion flow
@@ -75,7 +74,6 @@ export default function DeleteAccountDialog({ open, onOpenChange, userEmail, onC
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
-      <FocusLock disabled={!open}>
         <DrawerContent
           role="alertdialog"
           aria-modal="true"
@@ -317,7 +315,6 @@ export default function DeleteAccountDialog({ open, onOpenChange, userEmail, onC
             </>
           )}
         </DrawerContent>
-      </FocusLock>
     </Drawer>
   );
 }
