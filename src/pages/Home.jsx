@@ -100,11 +100,23 @@ const CATEGORY_WORLD_THEME = {
   },
 };
 
-const DEFAULT_CHARACTERS = [
-  { id: 'fox_1', name: '루', type: 'fox', x: 520, y: 430, size: 42 },
-  { id: 'alpaca_1', name: '파카', type: 'alpaca', x: 810, y: 380, size: 45 },
-  { id: 'platypus_1', name: '너구', type: 'platypus', x: 980, y: 520, size: 40 },
+const SHOP_ITEMS = [
+  { id: 'grass_1', label: '잔디', type: 'decoration', subtype: 'grass', price: 3, emoji: '🌿' },
+  { id: 'tree_1', label: '나무', type: 'decoration', subtype: 'tree', price: 8, emoji: '🌳' },
+  { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, emoji: '🌸' },
+
+  { id: 'fox_1', label: '여우', type: 'character', subtype: 'fox', price: 15, emoji: '🦊' },
+  { id: 'alpaca_1', label: '알파카', type: 'character', subtype: 'alpaca', price: 18, emoji: '🦙' },
+  { id: 'platypus_1', label: '오리너구리', type: 'character', subtype: 'platypus', price: 20, emoji: '🦫' },
 ];
+
+const DEFAULT_VILLAGE_DATA = {
+  village_points: 0,
+  village_decorations: [],
+  village_characters: [
+    { id: 'starter_fox', name: '루', type: 'fox', x: 620, y: 470, size: 42 },
+  ],
+};
 
 function readGuestData() {
   try {
@@ -483,6 +495,12 @@ function calculateExp(actionGoal, minutes = 0) {
   return 10;
 }
 
+function calculateVillagePointReward(actionGoal, minutes = 0) {
+  if (actionGoal?.action_type === 'one_time') return 5;
+  if (actionGoal?.action_type === 'timer' || Number(minutes || 0) > 0) return 3;
+  return 2;
+}
+
 function buildDerivedStats(logs = [], actionGoals = []) {
   const stats = {
     total_actions: 0,
@@ -582,90 +600,111 @@ function getCharacterEmoji(type) {
   return '🦊';
 }
 
-function getVillageCharacters(source) {
-  const raw = Array.isArray(source?.village_characters) && source.village_characters.length > 0
-    ? source.village_characters
-    : DEFAULT_CHARACTERS;
+function getVillageState(source) {
+  const villagePoints = Number(source?.village_points ?? DEFAULT_VILLAGE_DATA.village_points);
 
-  return raw.map((character, index) => ({
-    id: character?.id || `npc_${index + 1}`,
-    name: character?.name || `주민 ${index + 1}`,
-    type: character?.type || 'fox',
-    x: Number(character?.x ?? randomBetween(280, 1080)),
-    y: Number(character?.y ?? randomBetween(230, 620)),
-    size: Number(character?.size ?? 42),
-  }));
+  const decorations = Array.isArray(source?.village_decorations)
+    ? source.village_decorations
+    : DEFAULT_VILLAGE_DATA.village_decorations;
+
+  const characters =
+    Array.isArray(source?.village_characters) && source.village_characters.length > 0
+      ? source.village_characters
+      : DEFAULT_VILLAGE_DATA.village_characters;
+
+  return {
+    village_points: villagePoints,
+    village_decorations: decorations,
+    village_characters: characters.map((character, index) => ({
+      id: character?.id || `npc_${index + 1}`,
+      name: character?.name || `주민 ${index + 1}`,
+      type: character?.type || 'fox',
+      x: Number(character?.x ?? randomBetween(280, 1080)),
+      y: Number(character?.y ?? randomBetween(240, 620)),
+      size: Number(character?.size ?? 42),
+    })),
+  };
 }
 
-function buildWorldBuildings({ activeCategory, userLevels, totalLevel, actionCount }) {
-  const categoryLevel = Number(userLevels?.[`${activeCategory}_level`] || 1);
-
-  const commonBuildings = [
-    {
-      id: 'center_1',
-      x: 610,
-      y: 315,
-      w: 168,
-      h: 120,
-      label: totalLevel >= 12 ? '중앙회관 Lv.3' : totalLevel >= 6 ? '중앙회관 Lv.2' : '중앙회관 Lv.1',
-      emoji: '🏠',
-    },
-    {
-      id: 'shop_1',
-      x: 315,
-      y: 360,
-      w: 128,
-      h: 94,
-      label: actionCount >= 40 ? '상점 Lv.2' : '상점 Lv.1',
-      emoji: '🛍️',
-    },
-    {
-      id: 'garden_1',
-      x: 920,
-      y: 285,
-      w: 130,
-      h: 96,
-      label: categoryLevel >= 4 ? '정원 Lv.2' : '정원 Lv.1',
-      emoji: '🌳',
-    },
-  ];
-
-  const categoryBuildingMap = {
-    exercise: {
-      label: categoryLevel >= 7 ? '운동장 Lv.3' : categoryLevel >= 3 ? '운동장 Lv.2' : '운동장 Lv.1',
-      emoji: '🏋️',
-      x: 260,
-      y: 560,
-      w: 142,
-      h: 102,
-    },
-    study: {
-      label: categoryLevel >= 7 ? '도서관 Lv.3' : categoryLevel >= 3 ? '도서관 Lv.2' : '도서관 Lv.1',
-      emoji: '📚',
-      x: 470,
-      y: 565,
-      w: 142,
-      h: 102,
-    },
-    mental: {
-      label: categoryLevel >= 7 ? '명상숲 Lv.3' : categoryLevel >= 3 ? '명상숲 Lv.2' : '명상숲 Lv.1',
-      emoji: '🧘',
-      x: 700,
-      y: 560,
-      w: 142,
-      h: 102,
-    },
-    daily: {
-      label: categoryLevel >= 7 ? '생활공방 Lv.3' : categoryLevel >= 3 ? '생활공방 Lv.2' : '생활공방 Lv.1',
-      emoji: '🧺',
-      x: 930,
-      y: 560,
-      w: 142,
-      h: 102,
-    },
+function createDecoration(subtype, worldWidth = 1400, worldHeight = 900) {
+  const base = {
+    id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+    type: subtype,
+    x: randomBetween(180, worldWidth - 180),
+    y: randomBetween(220, worldHeight - 140),
   };
 
-  return [...commonBuildings, { id: 'category_building', ...categoryBuildingMap[activeCategory] }];
+  if (subtype === 'tree') return { ...base, size: 44 };
+  if (subtype === 'flower') return { ...base, size: 28 };
+  return { ...base, size: 22 };
+}
+
+function createCharacter(type, worldWidth = 1400, worldHeight = 900) {
+  return {
+    id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+    name:
+      type === 'alpaca'
+        ? '파카'
+        : type === 'platypus'
+          ? '너구'
+          : '루',
+    type,
+    x: randomBetween(280, worldWidth - 180),
+    y: randomBetween(240, worldHeight - 150),
+    size: type === 'alpaca' ? 46 : 42,
+  };
+}
+
+function buildWorldBuildings({ userLevels }) {
+  const exerciseLevel = Number(userLevels?.exercise_level || 1);
+  const studyLevel = Number(userLevels?.study_level || 1);
+  const mentalLevel = Number(userLevels?.mental_level || 1);
+  const dailyLevel = Number(userLevels?.daily_level || 1);
+
+  const getStage = (level) => (level >= 7 ? 3 : level >= 3 ? 2 : 1);
+
+  return [
+    {
+      id: 'exercise_building',
+      category: 'exercise',
+      label: `체육관 Lv.${getStage(exerciseLevel)}`,
+      emoji: '🏋️',
+      x: 220,
+      y: 500,
+      w: 150,
+      h: 110,
+    },
+    {
+      id: 'study_building',
+      category: 'study',
+      label: `도서관 Lv.${getStage(studyLevel)}`,
+      emoji: '📚',
+      x: 430,
+      y: 560,
+      w: 150,
+      h: 110,
+    },
+    {
+      id: 'mental_building',
+      category: 'mental',
+      label: `명상숲 Lv.${getStage(mentalLevel)}`,
+      emoji: '🧘',
+      x: 760,
+      y: 540,
+      w: 150,
+      h: 110,
+    },
+    {
+      id: 'daily_building',
+      category: 'daily',
+      label: `생활공방 Lv.${getStage(dailyLevel)}`,
+      emoji: '🧺',
+      x: 1010,
+      y: 460,
+      w: 150,
+      h: 110,
+    },
+  ];
 }
 
 function Section({ title, count, emptyText, children }) {
@@ -718,6 +757,21 @@ function ExpPopup({ exp }) {
       }}
     >
       +{exp} EXP
+    </div>
+  );
+}
+
+function PointPopup({ points }) {
+  return (
+    <div
+      className="animate-[fadeInOut_1.4s_ease-in-out_forwards] fixed left-1/2 top-40 z-[80] -translate-x-1/2 rounded-full px-4 py-2 text-sm font-extrabold shadow-lg"
+      style={{
+        background: 'linear-gradient(180deg, #fff0bf 0%, #efc75f 100%)',
+        color: '#4a2c08',
+        border: '2px solid #8a6520',
+      }}
+    >
+      +{points} 포인트
     </div>
   );
 }
@@ -823,7 +877,7 @@ function AddActionGoalButton({ onClick, categoryLabel }) {
   );
 }
 
-function VillageOverlayBar({ nickname, level, points, gems, isOverview, onToggleOverview }) {
+function VillageOverlayBar({ nickname, level, points, isOverview, onToggleOverview }) {
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3">
       <div className="flex items-start justify-between gap-2">
@@ -883,20 +937,63 @@ function VillageOverlayBar({ nickname, level, points, gems, isOverview, onToggle
   );
 }
 
+function DecorationSprite({ item }) {
+  if (item.type === 'tree') {
+    return (
+      <div
+        className="flex items-center justify-center rounded-full"
+        style={{
+          width: item.size,
+          height: item.size,
+          background: 'rgba(255,255,255,0.35)',
+        }}
+      >
+        <span style={{ fontSize: item.size * 0.65 }}>🌳</span>
+      </div>
+    );
+  }
+
+  if (item.type === 'flower') {
+    return (
+      <div
+        className="flex items-center justify-center rounded-full"
+        style={{
+          width: item.size,
+          height: item.size,
+          background: 'rgba(255,255,255,0.30)',
+        }}
+      >
+        <span style={{ fontSize: item.size * 0.7 }}>🌸</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="flex items-center justify-center rounded-full"
+      style={{
+        width: item.size,
+        height: item.size,
+        background: 'rgba(255,255,255,0.25)',
+      }}
+    >
+      <span style={{ fontSize: item.size * 0.75 }}>🌿</span>
+    </div>
+  );
+}
+
 function VillageWorldLayer({
   activeCategory,
   isOverview,
   nickname,
   totalLevel,
   points,
-  gems,
   userLevels,
-  actionCount,
+  decorations,
   characters,
   setCharacters,
   onToggleOverview,
 }) {
-  const viewportRef = useRef(null);
   const dragRef = useRef(null);
   const [offset, setOffset] = useState({ x: -250, y: -190 });
 
@@ -905,14 +1002,7 @@ function VillageWorldLayer({
   const worldHeight = 900;
   const scale = isOverview ? 0.62 : 1;
 
-  const buildings = useMemo(() => {
-    return buildWorldBuildings({
-      activeCategory,
-      userLevels,
-      totalLevel,
-      actionCount,
-    });
-  }, [activeCategory, userLevels, totalLevel, actionCount]);
+  const buildings = useMemo(() => buildWorldBuildings({ userLevels }), [userLevels]);
 
   const handlePointerDown = (e) => {
     dragRef.current = {
@@ -933,7 +1023,7 @@ function VillageWorldLayer({
       x: dragRef.current.originX + dx,
       y: dragRef.current.originY + dy,
     });
-  }, []);
+  }, [offset.x, offset.y]);
 
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
@@ -952,11 +1042,11 @@ function VillageWorldLayer({
   useEffect(() => {
     const timer = setInterval(() => {
       setCharacters((prev) =>
-        prev.map((npc) => {
-          const nextX = clamp(npc.x + randomBetween(-90, 90), 120, worldWidth - 120);
-          const nextY = clamp(npc.y + randomBetween(-70, 70), 140, worldHeight - 120);
-          return { ...npc, x: nextX, y: nextY };
-        })
+        prev.map((npc) => ({
+          ...npc,
+          x: clamp(npc.x + randomBetween(-90, 90), 120, worldWidth - 120),
+          y: clamp(npc.y + randomBetween(-70, 70), 150, worldHeight - 120),
+        }))
       );
     }, 2600);
 
@@ -986,13 +1076,11 @@ function VillageWorldLayer({
             nickname={nickname}
             level={totalLevel}
             points={points}
-            gems={gems}
             isOverview={isOverview}
             onToggleOverview={onToggleOverview}
           />
 
           <div
-            ref={viewportRef}
             className="absolute inset-0 touch-none overflow-hidden"
             onPointerDown={handlePointerDown}
           >
@@ -1024,7 +1112,7 @@ function VillageWorldLayer({
               />
 
               <div
-                className="absolute left-[180px] top-[240px] h-[340px] w-[970px] rounded-[999px]"
+                className="absolute left-[170px] top-[220px] h-[360px] w-[990px] rounded-[999px]"
                 style={{
                   background: theme.path,
                   boxShadow: 'inset 0 8px 18px rgba(255,255,255,0.18)',
@@ -1039,17 +1127,34 @@ function VillageWorldLayer({
                 }}
               />
 
+              {decorations.map((item) => (
+                <div
+                  key={item.id}
+                  className="absolute"
+                  style={{
+                    left: item.x,
+                    top: item.y,
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                >
+                  <DecorationSprite item={item} />
+                </div>
+              ))}
+
               {buildings.map((building) => (
                 <div
                   key={building.id}
-                  className="absolute rounded-[24px] border bg-white/75 backdrop-blur-sm"
+                  className="absolute rounded-[24px] border bg-white/78 backdrop-blur-sm"
                   style={{
                     left: building.x,
                     top: building.y,
                     width: building.w,
                     height: building.h,
-                    borderColor: theme.border,
-                    boxShadow: '0 10px 20px rgba(0,0,0,0.08)',
+                    borderColor: building.category === activeCategory ? theme.accent : theme.border,
+                    boxShadow:
+                      building.category === activeCategory
+                        ? `0 10px 22px rgba(0,0,0,0.10), 0 0 0 3px ${theme.border}`
+                        : '0 10px 20px rgba(0,0,0,0.08)',
                   }}
                 >
                   <div className="flex h-full flex-col items-center justify-center">
@@ -1087,6 +1192,86 @@ function VillageWorldLayer({
   );
 }
 
+function VillageShop({ points, onBuy }) {
+  return (
+    <div
+      className="rounded-[24px] p-4"
+      style={{
+        background: 'linear-gradient(180deg, #fff7e8 0%, #f8ebcf 100%)',
+        border: '1px solid rgba(160,120,64,0.18)',
+        boxShadow: '0 10px 18px rgba(80,50,10,0.08)',
+      }}
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <div className="text-[16px] font-extrabold" style={{ color: '#4a2c08' }}>
+            마을 상점
+          </div>
+          <div className="mt-1 text-[12px]" style={{ color: '#8a5a17' }}>
+            포인트로 장식과 캐릭터를 구매할 수 있어요
+          </div>
+        </div>
+
+        <div
+          className="rounded-full px-3 py-1.5 text-[12px] font-extrabold"
+          style={{
+            background: '#fff',
+            border: '1px solid rgba(160,120,64,0.16)',
+            color: '#4a2c08',
+          }}
+        >
+          보유 {points}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {SHOP_ITEMS.map((item) => {
+          const disabled = points < item.price;
+
+          return (
+            <div
+              key={item.id}
+              className="rounded-2xl p-3"
+              style={{
+                background: '#fffdf8',
+                border: '1px solid rgba(160,120,64,0.14)',
+              }}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="text-[22px]">{item.emoji}</div>
+                  <div className="mt-1 text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
+                    {item.label}
+                  </div>
+                  <div className="text-[12px]" style={{ color: '#8a5a17' }}>
+                    {item.price} 포인트
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => onBuy(item)}
+                className="mt-3 h-10 w-full rounded-2xl text-sm font-extrabold"
+                style={{
+                  background: disabled
+                    ? '#ede5d2'
+                    : 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
+                  color: disabled ? '#9a8f7b' : '#fff8e8',
+                  border: disabled ? '1px solid #d4c8b0' : '2px solid #6b4e15',
+                }}
+              >
+                구매
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -1109,12 +1294,15 @@ export default function Home() {
   });
 
   const [expPopup, setExpPopup] = useState(null);
+  const [pointPopup, setPointPopup] = useState(null);
   const [newTitle, setNewTitle] = useState(null);
   const hasCategoryInteractionRef = useRef(false);
   const chainRepairOnceRef = useRef(false);
   const expPopupTimerRef = useRef(null);
+  const pointPopupTimerRef = useRef(null);
 
-  const [characters, setCharacters] = useState(() => getVillageCharacters({}));
+  const [decorations, setDecorations] = useState([]);
+  const [characters, setCharacters] = useState(DEFAULT_VILLAGE_DATA.village_characters);
 
   useEffect(() => {
     const handleUpdate = () => setGuestVersion((prev) => prev + 1);
@@ -1128,6 +1316,13 @@ export default function Home() {
     expPopupTimerRef.current = setTimeout(() => setExpPopup(null), 1400);
     return () => clearTimeout(expPopupTimerRef.current);
   }, [expPopup]);
+
+  useEffect(() => {
+    if (!pointPopup) return undefined;
+    clearTimeout(pointPopupTimerRef.current);
+    pointPopupTimerRef.current = setTimeout(() => setPointPopup(null), 1400);
+    return () => clearTimeout(pointPopupTimerRef.current);
+  }, [pointPopup]);
 
   const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: ['me'],
@@ -1353,7 +1548,9 @@ export default function Home() {
 
   useEffect(() => {
     const source = isGuest ? guestData : user;
-    setCharacters(getVillageCharacters(source || {}));
+    const village = getVillageState(source || {});
+    setDecorations(village.village_decorations);
+    setCharacters(village.village_characters);
   }, [isGuest, guestData, user]);
 
   const handleCategoryChange = async (category) => {
@@ -1484,11 +1681,59 @@ export default function Home() {
     }
   };
 
+  const handleVillagePurchase = async (item) => {
+    const source = isGuest ? guestData : user;
+    const currentVillage = getVillageState(source || {});
+    const currentPoints = Number(currentVillage.village_points || 0);
+
+    if (currentPoints < item.price) {
+      toast.error('포인트가 부족해요.');
+      return;
+    }
+
+    const nextPoints = currentPoints - item.price;
+    const nextDecorations = [...currentVillage.village_decorations];
+    const nextCharacters = [...currentVillage.village_characters];
+
+    if (item.type === 'decoration') {
+      nextDecorations.push(createDecoration(item.subtype));
+    } else if (item.type === 'character') {
+      nextCharacters.push(createCharacter(item.subtype));
+    }
+
+    try {
+      if (isGuest) {
+        writeGuestDataPatch((prev) => ({
+          ...prev,
+          village_points: nextPoints,
+          village_decorations: nextDecorations,
+          village_characters: nextCharacters,
+        }));
+        window.dispatchEvent(new Event('root-home-data-updated'));
+      } else {
+        await base44.auth.updateMe({
+          village_points: nextPoints,
+          village_decorations: nextDecorations,
+          village_characters: nextCharacters,
+        });
+        queryClient.invalidateQueries({ queryKey: ['me'] });
+      }
+
+      setDecorations(nextDecorations);
+      setCharacters(nextCharacters);
+      toast.success(`${item.label}을(를) 구매했어요!`);
+    } catch (error) {
+      console.error('handleVillagePurchase error:', error);
+      toast.error('구매 중 오류가 발생했어요.');
+    }
+  };
+
   const handleActionComplete = async (actionGoal, minutes = 0, extra = {}) => {
     try {
       const now = new Date().toISOString();
       const todayStr = getTodayString();
       const earnedExp = calculateExp(actionGoal, minutes);
+      const earnedVillagePoints = calculateVillagePointReward(actionGoal, minutes);
 
       const safeGoalId =
         actionGoal?.goal_id ||
@@ -1519,6 +1764,10 @@ export default function Home() {
         updated_date: now,
       };
 
+      const currentVillageSource = isGuest ? guestData : user;
+      const currentVillage = getVillageState(currentVillageSource || {});
+      const nextVillagePoints = Number(currentVillage.village_points || 0) + earnedVillagePoints;
+
       if (isGuest) {
         guestDataPersistence.addActionLog(logPayload);
 
@@ -1530,6 +1779,11 @@ export default function Home() {
             updated_date: now,
           });
         }
+
+        writeGuestDataPatch((prev) => ({
+          ...prev,
+          village_points: nextVillagePoints,
+        }));
 
         queryClient.removeQueries({ queryKey: ['guest-home-data'] });
         queryClient.removeQueries({ queryKey: ['guest-records-data'] });
@@ -1552,6 +1806,10 @@ export default function Home() {
           });
         }
 
+        await base44.auth.updateMe({
+          village_points: nextVillagePoints,
+        });
+
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
           queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
@@ -1561,6 +1819,7 @@ export default function Home() {
       }
 
       setExpPopup(earnedExp);
+      setPointPopup(earnedVillagePoints);
 
       const currentLogs = isGuest
         ? (Array.isArray(guestData?.actionLogs) ? guestData.actionLogs : [])
@@ -1619,9 +1878,8 @@ export default function Home() {
     return Math.max(1, Math.floor(sum / 4));
   }, [userLevels]);
 
-  const points = derivedStats.total_actions || 0;
-  const gems = Math.floor((derivedStats.total_actions || 0) / 10);
-  const actionCount = derivedStats.total_actions || 0;
+  const villageState = getVillageState(isGuest ? guestData : user);
+  const points = villageState.village_points || 0;
 
   return (
     <div
@@ -1632,6 +1890,7 @@ export default function Home() {
       }}
     >
       {expPopup ? <ExpPopup exp={expPopup} /> : null}
+      {pointPopup ? <PointPopup points={pointPopup} /> : null}
 
       {newTitle ? (
         <TitleUnlockModal
@@ -1647,9 +1906,8 @@ export default function Home() {
         nickname={nickname}
         totalLevel={totalLevel}
         points={points}
-        gems={gems}
         userLevels={userLevels}
-        actionCount={actionCount}
+        decorations={decorations}
         characters={characters}
         setCharacters={setCharacters}
         onToggleOverview={() => setIsOverview((prev) => !prev)}
@@ -1673,7 +1931,12 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="px-4 pt-4">
+      <div className="space-y-4 px-4 pt-4">
+        <VillageShop
+          points={points}
+          onBuy={handleVillagePurchase}
+        />
+
         {activeGoal ? (
           <GoalProgress goal={activeGoal} logs={goalLogs} />
         ) : (
@@ -1684,7 +1947,7 @@ export default function Home() {
         )}
 
         {activeGoal ? (
-          <div className="space-y-6 pt-4">
+          <div className="space-y-6 pt-1">
             <Section
               title="오늘 해야 할 것"
               count={grouped.todayItems.length}
