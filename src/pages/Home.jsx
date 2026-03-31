@@ -18,19 +18,9 @@ import ActionGoalCard from '@/components/home/ActionGoalCard';
 import EmptyGoalState from '@/components/home/EmptyGoalState';
 
 import { getBackground } from '@/assets/root/backgrounds';
-
-import gymLv1Img from '@/assets/root/buildings/gym_lv1.png';
-import libraryLv1Img from '@/assets/root/buildings/library_lv1.png';
-import meditationLv1Img from '@/assets/root/buildings/meditation_lv1.png';
-import workshopLv1Img from '@/assets/root/buildings/workshop_lv1.png';
-
-import foxImg from '@/assets/root/characters/fox.png';
-import alpacaImg from '@/assets/root/characters/alpaca.png';
-import platypusImg from '@/assets/root/characters/platypus.png';
-
-import grassImg from '@/assets/root/decorations/grass.png';
-import treeImg from '@/assets/root/decorations/tree.png';
-import flowerImg from '@/assets/root/decorations/flower.png';
+import { gymLv1 as gymLv1Img, libraryLv1 as libraryLv1Img, meditationLv1 as meditationLv1Img, workshopLv1 as workshopLv1Img } from '@/assets/root/buildings';
+import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
+import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
 
 const CATEGORY_ROUTE_MAP = {
   exercise: '/CreateGoalExercise',
