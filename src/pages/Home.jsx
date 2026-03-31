@@ -559,11 +559,7 @@ function getVillageState(source) {
 }
 
 function createDecoration(subtype, worldWidth = 1400, worldHeight = 900) {
-  const sizeMap = {
-    grass: 34,
-    tree: 62,
-    flower: 30,
-  };
+  const sizeMap = { grass: 34, tree: 62, flower: 30 };
 
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
@@ -1667,11 +1663,6 @@ export default function Home() {
     [derivedStats, ownedTitleIds]
   );
 
-  const equippedTitle = useMemo(() => {
-    const equippedId = resolveEquippedTitleId({ isGuest, user, guestData, ownedTitleIds });
-    return unlockedTitles.find((title) => title.id === equippedId) || null;
-  }, [isGuest, user, guestData, unlockedTitles, ownedTitleIds]);
-
   useEffect(() => {
     ensureValidEquippedTitle({ isGuest, user, guestData, ownedTitleIds, queryClient })
       .then((nextGuest) => {
@@ -2160,8 +2151,7 @@ export default function Home() {
     return Math.max(1, Math.floor(sum / 4));
   }, [userLevels]);
 
-  const villageState = getVillageState(isGuest ? guestData : user);
-  const points = villageState.village_points || 0;
+  const points = Number(getVillageState(isGuest ? guestData : user).village_points || 0);
 
   return (
     <div
