@@ -1223,7 +1223,7 @@ const SHOP_ICON_SRC =
     </svg>
   `);
 
-function IconCircleButton({ iconSrc, label, onClick }) {
+function IconCircleButton({ iconSrc, label, onClick, size = 48 }) {
   return (
     <button
       type="button"
@@ -1277,7 +1277,7 @@ function EditToolbar({
         <button
           type="button"
           onClick={isEditMode ? onSave : onToggleEditMode}
-          className="pointer-events-auto rounded-full px-4 py-2.5 text-[12px] font-extrabold"
+          className="pointer-events-auto rounded-full px-3 py-2 text-[11px] font-extrabold"
           style={{
             background: isEditMode
               ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
@@ -1335,10 +1335,10 @@ function VillageOverlayBar({
   onOpenBag,
 }) {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3">
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-20 px-3 pt-2 pb-3">
       <div className="flex items-start justify-between gap-2">
         <div
-          className="pointer-events-auto rounded-2xl px-3 py-2"
+          className="pointer-events-auto flex items-center gap-2 rounded-2xl px-3 py-2"
           style={{
             background: 'rgba(255,248,232,0.82)',
             border: '1px solid rgba(107,78,21,0.14)',
@@ -1350,19 +1350,28 @@ function VillageOverlayBar({
           <div className="text-[11px] font-bold" style={{ color: '#8a5a17' }}>
             {nickname}
           </div>
-          <div className="text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
-            전체 Lv.{level}
+          <div
+            className="rounded-full px-2 py-0.5 text-[11px] font-extrabold"
+            style={{
+              background: 'rgba(196,154,74,0.16)',
+              color: '#6f4a12',
+              border: '1px solid rgba(196,154,74,0.2)',
+              lineHeight: 1.1,
+            }}
+          >
+            Lv.{level}
           </div>
         </div>
 
-        <div className="pointer-events-auto flex items-center gap-2">
+        <div className="pointer-events-auto flex items-start gap-2">
           <div
-            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+            className="rounded-full px-3 py-1.5 text-[11px] font-extrabold"
             style={{
               background: 'rgba(255,248,232,0.9)',
               color: '#4a2c08',
               border: '1px solid rgba(107,78,21,0.14)',
               boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+              marginTop: '-2px',
             }}
           >
             포인트 {points}
@@ -1372,12 +1381,14 @@ function VillageOverlayBar({
             iconSrc={BAG_ICON_SRC}
             label="가방 열기"
             onClick={onOpenBag}
+            size={42}
           />
 
           <IconCircleButton
             iconSrc={SHOP_ICON_SRC}
             label="상점 열기"
             onClick={onOpenShop}
+            size={42}
           />
         </div>
       </div>
