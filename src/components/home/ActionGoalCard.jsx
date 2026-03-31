@@ -22,7 +22,6 @@ import {
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import WeekDays from './WeekDays';
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 const TIMER_KEY = (id) => `timer_start_${id}`;
@@ -232,6 +231,47 @@ function MonthCalendar({ logs = [], onClose }) {
   );
 }
 
+function SimpleWeekRow({ logs = [] }) {
+  const doneSet = new Set(
+    (logs || [])
+      .map((log) => {
+        const d = new Date(log.date);
+        if (Number.isNaN(d.getTime())) return null;
+        return (d.getDay() + 6) % 7;
+      })
+      .filter((v) => v !== null)
+  );
+
+  return (
+    <div className="mt-2 flex items-center justify-between gap-1">
+      {DAY_LABELS.map((day, index) => {
+        const isDone = doneSet.has(index);
+
+        return (
+          <div key={day} className="flex flex-col items-center gap-1 flex-1 min-w-0">
+            <span
+              className="text-[10px] font-semibold leading-none"
+              style={{ color: '#9a7b47' }}
+            >
+              {day}
+            </span>
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold"
+              style={{
+                background: isDone ? '#c7973a' : '#f5ecda',
+                border: isDone ? '1px solid #a9771f' : '1px solid #e8dbc0',
+                color: isDone ? '#fff' : '#d9ccb3',
+              }}
+            >
+              {isDone ? '✓' : ''}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function ActionGoalCard({
   actionGoal,
   weeklyLogs = [],
@@ -284,22 +324,11 @@ export default function ActionGoalCard({
   const isGuest = !user;
   const isOneTime = actionGoal.action_type === 'one_time';
 
-  const weeklyCount = weeklyLogs.length;
-  const targetFreq = actionGoal.weekly_frequency || 7;
-
   const todayStr = getTodayString();
   const doneToday = isOneTime
     ? actionGoal.status === 'completed' ||
       allLogs.some((log) => log?.action_goal_id === actionGoal.id && log?.completed)
     : weeklyLogs.some((log) => log.date === todayStr);
-
-  const progressPercent = isOneTime
-    ? actionGoal.status === 'completed'
-      ? 100
-      : getDdayText(resolvedScheduledDate) === '기한 지남'
-        ? 100
-        : 0
-    : Math.min(100, Math.round((weeklyCount / Math.max(1, targetFreq)) * 100));
 
   const detailLogs = Array.isArray(allLogs) && allLogs.length > 0 ? allLogs : weeklyLogs;
   const [isRunning, setIsRunning] = useState(() => !!localStorage.getItem(TIMER_KEY(actionGoal.id)));
@@ -671,14 +700,111 @@ export default function ActionGoalCard({
     deleteMutation.mutate();
   };
 
-  const typeLabel =
-    actionGoal.action_type === 'timer'
-      ? `${actionGoal.duration_minutes || 0}분`
-      : actionGoal.action_type === 'abstain'
-        ? '안하기형'
-        : actionGoal.action_type === 'one_time'
-          ? '1회성'
-          : '확인형';
+  const renderActionButton = () => {
+    if (isOneTime) {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleConfirm();
+          }}
+          className="h-8 px-3 rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0"
+          style={{
+            background: '#c8ab6b',
+            color: '#5f4310',
+          }}
+        >
+          완료
+        </button>
+      );
+    }
+
+    if (actionGoal.action_type === 'timer') {
+      if (doneToday && !isRunning) {
+        return (
+          <span
+            onClick={(e) => e.stopPropagation()}
+            className="h-8 px-3 rounded-xl text-[11px] font-bold flex items-center shrink-0"
+            style={{
+              background: '#e5d6b8',
+              color: '#8f6a33',
+            }}
+          >
+            완료
+          </span>
+        );
+      }
+
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleTimerToggle();
+          }}
+          className="h-8 px-3 rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0"
+          style={
+            isRunning
+              ? {
+                  background: '#b94030',
+                  color: '#fff',
+                }
+              : {
+                  background: '#c8ab6b',
+                  color: '#5f4310',
+                }
+          }
+        >
+          {isRunning ? (
+            <>
+              <Square className="w-3 h-3" />
+              {formatTime(elapsed)}
+            </>
+          ) : (
+            <>
+              <Play className="w-3 h-3" />
+              시작
+            </>
+          )}
+        </button>
+      );
+    }
+
+    if (doneToday) {
+      return (
+        <span
+          onClick={(e) => e.stopPropagation()}
+          className="h-8 px-3 rounded-xl text-[11px] font-bold flex items-center shrink-0"
+          style={{
+            background: '#e5d6b8',
+            color: '#8f6a33',
+          }}
+        >
+          완료
+        </span>
+      );
+    }
+
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleConfirm();
+        }}
+        className="h-8 px-3 rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0"
+        style={{
+          background: '#c8ab6b',
+          color: '#5f4310',
+        }}
+      >
+        <Check className="w-3 h-3" />
+        {actionGoal.action_type === 'abstain' ? '성공' : '완료'}
+      </button>
+    );
+  };
+
+  const oneTimeSubText = resolvedScheduledDate
+    ? `${formatKoreanDate(resolvedScheduledDate)} · ${getDdayText(resolvedScheduledDate)}`
+    : '날짜 미지정';
 
   return (
     <>
@@ -702,223 +828,71 @@ export default function ActionGoalCard({
       <div ref={cardRef} className="relative">
         <div
           onClick={() => setShowCalendar((prev) => !prev)}
-          className="rounded-2xl px-3 py-3 cursor-pointer"
+          className="rounded-2xl px-4 py-3 cursor-pointer"
           style={{
             background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 60%, #f0e0bc 100%)',
             border: '1.5px solid #d7b97b',
-            boxShadow: '0 3px 8px rgba(80,50,10,0.12)',
+            boxShadow: '0 3px 8px rgba(80,50,10,0.10)',
           }}
         >
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                style={{
-                  background: 'rgba(255,255,255,0.28)',
-                  border: '1px solid rgba(122,80,32,0.12)',
-                }}
-              >
-                {doneToday ? (
-                  <Check className="w-4 h-4" style={{ color: '#4ca86a' }} />
-                ) : (
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#d2b06a' }} />
-                )}
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="truncate text-sm font-bold" style={{ color: '#3a1f04' }}>
-                    {actionGoal.title}
-                  </span>
-
-                  <span className="text-[11px] font-semibold shrink-0" style={{ color: '#8f6a33' }}>
-                    {typeLabel}
-                  </span>
-                </div>
-
-                {!isOneTime && streak > 0 && (
-                  <div className="mt-1 flex items-center gap-2">
-                    <div
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-xl text-[11px] font-bold"
-                      style={{
-                        background: 'rgba(255,140,0,0.10)',
-                        color: '#b85c00',
-                        border: '1px solid rgba(184,92,0,0.16)',
-                      }}
-                    >
-                      <span>🔥</span>
-                      <span>{streak}일 연속</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-1 flex items-center gap-2">
-                  {isOneTime ? (
-                    <>
-                      <div className="text-[11px] font-semibold" style={{ color: '#7a5020' }}>
-                        {resolvedScheduledDate
-                          ? `예정일: ${formatKoreanDate(resolvedScheduledDate)}`
-                          : '날짜 미지정'}
-                      </div>
-
-                      <span
-                        className="text-[11px] font-bold shrink-0 ml-auto"
-                        style={{
-                          color: doneToday
-                            ? '#4ca86a'
-                            : getDdayText(resolvedScheduledDate) === '기한 지남'
-                              ? '#b94030'
-                              : '#7a5020',
-                        }}
-                      >
-                        {doneToday ? '1/1' : '0/1'}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <div
-                        className="h-1.5 flex-1 overflow-hidden rounded-full"
-                        style={{ background: 'rgba(122,80,32,0.16)' }}
-                      >
-                        <div
-                          className="h-full rounded-full transition-all duration-300"
-                          style={{
-                            width: `${progressPercent}%`,
-                            background:
-                              'linear-gradient(90deg, #8b5a20 0%, #c98a2b 50%, #e1b44f 100%)',
-                          }}
-                        />
-                      </div>
-
-                      <span className="text-[11px] font-bold shrink-0" style={{ color: '#7a5020' }}>
-                        {weeklyCount}/{targetFreq}
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                {isOneTime && (
-                  <div className="mt-1 text-[11px] font-semibold" style={{ color: '#9a7b47' }}>
-                    {getDdayText(resolvedScheduledDate)}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {isOneTime ? (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleConfirm();
-                }}
-                className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center gap-1 shrink-0"
-                style={{
-                  background: '#8b5a20',
-                  color: '#fff',
-                }}
-              >
-                <Check className="w-3 h-3" />
-                완료
-              </button>
-            ) : actionGoal.action_type === 'timer' ? (
-              doneToday && !isRunning ? (
-                <span
-                  onClick={(e) => e.stopPropagation()}
-                  className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center shrink-0"
-                  style={{
-                    background: 'rgba(122,80,32,0.12)',
-                    color: '#8f6a33',
-                    border: '1px solid rgba(122,80,32,0.15)',
-                  }}
-                >
-                  완료
-                </span>
-              ) : (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleTimerToggle();
-                  }}
-                  className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center gap-1 shrink-0"
-                  style={
-                    isRunning
-                      ? {
-                          background: '#b94030',
-                          color: '#fff',
-                        }
-                      : {
-                          background: '#8b5a20',
-                          color: '#fff',
-                        }
-                  }
-                >
-                  {isRunning ? (
-                    <>
-                      <Square className="w-3 h-3" />
-                      {formatTime(elapsed)}
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-3 h-3" />
-                      시작
-                    </>
-                  )}
-                </button>
-              )
-            ) : doneToday ? (
-              <span
-                onClick={(e) => e.stopPropagation()}
-                className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center shrink-0"
-                style={{
-                  background: 'rgba(122,80,32,0.12)',
-                  color: '#8f6a33',
-                  border: '1px solid rgba(122,80,32,0.15)',
-                }}
-              >
-                완료
-              </span>
-            ) : (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleConfirm();
-                }}
-                className="h-8 px-2.5 rounded-lg text-[11px] font-bold flex items-center gap-1 shrink-0"
-                style={{
-                  background: '#8b5a20',
-                  color: '#fff',
-                }}
-              >
-                <Check className="w-3 h-3" />
-                {actionGoal.action_type === 'abstain' ? '성공' : '확인'}
-              </button>
-            )}
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMenu(true);
-              }}
-              className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+          <div className="flex items-start gap-2">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
               style={{
-                background: 'rgba(122,80,32,0.08)',
-                color: '#7a5020',
+                background: 'rgba(255,255,255,0.28)',
+                border: '1px solid rgba(122,80,32,0.10)',
               }}
-              aria-label="행동 목표 관리"
             >
-              <Pencil className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {!isOneTime && (
-            <div className="mt-1">
-              <WeekDays
-                logs={weeklyLogs}
-                weeklyTarget={targetFreq}
-                category={actionGoal.category}
-              />
+              {doneToday ? (
+                <Check className="w-4 h-4" style={{ color: '#4ca86a' }} />
+              ) : (
+                <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#d2b06a' }} />
+              )}
             </div>
-          )}
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div
+                    className="truncate text-[15px] font-bold leading-tight"
+                    style={{ color: '#3a1f04' }}
+                  >
+                    {actionGoal.title}
+                  </div>
+
+                  {isOneTime ? (
+                    <div
+                      className="mt-1 text-[11px] font-semibold leading-none"
+                      style={{ color: '#8f6a33' }}
+                    >
+                      {oneTimeSubText}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {renderActionButton()}
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMenu(true);
+                    }}
+                    className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0"
+                    style={{
+                      background: 'rgba(122,80,32,0.08)',
+                      color: '#7a5020',
+                    }}
+                    aria-label="행동 목표 관리"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {!isOneTime && <SimpleWeekRow logs={weeklyLogs} />}
+            </div>
+          </div>
         </div>
 
         <AnimatePresence>
