@@ -1349,14 +1349,16 @@ function VillageOverlayBar({
 }
 
 function DecorationSprite({ item }) {
+  const displaySize = item.type === 'tree' ? item.size * 2 : item.size;
+
   return (
     <img
       src={item.image}
       alt={item.type}
       draggable={false}
       style={{
-        width: item.size,
-        height: item.size,
+        width: displaySize,
+        height: displaySize,
         objectFit: 'contain',
         display: 'block',
         background: 'transparent',
@@ -1482,8 +1484,6 @@ function VillageWorldLayer({
   const backgroundImage = getBackground(activeCategory, 'day');
 
   const handleWorldPointerDown = (e) => {
-    if (isEditMode) return;
-
     dragRef.current = {
       mode: 'pan',
       startX: e.clientX,
