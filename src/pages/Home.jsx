@@ -1,42 +1,21 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Coins, Expand, Shrink, Plus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
+import {
+  addOwnedTitle,
+  ensureValidEquippedTitle,
+  getOwnedTitleIds,
+  resolveEquippedTitleId,
+  setEquippedTitle,
+} from '@/lib/titleStorage';
+import { toast } from 'sonner';
+
+import CategoryTabs from '@/components/home/CategoryTabs';
+import GoalProgress from '@/components/home/GoalProgress';
 import ActionGoalCard from '@/components/home/ActionGoalCard';
-
-const CATEGORY_KEYS = ['exercise', 'study', 'mental', 'daily'];
-
-const CATEGORY_LABELS = {
-  exercise: '운동',
-  study: '공부',
-  mental: '정신',
-  daily: '일상',
-};
-
-const CATEGORY_STYLES = {
-  exercise: {
-    bg: 'linear-gradient(180deg, #eef8ef 0%, #dff2e3 100%)',
-    chip: '#2f7d43',
-    border: '#a8d7b3',
-  },
-  study: {
-    bg: 'linear-gradient(180deg, #f4f1ff 0%, #e6ddff 100%)',
-    chip: '#5b49a8',
-    border: '#c6b7ff',
-  },
-  mental: {
-    bg: 'linear-gradient(180deg, #eef9ff 0%, #dff3ff 100%)',
-    chip: '#2d6f94',
-    border: '#a9d8f0',
-  },
-  daily: {
-    bg: 'linear-gradient(180deg, #fff7ea 0%, #f8ecd3 100%)',
-    chip: '#9a6b21',
-    border: '#e3c58e',
-  },
-};
+import EmptyGoalState from '@/components/home/EmptyGoalState';
 
 const CATEGORY_ROUTE_MAP = {
   exercise: '/CreateGoalExercise',
@@ -45,10 +24,86 @@ const CATEGORY_ROUTE_MAP = {
   daily: '/CreateGoalDaily',
 };
 
+const CATEGORY_LABELS = {
+  exercise: '운동',
+  study: '공부',
+  mental: '정신',
+  daily: '일상',
+};
+
+const CATEGORY_ALIASES = {
+  exercise: 'exercise',
+  study: 'study',
+  mental: 'mental',
+  daily: 'daily',
+  운동: 'exercise',
+  공부: 'study',
+  정신: 'mental',
+  일상: 'daily',
+};
+
+const VALID_CATEGORIES = Object.keys(CATEGORY_LABELS);
+
+const TITLES = [
+  { id: 'common_first_step', name: '첫 걸음을 뗀 자', description: '첫 행동목표를 완료한 용사', metric: 'total_actions', value: 1, category: 'common' },
+  { id: 'common_route_walker', name: '루트를 걷는 자', description: '전체 행동목표 100회 달성', metric: 'total_actions', value: 100, category: 'common' },
+
+  { id: 'exercise_001', name: '몸을 깨운 자', description: '운동 행동목표 10회 달성', metric: 'total_exercise_count', value: 10, category: 'exercise' },
+  { id: 'exercise_002', name: '꾸준함의 전사', description: '운동 행동목표 50회 달성', metric: 'total_exercise_count', value: 50, category: 'exercise' },
+  { id: 'exercise_003', name: '바람을 걷는 자', description: '러닝 거리 50km 누적', metric: 'total_running_km', value: 50, category: 'exercise' },
+  { id: 'exercise_004', name: '운동의 장인', description: '운동 행동목표 200회 달성', metric: 'total_exercise_count', value: 200, category: 'exercise' },
+
+  { id: 'study_001', name: '집중 입문자', description: '공부 10시간 누적', metric: 'total_study_minutes', value: 600, category: 'study' },
+  { id: 'study_002', name: '집중 수련생', description: '공부 30시간 누적', metric: 'total_study_minutes', value: 1800, category: 'study' },
+  { id: 'study_003', name: '몰입의 실천가', description: '공부 100시간 누적', metric: 'total_study_minutes', value: 6000, category: 'study' },
+  { id: 'study_004', name: '집중의 장인', description: '공부 300시간 누적', metric: 'total_study_minutes', value: 18000, category: 'study' },
+
+  { id: 'mental_001', name: '마음을 들여다본 자', description: '정신 행동목표 10회 달성', metric: 'total_mental_count', value: 10, category: 'mental' },
+  { id: 'mental_002', name: '유혹 저항가', description: '금연/금주 7일 누적', metric: 'total_no_smoking_days', value: 7, category: 'mental' },
+  { id: 'mental_003', name: '절제의 기사', description: '금연/금주 30일 누적', metric: 'total_no_smoking_days', value: 30, category: 'mental' },
+  { id: 'mental_004', name: '내면의 관리자', description: '정신 행동목표 100회 달성', metric: 'total_mental_count', value: 100, category: 'mental' },
+
+  { id: 'daily_001', name: '하루를 시작한 자', description: '일상 행동목표 5회 달성', metric: 'total_daily_count', value: 5, category: 'daily' },
+  { id: 'daily_002', name: '생활의 입문자', description: '일상 행동목표 30회 달성', metric: 'total_daily_count', value: 30, category: 'daily' },
+  { id: 'daily_003', name: '생활의 관리자', description: '일상 행동목표 100회 달성', metric: 'total_daily_count', value: 100, category: 'daily' },
+  { id: 'daily_004', name: '삶을 다듬는 자', description: '일상 행동목표 200회 달성', metric: 'total_daily_count', value: 200, category: 'daily' },
+];
+
+const CATEGORY_WORLD_THEME = {
+  exercise: {
+    sky: 'linear-gradient(180deg, #d9f1d9 0%, #c3e7c4 40%, #9dd58f 100%)',
+    field: '#8bc06b',
+    path: '#cfb17a',
+    accent: '#2f7d43',
+    border: '#98c79e',
+  },
+  study: {
+    sky: 'linear-gradient(180deg, #ece8ff 0%, #ddd5ff 40%, #c7bfff 100%)',
+    field: '#a8c98f',
+    path: '#d6c09a',
+    accent: '#5b49a8',
+    border: '#beb4f0',
+  },
+  mental: {
+    sky: 'linear-gradient(180deg, #def4fb 0%, #cfeef7 42%, #b5dde9 100%)',
+    field: '#91c79f',
+    path: '#d7c4a0',
+    accent: '#2d6f94',
+    border: '#9acddd',
+  },
+  daily: {
+    sky: 'linear-gradient(180deg, #fff1d7 0%, #f8e4bf 40%, #efd29b 100%)',
+    field: '#a4c67e',
+    path: '#d5b37d',
+    accent: '#9a6b21',
+    border: '#dcb679',
+  },
+};
+
 const DEFAULT_CHARACTERS = [
-  { id: 'fox_1', name: '루', type: 'fox', x: 520, y: 410, size: 42 },
-  { id: 'alpaca_1', name: '파카', type: 'alpaca', x: 760, y: 360, size: 46 },
-  { id: 'platypus_1', name: '너구', type: 'platypus', x: 930, y: 500, size: 40 },
+  { id: 'fox_1', name: '루', type: 'fox', x: 520, y: 430, size: 42 },
+  { id: 'alpaca_1', name: '파카', type: 'alpaca', x: 810, y: 380, size: 45 },
+  { id: 'platypus_1', name: '너구', type: 'platypus', x: 980, y: 520, size: 40 },
 ];
 
 function readGuestData() {
@@ -60,63 +115,54 @@ function readGuestData() {
       return guestDataPersistence.loadOnboardingData() || {};
     }
     return {};
-  } catch {
+  } catch (error) {
+    console.error('readGuestData error:', error);
     return {};
   }
 }
 
-function saveGuestKey(key, value) {
-  try {
-    if (typeof guestDataPersistence?.saveData === 'function') {
-      guestDataPersistence.saveData(key, value);
-    }
-  } catch (error) {
-    console.error('saveGuestKey error:', error);
-  }
-}
-
-function updateGuestData(updater) {
+function writeGuestDataPatch(patchOrUpdater) {
   try {
     if (typeof guestDataPersistence?.updateData === 'function') {
-      return guestDataPersistence.updateData(updater);
+      return guestDataPersistence.updateData((prev) => {
+        const draft =
+          typeof patchOrUpdater === 'function'
+            ? patchOrUpdater(prev)
+            : { ...prev, ...(patchOrUpdater || {}) };
+
+        const normalizedDraft = { ...(draft || {}) };
+
+        if (Object.prototype.hasOwnProperty.call(normalizedDraft, 'local_action_logs')) {
+          normalizedDraft.actionLogs = normalizedDraft.local_action_logs;
+          delete normalizedDraft.local_action_logs;
+        }
+
+        return normalizedDraft;
+      });
     }
 
     const prev = readGuestData();
-    const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+    const next =
+      typeof patchOrUpdater === 'function'
+        ? patchOrUpdater(prev)
+        : { ...prev, ...(patchOrUpdater || {}) };
 
     Object.entries(next || {}).forEach(([key, value]) => {
-      saveGuestKey(key, value);
+      const normalizedKey = key === 'local_action_logs' ? 'actionLogs' : key;
+      if (typeof guestDataPersistence?.saveData === 'function') {
+        guestDataPersistence.saveData(normalizedKey, value);
+      }
     });
 
     return next;
   } catch (error) {
-    console.error('updateGuestData error:', error);
+    console.error('writeGuestDataPatch error:', error);
     return readGuestData();
   }
 }
 
 function getTodayString() {
   return new Date().toISOString().split('T')[0];
-}
-
-function normalizeGuestGoals(data) {
-  if (Array.isArray(data?.goals) && data.goals.length > 0) return data.goals;
-  if (data?.goalData) return [data.goalData];
-  return [];
-}
-
-function normalizeGuestActionGoals(data) {
-  if (Array.isArray(data?.actionGoals) && data.actionGoals.length > 0) return data.actionGoals;
-  if (data?.actionGoalData) return [data.actionGoalData];
-  return [];
-}
-
-function sortByCreatedDateDesc(items = []) {
-  return [...items].sort((a, b) => {
-    const aTime = new Date(a?.created_date || a?.updated_date || 0).getTime();
-    const bTime = new Date(b?.created_date || b?.updated_date || 0).getTime();
-    return bTime - aTime;
-  });
 }
 
 function normalizeDateOnly(value) {
@@ -128,51 +174,151 @@ function normalizeDateOnly(value) {
   ).padStart(2, '0')}`;
 }
 
+function normalizeCategoryValue(category, fallback = 'exercise') {
+  const normalized = CATEGORY_ALIASES[category];
+  if (normalized && VALID_CATEGORIES.includes(normalized)) {
+    return normalized;
+  }
+  return fallback;
+}
+
+function resolveCategoryKey(category, fallback = '') {
+  const rawCategory = typeof category === 'string' ? category.trim() : '';
+  if (!rawCategory) return fallback;
+  return CATEGORY_ALIASES[rawCategory] || rawCategory;
+}
+
 function getGoalEndDate(goal) {
   if (!goal?.start_date || !goal?.duration_days) return null;
+
   const start = new Date(goal.start_date);
   if (Number.isNaN(start.getTime())) return null;
+
   const end = new Date(start);
   end.setDate(end.getDate() + Number(goal.duration_days || 0));
   end.setHours(23, 59, 59, 999);
   return end;
 }
 
-function getWeekStartString() {
-  const today = new Date();
-  const day = today.getDay();
+function getMonday(date = new Date()) {
+  const copy = new Date(date);
+  const day = copy.getDay();
   const diff = day === 0 ? -6 : 1 - day;
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + diff);
-  monday.setHours(0, 0, 0, 0);
-  return normalizeDateOnly(monday);
+  copy.setDate(copy.getDate() + diff);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
 }
 
-function getWeeklyLogsForAction(allLogs, actionGoalId) {
-  const weekStart = getWeekStartString();
-  return (allLogs || []).filter(
-    (log) => log?.action_goal_id === actionGoalId && log?.date && log.date >= weekStart
-  );
+function getSunday(date = new Date()) {
+  const monday = getMonday(date);
+  const sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return sunday;
 }
 
-function getAllLogsForAction(allLogs, actionGoalId) {
-  return (allLogs || []).filter((log) => log?.action_goal_id === actionGoalId);
+function getWeeklyLogsForAction(logs, actionGoalId) {
+  const monday = getMonday();
+  const sunday = getSunday();
+
+  return (logs || []).filter((log) => {
+    if (log?.action_goal_id !== actionGoalId) return false;
+    if (!log?.date) return false;
+
+    const logDate = new Date(log.date);
+    if (Number.isNaN(logDate.getTime())) return false;
+
+    return logDate >= monday && logDate <= sunday;
+  });
 }
 
-function getStreakForAction(allLogs, actionGoalId) {
-  const dates = (allLogs || [])
+function getAllLogsForAction(logs, actionGoalId) {
+  return (logs || []).filter((log) => log?.action_goal_id === actionGoalId);
+}
+
+function resolveGoalIdForActionGoal(actionGoal, goals = [], fallbackCategory = 'exercise') {
+  if (actionGoal?.goal_id) return actionGoal.goal_id;
+
+  const categoryKey = resolveCategoryKey(actionGoal?.category, fallbackCategory);
+  const safeGoals = Array.isArray(goals) ? goals.filter(Boolean) : [];
+
+  const byCategory = safeGoals.find((goal) => {
+    if (!goal?.id) return false;
+    if (goal?.status && goal.status !== 'active') return false;
+    return resolveCategoryKey(goal?.category, '') === categoryKey;
+  });
+
+  if (byCategory?.id) return byCategory.id;
+  return safeGoals[0]?.id || null;
+}
+
+function connectActionGoalsToGoals(goals = [], actionGoals = []) {
+  const safeGoals = Array.isArray(goals) ? goals.filter(Boolean) : [];
+  const safeActionGoals = Array.isArray(actionGoals) ? actionGoals.filter(Boolean) : [];
+
+  return safeActionGoals.map((actionGoal) => {
+    if (!actionGoal) return actionGoal;
+
+    const categoryKey = resolveCategoryKey(actionGoal?.category, 'exercise');
+    const resolvedGoalId = resolveGoalIdForActionGoal(actionGoal, safeGoals, categoryKey);
+
+    return {
+      ...actionGoal,
+      category: categoryKey,
+      goal_id: resolvedGoalId,
+    };
+  });
+}
+
+function normalizeGuestGoals(rawGoals, fallbackCategory = 'exercise') {
+  return (Array.isArray(rawGoals) ? rawGoals : [])
+    .filter(Boolean)
+    .map((goal, index) => ({
+      ...goal,
+      id: goal?.id || `local_goal_${index + 1}`,
+      category: normalizeCategoryValue(goal?.category, fallbackCategory),
+      status: goal?.status || 'active',
+    }));
+}
+
+function normalizeGuestActionGoals(rawActionGoals, goals = [], fallbackCategory = 'exercise') {
+  const safeActionGoals = Array.isArray(rawActionGoals) ? rawActionGoals : [];
+
+  return safeActionGoals
+    .filter(Boolean)
+    .map((actionGoal, index) => {
+      const category = normalizeCategoryValue(actionGoal?.category, fallbackCategory);
+      const tempGoalId =
+        actionGoal?.goal_id ||
+        goals.find((goal) => normalizeCategoryValue(goal?.category, '') === category)?.id ||
+        goals[0]?.id ||
+        null;
+
+      return {
+        ...actionGoal,
+        id: actionGoal?.id || `local_ag_${index + 1}`,
+        category,
+        status: actionGoal?.status || 'active',
+        goal_id: tempGoalId,
+      };
+    });
+}
+
+function getStreakForAction(logs, actionGoalId) {
+  const completedDates = (logs || [])
     .filter((log) => log?.action_goal_id === actionGoalId && log?.completed && log?.date)
     .map((log) => normalizeDateOnly(log.date))
     .filter(Boolean);
 
-  const set = new Set(dates);
+  const dateSet = new Set(completedDates);
+
   let streak = 0;
   const cursor = new Date();
   cursor.setHours(0, 0, 0, 0);
 
   while (true) {
-    const key = normalizeDateOnly(cursor);
-    if (!set.has(key)) break;
+    const dateStr = normalizeDateOnly(cursor);
+    if (!dateSet.has(dateStr)) break;
     streak += 1;
     cursor.setDate(cursor.getDate() - 1);
   }
@@ -180,52 +326,36 @@ function getStreakForAction(allLogs, actionGoalId) {
   return streak;
 }
 
-function buildGuestLevelStats(logs = []) {
-  const stats = {
-    exercise_xp: 0,
+function getDefaultUserLevels(logs = []) {
+  const result = {
     exercise_level: 1,
-    study_xp: 0,
+    exercise_xp: 0,
     study_level: 1,
-    mental_xp: 0,
+    study_xp: 0,
     mental_level: 1,
-    daily_xp: 0,
+    mental_xp: 0,
     daily_level: 1,
+    daily_xp: 0,
   };
 
   (logs || []).forEach((log) => {
     const category = log?.category;
-    if (!category || !CATEGORY_KEYS.includes(category)) return;
+    if (!category) return;
 
-    let xp = 1;
-    if (Number(log?.duration_minutes || 0) > 0) xp = 1;
-    if (log?.meta_action_type === 'one_time') xp = 1;
+    let addXp = 10;
+    if (log?.duration_minutes && Number(log.duration_minutes) > 0) addXp = 15;
+    if (log?.meta_action_type === 'one_time') addXp = 20;
 
-    stats[`${category}_xp`] += xp;
+    if (!Object.prototype.hasOwnProperty.call(result, `${category}_xp`)) return;
+    result[`${category}_xp`] += addXp;
   });
 
-  CATEGORY_KEYS.forEach((category) => {
-    const xp = stats[`${category}_xp`] || 0;
-    stats[`${category}_level`] = Math.floor(xp / 30) + 1;
+  ['exercise', 'study', 'mental', 'daily'].forEach((category) => {
+    const xp = result[`${category}_xp`] || 0;
+    result[`${category}_level`] = Math.max(1, Math.floor(xp / 30) + 1);
   });
 
-  return stats;
-}
-
-function resolveGoalIdForActionGoal(actionGoal, goals = []) {
-  if (actionGoal?.goal_id) return actionGoal.goal_id;
-
-  const sameCategory = goals.find(
-    (goal) => goal?.status === 'active' && goal?.category === actionGoal?.category
-  );
-
-  return sameCategory?.id || goals?.[0]?.id || null;
-}
-
-function connectActionGoalsToGoals(goals = [], actionGoals = []) {
-  return (actionGoals || []).map((actionGoal) => ({
-    ...actionGoal,
-    goal_id: resolveGoalIdForActionGoal(actionGoal, goals),
-  }));
+  return result;
 }
 
 function groupActionGoals(actionGoals, today) {
@@ -237,16 +367,25 @@ function groupActionGoals(actionGoals, today) {
     const isOneTime = actionGoal?.action_type === 'one_time';
 
     if (isOneTime) {
-      const scheduledDate = normalizeDateOnly(actionGoal?.scheduled_date);
-      const isCompleted =
-        actionGoal?.status === 'completed' || actionGoal?.completed === true;
+      const scheduledDate = normalizeDateOnly(
+        actionGoal?.scheduled_date ||
+          actionGoal?.scheduledDate ||
+          actionGoal?.date ||
+          actionGoal?.target_date ||
+          actionGoal?.targetDate ||
+          actionGoal?.selected_date ||
+          actionGoal?.selectedDate
+      );
 
-      if (isCompleted) {
+      if (!scheduledDate) {
         scheduledItems.push(actionGoal);
         return;
       }
 
-      if (!scheduledDate) {
+      const isCompleted =
+        actionGoal?.status === 'completed' || actionGoal?.completed === true;
+
+      if (isCompleted) {
         scheduledItems.push(actionGoal);
         return;
       }
@@ -266,12 +405,13 @@ function groupActionGoals(actionGoals, today) {
     }
 
     const endDate = getGoalEndDate(actionGoal);
-    if (endDate) {
-      const compareEnd = new Date(endDate);
-      compareEnd.setHours(0, 0, 0, 0);
 
+    if (endDate) {
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
+
+      const compareEnd = new Date(endDate);
+      compareEnd.setHours(0, 0, 0, 0);
 
       if (compareEnd < todayDate) {
         overdueItems.push(actionGoal);
@@ -282,19 +422,150 @@ function groupActionGoals(actionGoals, today) {
     todayItems.push(actionGoal);
   });
 
-  scheduledItems.sort((a, b) =>
-    (normalizeDateOnly(a?.scheduled_date) || '9999-12-31').localeCompare(
-      normalizeDateOnly(b?.scheduled_date) || '9999-12-31'
-    )
-  );
+  scheduledItems.sort((a, b) => {
+    const aDate =
+      normalizeDateOnly(
+        a?.scheduled_date ||
+          a?.scheduledDate ||
+          a?.date ||
+          a?.target_date ||
+          a?.targetDate ||
+          a?.selected_date ||
+          a?.selectedDate
+      ) || '9999-12-31';
 
-  overdueItems.sort((a, b) =>
-    (normalizeDateOnly(a?.scheduled_date) || '0000-01-01').localeCompare(
-      normalizeDateOnly(b?.scheduled_date) || '0000-01-01'
-    )
-  );
+    const bDate =
+      normalizeDateOnly(
+        b?.scheduled_date ||
+          b?.scheduledDate ||
+          b?.date ||
+          b?.target_date ||
+          b?.targetDate ||
+          b?.selected_date ||
+          b?.selectedDate
+      ) || '9999-12-31';
+
+    return aDate.localeCompare(bDate);
+  });
+
+  overdueItems.sort((a, b) => {
+    const aDate =
+      normalizeDateOnly(
+        a?.scheduled_date ||
+          a?.scheduledDate ||
+          a?.date ||
+          a?.target_date ||
+          a?.targetDate ||
+          a?.selected_date ||
+          a?.selectedDate
+      ) || '0000-01-01';
+
+    const bDate =
+      normalizeDateOnly(
+        b?.scheduled_date ||
+          b?.scheduledDate ||
+          b?.date ||
+          b?.target_date ||
+          b?.targetDate ||
+          b?.selected_date ||
+          b?.selectedDate
+      ) || '0000-01-01';
+
+    return aDate.localeCompare(bDate);
+  });
 
   return { todayItems, scheduledItems, overdueItems };
+}
+
+function calculateExp(actionGoal, minutes = 0) {
+  if (actionGoal?.action_type === 'one_time') return 20;
+  if (actionGoal?.action_type === 'timer' || Number(minutes || 0) > 0) return 15;
+  return 10;
+}
+
+function buildDerivedStats(logs = [], actionGoals = []) {
+  const stats = {
+    total_actions: 0,
+    total_exercise_count: 0,
+    total_study_minutes: 0,
+    total_mental_count: 0,
+    total_daily_count: 0,
+    total_running_km: 0,
+    total_no_smoking_days: 0,
+  };
+
+  (logs || []).forEach((log) => {
+    if (!log?.completed) return;
+
+    stats.total_actions += 1;
+
+    if (log.category === 'exercise') {
+      stats.total_exercise_count += 1;
+      stats.total_running_km += Number(log.distance_km || 0);
+    }
+
+    if (log.category === 'study') {
+      stats.total_study_minutes += Number(log.duration_minutes || 0);
+      if (!log.duration_minutes || Number(log.duration_minutes) === 0) {
+        stats.total_study_minutes += 10;
+      }
+    }
+
+    if (log.category === 'mental') {
+      stats.total_mental_count += 1;
+    }
+
+    if (log.category === 'daily') {
+      stats.total_daily_count += 1;
+    }
+  });
+
+  const abstainGoalIds = new Set(
+    (actionGoals || [])
+      .filter((goal) => goal?.category === 'mental' && goal?.action_type === 'abstain')
+      .map((goal) => goal.id)
+  );
+
+  stats.total_no_smoking_days = (logs || []).filter(
+    (log) => log?.completed && abstainGoalIds.has(log?.action_goal_id)
+  ).length;
+
+  return stats;
+}
+
+function getUnlockedTitles(stats, ownedTitleIds = []) {
+  const ownedSet = new Set(ownedTitleIds);
+  return TITLES.filter(
+    (title) => ownedSet.has(title.id) || Number(stats?.[title.metric] || 0) >= title.value
+  );
+}
+
+function getNewlyUnlockedTitle(stats, ownedTitleIds = []) {
+  const ownedSet = new Set(ownedTitleIds);
+  return TITLES.find(
+    (title) => !ownedSet.has(title.id) && Number(stats?.[title.metric] || 0) >= title.value
+  );
+}
+
+function validateGoalActionLogChain(goals = [], actionGoals = [], logs = []) {
+  const goalIds = new Set((goals || []).map((goal) => goal?.id).filter(Boolean));
+  const actionGoalIds = new Set((actionGoals || []).map((goal) => goal?.id).filter(Boolean));
+
+  const actionGoalsWithoutGoalId = (actionGoals || []).filter((goal) => !goal?.goal_id).length;
+  const logsWithoutGoalId = (logs || []).filter((log) => !log?.goal_id).length;
+  const logsWithUnknownActionGoal = (logs || []).filter(
+    (log) => log?.action_goal_id && !actionGoalIds.has(log.action_goal_id)
+  ).length;
+  const actionGoalsWithUnknownGoal = (actionGoals || []).filter(
+    (goal) => goal?.goal_id && !goalIds.has(goal.goal_id)
+  ).length;
+
+  return {
+    actionGoalsWithoutGoalId,
+    logsWithoutGoalId,
+    logsWithUnknownActionGoal,
+    actionGoalsWithUnknownGoal,
+  };
 }
 
 function clamp(value, min, max) {
@@ -320,108 +591,192 @@ function getVillageCharacters(source) {
     id: character?.id || `npc_${index + 1}`,
     name: character?.name || `주민 ${index + 1}`,
     type: character?.type || 'fox',
-    x: Number(character?.x ?? randomBetween(260, 1080)),
-    y: Number(character?.y ?? randomBetween(210, 620)),
+    x: Number(character?.x ?? randomBetween(280, 1080)),
+    y: Number(character?.y ?? randomBetween(230, 620)),
     size: Number(character?.size ?? 42),
   }));
 }
 
 function buildWorldBuildings({ activeCategory, userLevels, totalLevel, actionCount }) {
-  const level = userLevels?.[`${activeCategory}_level`] || 1;
+  const categoryLevel = Number(userLevels?.[`${activeCategory}_level`] || 1);
 
-  const baseBuildings = [
+  const commonBuildings = [
     {
-      id: 'town_hall',
+      id: 'center_1',
+      x: 610,
+      y: 315,
+      w: 168,
+      h: 120,
       label: totalLevel >= 12 ? '중앙회관 Lv.3' : totalLevel >= 6 ? '중앙회관 Lv.2' : '중앙회관 Lv.1',
-      x: 590,
-      y: 290,
-      w: 150,
-      h: 110,
       emoji: '🏠',
     },
     {
-      id: 'shop',
-      label: actionCount >= 20 ? '상점 Lv.2' : '상점 Lv.1',
-      x: 260,
-      y: 350,
-      w: 118,
-      h: 92,
+      id: 'shop_1',
+      x: 315,
+      y: 360,
+      w: 128,
+      h: 94,
+      label: actionCount >= 40 ? '상점 Lv.2' : '상점 Lv.1',
       emoji: '🛍️',
     },
     {
-      id: 'garden',
-      label: level >= 4 ? '정원 Lv.2' : '정원 Lv.1',
-      x: 870,
-      y: 270,
+      id: 'garden_1',
+      x: 920,
+      y: 285,
       w: 130,
       h: 96,
+      label: categoryLevel >= 4 ? '정원 Lv.2' : '정원 Lv.1',
       emoji: '🌳',
     },
   ];
 
   const categoryBuildingMap = {
     exercise: {
-      label: level >= 7 ? '운동장 Lv.3' : level >= 3 ? '운동장 Lv.2' : '운동장 Lv.1',
+      label: categoryLevel >= 7 ? '운동장 Lv.3' : categoryLevel >= 3 ? '운동장 Lv.2' : '운동장 Lv.1',
       emoji: '🏋️',
-      x: 210,
-      y: 520,
+      x: 260,
+      y: 560,
+      w: 142,
+      h: 102,
     },
     study: {
-      label: level >= 7 ? '도서관 Lv.3' : level >= 3 ? '도서관 Lv.2' : '도서관 Lv.1',
+      label: categoryLevel >= 7 ? '도서관 Lv.3' : categoryLevel >= 3 ? '도서관 Lv.2' : '도서관 Lv.1',
       emoji: '📚',
-      x: 430,
-      y: 540,
+      x: 470,
+      y: 565,
+      w: 142,
+      h: 102,
     },
     mental: {
-      label: level >= 7 ? '명상숲 Lv.3' : level >= 3 ? '명상숲 Lv.2' : '명상숲 Lv.1',
+      label: categoryLevel >= 7 ? '명상숲 Lv.3' : categoryLevel >= 3 ? '명상숲 Lv.2' : '명상숲 Lv.1',
       emoji: '🧘',
       x: 700,
-      y: 540,
+      y: 560,
+      w: 142,
+      h: 102,
     },
     daily: {
-      label: level >= 7 ? '생활공방 Lv.3' : level >= 3 ? '생활공방 Lv.2' : '생활공방 Lv.1',
+      label: categoryLevel >= 7 ? '생활공방 Lv.3' : categoryLevel >= 3 ? '생활공방 Lv.2' : '생활공방 Lv.1',
       emoji: '🧺',
       x: 930,
-      y: 520,
+      y: 560,
+      w: 142,
+      h: 102,
     },
   };
 
-  return [
-    ...baseBuildings,
-    {
-      id: 'category_building',
-      ...categoryBuildingMap[activeCategory],
-      w: 136,
-      h: 100,
-    },
-  ];
+  return [...commonBuildings, { id: 'category_building', ...categoryBuildingMap[activeCategory] }];
 }
 
-function HeaderBar({ nickname, totalLevel, points, isZoomedOut, onToggleZoom }) {
+function Section({ title, count, emptyText, children }) {
+  const hasItems = React.Children.count(children) > 0;
+
   return (
-    <div className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-      <div className="px-4 pt-3 pb-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <div className="text-[12px] text-muted-foreground">루트 마을</div>
-            <div className="truncate text-[17px] font-extrabold">
-              {nickname} · Lv.{totalLevel}
-            </div>
+    <section>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-[15px] font-extrabold" style={{ color: '#4a2c08' }}>
+          {title}
+        </h2>
+        <div
+          className="rounded-full px-2 py-1 text-[11px] font-bold"
+          style={{
+            background: 'rgba(196,154,74,0.14)',
+            color: '#8a5a17',
+            border: '1px solid rgba(196,154,74,0.18)',
+          }}
+        >
+          {count}개
+        </div>
+      </div>
+
+      {hasItems ? (
+        <div className="space-y-3">{children}</div>
+      ) : (
+        <div
+          className="rounded-2xl px-4 py-4 text-sm"
+          style={{
+            background: '#fffaf0',
+            border: '1px solid rgba(160,120,64,0.16)',
+            color: '#8f6a33',
+          }}
+        >
+          {emptyText}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ExpPopup({ exp }) {
+  return (
+    <div
+      className="animate-[fadeInOut_1.4s_ease-in-out_forwards] fixed left-1/2 top-24 z-[80] -translate-x-1/2 rounded-full px-4 py-2 text-sm font-extrabold shadow-lg"
+      style={{
+        background: 'linear-gradient(180deg, #f6d98c 0%, #d9a83e 100%)',
+        color: '#4a2c08',
+        border: '2px solid #8a6520',
+      }}
+    >
+      +{exp} EXP
+    </div>
+  );
+}
+
+function TitleUnlockModal({ title, onClose, onEquip }) {
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 px-5">
+      <div
+        className="w-full max-w-sm rounded-3xl p-5 shadow-2xl"
+        style={{
+          background: 'linear-gradient(180deg, #fff6df 0%, #f5e3b8 100%)',
+          border: '2px solid #c89b45',
+        }}
+      >
+        <div className="text-center">
+          <div className="mb-2 text-sm font-bold" style={{ color: '#8a5a17' }}>
+            ✨ 새로운 칭호 획득
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-bold">
-              <Coins className="w-4 h-4" />
-              {points}
-            </div>
+          <div
+            className="mb-3 inline-flex rounded-full px-4 py-2 text-lg font-extrabold"
+            style={{
+              background: 'rgba(255,255,255,0.55)',
+              color: '#4a2c08',
+              border: '1px solid rgba(138,90,23,0.15)',
+            }}
+          >
+            {title.name}
+          </div>
+
+          <p className="mb-5 text-sm" style={{ color: '#7a5020' }}>
+            {title.description}
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-11 flex-1 rounded-2xl text-sm font-bold"
+              style={{
+                background: '#fff',
+                border: '1px solid #d8c08e',
+                color: '#7a5020',
+              }}
+            >
+              닫기
+            </button>
 
             <button
               type="button"
-              onClick={onToggleZoom}
-              className="flex items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-bold transition active:scale-[0.97]"
+              onClick={onEquip}
+              className="h-11 flex-1 rounded-2xl text-sm font-bold"
+              style={{
+                background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
+                color: '#fff8e8',
+                border: '2px solid #6b4e15',
+              }}
             >
-              {isZoomedOut ? <Shrink className="w-4 h-4" /> : <Expand className="w-4 h-4" />}
-              {isZoomedOut ? '기본보기' : '전체보기'}
+              대표 칭호 장착
             </button>
           </div>
         </div>
@@ -430,310 +785,305 @@ function HeaderBar({ nickname, totalLevel, points, isZoomedOut, onToggleZoom }) 
   );
 }
 
-function CategoryTabs({ activeCategory, onChange, userLevels }) {
+function AddActionGoalButton({ onClick, categoryLabel }) {
   return (
-    <div className="sticky top-[65px] z-30 border-b bg-background/95 backdrop-blur">
-      <div className="flex gap-2 overflow-x-auto px-4 py-2">
-        {CATEGORY_KEYS.map((category) => {
-          const isActive = category === activeCategory;
-          const level = userLevels?.[`${category}_level`] || 1;
-          const xp = userLevels?.[`${category}_xp`] || 0;
-          const currentXp = xp % 30;
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full rounded-2xl px-4 py-3 text-left"
+      style={{
+        background: 'linear-gradient(180deg, #fff7e8 0%, #f6e4bd 100%)',
+        border: '1px solid rgba(160,120,64,0.22)',
+        boxShadow: '0 8px 18px rgba(80,50,10,0.08)',
+      }}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
+            + 행동목표 추가
+          </div>
+          <div className="mt-1 text-[12px]" style={{ color: '#8a5a17' }}>
+            {categoryLabel} 루트에 새로운 행동목표를 추가해요
+          </div>
+        </div>
 
-          return (
-            <button
-              key={category}
-              type="button"
-              onClick={() => onChange(category)}
-              className={`min-w-[88px] rounded-2xl border px-3 py-2 text-left transition ${
-                isActive ? 'shadow-sm' : ''
-              }`}
-              style={{
-                background: isActive ? CATEGORY_STYLES[category].bg : '#ffffff',
-                borderColor: isActive ? CATEGORY_STYLES[category].border : '#e5e7eb',
-              }}
-            >
-              <div
-                className="text-[12px] font-extrabold"
-                style={{ color: isActive ? CATEGORY_STYLES[category].chip : '#374151' }}
-              >
-                {CATEGORY_LABELS[category]}
-              </div>
-              <div className="mt-1 text-[10px] text-muted-foreground">Lv.{level}</div>
-              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-black/8">
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${(currentXp / 30) * 100}%`,
-                    background: CATEGORY_STYLES[category].chip,
-                  }}
-                />
-              </div>
-            </button>
-          );
-        })}
+        <div
+          className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-extrabold"
+          style={{
+            background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
+            color: '#fff8e8',
+            border: '2px solid #6b4e15',
+            flexShrink: 0,
+          }}
+        >
+          +
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function VillageOverlayBar({ nickname, level, points, gems, isOverview, onToggleOverview }) {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3">
+      <div className="flex items-start justify-between gap-2">
+        <div
+          className="pointer-events-auto rounded-2xl px-3 py-2"
+          style={{
+            background: 'rgba(255,248,232,0.82)',
+            border: '1px solid rgba(107,78,21,0.14)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+          }}
+        >
+          <div className="text-[11px] font-bold" style={{ color: '#8a5a17' }}>
+            {nickname}
+          </div>
+          <div className="text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
+            전체 Lv.{level}
+          </div>
+        </div>
+
+        <div className="pointer-events-auto flex items-center gap-2">
+          <div
+            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+            style={{
+              background: 'rgba(255,248,232,0.9)',
+              color: '#4a2c08',
+              border: '1px solid rgba(107,78,21,0.14)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+            }}
+          >
+            포인트 {points}
+          </div>
+
+          <button
+            type="button"
+            onClick={onToggleOverview}
+            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+            style={{
+              background: isOverview
+                ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
+                : 'rgba(255,248,232,0.9)',
+              color: isOverview ? '#fff8e8' : '#4a2c08',
+              border: isOverview
+                ? '2px solid #6b4e15'
+                : '1px solid rgba(107,78,21,0.14)',
+              boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+            }}
+          >
+            {isOverview ? '기본보기' : '전체보기'}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-function WorldLayer({
+function VillageWorldLayer({
   activeCategory,
-  userLevels,
+  isOverview,
+  nickname,
   totalLevel,
+  points,
+  gems,
+  userLevels,
   actionCount,
   characters,
   setCharacters,
-  isZoomedOut,
+  onToggleOverview,
 }) {
   const viewportRef = useRef(null);
-  const [worldOffset, setWorldOffset] = useState({ x: -260, y: -160 });
-  const dragStateRef = useRef(null);
+  const dragRef = useRef(null);
+  const [offset, setOffset] = useState({ x: -250, y: -190 });
 
-  const scale = isZoomedOut ? 0.56 : 1;
-  const worldWidth = 1300;
-  const worldHeight = 860;
-  const buildings = useMemo(
-    () => buildWorldBuildings({ activeCategory, userLevels, totalLevel, actionCount }),
-    [activeCategory, userLevels, totalLevel, actionCount]
-  );
+  const theme = CATEGORY_WORLD_THEME[activeCategory];
+  const worldWidth = 1400;
+  const worldHeight = 900;
+  const scale = isOverview ? 0.62 : 1;
 
-  const onPointerDown = (e) => {
-    dragStateRef.current = {
+  const buildings = useMemo(() => {
+    return buildWorldBuildings({
+      activeCategory,
+      userLevels,
+      totalLevel,
+      actionCount,
+    });
+  }, [activeCategory, userLevels, totalLevel, actionCount]);
+
+  const handlePointerDown = (e) => {
+    dragRef.current = {
       startX: e.clientX,
       startY: e.clientY,
-      originX: worldOffset.x,
-      originY: worldOffset.y,
+      originX: offset.x,
+      originY: offset.y,
     };
   };
 
-  const onPointerMove = useCallback((e) => {
-    if (!dragStateRef.current) return;
-    const dx = e.clientX - dragStateRef.current.startX;
-    const dy = e.clientY - dragStateRef.current.startY;
-    setWorldOffset({
-      x: dragStateRef.current.originX + dx,
-      y: dragStateRef.current.originY + dy,
+  const handlePointerMove = useCallback((e) => {
+    if (!dragRef.current) return;
+
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+
+    setOffset({
+      x: dragRef.current.originX + dx,
+      y: dragRef.current.originY + dy,
     });
   }, []);
 
-  const onPointerUp = useCallback(() => {
-    dragStateRef.current = null;
+  const handlePointerUp = useCallback(() => {
+    dragRef.current = null;
   }, []);
 
   useEffect(() => {
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+
     return () => {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
     };
-  }, [onPointerMove, onPointerUp]);
+  }, [handlePointerMove, handlePointerUp]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const timer = setInterval(() => {
       setCharacters((prev) =>
         prev.map((npc) => {
           const nextX = clamp(npc.x + randomBetween(-90, 90), 120, worldWidth - 120);
-          const nextY = clamp(npc.y + randomBetween(-70, 70), 160, worldHeight - 120);
+          const nextY = clamp(npc.y + randomBetween(-70, 70), 140, worldHeight - 120);
           return { ...npc, x: nextX, y: nextY };
         })
       );
     }, 2600);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, [setCharacters]);
 
   return (
-    <div className="px-4 pt-3">
-      <div
-        className="overflow-hidden rounded-[28px] border shadow-sm"
-        style={{
-          background: CATEGORY_STYLES[activeCategory].bg,
-          borderColor: CATEGORY_STYLES[activeCategory].border,
-        }}
-      >
-        <div className="flex items-center justify-between border-b px-4 py-3">
-          <div>
-            <div className="text-[15px] font-extrabold">
-              {CATEGORY_LABELS[activeCategory]} 마을
-            </div>
-            <div className="text-[12px] text-muted-foreground">
-              드래그로 이동 · {isZoomedOut ? '줌아웃 상태' : '기본 확대 상태'}
-            </div>
-          </div>
-
-          <div
-            className="rounded-full px-3 py-1 text-[11px] font-bold"
-            style={{
-              background: '#ffffffaa',
-              color: CATEGORY_STYLES[activeCategory].chip,
-              border: `1px solid ${CATEGORY_STYLES[activeCategory].border}`,
-            }}
-          >
-            건물 {buildings.length}개 · 주민 {characters.length}명
-          </div>
-        </div>
-
+    <div
+      className="sticky top-0 z-40 overflow-hidden"
+      style={{
+        background: 'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 100%)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+      }}
+    >
+      <div className="px-4 pt-3 pb-2">
         <div
-          ref={viewportRef}
-          className="relative h-[340px] touch-none overflow-hidden"
-          onPointerDown={onPointerDown}
+          className="relative overflow-hidden rounded-[28px]"
           style={{
-            background:
-              'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.08) 100%)',
+            height: 300,
+            background: theme.sky,
+            border: `1px solid ${theme.border}`,
+            boxShadow: '0 12px 24px rgba(80,50,10,0.08)',
           }}
         >
+          <VillageOverlayBar
+            nickname={nickname}
+            level={totalLevel}
+            points={points}
+            gems={gems}
+            isOverview={isOverview}
+            onToggleOverview={onToggleOverview}
+          />
+
           <div
-            className="absolute left-0 top-0"
-            style={{
-              width: worldWidth,
-              height: worldHeight,
-              transform: `translate(${worldOffset.x}px, ${worldOffset.y}px) scale(${scale})`,
-              transformOrigin: 'top left',
-              transition: dragStateRef.current ? 'none' : 'transform 300ms ease',
-            }}
+            ref={viewportRef}
+            className="absolute inset-0 touch-none overflow-hidden"
+            onPointerDown={handlePointerDown}
           >
             <div
-              className="absolute inset-0 rounded-[36px]"
+              className="absolute left-0 top-0"
               style={{
-                background:
-                  'radial-gradient(circle at 50% 40%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.2) 38%, rgba(90,120,60,0.05) 100%)',
+                width: worldWidth,
+                height: worldHeight,
+                transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+                transformOrigin: 'top left',
+                transition: dragRef.current ? 'none' : 'transform 300ms ease',
               }}
-            />
-
-            <div
-              className="absolute left-[80px] top-[120px] h-[590px] w-[1140px] rounded-[999px]"
-              style={{
-                background:
-                  'linear-gradient(180deg, rgba(111,183,104,0.24) 0%, rgba(98,170,89,0.32) 100%)',
-                border: '1px solid rgba(83,140,74,0.18)',
-              }}
-            />
-
-            <div
-              className="absolute left-[170px] top-[220px] h-[340px] w-[960px] rounded-[999px]"
-              style={{
-                background:
-                  'radial-gradient(circle at 50% 50%, #d8be85 0%, #cfb376 52%, #c6a767 100%)',
-                boxShadow: 'inset 0 10px 30px rgba(255,255,255,0.18)',
-              }}
-            />
-
-            <div
-              className="absolute left-[230px] top-[280px] h-[220px] w-[840px] rounded-[999px]"
-              style={{
-                background:
-                  'radial-gradient(circle at 50% 50%, #7fc36a 0%, #6db65c 65%, #62aa52 100%)',
-                opacity: 0.9,
-              }}
-            />
-
-            {buildings.map((building) => (
+            >
               <div
-                key={building.id}
-                className="absolute select-none rounded-[24px] border bg-white/75 backdrop-blur-sm"
+                className="absolute inset-0"
                 style={{
-                  left: building.x,
-                  top: building.y,
-                  width: building.w,
-                  height: building.h,
-                  borderColor: CATEGORY_STYLES[activeCategory].border,
-                  boxShadow: '0 10px 20px rgba(0,0,0,0.08)',
+                  background:
+                    'radial-gradient(circle at 50% 8%, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.18) 32%, rgba(255,255,255,0) 56%)',
                 }}
-              >
-                <div className="flex h-full flex-col items-center justify-center">
-                  <div className="text-[28px]">{building.emoji}</div>
-                  <div className="mt-1 text-[12px] font-extrabold text-slate-700">
-                    {building.label}
+              />
+
+              <div
+                className="absolute left-[70px] top-[110px] h-[660px] w-[1220px] rounded-[999px]"
+                style={{
+                  background: theme.field,
+                  opacity: 0.95,
+                  border: '1px solid rgba(255,255,255,0.25)',
+                }}
+              />
+
+              <div
+                className="absolute left-[180px] top-[240px] h-[340px] w-[970px] rounded-[999px]"
+                style={{
+                  background: theme.path,
+                  boxShadow: 'inset 0 8px 18px rgba(255,255,255,0.18)',
+                  opacity: 0.92,
+                }}
+              />
+
+              <div
+                className="absolute left-[255px] top-[305px] h-[210px] w-[820px] rounded-[999px]"
+                style={{
+                  background: 'rgba(255,255,255,0.10)',
+                }}
+              />
+
+              {buildings.map((building) => (
+                <div
+                  key={building.id}
+                  className="absolute rounded-[24px] border bg-white/75 backdrop-blur-sm"
+                  style={{
+                    left: building.x,
+                    top: building.y,
+                    width: building.w,
+                    height: building.h,
+                    borderColor: theme.border,
+                    boxShadow: '0 10px 20px rgba(0,0,0,0.08)',
+                  }}
+                >
+                  <div className="flex h-full flex-col items-center justify-center">
+                    <div className="text-[28px]">{building.emoji}</div>
+                    <div className="mt-1 text-[12px] font-extrabold text-slate-700">
+                      {building.label}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {characters.map((npc) => (
-              <div
-                key={npc.id}
-                className="absolute select-none"
-                style={{
-                  left: npc.x,
-                  top: npc.y,
-                  width: npc.size,
-                  height: npc.size,
-                  transform: 'translate(-50%, -50%)',
-                  transition: 'left 2200ms ease-in-out, top 2200ms ease-in-out',
-                }}
-              >
-                <div className="relative flex h-full w-full items-center justify-center rounded-full bg-white/85 shadow">
-                  <span style={{ fontSize: npc.size * 0.55 }}>{getCharacterEmoji(npc.type)}</span>
-                </div>
-
+              {characters.map((npc) => (
                 <div
-                  className="absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold text-white"
+                  key={npc.id}
+                  className="absolute"
+                  style={{
+                    left: npc.x,
+                    top: npc.y,
+                    width: npc.size,
+                    height: npc.size,
+                    transform: 'translate(-50%, -50%)',
+                    transition: 'left 2200ms ease-in-out, top 2200ms ease-in-out',
+                  }}
                 >
-                  {npc.name}
+                  <div className="relative flex h-full w-full items-center justify-center rounded-full bg-white/85 shadow">
+                    <span style={{ fontSize: npc.size * 0.55 }}>{getCharacterEmoji(npc.type)}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
     </div>
-  );
-}
-
-function ActiveGoalCard({ goal, activeCategory }) {
-  if (!goal) return null;
-
-  const endDate = getGoalEndDate(goal);
-  const dday = goal?.has_d_day && goal?.d_day ? goal.d_day : null;
-
-  return (
-    <div className="rounded-[24px] border bg-white px-4 py-4 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div
-            className="inline-flex rounded-full px-2.5 py-1 text-[11px] font-extrabold"
-            style={{
-              background: CATEGORY_STYLES[activeCategory].bg,
-              color: CATEGORY_STYLES[activeCategory].chip,
-              border: `1px solid ${CATEGORY_STYLES[activeCategory].border}`,
-            }}
-          >
-            결과목표
-          </div>
-          <div className="mt-2 text-[17px] font-extrabold leading-snug">{goal.title}</div>
-          <div className="mt-2 text-[12px] text-muted-foreground">
-            {dday ? `D-DAY ${dday}` : ''}
-            {dday && endDate ? ' · ' : ''}
-            {endDate ? `종료 ${normalizeDateOnly(endDate)}` : ''}
-          </div>
-        </div>
-
-        <div className="shrink-0 rounded-full border px-3 py-1 text-[11px] font-bold">
-          {CATEGORY_LABELS[activeCategory]}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Section({ title, count, emptyText, children }) {
-  return (
-    <section className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="text-[16px] font-extrabold">{title}</div>
-        <div className="rounded-full border px-2.5 py-1 text-[11px] font-bold">{count}</div>
-      </div>
-
-      {count === 0 ? (
-        <div className="rounded-2xl border bg-white px-4 py-4 text-sm text-muted-foreground">
-          {emptyText}
-        </div>
-      ) : (
-        <div className="space-y-2">{children}</div>
-      )}
-    </section>
   );
 }
 
@@ -742,8 +1092,42 @@ export default function Home() {
   const queryClient = useQueryClient();
 
   const [guestVersion, setGuestVersion] = useState(0);
-  const [activeCategory, setActiveCategory] = useState('exercise');
-  const [isZoomedOut, setIsZoomedOut] = useState(false);
+  const [isOverview, setIsOverview] = useState(false);
+
+  const [activeCategory, setActiveCategory] = useState(() => {
+    try {
+      const raw = guestDataPersistence.getData();
+      const cat =
+        raw?.activeCategory ||
+        raw?.guest_active_category ||
+        raw?.category ||
+        raw?.goals?.[0]?.category;
+      return normalizeCategoryValue(cat, 'exercise');
+    } catch {
+      return 'exercise';
+    }
+  });
+
+  const [expPopup, setExpPopup] = useState(null);
+  const [newTitle, setNewTitle] = useState(null);
+  const hasCategoryInteractionRef = useRef(false);
+  const chainRepairOnceRef = useRef(false);
+  const expPopupTimerRef = useRef(null);
+
+  const [characters, setCharacters] = useState(() => getVillageCharacters({}));
+
+  useEffect(() => {
+    const handleUpdate = () => setGuestVersion((prev) => prev + 1);
+    window.addEventListener('root-home-data-updated', handleUpdate);
+    return () => window.removeEventListener('root-home-data-updated', handleUpdate);
+  }, []);
+
+  useEffect(() => {
+    if (!expPopup) return undefined;
+    clearTimeout(expPopupTimerRef.current);
+    expPopupTimerRef.current = setTimeout(() => setExpPopup(null), 1400);
+    return () => clearTimeout(expPopupTimerRef.current);
+  }, [expPopup]);
 
   const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: ['me'],
@@ -751,193 +1135,375 @@ export default function Home() {
     staleTime: 1000 * 30,
   });
 
-  const isGuest = !isUserLoading && !user;
-
-  useEffect(() => {
-    const handle = () => setGuestVersion((v) => v + 1);
-    window.addEventListener('root-home-data-updated', handle);
-    return () => window.removeEventListener('root-home-data-updated', handle);
-  }, []);
+  const isGuest = !user;
 
   const { data: guestData = {} } = useQuery({
     queryKey: ['guest-home-data', guestVersion],
     queryFn: () => readGuestData(),
     staleTime: 0,
-    enabled: isGuest,
   });
 
   const { data: goals = [] } = useQuery({
     queryKey: ['goals', isGuest, guestVersion],
     enabled: !isUserLoading,
-    staleTime: 1000 * 60,
     queryFn: async () => {
       if (isGuest) {
-        return normalizeGuestGoals(readGuestData());
+        const rawGoals =
+          Array.isArray(guestData?.goals) && guestData.goals.length > 0
+            ? guestData.goals
+            : guestData?.goalData
+              ? [guestData.goalData]
+              : [];
+        return normalizeGuestGoals(rawGoals, guestData?.category || 'exercise');
       }
-
-      const resultGoals = await base44.entities.Goal.filter({
-        status: 'active',
-        goal_type: 'result',
-      });
-
-      return Array.isArray(resultGoals) ? resultGoals : [];
+      return base44.entities.Goal.list('-created_date', 100);
     },
   });
 
   const { data: actionGoals = [] } = useQuery({
     queryKey: ['actionGoals', isGuest, guestVersion],
     enabled: !isUserLoading,
-    staleTime: 1000 * 30,
     queryFn: async () => {
       if (isGuest) {
-        return normalizeGuestActionGoals(readGuestData());
-      }
+        const normalizedGoals = normalizeGuestGoals(
+          Array.isArray(guestData?.goals) && guestData.goals.length > 0
+            ? guestData.goals
+            : guestData?.goalData
+              ? [guestData.goalData]
+              : [],
+          guestData?.category || 'exercise'
+        );
 
-      const result = await base44.entities.ActionGoal.filter({ status: 'active' });
-      return Array.isArray(result) ? result : [];
+        const rawActionGoals =
+          Array.isArray(guestData?.actionGoals) && guestData.actionGoals.length > 0
+            ? guestData.actionGoals
+            : guestData?.actionGoalData
+              ? [guestData.actionGoalData]
+              : [];
+
+        return normalizeGuestActionGoals(
+          rawActionGoals,
+          normalizedGoals,
+          guestData?.category || normalizedGoals[0]?.category || 'exercise'
+        );
+      }
+      return base44.entities.ActionGoal.list('-created_date', 200);
     },
   });
 
   const { data: allLogs = [] } = useQuery({
     queryKey: ['allLogs', isGuest, guestVersion],
     enabled: !isUserLoading,
-    staleTime: 1000 * 15,
     queryFn: async () => {
-      if (isGuest) {
-        const data = readGuestData();
-        return Array.isArray(data?.actionLogs) ? data.actionLogs : [];
-      }
-
-      const result = await base44.entities.ActionLog.list('-created_date', 200);
-      return Array.isArray(result) ? result : [];
+      if (isGuest) return guestData?.actionLogs || [];
+      return base44.entities.ActionLog.list('-date', 500);
     },
   });
-
-  useEffect(() => {
-    if (isUserLoading) return;
-
-    if (user) {
-      if (!user?.onboarding_complete) {
-        navigate('/Onboarding', { replace: true });
-        return;
-      }
-
-      if (CATEGORY_KEYS.includes(user?.active_category)) {
-        setActiveCategory(user.active_category);
-      }
-      return;
-    }
-
-    const data = readGuestData();
-    const done = data?.onboardingComplete === true;
-
-    if (!done) {
-      navigate('/Onboarding', { replace: true });
-      return;
-    }
-
-    if (CATEGORY_KEYS.includes(data?.activeCategory)) {
-      setActiveCategory(data.activeCategory);
-    }
-  }, [isUserLoading, user, navigate]);
 
   const connectedActionGoals = useMemo(() => {
     return connectActionGoalsToGoals(goals, actionGoals);
   }, [goals, actionGoals]);
 
-  const guestLevels = useMemo(() => buildGuestLevelStats(allLogs), [allLogs]);
+  useEffect(() => {
+    if (!Array.isArray(actionGoals) || actionGoals.length === 0) return;
+    if (chainRepairOnceRef.current) return;
+
+    const needsRepair = actionGoals.some((goal) => {
+      if (!goal?.id) return false;
+      const resolved = resolveGoalIdForActionGoal(goal, goals, activeCategory);
+      return !goal?.goal_id || goal.goal_id !== resolved;
+    });
+
+    if (!needsRepair) return;
+
+    chainRepairOnceRef.current = true;
+
+    if (isGuest) {
+      writeGuestDataPatch((prev) => {
+        const prevActionGoals = Array.isArray(prev?.actionGoals) ? prev.actionGoals : [];
+        const repaired = prevActionGoals.map((goal) => ({
+          ...goal,
+          goal_id: resolveGoalIdForActionGoal(
+            goal,
+            goals,
+            prev?.category || activeCategory || 'exercise'
+          ),
+        }));
+        return {
+          ...prev,
+          actionGoals: repaired,
+          actionGoalData: repaired[0] || prev?.actionGoalData || null,
+        };
+      });
+      window.dispatchEvent(new Event('root-home-data-updated'));
+      return;
+    }
+
+    const updates = actionGoals
+      .map((goal) => ({
+        id: goal?.id,
+        currentGoalId: goal?.goal_id || null,
+        nextGoalId: resolveGoalIdForActionGoal(
+          goal,
+          goals,
+          user?.active_category || activeCategory || 'exercise'
+        ),
+      }))
+      .filter((item) => item.id && item.nextGoalId && item.currentGoalId !== item.nextGoalId);
+
+    if (updates.length === 0) return;
+
+    Promise.all(
+      updates.map((item) =>
+        base44.entities.ActionGoal.update(item.id, {
+          goal_id: item.nextGoalId,
+        })
+      )
+    )
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
+      })
+      .catch((error) => {
+        console.error('Failed to repair actionGoal.goal_id:', error);
+      });
+  }, [actionGoals, goals, isGuest, activeCategory, queryClient, user]);
+
+  useEffect(() => {
+    const report = validateGoalActionLogChain(goals, connectedActionGoals, allLogs);
+    if (
+      report.actionGoalsWithoutGoalId > 0 ||
+      report.logsWithoutGoalId > 0 ||
+      report.logsWithUnknownActionGoal > 0 ||
+      report.actionGoalsWithUnknownGoal > 0
+    ) {
+      console.warn('[Home] goal→actionGoal→log chain issue detected:', report);
+    }
+  }, [goals, connectedActionGoals, allLogs]);
 
   const userLevels = useMemo(() => {
-    if (isGuest) return guestLevels;
+    if (isGuest) return getDefaultUserLevels(guestData?.actionLogs || []);
+    return getDefaultUserLevels(allLogs || []);
+  }, [isGuest, guestData, allLogs]);
 
-    return {
-      exercise_xp: user?.exercise_xp || 0,
-      exercise_level: user?.exercise_level || 1,
-      study_xp: user?.study_xp || 0,
-      study_level: user?.study_level || 1,
-      mental_xp: user?.mental_xp || 0,
-      mental_level: user?.mental_level || 1,
-      daily_xp: user?.daily_xp || 0,
-      daily_level: user?.daily_level || 1,
-    };
-  }, [isGuest, guestLevels, user]);
+  const derivedStats = useMemo(() => {
+    const sourceLogs = isGuest ? guestData?.actionLogs || [] : allLogs || [];
+    return buildDerivedStats(sourceLogs, connectedActionGoals || []);
+  }, [isGuest, guestData, allLogs, connectedActionGoals]);
 
-  const totalLevel = useMemo(() => {
-    return (
-      (userLevels.exercise_level || 1) +
-      (userLevels.study_level || 1) +
-      (userLevels.mental_level || 1) +
-      (userLevels.daily_level || 1)
+  const ownedTitleIds = useMemo(() => {
+    return getOwnedTitleIds({ isGuest, user, guestData });
+  }, [isGuest, user, guestData, guestVersion]);
+
+  const unlockedTitles = useMemo(() => {
+    return getUnlockedTitles(derivedStats, ownedTitleIds);
+  }, [derivedStats, ownedTitleIds]);
+
+  const equippedTitle = useMemo(() => {
+    const equippedId = resolveEquippedTitleId({ isGuest, user, guestData, ownedTitleIds });
+    return unlockedTitles.find((title) => title.id === equippedId) || null;
+  }, [isGuest, user, guestData, unlockedTitles, guestVersion, ownedTitleIds]);
+
+  useEffect(() => {
+    ensureValidEquippedTitle({ isGuest, user, guestData, ownedTitleIds, queryClient })
+      .then((nextGuest) => {
+        if (!isGuest || !nextGuest) return;
+        queryClient.removeQueries({ queryKey: ['guest-home-data'] });
+        queryClient.removeQueries({ queryKey: ['guest-records-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
+        window.dispatchEvent(new Event('root-home-data-updated'));
+        setGuestVersion((v) => v + 1);
+      })
+      .catch((error) => {
+        console.error('ensureValidEquippedTitle error:', error);
+      });
+  }, [isGuest, ownedTitleIds, guestData, queryClient]);
+
+  useEffect(() => {
+    if (isUserLoading) return;
+
+    const current = normalizeCategoryValue(activeCategory, 'exercise');
+
+    if (isGuest) {
+      const guestCategory = normalizeCategoryValue(
+        guestData?.activeCategory ||
+          guestData?.guest_active_category ||
+          guestData?.category ||
+          guestData?.goalData?.category ||
+          guestData?.actionGoalData?.category ||
+          guestData?.goals?.[0]?.category,
+        'exercise'
+      );
+
+      if (!hasCategoryInteractionRef.current || !VALID_CATEGORIES.includes(current)) {
+        setActiveCategory(guestCategory);
+      }
+      return;
+    }
+
+    const userCategory = normalizeCategoryValue(
+      user?.active_category || goals?.[0]?.category,
+      'exercise'
     );
-  }, [userLevels]);
 
-  const nickname = isGuest
-    ? guestData?.nickname || '용사님'
-    : user?.nickname || '용사님';
-
-  const points = isGuest
-    ? Number(guestData?.points || guestData?.village_points || 0)
-    : Number(user?.points || user?.village_points || 0);
-
-  const [characters, setCharacters] = useState(() => getVillageCharacters({}));
+    if (!hasCategoryInteractionRef.current || !VALID_CATEGORIES.includes(current)) {
+      setActiveCategory(userCategory);
+    }
+  }, [isUserLoading, isGuest, guestData, user, goals, activeCategory]);
 
   useEffect(() => {
     const source = isGuest ? guestData : user;
     setCharacters(getVillageCharacters(source || {}));
   }, [isGuest, guestData, user]);
 
-  const activeGoal = useMemo(() => {
-    const filtered = sortByCreatedDateDesc(
-      goals.filter((goal) => goal?.category === activeCategory && goal?.status === 'active')
-    );
-    return filtered[0] || null;
-  }, [goals, activeCategory]);
-
-  const categoryActionGoals = useMemo(() => {
-    const filtered = connectedActionGoals.filter((actionGoal) => {
-      if (actionGoal?.category !== activeCategory) return false;
-      if (actionGoal?.status !== 'active') return false;
-      if (activeGoal?.id) return actionGoal?.goal_id === activeGoal.id;
-      return true;
-    });
-
-    return sortByCreatedDateDesc(filtered);
-  }, [connectedActionGoals, activeCategory, activeGoal]);
-
-  const grouped = useMemo(() => {
-    return groupActionGoals(categoryActionGoals, getTodayString());
-  }, [categoryActionGoals]);
-
-  const handleCategoryChange = async (nextCategory) => {
-    setActiveCategory(nextCategory);
+  const handleCategoryChange = async (category) => {
+    const normalizedCategory = normalizeCategoryValue(category, 'exercise');
+    hasCategoryInteractionRef.current = true;
+    setActiveCategory(normalizedCategory);
 
     if (isGuest) {
-      saveGuestKey('activeCategory', nextCategory);
+      writeGuestDataPatch((prev) => ({
+        ...prev,
+        category: normalizedCategory,
+        activeCategory: normalizedCategory,
+        guest_active_category: normalizedCategory,
+      }));
       window.dispatchEvent(new Event('root-home-data-updated'));
       return;
     }
 
-    await base44.auth.updateMe({ active_category: nextCategory }).catch(() => {});
+    try {
+      await base44.auth.updateMe({ active_category: normalizedCategory });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    } catch (error) {
+      console.error(error);
+    }
   };
+
+  const activeGoals = useMemo(() => {
+    const sourceGoals = goals || [];
+
+    return sourceGoals.filter((goal) => {
+      if (!goal) return false;
+      const goalCategory = normalizeCategoryValue(goal.category, '');
+      if (goalCategory !== activeCategory) return false;
+      if (goal.status && goal.status !== 'active') return false;
+      return true;
+    });
+  }, [goals, activeCategory]);
+
+  const activeGoal = activeGoals[0] || null;
+
+  const activeActionGoals = useMemo(() => {
+    const goalIds = new Set(activeGoals.map((goal) => goal.id));
+
+    return (connectedActionGoals || []).filter((actionGoal) => {
+      if (!actionGoal) return false;
+      const actionCategory = normalizeCategoryValue(actionGoal.category, '');
+      if (actionCategory !== activeCategory) return false;
+      if (
+        actionGoal.status &&
+        actionGoal.status !== 'active' &&
+        actionGoal.status !== 'completed'
+      ) {
+        return false;
+      }
+
+      if (!actionGoal.goal_id) return false;
+      if (goalIds.size === 0) return false;
+
+      return goalIds.has(actionGoal.goal_id);
+    });
+  }, [connectedActionGoals, activeCategory, activeGoals]);
+
+  const goalLogs = useMemo(() => {
+    if (!activeGoal) return [];
+    return (allLogs || []).filter((log) => log?.goal_id === activeGoal.id);
+  }, [allLogs, activeGoal]);
+
+  const today = getTodayString();
+
+  const grouped = useMemo(() => {
+    return groupActionGoals(activeActionGoals, today);
+  }, [activeActionGoals, today]);
+
+  const nickname = isGuest ? guestData?.nickname || '용사' : user?.nickname || '용사';
 
   const handleCreateGoal = () => {
     const route = CATEGORY_ROUTE_MAP[activeCategory] || '/CreateGoalExercise';
-    if (activeGoal?.id) {
-      navigate(`${route}?goalId=${activeGoal.id}`);
-      return;
-    }
     navigate(route);
+  };
+
+  const persistNewTitle = async (titleId) => {
+    if (!titleId) return null;
+
+    if (isGuest) {
+      try {
+        await addOwnedTitle({ titleId, isGuest, user, queryClient });
+
+        queryClient.removeQueries({ queryKey: ['guest-home-data'] });
+        queryClient.removeQueries({ queryKey: ['guest-records-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
+
+        window.dispatchEvent(new Event('root-home-data-updated'));
+        setGuestVersion((v) => v + 1);
+      } catch (error) {
+        console.error('persistNewTitle guest error:', error);
+      }
+      return titleId;
+    }
+
+    try {
+      await addOwnedTitle({ titleId, isGuest, user, queryClient });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    } catch (error) {
+      console.error('persistNewTitle user error:', error);
+    }
+    return titleId;
+  };
+
+  const handleEquipTitle = async (titleId) => {
+    try {
+      await setEquippedTitle({ titleId, isGuest, user, queryClient });
+      setNewTitle(null);
+
+      if (isGuest) {
+        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
+        window.dispatchEvent(new Event('root-home-data-updated'));
+        setGuestVersion((v) => v + 1);
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['me'] });
+      }
+
+      toast.success('대표 칭호가 설정되었어요.');
+    } catch (error) {
+      console.error('handleEquipTitle error:', error);
+      toast.error('대표 칭호 설정에 실패했어요.');
+    }
   };
 
   const handleActionComplete = async (actionGoal, minutes = 0, extra = {}) => {
     try {
       const now = new Date().toISOString();
       const todayStr = getTodayString();
+      const earnedExp = calculateExp(actionGoal, minutes);
+
+      const safeGoalId =
+        actionGoal?.goal_id ||
+        resolveGoalIdForActionGoal(actionGoal, goals, activeCategory);
+
+      if (!safeGoalId) {
+        console.error('goal_id를 찾지 못해 로그 생성을 중단했습니다.', actionGoal);
+        toast.error('행동목표와 결과목표 연결이 끊어졌어요. 새로고침 후 다시 시도해 주세요.');
+        return;
+      }
 
       const logPayload = {
-        id: `log_${Date.now()}`,
+        id: `local_log_${Date.now()}`,
         action_goal_id: actionGoal.id,
-        goal_id: actionGoal.goal_id || activeGoal?.id || null,
+        goal_id: safeGoalId,
         category: actionGoal.category,
         title: actionGoal.title || '',
         completed: true,
@@ -954,192 +1520,230 @@ export default function Home() {
       };
 
       if (isGuest) {
-        updateGuestData((prev) => {
-          const prevLogs = Array.isArray(prev?.actionLogs) ? prev.actionLogs : [];
-          const prevActionGoals = Array.isArray(prev?.actionGoals) ? prev.actionGoals : [];
+        guestDataPersistence.addActionLog(logPayload);
 
-          const nextLogs = [...prevLogs, logPayload];
+        if (actionGoal.action_type === 'one_time') {
+          guestDataPersistence.updateActionGoal(actionGoal.id, {
+            status: 'completed',
+            completed: true,
+            completed_date: todayStr,
+            updated_date: now,
+          });
+        }
 
-          const nextActionGoals =
-            actionGoal.action_type === 'one_time'
-              ? prevActionGoals.map((goal) =>
-                  goal.id === actionGoal.id
-                    ? {
-                        ...goal,
-                        status: 'completed',
-                        completed: true,
-                        completed_date: todayStr,
-                        updated_date: now,
-                      }
-                    : goal
-                )
-              : prevActionGoals;
-
-          return {
-            ...prev,
-            actionLogs: nextLogs,
-            actionGoals: nextActionGoals,
-          };
-        });
+        queryClient.removeQueries({ queryKey: ['guest-home-data'] });
+        queryClient.removeQueries({ queryKey: ['guest-records-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
+        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
 
         window.dispatchEvent(new Event('root-home-data-updated'));
       } else {
-        const createPayload = { ...logPayload };
-        delete createPayload.id;
-
-        await base44.entities.ActionLog.create(createPayload);
+        await base44.entities.ActionLog.create({
+          ...logPayload,
+          id: undefined,
+        });
 
         if (actionGoal.action_type === 'one_time') {
           await base44.entities.ActionGoal.update(actionGoal.id, {
             status: 'completed',
             completed: true,
             completed_date: todayStr,
+            updated_date: now,
           });
         }
 
-        const currentXp = user?.[`${actionGoal.category}_xp`] || 0;
-        const newXp = currentXp + 1;
-        const newLevel = Math.floor(newXp / 30) + 1;
-
-        await base44.auth
-          .updateMe({
-            [`${actionGoal.category}_xp`]: newXp,
-            [`${actionGoal.category}_level`]: newLevel,
-          })
-          .catch(() => {});
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
+          queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
+          queryClient.invalidateQueries({ queryKey: ['goals'] }),
+          queryClient.invalidateQueries({ queryKey: ['me'] }),
+        ]);
       }
 
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['me'] }),
-        queryClient.invalidateQueries({ queryKey: ['goals'] }),
-        queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
-        queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
-        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] }),
-      ]);
+      setExpPopup(earnedExp);
+
+      const currentLogs = isGuest
+        ? (Array.isArray(guestData?.actionLogs) ? guestData.actionLogs : [])
+        : (Array.isArray(allLogs) ? allLogs : []);
+
+      const currentActionGoals = isGuest
+        ? (Array.isArray(guestData?.actionGoals)
+            ? connectActionGoalsToGoals(goals, guestData.actionGoals)
+            : [])
+        : (Array.isArray(connectedActionGoals) ? connectedActionGoals : []);
+
+      const nextLogs = [...currentLogs, logPayload];
+
+      const nextActionGoals =
+        actionGoal.action_type === 'one_time'
+          ? currentActionGoals.map((goal) =>
+              goal.id === actionGoal.id
+                ? {
+                    ...goal,
+                    status: 'completed',
+                    completed: true,
+                    completed_date: todayStr,
+                    updated_date: now,
+                  }
+                : goal
+            )
+          : currentActionGoals;
+
+      const nextStats = buildDerivedStats(nextLogs, nextActionGoals);
+
+      const currentOwnedTitleIds = isGuest
+        ? getOwnedTitleIds({ isGuest: true, user: null, guestData: readGuestData() })
+        : getOwnedTitleIds({ isGuest: false, user, guestData: null });
+
+      const unlocked = getNewlyUnlockedTitle(nextStats, currentOwnedTitleIds);
+
+      if (unlocked) {
+        await persistNewTitle(unlocked.id);
+        setNewTitle(unlocked);
+      }
+
+      toast.success('행동목표를 완료했어요!');
     } catch (error) {
       console.error('handleActionComplete error:', error);
+      toast.error('행동목표 완료 처리 중 오류가 발생했어요.');
     }
   };
 
-  const actionCount = allLogs.filter((log) => log?.completed).length;
+  const totalLevel = useMemo(() => {
+    const sum =
+      Number(userLevels.exercise_level || 1) +
+      Number(userLevels.study_level || 1) +
+      Number(userLevels.mental_level || 1) +
+      Number(userLevels.daily_level || 1);
+
+    return Math.max(1, Math.floor(sum / 4));
+  }, [userLevels]);
+
+  const points = derivedStats.total_actions || 0;
+  const gems = Math.floor((derivedStats.total_actions || 0) / 10);
+  const actionCount = derivedStats.total_actions || 0;
 
   return (
-    <div className="min-h-screen bg-background pb-28">
-      <HeaderBar
+    <div
+      className="min-h-screen pb-28"
+      style={{
+        background:
+          'linear-gradient(180deg, #f8f1df 0%, #f5e8c9 38%, #f2e1bc 68%, #ebd6a9 100%)',
+      }}
+    >
+      {expPopup ? <ExpPopup exp={expPopup} /> : null}
+
+      {newTitle ? (
+        <TitleUnlockModal
+          title={newTitle}
+          onClose={() => setNewTitle(null)}
+          onEquip={() => handleEquipTitle(newTitle.id)}
+        />
+      ) : null}
+
+      <VillageWorldLayer
+        activeCategory={activeCategory}
+        isOverview={isOverview}
         nickname={nickname}
         totalLevel={totalLevel}
         points={points}
-        isZoomedOut={isZoomedOut}
-        onToggleZoom={() => setIsZoomedOut((prev) => !prev)}
-      />
-
-      <CategoryTabs
-        activeCategory={activeCategory}
-        onChange={handleCategoryChange}
+        gems={gems}
         userLevels={userLevels}
-      />
-
-      <WorldLayer
-        activeCategory={activeCategory}
-        userLevels={userLevels}
-        totalLevel={totalLevel}
         actionCount={actionCount}
         characters={characters}
         setCharacters={setCharacters}
-        isZoomedOut={isZoomedOut}
+        onToggleOverview={() => setIsOverview((prev) => !prev)}
       />
+
+      <div
+        className="sticky top-[314px] z-40 -mx-4 px-4 pt-1 pb-2"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 78%, rgba(245,232,201,0.88) 100%)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+        }}
+      >
+        <div className="px-4">
+          <CategoryTabs
+            active={activeCategory}
+            onChange={handleCategoryChange}
+            userLevels={userLevels}
+          />
+        </div>
+      </div>
 
       <div className="px-4 pt-4">
         {activeGoal ? (
-          <ActiveGoalCard goal={activeGoal} activeCategory={activeCategory} />
+          <GoalProgress goal={activeGoal} logs={goalLogs} />
         ) : (
-          <div className="rounded-[24px] border bg-white px-4 py-5 shadow-sm">
-            <div className="text-[16px] font-extrabold">
-              아직 {CATEGORY_LABELS[activeCategory]} 결과목표가 없어요
-            </div>
-            <div className="mt-1 text-[13px] text-muted-foreground">
-              먼저 결과목표를 만들면 이 카테고리 마을이 더 크게 자라나기 시작해요.
-            </div>
-
-            <button
-              type="button"
-              onClick={handleCreateGoal}
-              className="mt-4 inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-extrabold transition active:scale-[0.98]"
-            >
-              <Plus className="w-4 h-4" />
-              결과/행동목표 만들기
-            </button>
-          </div>
+          <EmptyGoalState
+            category={activeCategory}
+            onCreateGoal={handleCreateGoal}
+          />
         )}
-      </div>
 
-      <div className="space-y-6 px-4 pt-5">
-        <Section
-          title="오늘 해야 할 것"
-          count={grouped.todayItems.length}
-          emptyText="오늘 해야 할 행동목표가 없습니다."
-        >
-          {grouped.todayItems.map((actionGoal) => (
-            <ActionGoalCard
-              key={actionGoal.id}
-              actionGoal={actionGoal}
-              weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-              allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-              streak={getStreakForAction(allLogs, actionGoal.id)}
-              onComplete={handleActionComplete}
-            />
-          ))}
-        </Section>
+        {activeGoal ? (
+          <div className="space-y-6 pt-4">
+            <Section
+              title="오늘 해야 할 것"
+              count={grouped.todayItems.length}
+              emptyText="오늘 해야 할 행동목표가 없어요."
+            >
+              {grouped.todayItems.map((actionGoal) => (
+                <ActionGoalCard
+                  key={actionGoal.id}
+                  actionGoal={actionGoal}
+                  weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+                  allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+                  streak={getStreakForAction(allLogs, actionGoal.id)}
+                  onComplete={handleActionComplete}
+                />
+              ))}
+            </Section>
 
-        <Section
-          title="예정된 목표"
-          count={grouped.scheduledItems.length}
-          emptyText="예정된 목표가 없습니다."
-        >
-          {grouped.scheduledItems.map((actionGoal) => (
-            <ActionGoalCard
-              key={actionGoal.id}
-              actionGoal={actionGoal}
-              weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-              allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-              streak={getStreakForAction(allLogs, actionGoal.id)}
-              onComplete={handleActionComplete}
-            />
-          ))}
-        </Section>
+            <Section
+              title="예정된 목표"
+              count={grouped.scheduledItems.length}
+              emptyText="예정된 목표가 없어요."
+            >
+              {grouped.scheduledItems.map((actionGoal) => (
+                <ActionGoalCard
+                  key={actionGoal.id}
+                  actionGoal={actionGoal}
+                  weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+                  allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+                  streak={getStreakForAction(allLogs, actionGoal.id)}
+                  onComplete={handleActionComplete}
+                />
+              ))}
+            </Section>
 
-        <Section
-          title="기한 지난 목표"
-          count={grouped.overdueItems.length}
-          emptyText="기한 지난 목표가 없습니다."
-        >
-          {grouped.overdueItems.map((actionGoal) => (
-            <ActionGoalCard
-              key={actionGoal.id}
-              actionGoal={actionGoal}
-              weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-              allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-              streak={getStreakForAction(allLogs, actionGoal.id)}
-              onComplete={handleActionComplete}
-            />
-          ))}
-        </Section>
-      </div>
+            <Section
+              title="기한 지난 목표"
+              count={grouped.overdueItems.length}
+              emptyText="기한 지난 목표가 없어요."
+            >
+              {grouped.overdueItems.map((actionGoal) => (
+                <ActionGoalCard
+                  key={actionGoal.id}
+                  actionGoal={actionGoal}
+                  weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+                  allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+                  streak={getStreakForAction(allLogs, actionGoal.id)}
+                  onComplete={handleActionComplete}
+                />
+              ))}
+            </Section>
 
-      <div className="px-4 pt-5">
-        <button
-          type="button"
-          onClick={handleCreateGoal}
-          className="w-full h-12 rounded-2xl font-bold text-sm"
-          style={{
-            background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 50%, #8a6520 100%)',
-            border: '2px solid #6b4e15',
-            color: '#fff8e8',
-            boxShadow: 'inset 0 1px 2px rgba(255,220,120,0.4), 0 3px 6px rgba(60,35,5,0.3)',
-          }}
-        >
-          + 행동목표 추가
-        </button>
+            <div className="pt-1">
+              <AddActionGoalButton
+                onClick={handleCreateGoal}
+                categoryLabel={CATEGORY_LABELS[activeCategory]}
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
