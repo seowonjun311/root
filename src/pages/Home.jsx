@@ -17,6 +17,21 @@ import GoalProgress from '@/components/home/GoalProgress';
 import ActionGoalCard from '@/components/home/ActionGoalCard';
 import EmptyGoalState from '@/components/home/EmptyGoalState';
 
+import { getBackground } from '@/assets/root/backgrounds';
+
+import gymLv1Img from '@/assets/root/buildings/gym_lv1.png';
+import libraryLv1Img from '@/assets/root/buildings/library_lv1.png';
+import meditationLv1Img from '@/assets/root/buildings/meditation_lv1.png';
+import workshopLv1Img from '@/assets/root/buildings/workshop_lv1.png';
+
+import foxImg from '@/assets/root/characters/fox.png';
+import alpacaImg from '@/assets/root/characters/alpaca.png';
+import platypusImg from '@/assets/root/characters/platypus.png';
+
+import grassImg from '@/assets/root/decorations/grass.png';
+import treeImg from '@/assets/root/decorations/tree.png';
+import flowerImg from '@/assets/root/decorations/flower.png';
+
 const CATEGORY_ROUTE_MAP = {
   exercise: '/CreateGoalExercise',
   study: '/CreateGoalStudy',
@@ -69,45 +84,14 @@ const TITLES = [
   { id: 'daily_004', name: '삶을 다듬는 자', description: '일상 행동목표 200회 달성', metric: 'total_daily_count', value: 200, category: 'daily' },
 ];
 
-const CATEGORY_WORLD_THEME = {
-  exercise: {
-    sky: 'linear-gradient(180deg, #d9f1d9 0%, #c3e7c4 40%, #9dd58f 100%)',
-    field: '#8bc06b',
-    path: '#cfb17a',
-    accent: '#2f7d43',
-    border: '#98c79e',
-  },
-  study: {
-    sky: 'linear-gradient(180deg, #ece8ff 0%, #ddd5ff 40%, #c7bfff 100%)',
-    field: '#a8c98f',
-    path: '#d6c09a',
-    accent: '#5b49a8',
-    border: '#beb4f0',
-  },
-  mental: {
-    sky: 'linear-gradient(180deg, #def4fb 0%, #cfeef7 42%, #b5dde9 100%)',
-    field: '#91c79f',
-    path: '#d7c4a0',
-    accent: '#2d6f94',
-    border: '#9acddd',
-  },
-  daily: {
-    sky: 'linear-gradient(180deg, #fff1d7 0%, #f8e4bf 40%, #efd29b 100%)',
-    field: '#a4c67e',
-    path: '#d5b37d',
-    accent: '#9a6b21',
-    border: '#dcb679',
-  },
-};
-
 const SHOP_ITEMS = [
-  { id: 'fox_1', label: '여우', type: 'character', subtype: 'fox', price: 15, emoji: '🦊' },
-  { id: 'alpaca_1', label: '알파카', type: 'character', subtype: 'alpaca', price: 18, emoji: '🦙' },
-  { id: 'platypus_1', label: '오리너구리', type: 'character', subtype: 'platypus', price: 20, emoji: '🦫' },
+  { id: 'fox_1', label: '여우', type: 'character', subtype: 'fox', price: 15, image: foxImg },
+  { id: 'alpaca_1', label: '알파카', type: 'character', subtype: 'alpaca', price: 18, image: alpacaImg },
+  { id: 'platypus_1', label: '오리너구리', type: 'character', subtype: 'platypus', price: 20, image: platypusImg },
 
-  { id: 'grass_1', label: '잔디', type: 'decoration', subtype: 'grass', price: 3, emoji: '🌿' },
-  { id: 'tree_1', label: '나무', type: 'decoration', subtype: 'tree', price: 8, emoji: '🌳' },
-  { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, emoji: '🌸' },
+  { id: 'grass_1', label: '잔디', type: 'decoration', subtype: 'grass', price: 3, image: grassImg },
+  { id: 'tree_1', label: '나무', type: 'decoration', subtype: 'tree', price: 8, image: treeImg },
+  { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, image: flowerImg },
 ];
 
 const DEFAULT_BUILDINGS = [
@@ -392,9 +376,7 @@ function groupActionGoals(actionGoals, today) {
           actionGoal?.scheduledDate ||
           actionGoal?.date ||
           actionGoal?.target_date ||
-          actionGoal?.targetDate ||
-          actionGoal?.selected_date ||
-          actionGoal?.selectedDate
+          actionGoal?.targetDate
       );
 
       if (!scheduledDate) {
@@ -425,7 +407,6 @@ function groupActionGoals(actionGoals, today) {
     }
 
     const endDate = getGoalEndDate(actionGoal);
-
     if (endDate) {
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
@@ -558,12 +539,6 @@ function validateGoalActionLogChain(goals = [], actionGoals = [], logs = []) {
   };
 }
 
-function getCharacterEmoji(type) {
-  if (type === 'alpaca') return '🦙';
-  if (type === 'platypus') return '🦫';
-  return '🦊';
-}
-
 function getVillageState(source) {
   return {
     village_points: Number(source?.village_points ?? DEFAULT_VILLAGE_DATA.village_points),
@@ -582,27 +557,44 @@ function getVillageState(source) {
 }
 
 function createDecoration(subtype, worldWidth = 1400, worldHeight = 900) {
-  const base = {
+  const imageMap = {
+    grass: grassImg,
+    tree: treeImg,
+    flower: flowerImg,
+  };
+
+  const sizeMap = {
+    grass: 34,
+    tree: 62,
+    flower: 30,
+  };
+
+  return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     type: subtype,
+    image: imageMap[subtype],
     x: randomBetween(180, worldWidth - 180),
     y: randomBetween(220, worldHeight - 140),
     flipped: false,
+    size: sizeMap[subtype] || 32,
   };
-
-  if (subtype === 'tree') return { ...base, size: 44 };
-  if (subtype === 'flower') return { ...base, size: 28 };
-  return { ...base, size: 22 };
 }
 
 function createCharacter(type, worldWidth = 1400, worldHeight = 900) {
+  const imageMap = {
+    fox: foxImg,
+    alpaca: alpacaImg,
+    platypus: platypusImg,
+  };
+
   return {
     id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
     type,
+    image: imageMap[type],
     x: randomBetween(280, worldWidth - 180),
     y: randomBetween(240, worldHeight - 150),
-    size: type === 'alpaca' ? 46 : 42,
+    size: type === 'alpaca' ? 56 : 52,
     flipped: false,
   };
 }
@@ -621,45 +613,45 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       id: 'exercise_building',
       category: 'exercise',
       label: `체육관 Lv.${getStage(exerciseLevel)}`,
-      emoji: '🏋️',
+      image: gymLv1Img,
       x: layoutMap.exercise?.x ?? 220,
       y: layoutMap.exercise?.y ?? 500,
       flipped: !!layoutMap.exercise?.flipped,
       w: 150,
-      h: 110,
+      h: 120,
     },
     {
       id: 'study_building',
       category: 'study',
       label: `도서관 Lv.${getStage(studyLevel)}`,
-      emoji: '📚',
+      image: libraryLv1Img,
       x: layoutMap.study?.x ?? 430,
       y: layoutMap.study?.y ?? 560,
       flipped: !!layoutMap.study?.flipped,
       w: 150,
-      h: 110,
+      h: 120,
     },
     {
       id: 'mental_building',
       category: 'mental',
       label: `명상숲 Lv.${getStage(mentalLevel)}`,
-      emoji: '🧘',
+      image: meditationLv1Img,
       x: layoutMap.mental?.x ?? 760,
       y: layoutMap.mental?.y ?? 540,
       flipped: !!layoutMap.mental?.flipped,
       w: 150,
-      h: 110,
+      h: 120,
     },
     {
       id: 'daily_building',
       category: 'daily',
       label: `생활공방 Lv.${getStage(dailyLevel)}`,
-      emoji: '🧺',
+      image: workshopLv1Img,
       x: layoutMap.daily?.x ?? 1010,
       y: layoutMap.daily?.y ?? 460,
       flipped: !!layoutMap.daily?.flipped,
       w: 150,
-      h: 110,
+      h: 120,
     },
   ];
 }
@@ -928,8 +920,15 @@ function VillageShopModal({ open, activeTab, onTabChange, points, onClose, onBuy
                   border: '1px solid rgba(160,120,64,0.14)',
                 }}
               >
-                <div className="text-[24px]">{item.emoji}</div>
-                <div className="mt-1 text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
+                <div className="flex h-[68px] items-center justify-center">
+                  <img
+                    src={item.image}
+                    alt={item.label}
+                    className="max-h-[64px] max-w-full object-contain"
+                  />
+                </div>
+
+                <div className="mt-2 text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
                   {item.label}
                 </div>
                 <div className="text-[12px]" style={{ color: '#8a5a17' }}>
@@ -1118,47 +1117,17 @@ function VillageOverlayBar({
 }
 
 function DecorationSprite({ item }) {
-  if (item.type === 'tree') {
-    return (
-      <div
-        className="flex items-center justify-center rounded-full"
-        style={{
-          width: item.size,
-          height: item.size,
-          background: 'rgba(255,255,255,0.35)',
-        }}
-      >
-        <span style={{ fontSize: item.size * 0.65 }}>🌳</span>
-      </div>
-    );
-  }
-
-  if (item.type === 'flower') {
-    return (
-      <div
-        className="flex items-center justify-center rounded-full"
-        style={{
-          width: item.size,
-          height: item.size,
-          background: 'rgba(255,255,255,0.30)',
-        }}
-      >
-        <span style={{ fontSize: item.size * 0.7 }}>🌸</span>
-      </div>
-    );
-  }
-
   return (
-    <div
-      className="flex items-center justify-center rounded-full"
+    <img
+      src={item.image}
+      alt={item.type}
       style={{
         width: item.size,
         height: item.size,
-        background: 'rgba(255,255,255,0.25)',
+        objectFit: 'contain',
+        display: 'block',
       }}
-    >
-      <span style={{ fontSize: item.size * 0.75 }}>🌿</span>
-    </div>
+    />
   );
 }
 
@@ -1188,7 +1157,6 @@ function VillageWorldLayer({
   const dragRef = useRef(null);
   const [offset, setOffset] = useState({ x: -250, y: -190 });
 
-  const theme = CATEGORY_WORLD_THEME[activeCategory];
   const worldWidth = 1400;
   const worldHeight = 900;
   const scale = isOverview ? 0.62 : 1;
@@ -1197,6 +1165,8 @@ function VillageWorldLayer({
     () => buildWorldBuildings({ userLevels, buildingLayout }),
     [userLevels, buildingLayout]
   );
+
+  const backgroundImage = getBackground(activeCategory, 'day');
 
   const handleWorldPointerDown = (e) => {
     if (isEditMode) return;
@@ -1288,7 +1258,7 @@ function VillageWorldLayer({
       dragRef.current.startX = e.clientX;
       dragRef.current.startY = e.clientY;
     }
-  }, [scale, setDecorations, setCharacters, setBuildingLayout]);
+  }, [scale, setDecorations, setCharacters, setBuildingLayout, offset.x, offset.y]);
 
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
@@ -1334,8 +1304,7 @@ function VillageWorldLayer({
           className="relative overflow-hidden rounded-[28px]"
           style={{
             height: 300,
-            background: theme.sky,
-            border: `1px solid ${theme.border}`,
+            border: '1px solid rgba(160,120,64,0.18)',
             boxShadow: '0 12px 24px rgba(80,50,10,0.08)',
           }}
         >
@@ -1371,31 +1340,16 @@ function VillageWorldLayer({
                 transition: dragRef.current ? 'none' : 'transform 300ms ease',
               }}
             >
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    'radial-gradient(circle at 50% 8%, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.18) 32%, rgba(255,255,255,0) 56%)',
-                }}
-              />
-
-              <div
-                className="absolute left-[70px] top-[110px] h-[660px] w-[1220px] rounded-[999px]"
-                style={{
-                  background: theme.field,
-                  opacity: 0.95,
-                  border: '1px solid rgba(255,255,255,0.25)',
-                }}
-              />
-
-              <div
-                className="absolute left-[170px] top-[220px] h-[360px] w-[990px] rounded-[999px]"
-                style={{
-                  background: theme.path,
-                  boxShadow: 'inset 0 8px 18px rgba(255,255,255,0.18)',
-                  opacity: 0.92,
-                }}
-              />
+              {backgroundImage ? (
+                <img
+                  src={backgroundImage}
+                  alt="village background"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  draggable={false}
+                />
+              ) : (
+                <div className="absolute inset-0 bg-[#d8e8b0]" />
+              )}
 
               {decorations.map((item) => {
                 const isSelected =
@@ -1429,7 +1383,7 @@ function VillageWorldLayer({
                 return (
                   <div
                     key={building.id}
-                    className="absolute rounded-[24px] border bg-white/78 backdrop-blur-sm"
+                    className="absolute"
                     onPointerDown={(e) => startObjectDrag(e, 'building', building.category)}
                     style={{
                       left: building.x,
@@ -1437,24 +1391,18 @@ function VillageWorldLayer({
                       width: building.w,
                       height: building.h,
                       transform: `scaleX(${building.flipped ? -1 : 1})`,
-                      borderColor: building.category === activeCategory ? theme.accent : theme.border,
-                      boxShadow: isSelected
-                        ? '0 0 0 4px rgba(196,154,74,0.9), 0 10px 20px rgba(0,0,0,0.12)'
-                        : building.category === activeCategory
-                          ? `0 10px 22px rgba(0,0,0,0.10), 0 0 0 3px ${theme.border}`
-                          : '0 10px 20px rgba(0,0,0,0.08)',
+                      outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
+                      outlineOffset: '4px',
+                      borderRadius: '20px',
                       cursor: isEditMode ? 'grab' : 'default',
                     }}
                   >
-                    <div
-                      className="flex h-full flex-col items-center justify-center"
-                      style={{ transform: `scaleX(${building.flipped ? -1 : 1})` }}
-                    >
-                      <div className="text-[28px]">{building.emoji}</div>
-                      <div className="mt-1 text-[12px] font-extrabold text-slate-700">
-                        {building.label}
-                      </div>
-                    </div>
+                    <img
+                      src={building.image}
+                      alt={building.label}
+                      className="h-full w-full object-contain"
+                      draggable={false}
+                    />
                   </div>
                 );
               })}
@@ -1481,9 +1429,12 @@ function VillageWorldLayer({
                       cursor: isEditMode ? 'grab' : 'default',
                     }}
                   >
-                    <div className="relative flex h-full w-full items-center justify-center rounded-full bg-white/85 shadow">
-                      <span style={{ fontSize: npc.size * 0.55 }}>{getCharacterEmoji(npc.type)}</span>
-                    </div>
+                    <img
+                      src={npc.image || foxImg}
+                      alt={npc.name}
+                      className="h-full w-full object-contain"
+                      draggable={false}
+                    />
                   </div>
                 );
               })}
@@ -1782,8 +1733,28 @@ export default function Home() {
   useEffect(() => {
     const source = isGuest ? guestData : user;
     const village = getVillageState(source || {});
-    setDecorations(village.village_decorations);
-    setCharacters(village.village_characters);
+    setDecorations(
+      (village.village_decorations || []).map((item) => ({
+        ...item,
+        image:
+          item.type === 'tree'
+            ? treeImg
+            : item.type === 'flower'
+              ? flowerImg
+              : grassImg,
+      }))
+    );
+    setCharacters(
+      (village.village_characters || []).map((item) => ({
+        ...item,
+        image:
+          item.type === 'alpaca'
+            ? alpacaImg
+            : item.type === 'platypus'
+              ? platypusImg
+              : foxImg,
+      }))
+    );
     setBuildingLayout(village.village_buildings);
     originalVillageRef.current = village;
   }, [isGuest, guestData, user]);
@@ -1911,8 +1882,8 @@ export default function Home() {
       writeGuestDataPatch((prev) => ({
         ...prev,
         village_points: nextState.village_points,
-        village_decorations: nextState.village_decorations,
-        village_characters: nextState.village_characters,
+        village_decorations: nextState.village_decorations.map(({ image, ...rest }) => rest),
+        village_characters: nextState.village_characters.map(({ image, ...rest }) => rest),
         village_buildings: nextState.village_buildings,
       }));
       window.dispatchEvent(new Event('root-home-data-updated'));
@@ -1921,8 +1892,8 @@ export default function Home() {
 
     await base44.auth.updateMe({
       village_points: nextState.village_points,
-      village_decorations: nextState.village_decorations,
-      village_characters: nextState.village_characters,
+      village_decorations: nextState.village_decorations.map(({ image, ...rest }) => rest),
+      village_characters: nextState.village_characters.map(({ image, ...rest }) => rest),
       village_buildings: nextState.village_buildings,
     });
     queryClient.invalidateQueries({ queryKey: ['me'] });
@@ -1939,8 +1910,8 @@ export default function Home() {
     }
 
     const nextPoints = currentPoints - item.price;
-    const nextDecorations = [...currentVillage.village_decorations];
-    const nextCharacters = [...currentVillage.village_characters];
+    const nextDecorations = [...decorations];
+    const nextCharacters = [...characters];
 
     if (item.type === 'decoration') {
       nextDecorations.push(createDecoration(item.subtype));
