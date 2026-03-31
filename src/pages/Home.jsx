@@ -2153,7 +2153,7 @@ export default function Home() {
         onCancelEdit={handleCancelEdit}
       />
 
-      <div className="sticky top-[356px] z-30 px-4 pt-2 pb-2 bg-[#f7f0df]/95 backdrop-blur-sm">
+      <div className="sticky top-[314px] z-30 px-4 pt-1 pb-2 bg-[#f7f0df]/95 backdrop-blur-sm">
         <CategoryTabs
           active={activeCategory}
           onChange={setActiveCategory}
