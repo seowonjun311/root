@@ -3,12 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
-import {
-  addOwnedTitle,
-  ensureValidEquippedTitle,
-  getOwnedTitleIds,
-  setEquippedTitle,
-} from '@/lib/titleStorage';
 import { toast } from 'sonner';
 
 import CategoryTabs from '@/components/home/CategoryTabs';
@@ -48,35 +42,9 @@ const CATEGORY_ALIASES = {
 
 const VALID_CATEGORIES = Object.keys(CATEGORY_LABELS);
 
-// ✅ 마을 크기 축소: 기존 1400x900 → 절반으로 축소 (면적으로 약 1/4)
 const WORLD_WIDTH = 700;
 const WORLD_HEIGHT = 450;
 const VIEWPORT_HEIGHT = 300;
-
-const TITLES = [
-  { id: 'common_first_step', name: '첫 걸음을 뗀 자', description: '첫 행동목표를 완료한 용사', metric: 'total_actions', value: 1, category: 'common' },
-  { id: 'common_route_walker', name: '루트를 걷는 자', description: '전체 행동목표 100회 달성', metric: 'total_actions', value: 100, category: 'common' },
-
-  { id: 'exercise_001', name: '몸을 깨운 자', description: '운동 행동목표 10회 달성', metric: 'total_exercise_count', value: 10, category: 'exercise' },
-  { id: 'exercise_002', name: '꾸준함의 전사', description: '운동 행동목표 50회 달성', metric: 'total_exercise_count', value: 50, category: 'exercise' },
-  { id: 'exercise_003', name: '바람을 걷는 자', description: '러닝 거리 50km 누적', metric: 'total_running_km', value: 50, category: 'exercise' },
-  { id: 'exercise_004', name: '운동의 장인', description: '운동 행동목표 200회 달성', metric: 'total_exercise_count', value: 200, category: 'exercise' },
-
-  { id: 'study_001', name: '집중 입문자', description: '공부 10시간 누적', metric: 'total_study_minutes', value: 600, category: 'study' },
-  { id: 'study_002', name: '집중 수련생', description: '공부 30시간 누적', metric: 'total_study_minutes', value: 1800, category: 'study' },
-  { id: 'study_003', name: '몰입의 실천가', description: '공부 100시간 누적', metric: 'total_study_minutes', value: 6000, category: 'study' },
-  { id: 'study_004', name: '집중의 장인', description: '공부 300시간 누적', metric: 'total_study_minutes', value: 18000, category: 'study' },
-
-  { id: 'mental_001', name: '마음을 들여다본 자', description: '정신 행동목표 10회 달성', metric: 'total_mental_count', value: 10, category: 'mental' },
-  { id: 'mental_002', name: '유혹 저항가', description: '금연/금주 7일 누적', metric: 'total_no_smoking_days', value: 7, category: 'mental' },
-  { id: 'mental_003', name: '절제의 기사', description: '금연/금주 30일 누적', metric: 'total_no_smoking_days', value: 30, category: 'mental' },
-  { id: 'mental_004', name: '내면의 관리자', description: '정신 행동목표 100회 달성', metric: 'total_mental_count', value: 100, category: 'mental' },
-
-  { id: 'daily_001', name: '하루를 시작한 자', description: '일상 행동목표 5회 달성', metric: 'total_daily_count', value: 5, category: 'daily' },
-  { id: 'daily_002', name: '생활의 입문자', description: '일상 행동목표 30회 달성', metric: 'total_daily_count', value: 30, category: 'daily' },
-  { id: 'daily_003', name: '생활의 관리자', description: '일상 행동목표 100회 달성', metric: 'total_daily_count', value: 100, category: 'daily' },
-  { id: 'daily_004', name: '삶을 다듬는 자', description: '일상 행동목표 200회 달성', metric: 'total_daily_count', value: 200, category: 'daily' },
-];
 
 const SHOP_ITEMS = [
   { id: 'fox_1', label: '여우', type: 'character', subtype: 'fox', price: 15, image: foxImg },
@@ -88,12 +56,12 @@ const SHOP_ITEMS = [
   { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, image: flowerImg },
 ];
 
-// ✅ 좌표도 절반 수준으로 조정
+// 배경 구도에 맞게 다시 줄인 건물 위치
 const DEFAULT_BUILDINGS = [
-  { id: 'exercise_building', category: 'exercise', x: 110, y: 250, flipped: false },
-  { id: 'study_building', category: 'study', x: 215, y: 280, flipped: false },
-  { id: 'mental_building', category: 'mental', x: 380, y: 270, flipped: false },
-  { id: 'daily_building', category: 'daily', x: 505, y: 230, flipped: false },
+  { id: 'exercise_building', category: 'exercise', x: 88, y: 246, flipped: false },
+  { id: 'study_building', category: 'study', x: 210, y: 278, flipped: false },
+  { id: 'mental_building', category: 'mental', x: 390, y: 264, flipped: false },
+  { id: 'daily_building', category: 'daily', x: 548, y: 222, flipped: false },
 ];
 
 const DEFAULT_VILLAGE_DATA = {
@@ -103,6 +71,10 @@ const DEFAULT_VILLAGE_DATA = {
     { id: 'starter_fox', name: '루', type: 'fox', x: 310, y: 235, size: 52, flipped: false },
   ],
   village_buildings: DEFAULT_BUILDINGS,
+  owned_characters: [
+    { id: 'owned_starter_fox', shop_item_id: 'fox_1', type: 'fox', label: '여우', image: foxImg, placed: true },
+  ],
+  owned_decorations: [],
 };
 
 function readGuestData() {
@@ -377,9 +349,7 @@ function groupActionGoals(actionGoals, today) {
       const isCompleted =
         actionGoal?.status === 'completed' || actionGoal?.completed === true;
 
-      if (isCompleted) {
-        return;
-      }
+      if (isCompleted) return;
 
       if (!scheduledDate) {
         scheduledItems.push(actionGoal);
@@ -460,79 +430,6 @@ function calculateVillagePointReward(actionGoal, minutes = 0) {
   return 2;
 }
 
-function buildDerivedStats(logs = [], actionGoals = []) {
-  const stats = {
-    total_actions: 0,
-    total_exercise_count: 0,
-    total_study_minutes: 0,
-    total_mental_count: 0,
-    total_daily_count: 0,
-    total_running_km: 0,
-    total_no_smoking_days: 0,
-  };
-
-  (logs || []).forEach((log) => {
-    if (!log?.completed) return;
-
-    stats.total_actions += 1;
-
-    if (log.category === 'exercise') {
-      stats.total_exercise_count += 1;
-      stats.total_running_km += Number(log.distance_km || 0);
-    }
-    if (log.category === 'study') {
-      stats.total_study_minutes += Number(log.duration_minutes || 0);
-      if (!log.duration_minutes || Number(log.duration_minutes) === 0) {
-        stats.total_study_minutes += 10;
-      }
-    }
-    if (log.category === 'mental') stats.total_mental_count += 1;
-    if (log.category === 'daily') stats.total_daily_count += 1;
-  });
-
-  const abstainGoalIds = new Set(
-    (actionGoals || [])
-      .filter((goal) => goal?.category === 'mental' && goal?.action_type === 'abstain')
-      .map((goal) => goal.id)
-  );
-
-  stats.total_no_smoking_days = (logs || []).filter(
-    (log) => log?.completed && abstainGoalIds.has(log?.action_goal_id)
-  ).length;
-
-  return stats;
-}
-
-function getUnlockedTitles(stats, ownedTitleIds = []) {
-  const ownedSet = new Set(ownedTitleIds);
-  return TITLES.filter(
-    (title) => ownedSet.has(title.id) || Number(stats?.[title.metric] || 0) >= title.value
-  );
-}
-
-function getNewlyUnlockedTitle(stats, ownedTitleIds = []) {
-  const ownedSet = new Set(ownedTitleIds);
-  return TITLES.find(
-    (title) => !ownedSet.has(title.id) && Number(stats?.[title.metric] || 0) >= title.value
-  );
-}
-
-function validateGoalActionLogChain(goals = [], actionGoals = [], logs = []) {
-  const goalIds = new Set((goals || []).map((goal) => goal?.id).filter(Boolean));
-  const actionGoalIds = new Set((actionGoals || []).map((goal) => goal?.id).filter(Boolean));
-
-  return {
-    actionGoalsWithoutGoalId: (actionGoals || []).filter((goal) => !goal?.goal_id).length,
-    logsWithoutGoalId: (logs || []).filter((log) => !log?.goal_id).length,
-    logsWithUnknownActionGoal: (logs || []).filter(
-      (log) => log?.action_goal_id && !actionGoalIds.has(log.action_goal_id)
-    ).length,
-    actionGoalsWithUnknownGoal: (actionGoals || []).filter(
-      (goal) => goal?.goal_id && !goalIds.has(goal.goal_id)
-    ).length,
-  };
-}
-
 function getCharacterImage(type) {
   if (type === 'alpaca') return alpacaImg;
   if (type === 'platypus') return platypusImg;
@@ -559,6 +456,12 @@ function getVillageState(source) {
       Array.isArray(source?.village_buildings) && source.village_buildings.length > 0
         ? source.village_buildings
         : DEFAULT_VILLAGE_DATA.village_buildings,
+    owned_characters: Array.isArray(source?.owned_characters)
+      ? source.owned_characters
+      : DEFAULT_VILLAGE_DATA.owned_characters,
+    owned_decorations: Array.isArray(source?.owned_decorations)
+      ? source.owned_decorations
+      : DEFAULT_VILLAGE_DATA.owned_decorations,
   };
 }
 
@@ -569,8 +472,8 @@ function createDecoration(subtype, worldWidth = WORLD_WIDTH, worldHeight = WORLD
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     type: subtype,
     image: getDecorationImage(subtype),
-    x: randomBetween(80, worldWidth - 80),
-    y: randomBetween(80, worldHeight - 60),
+    x: randomBetween(70, worldWidth - 70),
+    y: randomBetween(75, worldHeight - 55),
     flipped: false,
     size: sizeMap[subtype] || 24,
   };
@@ -582,8 +485,8 @@ function createCharacter(type, worldWidth = WORLD_WIDTH, worldHeight = WORLD_HEI
     name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
     type,
     image: getCharacterImage(type),
-    x: randomBetween(120, worldWidth - 80),
-    y: randomBetween(100, worldHeight - 60),
+    x: randomBetween(90, worldWidth - 90),
+    y: randomBetween(80, worldHeight - 70),
     size: type === 'alpaca' ? 52 : 46,
     flipped: false,
   };
@@ -604,46 +507,100 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'exercise',
       label: `체육관 Lv.${getStage(exerciseLevel)}`,
       image: getBuilding('exercise', getStage(exerciseLevel)),
-      x: layoutMap.exercise?.x ?? 110,
-      y: layoutMap.exercise?.y ?? 250,
+      x: layoutMap.exercise?.x ?? 88,
+      y: layoutMap.exercise?.y ?? 246,
       flipped: !!layoutMap.exercise?.flipped,
-      w: 96,
-      h: 76,
+      w: 92,
+      h: 74,
     },
     {
       id: 'study_building',
       category: 'study',
       label: `도서관 Lv.${getStage(studyLevel)}`,
       image: getBuilding('study', getStage(studyLevel)),
-      x: layoutMap.study?.x ?? 215,
-      y: layoutMap.study?.y ?? 280,
+      x: layoutMap.study?.x ?? 210,
+      y: layoutMap.study?.y ?? 278,
       flipped: !!layoutMap.study?.flipped,
-      w: 96,
-      h: 76,
+      w: 92,
+      h: 74,
     },
     {
       id: 'mental_building',
       category: 'mental',
       label: `명상숲 Lv.${getStage(mentalLevel)}`,
       image: getBuilding('mental', getStage(mentalLevel)),
-      x: layoutMap.mental?.x ?? 380,
-      y: layoutMap.mental?.y ?? 270,
+      x: layoutMap.mental?.x ?? 390,
+      y: layoutMap.mental?.y ?? 264,
       flipped: !!layoutMap.mental?.flipped,
-      w: 96,
-      h: 76,
+      w: 92,
+      h: 74,
     },
     {
       id: 'daily_building',
       category: 'daily',
       label: `생활공방 Lv.${getStage(dailyLevel)}`,
       image: getBuilding('daily', getStage(dailyLevel)),
-      x: layoutMap.daily?.x ?? 505,
-      y: layoutMap.daily?.y ?? 230,
+      x: layoutMap.daily?.x ?? 548,
+      y: layoutMap.daily?.y ?? 222,
       flipped: !!layoutMap.daily?.flipped,
-      w: 96,
-      h: 76,
+      w: 92,
+      h: 74,
     },
   ];
+}
+
+function buildBuildingHitboxes(buildings = []) {
+  return buildings.map((building) => ({
+    id: building.id,
+    left: building.x - building.w * 0.45,
+    right: building.x + building.w * 0.45,
+    top: building.y - building.h * 0.25,
+    bottom: building.y + building.h * 0.35,
+  }));
+}
+
+function pointInRect(x, y, rect, padding = 0) {
+  return (
+    x >= rect.left - padding &&
+    x <= rect.right + padding &&
+    y >= rect.top - padding &&
+    y <= rect.bottom + padding
+  );
+}
+
+function isBlockedByBuildings(x, y, buildings = [], padding = 16) {
+  return buildings.some((rect) => pointInRect(x, y, rect, padding));
+}
+
+function findSafeRandomPoint(buildings = [], worldWidth = WORLD_WIDTH, worldHeight = WORLD_HEIGHT) {
+  for (let i = 0; i < 80; i += 1) {
+    const x = randomBetween(58, worldWidth - 58);
+    const y = randomBetween(62, worldHeight - 52);
+
+    if (!isBlockedByBuildings(x, y, buildings, 20)) {
+      return { x, y };
+    }
+  }
+
+  return { x: worldWidth / 2, y: worldHeight / 2 };
+}
+
+function moveNpcAvoidingBuildings(npc, buildingHitboxes) {
+  for (let i = 0; i < 20; i += 1) {
+    const nextX = clamp(npc.x + randomBetween(-34, 34), 48, WORLD_WIDTH - 48);
+    const nextY = clamp(npc.y + randomBetween(-28, 28), 50, WORLD_HEIGHT - 48);
+
+    if (!isBlockedByBuildings(nextX, nextY, buildingHitboxes, 18)) {
+      return {
+        ...npc,
+        x: nextX,
+        y: nextY,
+        flipped: nextX < npc.x ? true : nextX > npc.x ? false : npc.flipped,
+      };
+    }
+  }
+
+  return npc;
 }
 
 function Section({ title, count, emptyText, children }) {
@@ -711,69 +668,6 @@ function PointPopup({ points }) {
       }}
     >
       +{points} 포인트
-    </div>
-  );
-}
-
-function TitleUnlockModal({ title, onClose, onEquip }) {
-  return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 px-5">
-      <div
-        className="w-full max-w-sm rounded-3xl p-5 shadow-2xl"
-        style={{
-          background: 'linear-gradient(180deg, #fff6df 0%, #f5e3b8 100%)',
-          border: '2px solid #c89b45',
-        }}
-      >
-        <div className="text-center">
-          <div className="mb-2 text-sm font-bold" style={{ color: '#8a5a17' }}>
-            ✨ 새로운 칭호 획득
-          </div>
-
-          <div
-            className="mb-3 inline-flex rounded-full px-4 py-2 text-lg font-extrabold"
-            style={{
-              background: 'rgba(255,255,255,0.55)',
-              color: '#4a2c08',
-              border: '1px solid rgba(138,90,23,0.15)',
-            }}
-          >
-            {title.name}
-          </div>
-
-          <p className="mb-5 text-sm" style={{ color: '#7a5020' }}>
-            {title.description}
-          </p>
-
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-11 flex-1 rounded-2xl text-sm font-bold"
-              style={{
-                background: '#fff',
-                border: '1px solid #d8c08e',
-                color: '#7a5020',
-              }}
-            >
-              닫기
-            </button>
-
-            <button
-              type="button"
-              onClick={onEquip}
-              className="h-11 flex-1 rounded-2xl text-sm font-bold"
-              style={{
-                background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
-                color: '#fff8e8',
-                border: '2px solid #6b4e15',
-              }}
-            >
-              대표 칭호 장착
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -959,6 +853,166 @@ function VillageShopModal({ open, activeTab, onTabChange, points, onClose, onBuy
   );
 }
 
+function VillageBagModal({
+  open,
+  activeTab,
+  onTabChange,
+  ownedCharacters,
+  ownedDecorations,
+  onClose,
+  onPlaceCharacter,
+  onPlaceDecoration,
+}) {
+  if (!open) return null;
+
+  const items = activeTab === 'character' ? ownedCharacters : ownedDecorations;
+
+  return (
+    <div className="fixed inset-0 z-[96] bg-black/45 px-4 py-8">
+      <div
+        className="mx-auto w-full max-w-md rounded-[28px] p-4"
+        style={{
+          background: 'linear-gradient(180deg, #fff7e8 0%, #f7e9cb 100%)',
+          border: '1px solid rgba(160,120,64,0.18)',
+          boxShadow: '0 18px 36px rgba(0,0,0,0.18)',
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[17px] font-extrabold" style={{ color: '#4a2c08' }}>
+              가방
+            </div>
+            <div className="mt-1 text-[12px]" style={{ color: '#8a5a17' }}>
+              구매한 아이템을 마을에 배치할 수 있어요
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full px-3 py-1.5 text-[12px] font-extrabold"
+            style={{
+              background: '#fff',
+              border: '1px solid rgba(160,120,64,0.14)',
+              color: '#4a2c08',
+            }}
+          >
+            닫기
+          </button>
+        </div>
+
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => onTabChange('character')}
+            className="h-11 flex-1 rounded-2xl text-sm font-extrabold"
+            style={{
+              background:
+                activeTab === 'character'
+                  ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
+                  : '#fff',
+              color: activeTab === 'character' ? '#fff8e8' : '#4a2c08',
+              border:
+                activeTab === 'character'
+                  ? '2px solid #6b4e15'
+                  : '1px solid rgba(160,120,64,0.14)',
+            }}
+          >
+            내 캐릭터
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onTabChange('decoration')}
+            className="h-11 flex-1 rounded-2xl text-sm font-extrabold"
+            style={{
+              background:
+                activeTab === 'decoration'
+                  ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
+                  : '#fff',
+              color: activeTab === 'decoration' ? '#fff8e8' : '#4a2c08',
+              border:
+                activeTab === 'decoration'
+                  ? '2px solid #6b4e15'
+                  : '1px solid rgba(160,120,64,0.14)',
+            }}
+          >
+            내 꾸미기
+          </button>
+        </div>
+
+        <div className="mt-4 max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+          {items.length === 0 ? (
+            <div
+              className="rounded-2xl px-4 py-6 text-center text-sm"
+              style={{
+                background: '#fffaf0',
+                border: '1px solid rgba(160,120,64,0.16)',
+                color: '#8f6a33',
+              }}
+            >
+              아직 가방에 아이템이 없어요
+            </div>
+          ) : (
+            items.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center gap-3 rounded-2xl p-3"
+                style={{
+                  background: '#fffdf8',
+                  border: '1px solid rgba(160,120,64,0.14)',
+                }}
+              >
+                <div className="flex h-[60px] w-[60px] items-center justify-center rounded-2xl bg-white">
+                  <img
+                    src={item.image}
+                    alt={item.label}
+                    draggable={false}
+                    style={{
+                      maxHeight: '52px',
+                      maxWidth: '52px',
+                      objectFit: 'contain',
+                    }}
+                  />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
+                    {item.label}
+                  </div>
+                  <div className="mt-1 text-[12px]" style={{ color: '#8a5a17' }}>
+                    {item.placed ? '이미 배치됨' : '가방에 보관 중'}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={item.placed}
+                  onClick={() =>
+                    activeTab === 'character'
+                      ? onPlaceCharacter(item)
+                      : onPlaceDecoration(item)
+                  }
+                  className="h-10 shrink-0 rounded-2xl px-4 text-sm font-extrabold"
+                  style={{
+                    background: item.placed
+                      ? '#ede5d2'
+                      : 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
+                    color: item.placed ? '#9a8f7b' : '#fff8e8',
+                    border: item.placed ? '1px solid #d4c8b0' : '2px solid #6b4e15',
+                  }}
+                >
+                  배치하기
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EditToolbar({
   isEditMode,
   selectedObject,
@@ -1044,6 +1098,7 @@ function VillageOverlayBar({
   isOverview,
   onToggleOverview,
   onOpenShop,
+  onOpenBag,
 }) {
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3">
@@ -1078,6 +1133,20 @@ function VillageOverlayBar({
           >
             포인트 {points}
           </div>
+
+          <button
+            type="button"
+            onClick={onOpenBag}
+            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+            style={{
+              background: '#fff',
+              color: '#4a2c08',
+              border: '1px solid rgba(107,78,21,0.14)',
+              boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+            }}
+          >
+            가방
+          </button>
 
           <button
             type="button"
@@ -1187,6 +1256,7 @@ function VillageWorldLayer({
   setSelectedObject,
   onToggleOverview,
   onOpenShop,
+  onOpenBag,
   onToggleEditMode,
   onFlipSelected,
   onSaveEdit,
@@ -1215,6 +1285,8 @@ function VillageWorldLayer({
     () => buildWorldBuildings({ userLevels, buildingLayout }),
     [userLevels, buildingLayout]
   );
+
+  const buildingHitboxes = useMemo(() => buildBuildingHitboxes(buildings), [buildings]);
 
   const backgroundImage = getBackground(activeCategory, 'day');
 
@@ -1271,82 +1343,85 @@ function VillageWorldLayer({
     };
   };
 
-  const handlePointerMove = useCallback((e) => {
-    if (!dragRef.current) return;
+  const handlePointerMove = useCallback(
+    (e) => {
+      if (!dragRef.current) return;
 
-    if (dragRef.current.mode === 'pan') {
-      const dx = e.clientX - dragRef.current.startX;
-      const dy = e.clientY - dragRef.current.startY;
+      if (dragRef.current.mode === 'pan') {
+        const dx = e.clientX - dragRef.current.startX;
+        const dy = e.clientY - dragRef.current.startY;
 
-      const bounds = getOffsetBounds(
-        viewportWidth || 1,
-        VIEWPORT_HEIGHT,
-        WORLD_WIDTH,
-        WORLD_HEIGHT,
-        scale
-      );
-
-      const nextX = dragRef.current.originX + dx;
-      const nextY = dragRef.current.originY + dy;
-
-      setOffset({
-        x: clamp(nextX, bounds.minX, bounds.maxX),
-        y: clamp(nextY, bounds.minY, bounds.maxY),
-      });
-      return;
-    }
-
-    if (dragRef.current.mode === 'object') {
-      const dx = (e.clientX - dragRef.current.startX) / scale;
-      const dy = (e.clientY - dragRef.current.startY) / scale;
-      const margin = 40;
-
-      if (dragRef.current.objectType === 'decoration') {
-        setDecorations((prev) =>
-          prev.map((item) =>
-            item.id === dragRef.current.objectId
-              ? {
-                  ...item,
-                  x: clamp(item.x + dx, margin, WORLD_WIDTH - margin),
-                  y: clamp(item.y + dy, margin, WORLD_HEIGHT - margin),
-                }
-              : item
-          )
+        const bounds = getOffsetBounds(
+          viewportWidth || 1,
+          VIEWPORT_HEIGHT,
+          WORLD_WIDTH,
+          WORLD_HEIGHT,
+          scale
         );
+
+        const nextX = dragRef.current.originX + dx;
+        const nextY = dragRef.current.originY + dy;
+
+        setOffset({
+          x: clamp(nextX, bounds.minX, bounds.maxX),
+          y: clamp(nextY, bounds.minY, bounds.maxY),
+        });
+        return;
       }
 
-      if (dragRef.current.objectType === 'character') {
-        setCharacters((prev) =>
-          prev.map((item) =>
-            item.id === dragRef.current.objectId
-              ? {
-                  ...item,
-                  x: clamp(item.x + dx, margin, WORLD_WIDTH - margin),
-                  y: clamp(item.y + dy, margin, WORLD_HEIGHT - margin),
-                }
-              : item
-          )
-        );
-      }
+      if (dragRef.current.mode === 'object') {
+        const dx = (e.clientX - dragRef.current.startX) / scale;
+        const dy = (e.clientY - dragRef.current.startY) / scale;
+        const margin = 40;
 
-      if (dragRef.current.objectType === 'building') {
-        setBuildingLayout((prev) =>
-          prev.map((item) =>
-            item.category === dragRef.current.objectId
-              ? {
-                  ...item,
-                  x: clamp(item.x + dx, 60, WORLD_WIDTH - 60),
-                  y: clamp(item.y + dy, 60, WORLD_HEIGHT - 60),
-                }
-              : item
-          )
-        );
-      }
+        if (dragRef.current.objectType === 'decoration') {
+          setDecorations((prev) =>
+            prev.map((item) =>
+              item.id === dragRef.current.objectId
+                ? {
+                    ...item,
+                    x: clamp(item.x + dx, margin, WORLD_WIDTH - margin),
+                    y: clamp(item.y + dy, margin, WORLD_HEIGHT - margin),
+                  }
+                : item
+            )
+          );
+        }
 
-      dragRef.current.startX = e.clientX;
-      dragRef.current.startY = e.clientY;
-    }
-  }, [scale, setDecorations, setCharacters, setBuildingLayout, viewportWidth]);
+        if (dragRef.current.objectType === 'character') {
+          setCharacters((prev) =>
+            prev.map((item) =>
+              item.id === dragRef.current.objectId
+                ? {
+                    ...item,
+                    x: clamp(item.x + dx, margin, WORLD_WIDTH - margin),
+                    y: clamp(item.y + dy, margin, WORLD_HEIGHT - margin),
+                  }
+                : item
+            )
+          );
+        }
+
+        if (dragRef.current.objectType === 'building') {
+          setBuildingLayout((prev) =>
+            prev.map((item) =>
+              item.category === dragRef.current.objectId
+                ? {
+                    ...item,
+                    x: clamp(item.x + dx, 56, WORLD_WIDTH - 56),
+                    y: clamp(item.y + dy, 56, WORLD_HEIGHT - 56),
+                  }
+                : item
+            )
+          );
+        }
+
+        dragRef.current.startX = e.clientX;
+        dragRef.current.startY = e.clientY;
+      }
+    },
+    [scale, setDecorations, setCharacters, setBuildingLayout, viewportWidth]
+  );
 
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
@@ -1365,24 +1440,18 @@ function VillageWorldLayer({
     if (isEditMode) return;
 
     const timer = setInterval(() => {
-      setCharacters((prev) =>
-        prev.map((npc) => ({
-          ...npc,
-          x: clamp(npc.x + randomBetween(-30, 30), 50, WORLD_WIDTH - 50),
-          y: clamp(npc.y + randomBetween(-25, 25), 50, WORLD_HEIGHT - 50),
-          flipped: randomBetween(0, 1) > 0.5 ? !npc.flipped : npc.flipped,
-        }))
-      );
+      setCharacters((prev) => prev.map((npc) => moveNpcAvoidingBuildings(npc, buildingHitboxes)));
     }, 2600);
 
     return () => clearInterval(timer);
-  }, [isEditMode, setCharacters]);
+  }, [isEditMode, setCharacters, buildingHitboxes]);
 
   return (
     <div
       className="sticky top-0 z-40 overflow-hidden"
       style={{
-        background: 'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 100%)',
+        background:
+          'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 100%)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
       }}
@@ -1404,6 +1473,7 @@ function VillageWorldLayer({
             isOverview={isOverview}
             onToggleOverview={onToggleOverview}
             onOpenShop={onOpenShop}
+            onOpenBag={onOpenBag}
           />
 
           <EditToolbar
@@ -1479,7 +1549,7 @@ function VillageWorldLayer({
                       top: building.y,
                       width: building.w,
                       height: building.h,
-                      transform: `scaleX(${building.flipped ? -1 : 1})`,
+                      transform: `translate(-50%, -50%) scaleX(${building.flipped ? -1 : 1})`,
                       outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
                       outlineOffset: '4px',
                       borderRadius: '20px',
@@ -1511,7 +1581,9 @@ function VillageWorldLayer({
                       width: npc.size,
                       height: npc.size,
                       transform: `translate(-50%, -50%) scaleX(${npc.flipped ? -1 : 1})`,
-                      transition: isEditMode ? 'none' : 'left 2200ms ease-in-out, top 2200ms ease-in-out',
+                      transition: isEditMode
+                        ? 'none'
+                        : 'left 2200ms ease-in-out, top 2200ms ease-in-out',
                       outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
                       outlineOffset: '3px',
                       borderRadius: '999px',
@@ -1555,7 +1627,7 @@ export default function Home() {
 
   const [activeCategory, setActiveCategory] = useState(() => {
     try {
-      const raw = guestDataPersistence.getData();
+      const raw = guestDataPersistence.getData?.() || {};
       const cat =
         raw?.activeCategory ||
         raw?.guest_active_category ||
@@ -1569,10 +1641,12 @@ export default function Home() {
 
   const [expPopup, setExpPopup] = useState(null);
   const [pointPopup, setPointPopup] = useState(null);
-  const [newTitle, setNewTitle] = useState(null);
 
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [shopTab, setShopTab] = useState('character');
+
+  const [isBagOpen, setIsBagOpen] = useState(false);
+  const [bagTab, setBagTab] = useState('character');
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedObject, setSelectedObject] = useState(null);
@@ -1580,10 +1654,10 @@ export default function Home() {
   const [decorations, setDecorations] = useState([]);
   const [characters, setCharacters] = useState(DEFAULT_VILLAGE_DATA.village_characters);
   const [buildingLayout, setBuildingLayout] = useState(DEFAULT_BUILDINGS);
+  const [ownedCharacters, setOwnedCharacters] = useState(DEFAULT_VILLAGE_DATA.owned_characters);
+  const [ownedDecorations, setOwnedDecorations] = useState(DEFAULT_VILLAGE_DATA.owned_decorations);
 
   const originalVillageRef = useRef(null);
-  const hasCategoryInteractionRef = useRef(false);
-  const chainRepairOnceRef = useRef(false);
   const expPopupTimerRef = useRef(null);
   const pointPopupTimerRef = useRef(null);
 
@@ -1593,452 +1667,199 @@ export default function Home() {
     return () => window.removeEventListener('root-home-data-updated', handleUpdate);
   }, []);
 
-  useEffect(() => {
-    if (!expPopup) return undefined;
-    clearTimeout(expPopupTimerRef.current);
-    expPopupTimerRef.current = setTimeout(() => setExpPopup(null), 1400);
-    return () => clearTimeout(expPopupTimerRef.current);
-  }, [expPopup]);
+  const guestData = useMemo(() => readGuestData(), [guestVersion]);
 
-  useEffect(() => {
-    if (!pointPopup) return undefined;
-    clearTimeout(pointPopupTimerRef.current);
-    pointPopupTimerRef.current = setTimeout(() => setPointPopup(null), 1400);
-    return () => clearTimeout(pointPopupTimerRef.current);
-  }, [pointPopup]);
-
-  const { data: user, isLoading: isUserLoading } = useQuery({
-    queryKey: ['me'],
-    queryFn: () => base44.auth.me().catch(() => null),
-    staleTime: 1000 * 30,
-  });
-
-  const isGuest = !user;
-
-  const { data: guestData = {} } = useQuery({
-    queryKey: ['guest-home-data', guestVersion],
-    queryFn: () => readGuestData(),
-    staleTime: 0,
-  });
-
-  const { data: goals = [] } = useQuery({
-    queryKey: ['goals', isGuest, guestVersion],
-    enabled: !isUserLoading,
+  const { data: me } = useQuery({
+    queryKey: ['root-home-me'],
     queryFn: async () => {
-      if (isGuest) {
-        const rawGoals =
-          Array.isArray(guestData?.goals) && guestData.goals.length > 0
-            ? guestData.goals
-            : guestData?.goalData
-              ? [guestData.goalData]
-              : [];
-        return normalizeGuestGoals(rawGoals, guestData?.category || 'exercise');
+      try {
+        return await base44.auth.me();
+      } catch {
+        return null;
       }
-      return base44.entities.Goal.list('-created_date', 100);
     },
+    staleTime: 30 * 1000,
   });
 
-  const { data: actionGoals = [] } = useQuery({
-    queryKey: ['actionGoals', isGuest, guestVersion],
-    enabled: !isUserLoading,
+  const { data: serverGoals = [] } = useQuery({
+    queryKey: ['root-home-goals'],
     queryFn: async () => {
-      if (isGuest) {
-        const normalizedGoals = normalizeGuestGoals(
-          Array.isArray(guestData?.goals) && guestData.goals.length > 0
-            ? guestData.goals
-            : guestData?.goalData
-              ? [guestData.goalData]
-              : [],
-          guestData?.category || 'exercise'
-        );
-
-        const rawActionGoals =
-          Array.isArray(guestData?.actionGoals) && guestData.actionGoals.length > 0
-            ? guestData.actionGoals
-            : guestData?.actionGoalData
-              ? [guestData.actionGoalData]
-              : [];
-
-        return normalizeGuestActionGoals(
-          rawActionGoals,
-          normalizedGoals,
-          guestData?.category || normalizedGoals[0]?.category || 'exercise'
-        );
+      try {
+        return await base44.entities.Goal.list('-created_date', 200);
+      } catch {
+        return [];
       }
-      return base44.entities.ActionGoal.list('-created_date', 200);
     },
+    staleTime: 15 * 1000,
   });
 
-  const { data: allLogs = [] } = useQuery({
-    queryKey: ['allLogs', isGuest, guestVersion],
-    enabled: !isUserLoading,
+  const { data: serverActionGoals = [] } = useQuery({
+    queryKey: ['root-home-action-goals'],
     queryFn: async () => {
-      if (isGuest) return guestData?.actionLogs || [];
-      return base44.entities.ActionLog.list('-date', 500);
+      try {
+        return await base44.entities.ActionGoal.list('-created_date', 300);
+      } catch {
+        return [];
+      }
     },
+    staleTime: 15 * 1000,
   });
 
-  const connectedActionGoals = useMemo(
-    () => connectActionGoalsToGoals(goals, actionGoals),
-    [goals, actionGoals]
-  );
+  const isLoggedIn = !!me?.id;
 
-  useEffect(() => {
-    if (!Array.isArray(actionGoals) || actionGoals.length === 0) return;
-    if (chainRepairOnceRef.current) return;
-
-    const needsRepair = actionGoals.some((goal) => {
-      const resolved = resolveGoalIdForActionGoal(goal, goals, activeCategory);
-      return !goal?.goal_id || goal.goal_id !== resolved;
-    });
-
-    if (!needsRepair) return;
-    chainRepairOnceRef.current = true;
-
-    if (isGuest) {
-      writeGuestDataPatch((prev) => {
-        const prevActionGoals = Array.isArray(prev?.actionGoals) ? prev.actionGoals : [];
-        const repaired = prevActionGoals.map((goal) => ({
-          ...goal,
-          goal_id: resolveGoalIdForActionGoal(
-            goal,
-            goals,
-            prev?.category || activeCategory || 'exercise'
-          ),
-        }));
-        return {
-          ...prev,
-          actionGoals: repaired,
-          actionGoalData: repaired[0] || prev?.actionGoalData || null,
-        };
-      });
-      window.dispatchEvent(new Event('root-home-data-updated'));
-      return;
+  const goals = useMemo(() => {
+    if (isLoggedIn) {
+      return (Array.isArray(serverGoals) ? serverGoals : []).map((goal) => ({
+        ...goal,
+        category: normalizeCategoryValue(goal?.category, 'exercise'),
+      }));
     }
+    return normalizeGuestGoals(guestData?.goals || [], activeCategory);
+  }, [isLoggedIn, serverGoals, guestData, activeCategory]);
 
-    const updates = actionGoals
-      .map((goal) => ({
-        id: goal?.id,
-        currentGoalId: goal?.goal_id || null,
-        nextGoalId: resolveGoalIdForActionGoal(
-          goal,
-          goals,
-          user?.active_category || activeCategory || 'exercise'
-        ),
-      }))
-      .filter((item) => item.id && item.nextGoalId && item.currentGoalId !== item.nextGoalId);
+  const connectedActionGoals = useMemo(() => {
+    const source = isLoggedIn
+      ? (Array.isArray(serverActionGoals) ? serverActionGoals : [])
+      : normalizeGuestActionGoals(guestData?.actionGoals || [], goals, activeCategory);
 
-    if (updates.length === 0) return;
+    return connectActionGoalsToGoals(goals, source).filter(
+      (item) => resolveCategoryKey(item?.category, 'exercise') === activeCategory
+    );
+  }, [isLoggedIn, serverActionGoals, guestData, goals, activeCategory]);
 
-    Promise.all(
-      updates.map((item) =>
-        base44.entities.ActionGoal.update(item.id, {
-          goal_id: item.nextGoalId,
-        })
-      )
-    )
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: ['actionGoals'] });
-      })
-      .catch((error) => {
-        console.error('Failed to repair actionGoal.goal_id:', error);
-      });
-  }, [actionGoals, goals, isGuest, activeCategory, queryClient, user]);
+  const allConnectedActionGoals = useMemo(() => {
+    const source = isLoggedIn
+      ? (Array.isArray(serverActionGoals) ? serverActionGoals : [])
+      : normalizeGuestActionGoals(guestData?.actionGoals || [], goals, activeCategory);
 
-  useEffect(() => {
-    const report = validateGoalActionLogChain(goals, connectedActionGoals, allLogs);
-    if (
-      report.actionGoalsWithoutGoalId > 0 ||
-      report.logsWithoutGoalId > 0 ||
-      report.logsWithUnknownActionGoal > 0 ||
-      report.actionGoalsWithUnknownGoal > 0
-    ) {
-      console.warn('[Home] goal→actionGoal→log chain issue detected:', report);
-    }
-  }, [goals, connectedActionGoals, allLogs]);
+    return connectActionGoalsToGoals(goals, source);
+  }, [isLoggedIn, serverActionGoals, guestData, goals, activeCategory]);
+
+  const logs = useMemo(() => {
+    const localLogs = Array.isArray(guestData?.actionLogs)
+      ? guestData.actionLogs
+      : Array.isArray(guestData?.local_action_logs)
+      ? guestData.local_action_logs
+      : [];
+    return localLogs;
+  }, [guestData]);
 
   const userLevels = useMemo(() => {
-    if (isGuest) return getDefaultUserLevels(guestData?.actionLogs || []);
-    return getDefaultUserLevels(allLogs || []);
-  }, [isGuest, guestData, allLogs]);
+    const saved = guestData?.userLevels;
+    if (saved && typeof saved === 'object') return saved;
+    return getDefaultUserLevels(logs);
+  }, [guestData, logs]);
 
-  const derivedStats = useMemo(() => {
-    const sourceLogs = isGuest ? guestData?.actionLogs || [] : allLogs || [];
-    return buildDerivedStats(sourceLogs, connectedActionGoals || []);
-  }, [isGuest, guestData, allLogs, connectedActionGoals]);
+  const totalLevel = useMemo(() => {
+    return (
+      Number(userLevels.exercise_level || 1) +
+      Number(userLevels.study_level || 1) +
+      Number(userLevels.mental_level || 1) +
+      Number(userLevels.daily_level || 1)
+    );
+  }, [userLevels]);
 
-  const ownedTitleIds = useMemo(
-    () => getOwnedTitleIds({ isGuest, user, guestData }),
-    [isGuest, user, guestData, guestVersion]
+  const nickname = guestData?.nickname || me?.nickname || me?.name || '루트 용사';
+
+  const villageState = useMemo(() => getVillageState(guestData), [guestData]);
+
+  useEffect(() => {
+    setDecorations(villageState.village_decorations || []);
+    setCharacters(villageState.village_characters || DEFAULT_VILLAGE_DATA.village_characters);
+    setBuildingLayout(villageState.village_buildings || DEFAULT_BUILDINGS);
+    setOwnedCharacters(villageState.owned_characters || DEFAULT_VILLAGE_DATA.owned_characters);
+    setOwnedDecorations(villageState.owned_decorations || []);
+  }, [villageState]);
+
+  useEffect(() => {
+    if (!guestData?.activeCategory && activeCategory) return;
+    if (typeof guestDataPersistence?.saveData === 'function') {
+      guestDataPersistence.saveData('activeCategory', activeCategory);
+    }
+  }, [activeCategory, guestData]);
+
+  const points = Number(guestData?.village_points ?? 0);
+  const today = getTodayString();
+
+  const { todayItems, scheduledItems, overdueItems } = useMemo(
+    () => groupActionGoals(connectedActionGoals, today),
+    [connectedActionGoals, today]
   );
 
-  useEffect(() => {
-    ensureValidEquippedTitle({ isGuest, user, guestData, ownedTitleIds, queryClient })
-      .then((nextGuest) => {
-        if (!isGuest || !nextGuest) return;
-        queryClient.removeQueries({ queryKey: ['guest-home-data'] });
-        queryClient.removeQueries({ queryKey: ['guest-records-data'] });
-        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
-        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
-        window.dispatchEvent(new Event('root-home-data-updated'));
-        setGuestVersion((v) => v + 1);
-      })
-      .catch((error) => {
-        console.error('ensureValidEquippedTitle error:', error);
-      });
-  }, [isGuest, ownedTitleIds, guestData, queryClient]);
-
-  useEffect(() => {
-    if (isUserLoading) return;
-
-    const current = normalizeCategoryValue(activeCategory, 'exercise');
-
-    if (isGuest) {
-      const guestCategory = normalizeCategoryValue(
-        guestData?.activeCategory ||
-          guestData?.guest_active_category ||
-          guestData?.category ||
-          guestData?.goalData?.category ||
-          guestData?.actionGoalData?.category ||
-          guestData?.goals?.[0]?.category,
-        'exercise'
-      );
-
-      if (!hasCategoryInteractionRef.current || !VALID_CATEGORIES.includes(current)) {
-        setActiveCategory(guestCategory);
-      }
-      return;
-    }
-
-    const userCategory = normalizeCategoryValue(
-      user?.active_category || goals?.[0]?.category,
-      'exercise'
-    );
-
-    if (!hasCategoryInteractionRef.current || !VALID_CATEGORIES.includes(current)) {
-      setActiveCategory(userCategory);
-    }
-  }, [isUserLoading, isGuest, guestData, user, goals, activeCategory]);
-
-  useEffect(() => {
-    const source = isGuest ? guestData : user;
-    const village = getVillageState(source || {});
-    setDecorations(
-      (village.village_decorations || []).map((item) => ({
-        ...item,
-        image: getDecorationImage(item.type),
-      }))
-    );
-    setCharacters(
-      (village.village_characters || []).map((item) => ({
-        ...item,
-        image: getCharacterImage(item.type),
-      }))
-    );
-    setBuildingLayout(village.village_buildings);
-    originalVillageRef.current = village;
-  }, [isGuest, guestData, user]);
-
-  const handleCategoryChange = async (category) => {
-    const normalizedCategory = normalizeCategoryValue(category, 'exercise');
-    hasCategoryInteractionRef.current = true;
-    setActiveCategory(normalizedCategory);
-
-    if (isGuest) {
-      writeGuestDataPatch((prev) => ({
-        ...prev,
-        category: normalizedCategory,
-        activeCategory: normalizedCategory,
-        guest_active_category: normalizedCategory,
-      }));
-      window.dispatchEvent(new Event('root-home-data-updated'));
-      return;
-    }
-
-    try {
-      await base44.auth.updateMe({ active_category: normalizedCategory });
-      queryClient.invalidateQueries({ queryKey: ['me'] });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const activeGoals = useMemo(() => {
-    return (goals || []).filter((goal) => {
-      const goalCategory = normalizeCategoryValue(goal?.category, '');
-      if (goalCategory !== activeCategory) return false;
-      if (goal?.status && goal.status !== 'active') return false;
-      return true;
-    });
+  const activeGoal = useMemo(() => {
+    return goals.find((goal) => resolveCategoryKey(goal?.category) === activeCategory) || null;
   }, [goals, activeCategory]);
 
-  const activeGoal = activeGoals[0] || null;
+  const progress = useMemo(() => {
+    if (!activeGoal) return 0;
 
-  const activeActionGoals = useMemo(() => {
-    const goalIds = new Set(activeGoals.map((goal) => goal.id));
+    const goalActionGoals = allConnectedActionGoals.filter((ag) => ag.goal_id === activeGoal.id);
+    if (goalActionGoals.length === 0) return 0;
 
-    return (connectedActionGoals || []).filter((actionGoal) => {
-      const actionCategory = normalizeCategoryValue(actionGoal?.category, '');
-      if (actionCategory !== activeCategory) return false;
-      if (
-        actionGoal?.status &&
-        actionGoal.status !== 'active' &&
-        actionGoal.status !== 'completed'
-      ) {
-        return false;
-      }
-      if (!actionGoal?.goal_id) return false;
-      if (goalIds.size === 0) return false;
+    const totalCompleted = goalActionGoals.reduce((acc, actionGoal) => {
+      const actionLogs = getAllLogsForAction(logs, actionGoal.id).filter((log) => log?.completed);
+      return acc + actionLogs.length;
+    }, 0);
 
-      return goalIds.has(actionGoal.goal_id);
-    });
-  }, [connectedActionGoals, activeCategory, activeGoals]);
+    const target = goalActionGoals.reduce((acc, actionGoal) => {
+      if (actionGoal?.action_type === 'one_time') return acc + 1;
+      return acc + Number(actionGoal?.weekly_frequency || 1);
+    }, 0);
 
-  const goalLogs = useMemo(() => {
-    if (!activeGoal) return [];
-    return (allLogs || []).filter((log) => log?.goal_id === activeGoal.id);
-  }, [allLogs, activeGoal]);
+    if (target <= 0) return 0;
+    return Math.min(100, Math.round((totalCompleted / target) * 100));
+  }, [activeGoal, allConnectedActionGoals, logs]);
 
-  const today = getTodayString();
-  const grouped = useMemo(() => groupActionGoals(activeActionGoals, today), [activeActionGoals, today]);
-
-  const nickname = isGuest ? guestData?.nickname || '용사' : user?.nickname || '용사';
-
-  const handleCreateGoal = () => {
-    const route = CATEGORY_ROUTE_MAP[activeCategory] || '/CreateGoalExercise';
-    navigate(route);
-  };
-
-  const persistNewTitle = async (titleId) => {
-    if (!titleId) return null;
-
-    if (isGuest) {
-      try {
-        await addOwnedTitle({ titleId, isGuest, user, queryClient });
-        queryClient.removeQueries({ queryKey: ['guest-home-data'] });
-        queryClient.removeQueries({ queryKey: ['guest-records-data'] });
-        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
-        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
-        window.dispatchEvent(new Event('root-home-data-updated'));
-        setGuestVersion((v) => v + 1);
-      } catch (error) {
-        console.error('persistNewTitle guest error:', error);
-      }
-      return titleId;
-    }
-
-    try {
-      await addOwnedTitle({ titleId, isGuest, user, queryClient });
-      queryClient.invalidateQueries({ queryKey: ['me'] });
-    } catch (error) {
-      console.error('persistNewTitle user error:', error);
-    }
-    return titleId;
-  };
-
-  const handleEquipTitle = async (titleId) => {
-    try {
-      await setEquippedTitle({ titleId, isGuest, user, queryClient });
-      setNewTitle(null);
-
-      if (isGuest) {
-        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
-        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
-        window.dispatchEvent(new Event('root-home-data-updated'));
-        setGuestVersion((v) => v + 1);
-      } else {
-        queryClient.invalidateQueries({ queryKey: ['me'] });
-      }
-
-      toast.success('대표 칭호가 설정되었어요.');
-    } catch (error) {
-      console.error('handleEquipTitle error:', error);
-      toast.error('대표 칭호 설정에 실패했어요.');
-    }
-  };
-
-  const saveVillageState = async (nextState) => {
-    if (isGuest) {
+  const persistVillageState = useCallback(
+    (patch = {}) => {
       writeGuestDataPatch((prev) => ({
         ...prev,
-        village_points: nextState.village_points,
-        village_decorations: nextState.village_decorations.map(({ image, ...rest }) => rest),
-        village_characters: nextState.village_characters.map(({ image, ...rest }) => rest),
-        village_buildings: nextState.village_buildings,
+        village_points: patch.village_points ?? points,
+        village_decorations: patch.village_decorations ?? decorations,
+        village_characters: patch.village_characters ?? characters,
+        village_buildings: patch.village_buildings ?? buildingLayout,
+        owned_characters: patch.owned_characters ?? ownedCharacters,
+        owned_decorations: patch.owned_decorations ?? ownedDecorations,
       }));
       window.dispatchEvent(new Event('root-home-data-updated'));
-      return;
+    },
+    [points, decorations, characters, buildingLayout, ownedCharacters, ownedDecorations]
+  );
+
+  const handleSaveEdit = useCallback(() => {
+    persistVillageState();
+    originalVillageRef.current = null;
+    setIsEditMode(false);
+    setSelectedObject(null);
+    toast.success('마을 배치를 저장했어');
+  }, [persistVillageState]);
+
+  const handleCancelEdit = useCallback(() => {
+    if (originalVillageRef.current) {
+      setDecorations(originalVillageRef.current.decorations);
+      setCharacters(originalVillageRef.current.characters);
+      setBuildingLayout(originalVillageRef.current.buildingLayout);
     }
+    setIsEditMode(false);
+    setSelectedObject(null);
+    toast('편집을 취소했어');
+  }, []);
 
-    await base44.auth.updateMe({
-      village_points: nextState.village_points,
-      village_decorations: nextState.village_decorations.map(({ image, ...rest }) => rest),
-      village_characters: nextState.village_characters.map(({ image, ...rest }) => rest),
-      village_buildings: nextState.village_buildings,
-    });
-    queryClient.invalidateQueries({ queryKey: ['me'] });
-  };
-
-  const handleVillagePurchase = async (item) => {
-    const source = isGuest ? guestData : user;
-    const currentVillage = getVillageState(source || {});
-    const currentPoints = Number(currentVillage.village_points || 0);
-
-    if (currentPoints < item.price) {
-      toast.error('포인트가 부족해요.');
-      return;
-    }
-
-    const nextPoints = currentPoints - item.price;
-    const nextDecorations = [...decorations];
-    const nextCharacters = [...characters];
-
-    if (item.type === 'decoration') {
-      nextDecorations.push(createDecoration(item.subtype));
-    } else if (item.type === 'character') {
-      nextCharacters.push(createCharacter(item.subtype));
-    }
-
-    const nextState = {
-      village_points: nextPoints,
-      village_decorations: nextDecorations,
-      village_characters: nextCharacters,
-      village_buildings: buildingLayout,
-    };
-
-    try {
-      await saveVillageState(nextState);
-      setDecorations(nextDecorations);
-      setCharacters(nextCharacters);
-      originalVillageRef.current = {
-        ...currentVillage,
-        ...nextState,
-      };
-      toast.success(`${item.label} 구매 완료! (-${item.price} 포인트)`);
-    } catch (error) {
-      console.error('handleVillagePurchase error:', error);
-      toast.error('구매 중 오류가 발생했어요.');
-    }
-  };
-
-  const handleToggleEditMode = () => {
+  const handleToggleEditMode = useCallback(() => {
     if (!isEditMode) {
       originalVillageRef.current = {
-        village_points: points,
-        village_decorations: decorations,
-        village_characters: characters,
-        village_buildings: buildingLayout,
+        decorations: JSON.parse(JSON.stringify(decorations)),
+        characters: JSON.parse(JSON.stringify(characters)),
+        buildingLayout: JSON.parse(JSON.stringify(buildingLayout)),
       };
-      setSelectedObject(null);
       setIsEditMode(true);
       return;
     }
 
-    setIsEditMode(false);
-    setSelectedObject(null);
-  };
+    handleSaveEdit();
+  }, [isEditMode, decorations, characters, buildingLayout, handleSaveEdit]);
 
-  const handleFlipSelected = () => {
+  const handleFlipSelected = useCallback(() => {
     if (!selectedObject) return;
 
     if (selectedObject.type === 'decoration') {
@@ -2047,6 +1868,7 @@ export default function Home() {
           item.id === selectedObject.id ? { ...item, flipped: !item.flipped } : item
         )
       );
+      return;
     }
 
     if (selectedObject.type === 'character') {
@@ -2055,6 +1877,7 @@ export default function Home() {
           item.id === selectedObject.id ? { ...item, flipped: !item.flipped } : item
         )
       );
+      return;
     }
 
     if (selectedObject.type === 'building') {
@@ -2064,222 +1887,226 @@ export default function Home() {
         )
       );
     }
-  };
+  }, [selectedObject]);
 
-  const handleSaveEdit = async () => {
-    try {
-      const source = isGuest ? guestData : user;
-      const currentVillage = getVillageState(source || {});
-
-      const nextState = {
-        village_points: currentVillage.village_points,
-        village_decorations: decorations,
-        village_characters: characters,
-        village_buildings: buildingLayout,
-      };
-
-      await saveVillageState(nextState);
-      originalVillageRef.current = nextState;
-      setIsEditMode(false);
-      setSelectedObject(null);
-      toast.success('마을 배치를 저장했어요!');
-    } catch (error) {
-      console.error('handleSaveEdit error:', error);
-      toast.error('배치 저장 중 오류가 발생했어요.');
-    }
-  };
-
-  const handleCancelEdit = () => {
-    const original = originalVillageRef.current;
-    if (original) {
-      setDecorations(
-        (original.village_decorations || []).map((item) => ({
-          ...item,
-          image: getDecorationImage(item.type),
-        }))
-      );
-      setCharacters(
-        (original.village_characters || []).map((item) => ({
-          ...item,
-          image: getCharacterImage(item.type),
-        }))
-      );
-      setBuildingLayout(original.village_buildings || DEFAULT_BUILDINGS);
-    }
-    setSelectedObject(null);
-    setIsEditMode(false);
-    toast.success('편집을 취소했어요.');
-  };
-
-  const handleActionComplete = async (actionGoal, minutes = 0, extra = {}) => {
-    try {
-      const now = new Date().toISOString();
-      const todayStr = getTodayString();
-      const earnedExp = calculateExp(actionGoal, minutes);
-      const earnedVillagePoints = calculateVillagePointReward(actionGoal, minutes);
-
-      const safeGoalId =
-        actionGoal?.goal_id ||
-        resolveGoalIdForActionGoal(actionGoal, goals, activeCategory);
-
-      if (!safeGoalId) {
-        toast.error('행동목표와 결과목표 연결이 끊어졌어요. 새로고침 후 다시 시도해 주세요.');
+  const handleBuy = useCallback(
+    (item) => {
+      if (points < item.price) {
+        toast.error('포인트가 부족해');
         return;
       }
 
-      const logPayload = {
-        id: `local_log_${Date.now()}`,
-        action_goal_id: actionGoal.id,
-        goal_id: safeGoalId,
-        category: actionGoal.category,
-        title: actionGoal.title || '',
-        completed: true,
-        date: todayStr,
-        duration_minutes: Number(minutes || 0),
-        gps_enabled: !!extra?.gpsEnabled,
-        distance_km: extra?.distance ?? null,
-        route_coordinates: extra?.coords ? JSON.stringify(extra.coords) : null,
-        photo_url: extra?.photo || null,
-        memo: extra?.memo || '',
-        meta_action_type: actionGoal.action_type || 'confirm',
-        created_date: now,
-        updated_date: now,
+      const nextPoints = points - item.price;
+
+      if (item.type === 'character') {
+        const newOwned = [
+          ...ownedCharacters,
+          {
+            id: `owned_character_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+            shop_item_id: item.id,
+            type: item.subtype,
+            label: item.label,
+            image: item.image,
+            placed: false,
+          },
+        ];
+
+        setOwnedCharacters(newOwned);
+        persistVillageState({
+          village_points: nextPoints,
+          owned_characters: newOwned,
+        });
+        toast.success(`${item.label} 구매 완료! 가방에 들어갔어`);
+        return;
+      }
+
+      const newOwned = [
+        ...ownedDecorations,
+        {
+          id: `owned_decoration_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+          shop_item_id: item.id,
+          type: item.subtype,
+          label: item.label,
+          image: item.image,
+          placed: false,
+        },
+      ];
+
+      setOwnedDecorations(newOwned);
+      persistVillageState({
+        village_points: nextPoints,
+        owned_decorations: newOwned,
+      });
+      toast.success(`${item.label} 구매 완료! 가방에 들어갔어`);
+    },
+    [points, ownedCharacters, ownedDecorations, persistVillageState]
+  );
+
+  const handlePlaceCharacter = useCallback(
+    (ownedItem) => {
+      const buildingHitboxes = buildBuildingHitboxes(
+        buildWorldBuildings({ userLevels, buildingLayout })
+      );
+      const safePoint = findSafeRandomPoint(buildingHitboxes, WORLD_WIDTH, WORLD_HEIGHT);
+
+      const newCharacter = {
+        ...createCharacter(ownedItem.type),
+        id: `placed_${ownedItem.id}`,
+        name: ownedItem.label,
+        image: ownedItem.image,
+        x: safePoint.x,
+        y: safePoint.y,
       };
 
-      const currentVillageSource = isGuest ? guestData : user;
-      const currentVillage = getVillageState(currentVillageSource || {});
-      const nextVillagePoints = Number(currentVillage.village_points || 0) + earnedVillagePoints;
+      const nextCharacters = [...characters, newCharacter];
+      const nextOwned = ownedCharacters.map((item) =>
+        item.id === ownedItem.id ? { ...item, placed: true } : item
+      );
 
-      if (isGuest) {
-        guestDataPersistence.addActionLog(logPayload);
+      setCharacters(nextCharacters);
+      setOwnedCharacters(nextOwned);
+      persistVillageState({
+        village_characters: nextCharacters,
+        owned_characters: nextOwned,
+      });
+      toast.success(`${ownedItem.label}을(를) 마을에 배치했어`);
+    },
+    [characters, ownedCharacters, persistVillageState, userLevels, buildingLayout]
+  );
 
-        if (actionGoal.action_type === 'one_time') {
-          guestDataPersistence.updateActionGoal(actionGoal.id, {
-            status: 'completed',
-            completed: true,
-            completed_date: todayStr,
-            updated_date: now,
-          });
-        }
+  const handlePlaceDecoration = useCallback(
+    (ownedItem) => {
+      const newDecoration = {
+        ...createDecoration(ownedItem.type),
+        id: `placed_${ownedItem.id}`,
+        image: ownedItem.image,
+        type: ownedItem.type,
+      };
 
-        writeGuestDataPatch((prev) => ({
-          ...prev,
-          village_points: nextVillagePoints,
-        }));
+      const nextDecorations = [...decorations, newDecoration];
+      const nextOwned = ownedDecorations.map((item) =>
+        item.id === ownedItem.id ? { ...item, placed: true } : item
+      );
 
-        queryClient.removeQueries({ queryKey: ['guest-home-data'] });
-        queryClient.removeQueries({ queryKey: ['guest-records-data'] });
-        queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
-        queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
+      setDecorations(nextDecorations);
+      setOwnedDecorations(nextOwned);
+      persistVillageState({
+        village_decorations: nextDecorations,
+        owned_decorations: nextOwned,
+      });
+      toast.success(`${ownedItem.label}을(를) 마을에 배치했어`);
+    },
+    [decorations, ownedDecorations, persistVillageState]
+  );
 
-        window.dispatchEvent(new Event('root-home-data-updated'));
-      } else {
-        await base44.entities.ActionLog.create({
-          ...logPayload,
-          id: undefined,
-        });
+  const showExp = useCallback((exp) => {
+    setExpPopup(exp);
+    if (expPopupTimerRef.current) clearTimeout(expPopupTimerRef.current);
+    expPopupTimerRef.current = setTimeout(() => setExpPopup(null), 1400);
+  }, []);
 
-        if (actionGoal.action_type === 'one_time') {
-          await base44.entities.ActionGoal.update(actionGoal.id, {
-            status: 'completed',
-            completed: true,
-            completed_date: todayStr,
-            updated_date: now,
-          });
-        }
+  const showPoints = useCallback((value) => {
+    setPointPopup(value);
+    if (pointPopupTimerRef.current) clearTimeout(pointPopupTimerRef.current);
+    pointPopupTimerRef.current = setTimeout(() => setPointPopup(null), 1400);
+  }, []);
 
-        await base44.auth.updateMe({
-          village_points: nextVillagePoints,
-        });
+  useEffect(() => {
+    return () => {
+      if (expPopupTimerRef.current) clearTimeout(expPopupTimerRef.current);
+      if (pointPopupTimerRef.current) clearTimeout(pointPopupTimerRef.current);
+    };
+  }, []);
 
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['allLogs'] }),
-          queryClient.invalidateQueries({ queryKey: ['actionGoals'] }),
-          queryClient.invalidateQueries({ queryKey: ['goals'] }),
-          queryClient.invalidateQueries({ queryKey: ['me'] }),
-        ]);
+  const handleCompleteActionGoal = useCallback(
+    async (actionGoal, payload = {}) => {
+      const todayString = getTodayString();
+      const addedExp = calculateExp(actionGoal, payload?.duration_minutes || 0);
+      const addedPoints = calculateVillagePointReward(actionGoal, payload?.duration_minutes || 0);
+
+      const nextLog = {
+        id: `log_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+        action_goal_id: actionGoal.id,
+        goal_id: actionGoal.goal_id,
+        category: actionGoal.category,
+        completed: true,
+        date: todayString,
+        duration_minutes: Number(payload?.duration_minutes || 0),
+        distance_km: Number(payload?.distance_km || 0),
+        meta_action_type: actionGoal?.action_type || 'confirm',
+        photo_url: payload?.photo_url || '',
+      };
+
+      const nextLogs = [...logs, nextLog];
+
+      const nextUserLevels = {
+        ...(guestData?.userLevels || getDefaultUserLevels(logs)),
+      };
+
+      const category = actionGoal.category || activeCategory;
+      const xpKey = `${category}_xp`;
+      const lvKey = `${category}_level`;
+
+      nextUserLevels[xpKey] = Number(nextUserLevels[xpKey] || 0) + addedExp;
+      nextUserLevels[lvKey] = Math.max(1, Math.floor(Number(nextUserLevels[xpKey] || 0) / 30) + 1);
+
+      let nextActionGoals = Array.isArray(guestData?.actionGoals)
+        ? [...guestData.actionGoals]
+        : [];
+
+      if (actionGoal?.action_type === 'one_time') {
+        nextActionGoals = nextActionGoals.map((item) =>
+          item.id === actionGoal.id
+            ? {
+                ...item,
+                status: 'completed',
+                completed: true,
+                completed_date: todayString,
+              }
+            : item
+        );
       }
 
-      setExpPopup(earnedExp);
-      setPointPopup(earnedVillagePoints);
+      writeGuestDataPatch((prev) => ({
+        ...prev,
+        actionLogs: nextLogs,
+        userLevels: nextUserLevels,
+        actionGoals: nextActionGoals.length > 0 ? nextActionGoals : prev.actionGoals,
+        village_points: Number(prev?.village_points || 0) + addedPoints,
+      }));
 
-      const currentLogs = isGuest
-        ? (Array.isArray(guestData?.actionLogs) ? guestData.actionLogs : [])
-        : (Array.isArray(allLogs) ? allLogs : []);
+      queryClient.invalidateQueries({ queryKey: ['root-home-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['root-home-action-goals'] });
+      window.dispatchEvent(new Event('root-home-data-updated'));
 
-      const currentActionGoals = isGuest
-        ? (Array.isArray(guestData?.actionGoals)
-            ? connectActionGoalsToGoals(goals, guestData.actionGoals)
-            : [])
-        : (Array.isArray(connectedActionGoals) ? connectedActionGoals : []);
+      showExp(addedExp);
+      showPoints(addedPoints);
+      toast.success('행동목표 완료!');
+    },
+    [logs, guestData, activeCategory, queryClient, showExp, showPoints]
+  );
 
-      const nextLogs = [...currentLogs, logPayload];
+  const renderActionGoalCard = (actionGoal) => {
+    const weeklyLogs = getWeeklyLogsForAction(logs, actionGoal.id);
+    const allLogs = getAllLogsForAction(logs, actionGoal.id);
+    const streak = getStreakForAction(logs, actionGoal.id);
 
-      const nextActionGoals =
-        actionGoal.action_type === 'one_time'
-          ? currentActionGoals.map((goal) =>
-              goal.id === actionGoal.id
-                ? {
-                    ...goal,
-                    status: 'completed',
-                    completed: true,
-                    completed_date: todayStr,
-                    updated_date: now,
-                  }
-                : goal
-            )
-          : currentActionGoals;
-
-      const nextStats = buildDerivedStats(nextLogs, nextActionGoals);
-
-      const currentOwnedTitleIds = isGuest
-        ? getOwnedTitleIds({ isGuest: true, user: null, guestData: readGuestData() })
-        : getOwnedTitleIds({ isGuest: false, user, guestData: null });
-
-      const unlocked = getNewlyUnlockedTitle(nextStats, currentOwnedTitleIds);
-
-      if (unlocked) {
-        await persistNewTitle(unlocked.id);
-        setNewTitle(unlocked);
-      }
-
-      toast.success('행동목표를 완료했어요!');
-    } catch (error) {
-      console.error('handleActionComplete error:', error);
-      toast.error('행동목표 완료 처리 중 오류가 발생했어요.');
-    }
+    return (
+      <ActionGoalCard
+        key={actionGoal.id}
+        actionGoal={actionGoal}
+        weeklyLogs={weeklyLogs}
+        allLogs={allLogs}
+        streak={streak}
+        onComplete={(payload) => handleCompleteActionGoal(actionGoal, payload)}
+      />
+    );
   };
 
-  const totalLevel = useMemo(() => {
-    const sum =
-      Number(userLevels.exercise_level || 1) +
-      Number(userLevels.study_level || 1) +
-      Number(userLevels.mental_level || 1) +
-      Number(userLevels.daily_level || 1);
-
-    return Math.max(1, Math.floor(sum / 4));
-  }, [userLevels]);
-
-  const points = Number(getVillageState(isGuest ? guestData : user).village_points || 0);
-
   return (
-    <div
-      className="min-h-screen pb-28"
-      style={{
-        background:
-          'linear-gradient(180deg, #f8f1df 0%, #f5e8c9 38%, #f2e1bc 68%, #ebd6a9 100%)',
-      }}
-    >
+    <div className="min-h-screen bg-[#f7f0df] pb-28">
       {expPopup ? <ExpPopup exp={expPopup} /> : null}
       {pointPopup ? <PointPopup points={pointPopup} /> : null}
-
-      {newTitle ? (
-        <TitleUnlockModal
-          title={newTitle}
-          onClose={() => setNewTitle(null)}
-          onEquip={() => handleEquipTitle(newTitle.id)}
-        />
-      ) : null}
 
       <VillageShopModal
         open={isShopOpen}
@@ -2287,7 +2114,18 @@ export default function Home() {
         onTabChange={setShopTab}
         points={points}
         onClose={() => setIsShopOpen(false)}
-        onBuy={handleVillagePurchase}
+        onBuy={handleBuy}
+      />
+
+      <VillageBagModal
+        open={isBagOpen}
+        activeTab={bagTab}
+        onTabChange={setBagTab}
+        ownedCharacters={ownedCharacters}
+        ownedDecorations={ownedDecorations}
+        onClose={() => setIsBagOpen(false)}
+        onPlaceCharacter={handlePlaceCharacter}
+        onPlaceDecoration={handlePlaceDecoration}
       />
 
       <VillageWorldLayer
@@ -2307,105 +2145,66 @@ export default function Home() {
         selectedObject={selectedObject}
         setSelectedObject={setSelectedObject}
         onToggleOverview={() => setIsOverview((prev) => !prev)}
-        onOpenShop={() => {
-          setShopTab('character');
-          setIsShopOpen(true);
-        }}
+        onOpenShop={() => setIsShopOpen(true)}
+        onOpenBag={() => setIsBagOpen(true)}
         onToggleEditMode={handleToggleEditMode}
         onFlipSelected={handleFlipSelected}
         onSaveEdit={handleSaveEdit}
         onCancelEdit={handleCancelEdit}
       />
 
-      <div
-        className="sticky top-[314px] z-40 -mx-4 px-4 pt-1 pb-2"
-        style={{
-          background:
-            'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 78%, rgba(245,232,201,0.88) 100%)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-        }}
-      >
-        <div className="px-4">
-          <CategoryTabs
-            active={activeCategory}
-            onChange={handleCategoryChange}
-            userLevels={userLevels}
-          />
-        </div>
+      <div className="sticky top-[356px] z-30 px-4 pt-2 pb-2 bg-[#f7f0df]/95 backdrop-blur-sm">
+        <CategoryTabs
+          active={activeCategory}
+          onChange={setActiveCategory}
+          userLevels={userLevels}
+        />
       </div>
 
-      <div className="space-y-4 px-4 pt-4">
+      <div className="px-4 pt-3">
         {activeGoal ? (
-          <GoalProgress goal={activeGoal} logs={goalLogs} />
+          <div className="mb-4">
+            <GoalProgress goal={activeGoal} progress={progress} />
+          </div>
         ) : (
-          <EmptyGoalState
-            category={activeCategory}
-            onCreateGoal={handleCreateGoal}
-          />
+          <div className="mb-4">
+            <EmptyGoalState
+              category={activeCategory}
+              onCreateGoal={() => navigate(CATEGORY_ROUTE_MAP[activeCategory])}
+            />
+          </div>
         )}
 
-        {activeGoal ? (
-          <div className="space-y-6 pt-1">
-            <Section
-              title="오늘 해야 할 것"
-              count={grouped.todayItems.length}
-              emptyText="오늘 해야 할 행동목표가 없어요."
-            >
-              {grouped.todayItems.map((actionGoal) => (
-                <ActionGoalCard
-                  key={actionGoal.id}
-                  actionGoal={actionGoal}
-                  weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-                  allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-                  streak={getStreakForAction(allLogs, actionGoal.id)}
-                  onComplete={handleActionComplete}
-                />
-              ))}
-            </Section>
+        <div className="space-y-6">
+          <Section
+            title="오늘 해야 할 것"
+            count={todayItems.length}
+            emptyText="오늘 해야 할 행동목표가 아직 없어"
+          >
+            {todayItems.map(renderActionGoalCard)}
+          </Section>
 
-            <Section
-              title="예정된 목표"
-              count={grouped.scheduledItems.length}
-              emptyText="예정된 목표가 없어요."
-            >
-              {grouped.scheduledItems.map((actionGoal) => (
-                <ActionGoalCard
-                  key={actionGoal.id}
-                  actionGoal={actionGoal}
-                  weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-                  allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-                  streak={getStreakForAction(allLogs, actionGoal.id)}
-                  onComplete={handleActionComplete}
-                />
-              ))}
-            </Section>
+          <Section
+            title="예정된 목표"
+            count={scheduledItems.length}
+            emptyText="예정된 행동목표가 없어"
+          >
+            {scheduledItems.map(renderActionGoalCard)}
+          </Section>
 
-            <Section
-              title="기한 지난 목표"
-              count={grouped.overdueItems.length}
-              emptyText="기한 지난 목표가 없어요."
-            >
-              {grouped.overdueItems.map((actionGoal) => (
-                <ActionGoalCard
-                  key={actionGoal.id}
-                  actionGoal={actionGoal}
-                  weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-                  allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-                  streak={getStreakForAction(allLogs, actionGoal.id)}
-                  onComplete={handleActionComplete}
-                />
-              ))}
-            </Section>
+          <Section
+            title="기한 지난 목표"
+            count={overdueItems.length}
+            emptyText="기한 지난 행동목표가 없어"
+          >
+            {overdueItems.map(renderActionGoalCard)}
+          </Section>
 
-            <div className="pt-1">
-              <AddActionGoalButton
-                onClick={handleCreateGoal}
-                categoryLabel={CATEGORY_LABELS[activeCategory]}
-              />
-            </div>
-          </div>
-        ) : null}
+          <AddActionGoalButton
+            categoryLabel={CATEGORY_LABELS[activeCategory]}
+            onClick={() => navigate(CATEGORY_ROUTE_MAP[activeCategory])}
+          />
+        </div>
       </div>
     </div>
   );
