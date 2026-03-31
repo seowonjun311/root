@@ -12,7 +12,7 @@ import {
 } from '@/lib/titleStorage';
 import { toast } from 'sonner';
 
-import CharacterBanner from '@/components/home/CharacterBanner';
+import HeaderBar from '@/components/home/HeaderBar';
 import CategoryTabs from '@/components/home/CategoryTabs';
 import GoalProgress from '@/components/home/GoalProgress';
 import ActionGoalCard from '@/components/home/ActionGoalCard';
@@ -253,7 +253,10 @@ function normalizeGuestActionGoals(rawActionGoals, goals = [], fallbackCategory 
     .map((actionGoal, index) => {
       const category = normalizeCategoryValue(actionGoal?.category, fallbackCategory);
       const tempGoalId =
-        actionGoal?.goal_id || goals.find((goal) => normalizeCategoryValue(goal?.category, '') === category)?.id || goals[0]?.id || null;
+        actionGoal?.goal_id ||
+        goals.find((goal) => normalizeCategoryValue(goal?.category, '') === category)?.id ||
+        goals[0]?.id ||
+        null;
 
       return {
         ...actionGoal,
@@ -329,14 +332,14 @@ function groupActionGoals(actionGoals, today) {
 
     if (isOneTime) {
       const scheduledDate = normalizeDateOnly(
-  actionGoal?.scheduled_date ||
-  actionGoal?.scheduledDate ||
-  actionGoal?.date ||
-  actionGoal?.target_date ||
-  actionGoal?.targetDate ||
-  actionGoal?.selected_date ||
-  actionGoal?.selectedDate
-);
+        actionGoal?.scheduled_date ||
+          actionGoal?.scheduledDate ||
+          actionGoal?.date ||
+          actionGoal?.target_date ||
+          actionGoal?.targetDate ||
+          actionGoal?.selected_date ||
+          actionGoal?.selectedDate
+      );
 
       if (!scheduledDate) {
         scheduledItems.push(actionGoal);
@@ -384,56 +387,56 @@ function groupActionGoals(actionGoals, today) {
   });
 
   scheduledItems.sort((a, b) => {
-  const aDate =
-    normalizeDateOnly(
-      a?.scheduled_date ||
-      a?.scheduledDate ||
-      a?.date ||
-      a?.target_date ||
-      a?.targetDate ||
-      a?.selected_date ||
-      a?.selectedDate
-    ) || '9999-12-31';
+    const aDate =
+      normalizeDateOnly(
+        a?.scheduled_date ||
+          a?.scheduledDate ||
+          a?.date ||
+          a?.target_date ||
+          a?.targetDate ||
+          a?.selected_date ||
+          a?.selectedDate
+      ) || '9999-12-31';
 
-  const bDate =
-    normalizeDateOnly(
-      b?.scheduled_date ||
-      b?.scheduledDate ||
-      b?.date ||
-      b?.target_date ||
-      b?.targetDate ||
-      b?.selected_date ||
-      b?.selectedDate
-    ) || '9999-12-31';
+    const bDate =
+      normalizeDateOnly(
+        b?.scheduled_date ||
+          b?.scheduledDate ||
+          b?.date ||
+          b?.target_date ||
+          b?.targetDate ||
+          b?.selected_date ||
+          b?.selectedDate
+      ) || '9999-12-31';
 
-  return aDate.localeCompare(bDate);
-});
+    return aDate.localeCompare(bDate);
+  });
 
-overdueItems.sort((a, b) => {
-  const aDate =
-    normalizeDateOnly(
-      a?.scheduled_date ||
-      a?.scheduledDate ||
-      a?.date ||
-      a?.target_date ||
-      a?.targetDate ||
-      a?.selected_date ||
-      a?.selectedDate
-    ) || '0000-01-01';
+  overdueItems.sort((a, b) => {
+    const aDate =
+      normalizeDateOnly(
+        a?.scheduled_date ||
+          a?.scheduledDate ||
+          a?.date ||
+          a?.target_date ||
+          a?.targetDate ||
+          a?.selected_date ||
+          a?.selectedDate
+      ) || '0000-01-01';
 
-  const bDate =
-    normalizeDateOnly(
-      b?.scheduled_date ||
-      b?.scheduledDate ||
-      b?.date ||
-      b?.target_date ||
-      b?.targetDate ||
-      b?.selected_date ||
-      b?.selectedDate
-    ) || '0000-01-01';
+    const bDate =
+      normalizeDateOnly(
+        b?.scheduled_date ||
+          b?.scheduledDate ||
+          b?.date ||
+          b?.target_date ||
+          b?.targetDate ||
+          b?.selected_date ||
+          b?.selectedDate
+      ) || '0000-01-01';
 
-  return aDate.localeCompare(bDate);
-});
+    return aDate.localeCompare(bDate);
+  });
 
   return { todayItems, scheduledItems, overdueItems };
 }
@@ -684,28 +687,149 @@ function AddActionGoalButton({ onClick, categoryLabel }) {
   );
 }
 
+function VillageTopPanel({ activeCategory, isOverview, onToggleOverview }) {
+  return (
+    <div
+      className="overflow-hidden rounded-[28px]"
+      style={{
+        background: 'linear-gradient(180deg, #f3e6c5 0%, #ead4a4 100%)',
+        border: '1px solid rgba(120,90,40,0.12)',
+        boxShadow: '0 12px 24px rgba(80,50,10,0.08)',
+      }}
+    >
+      <div
+        className="relative"
+        style={{
+          height: isOverview ? 250 : 360,
+          transition: 'height 0.25s ease',
+          background:
+            'radial-gradient(circle at 50% 20%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.18) 30%, rgba(0,0,0,0) 55%), linear-gradient(180deg, #cfe9ba 0%, #abd38a 50%, #90bf73 100%)',
+        }}
+      >
+        <div className="absolute left-0 right-0 top-0 px-4 pt-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-[12px] font-bold" style={{ color: '#6b4e15' }}>
+                마을 상단 프리뷰
+              </div>
+              <div className="text-[18px] font-extrabold" style={{ color: '#4a2c08' }}>
+                {CATEGORY_LABELS[activeCategory]} 루트
+              </div>
+              <div className="mt-1 text-[12px]" style={{ color: '#7a5b2b' }}>
+                마을이 주인공이고, 전체보기로 넓게 볼 수 있게 준비한 상단 영역
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={onToggleOverview}
+              className="rounded-full px-3 py-1.5 text-[12px] font-extrabold"
+              style={{
+                background: isOverview
+                  ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
+                  : 'rgba(255,255,255,0.78)',
+                color: isOverview ? '#fff8e8' : '#6b4e15',
+                border: isOverview
+                  ? '2px solid #6b4e15'
+                  : '1px solid rgba(160,120,64,0.16)',
+              }}
+            >
+              {isOverview ? '기본 보기' : '전체 보기'}
+            </button>
+          </div>
+        </div>
+
+        <div className="absolute inset-x-0 bottom-0 top-[74px] px-3 pb-3">
+          <div
+            className="relative h-full w-full overflow-hidden rounded-[24px]"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(245,255,239,0.46) 0%, rgba(234,248,224,0.22) 100%)',
+              border: '1px solid rgba(255,255,255,0.45)',
+            }}
+          >
+            <div className="absolute left-[8%] top-[16%] h-24 w-28 rounded-[22px] bg-[#c7e0a6] opacity-85" />
+            <div className="absolute right-[10%] top-[20%] h-20 w-24 rounded-[20px] bg-[#c2dca0] opacity-85" />
+            <div className="absolute left-[18%] bottom-[24%] h-24 w-28 rounded-[22px] bg-[#bfd89c] opacity-90" />
+            <div className="absolute right-[18%] bottom-[20%] h-24 w-28 rounded-[22px] bg-[#b9d392] opacity-90" />
+
+            <div
+              className="absolute left-[50%] top-[50%] h-[150%] w-[16px] -translate-x-1/2 -translate-y-1/2 rotate-[45deg] rounded-full"
+              style={{
+                background: 'rgba(214, 188, 128, 0.65)',
+                boxShadow: '0 0 0 4px rgba(255,255,255,0.18)',
+              }}
+            />
+
+            <div
+              className="absolute left-[25%] top-[35%] h-[90px] w-[110px] rounded-[20px]"
+              style={{
+                background: 'linear-gradient(180deg, #f4dfb0 0%, #d8b06a 100%)',
+                border: '2px solid rgba(110,78,24,0.2)',
+              }}
+            />
+            <div
+              className="absolute right-[22%] top-[32%] h-[80px] w-[100px] rounded-[20px]"
+              style={{
+                background: 'linear-gradient(180deg, #d8e4f6 0%, #96b3da 100%)',
+                border: '2px solid rgba(70,95,140,0.18)',
+              }}
+            />
+            <div
+              className="absolute left-[20%] bottom-[18%] h-[70px] w-[95px] rounded-[18px]"
+              style={{
+                background: 'linear-gradient(180deg, #f6ead2 0%, #d9c0a2 100%)',
+                border: '2px solid rgba(110,78,24,0.16)',
+              }}
+            />
+            <div
+              className="absolute right-[18%] bottom-[16%] h-[74px] w-[98px] rounded-[18px]"
+              style={{
+                background: 'linear-gradient(180deg, #fff4cf 0%, #f1dc84 100%)',
+                border: '2px solid rgba(134,105,32,0.16)',
+              }}
+            />
+
+            <div
+              className="absolute left-[50%] top-[52%] h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                background: '#fff5e6',
+                border: '2px solid #e0c18a',
+                boxShadow: '0 4px 10px rgba(80,50,10,0.12)',
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const [guestVersion, setGuestVersion] = useState(0);
+  const [isOverview, setIsOverview] = useState(false);
 
-  // 초기 카테고리를 로컬스토리지에서 바로 읽어 깜빡임 방지
   const [activeCategory, setActiveCategory] = useState(() => {
     try {
       const raw = guestDataPersistence.getData();
-      const cat = raw?.activeCategory || raw?.guest_active_category || raw?.category || raw?.goals?.[0]?.category;
+      const cat =
+        raw?.activeCategory ||
+        raw?.guest_active_category ||
+        raw?.category ||
+        raw?.goals?.[0]?.category;
       return normalizeCategoryValue(cat, 'exercise');
     } catch {
       return 'exercise';
     }
   });
-  const [moveTrigger, setMoveTrigger] = useState(0);
+
   const [expPopup, setExpPopup] = useState(null);
   const [newTitle, setNewTitle] = useState(null);
   const hasCategoryInteractionRef = useRef(false);
   const chainRepairOnceRef = useRef(false);
-
   const expPopupTimerRef = useRef(null);
 
   useEffect(() => {
@@ -815,7 +939,11 @@ export default function Home() {
         const prevActionGoals = Array.isArray(prev?.actionGoals) ? prev.actionGoals : [];
         const repaired = prevActionGoals.map((goal) => ({
           ...goal,
-          goal_id: resolveGoalIdForActionGoal(goal, goals, prev?.category || activeCategory || 'exercise'),
+          goal_id: resolveGoalIdForActionGoal(
+            goal,
+            goals,
+            prev?.category || activeCategory || 'exercise'
+          ),
         }));
         return {
           ...prev,
@@ -831,7 +959,11 @@ export default function Home() {
       .map((goal) => ({
         id: goal?.id,
         currentGoalId: goal?.goal_id || null,
-        nextGoalId: resolveGoalIdForActionGoal(goal, goals, user?.active_category || activeCategory || 'exercise'),
+        nextGoalId: resolveGoalIdForActionGoal(
+          goal,
+          goals,
+          user?.active_category || activeCategory || 'exercise'
+        ),
       }))
       .filter((item) => item.id && item.nextGoalId && item.currentGoalId !== item.nextGoalId);
 
@@ -1004,26 +1136,6 @@ export default function Home() {
 
   const nickname = isGuest ? guestData?.nickname || '용사' : user?.nickname || '용사';
 
-  const bannerMessage = equippedTitle
-    ? `${equippedTitle.name} · ${CATEGORY_LABELS[activeCategory]} 루트를 이어가고 있어요`
-    : `${CATEGORY_LABELS[activeCategory]} 루트를 한 걸음씩 이어가고 있어요`;
-
-  const bannerProgress = useMemo(() => {
-    const safeActionGoals = Array.isArray(activeActionGoals) ? activeActionGoals : [];
-
-    if (safeActionGoals.length === 0) return 0;
-
-    const completedCount = safeActionGoals.filter((goal) => {
-      if (!goal) return false;
-      if (goal.completed === true) return true;
-      if (goal.status === 'complete' || goal.status === 'completed') return true;
-      if (Number(goal.completion_rate || 0) >= 100) return true;
-      return false;
-    }).length;
-
-    return Math.max(0, Math.min(100, Math.round((completedCount / safeActionGoals.length) * 100)));
-  }, [activeActionGoals]);
-
   const handleCreateGoal = () => {
     const route = CATEGORY_ROUTE_MAP[activeCategory] || '/CreateGoalExercise';
     navigate(route);
@@ -1155,7 +1267,6 @@ export default function Home() {
         ]);
       }
 
-      setMoveTrigger((prev) => prev + 1);
       setExpPopup(earnedExp);
 
       const currentLogs = isGuest
@@ -1163,7 +1274,9 @@ export default function Home() {
         : (Array.isArray(allLogs) ? allLogs : []);
 
       const currentActionGoals = isGuest
-        ? (Array.isArray(guestData?.actionGoals) ? connectActionGoalsToGoals(goals, guestData.actionGoals) : [])
+        ? (Array.isArray(guestData?.actionGoals)
+            ? connectActionGoalsToGoals(goals, guestData.actionGoals)
+            : [])
         : (Array.isArray(connectedActionGoals) ? connectedActionGoals : []);
 
       const nextLogs = [...currentLogs, logPayload];
@@ -1203,14 +1316,42 @@ export default function Home() {
     }
   };
 
+  const totalLevel = useMemo(() => {
+    const sum =
+      Number(userLevels.exercise_level || 1) +
+      Number(userLevels.study_level || 1) +
+      Number(userLevels.mental_level || 1) +
+      Number(userLevels.daily_level || 1);
+
+    return Math.max(1, Math.floor(sum / 4));
+  }, [userLevels]);
+
+  const points = derivedStats.total_actions || 0;
+  const gems = Math.floor((derivedStats.total_actions || 0) / 10);
+
+  const headerUser = {
+    nickname,
+    title: equippedTitle?.name || '',
+    level: totalLevel,
+  };
+
   return (
     <div
-      className="min-h-screen pb-28"
+      className="min-h-screen pb-28 pt-[84px]"
       style={{
         background:
           'linear-gradient(180deg, #f8f1df 0%, #f5e8c9 38%, #f2e1bc 68%, #ebd6a9 100%)',
       }}
     >
+      <HeaderBar
+        user={headerUser}
+        points={points}
+        gems={gems}
+        isOverview={isOverview}
+        onToggleOverview={() => setIsOverview((prev) => !prev)}
+        onOpenSettings={() => navigate('/settings')}
+      />
+
       {expPopup ? <ExpPopup exp={expPopup} /> : null}
 
       {newTitle ? (
@@ -1223,7 +1364,7 @@ export default function Home() {
 
       <div className="px-4">
         <div
-          className="sticky top-0 z-40 -mx-4 px-4 pt-1 pb-1"
+          className="sticky top-[76px] z-40 -mx-4 px-4 pt-1 pb-1"
           style={{
             background:
               'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 78%, rgba(245,232,201,0.86) 100%)',
@@ -1231,17 +1372,7 @@ export default function Home() {
             WebkitBackdropFilter: 'blur(8px)',
           }}
         >
-          <CharacterBanner
-            nickname={nickname}
-            title={equippedTitle?.name || ''}
-            message={bannerMessage}
-            activeCategory={activeCategory}
-            moveTrigger={moveTrigger}
-            expText={expPopup ? `+${expPopup} EXP` : '+1 EXP'}
-            progress={bannerProgress}
-          />
-
-          <div className="mt-1">
+          <div className="pb-2">
             <CategoryTabs
               active={activeCategory}
               onChange={handleCategoryChange}
@@ -1250,20 +1381,23 @@ export default function Home() {
           </div>
 
           <div
-            className="mt-0 h-[1px] w-full"
+            className="h-[1px] w-full"
             style={{
-              background: 'linear-gradient(90deg, rgba(120,90,40,0) 0%, rgba(120,90,40,0.18) 20%, rgba(120,90,40,0.18) 80%, rgba(120,90,40,0) 100%)',
+              background:
+                'linear-gradient(90deg, rgba(120,90,40,0) 0%, rgba(120,90,40,0.18) 20%, rgba(120,90,40,0.18) 80%, rgba(120,90,40,0) 100%)',
             }}
           />
         </div>
 
         <div className="space-y-4 pt-3">
-          {activeGoal ? (
-            <>
-              <GoalProgress goal={activeGoal} logs={goalLogs} />
+          <VillageTopPanel
+            activeCategory={activeCategory}
+            isOverview={isOverview}
+            onToggleOverview={() => setIsOverview((prev) => !prev)}
+          />
 
-              
-            </>
+          {activeGoal ? (
+            <GoalProgress goal={activeGoal} logs={goalLogs} />
           ) : (
             <EmptyGoalState
               category={activeCategory}
@@ -1272,66 +1406,66 @@ export default function Home() {
           )}
 
           {activeGoal ? (
-  <div className="space-y-6">
-    <Section
-      title="오늘 해야 할 것"
-      count={grouped.todayItems.length}
-      emptyText="오늘 해야 할 행동목표가 없어요."
-    >
-      {grouped.todayItems.map((actionGoal) => (
-        <ActionGoalCard
-          key={actionGoal.id}
-          actionGoal={actionGoal}
-          weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-          allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-          streak={getStreakForAction(allLogs, actionGoal.id)}
-          onComplete={handleActionComplete}
-        />
-      ))}
-    </Section>
+            <div className="space-y-6">
+              <Section
+                title="오늘 해야 할 것"
+                count={grouped.todayItems.length}
+                emptyText="오늘 해야 할 행동목표가 없어요."
+              >
+                {grouped.todayItems.map((actionGoal) => (
+                  <ActionGoalCard
+                    key={actionGoal.id}
+                    actionGoal={actionGoal}
+                    weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+                    allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+                    streak={getStreakForAction(allLogs, actionGoal.id)}
+                    onComplete={handleActionComplete}
+                  />
+                ))}
+              </Section>
 
-    <Section
-      title="예정된 목표"
-      count={grouped.scheduledItems.length}
-      emptyText="예정된 목표가 없어요."
-    >
-      {grouped.scheduledItems.map((actionGoal) => (
-        <ActionGoalCard
-          key={actionGoal.id}
-          actionGoal={actionGoal}
-          weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-          allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-          streak={getStreakForAction(allLogs, actionGoal.id)}
-          onComplete={handleActionComplete}
-        />
-      ))}
-    </Section>
+              <Section
+                title="예정된 목표"
+                count={grouped.scheduledItems.length}
+                emptyText="예정된 목표가 없어요."
+              >
+                {grouped.scheduledItems.map((actionGoal) => (
+                  <ActionGoalCard
+                    key={actionGoal.id}
+                    actionGoal={actionGoal}
+                    weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+                    allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+                    streak={getStreakForAction(allLogs, actionGoal.id)}
+                    onComplete={handleActionComplete}
+                  />
+                ))}
+              </Section>
 
-    <Section
-      title="기한 지난 목표"
-      count={grouped.overdueItems.length}
-      emptyText="기한 지난 목표가 없어요."
-    >
-      {grouped.overdueItems.map((actionGoal) => (
-        <ActionGoalCard
-          key={actionGoal.id}
-          actionGoal={actionGoal}
-          weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
-          allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
-          streak={getStreakForAction(allLogs, actionGoal.id)}
-          onComplete={handleActionComplete}
-        />
-      ))}
-    </Section>
+              <Section
+                title="기한 지난 목표"
+                count={grouped.overdueItems.length}
+                emptyText="기한 지난 목표가 없어요."
+              >
+                {grouped.overdueItems.map((actionGoal) => (
+                  <ActionGoalCard
+                    key={actionGoal.id}
+                    actionGoal={actionGoal}
+                    weeklyLogs={getWeeklyLogsForAction(allLogs, actionGoal.id)}
+                    allLogs={getAllLogsForAction(allLogs, actionGoal.id)}
+                    streak={getStreakForAction(allLogs, actionGoal.id)}
+                    onComplete={handleActionComplete}
+                  />
+                ))}
+              </Section>
 
-    <div className="pt-1">
-      <AddActionGoalButton
-        onClick={handleCreateGoal}
-        categoryLabel={CATEGORY_LABELS[activeCategory]}
-      />
-    </div>
-  </div>
-) : null}
+              <div className="pt-1">
+                <AddActionGoalButton
+                  onClick={handleCreateGoal}
+                  categoryLabel={CATEGORY_LABELS[activeCategory]}
+                />
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
