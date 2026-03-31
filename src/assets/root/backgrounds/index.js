@@ -4,22 +4,24 @@
  * 실제 이미지 URL로 교체하세요.
  */
 
+export const villageBaseImg = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d1f80889d_village_basepng.png';
+
 export const backgrounds = {
   exercise: {
-    day: null,   // 운동 - 낮 배경
-    night: null, // 운동 - 밤 배경
+    day: villageBaseImg,
+    night: null,
   },
   study: {
-    day: null,   // 공부 - 낮 배경
-    night: null, // 공부 - 밤 배경
+    day: villageBaseImg,
+    night: null,
   },
   mental: {
-    day: null,   // 정신 - 낮 배경
-    night: null, // 정신 - 밤 배경
+    day: villageBaseImg,
+    night: null,
   },
   daily: {
-    day: null,   // 일상 - 낮 배경
-    night: null, // 일상 - 밤 배경
+    day: villageBaseImg,
+    night: null,
   },
 };
 
