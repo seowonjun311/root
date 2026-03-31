@@ -1277,13 +1277,13 @@ function EditToolbar({
         <button
           type="button"
           onClick={isEditMode ? onSave : onToggleEditMode}
-          className="pointer-events-auto rounded-full px-3 py-2 text-[11px] font-extrabold"
+          className="pointer-events-auto rounded-full px-3 py-2 text-[12px] font-extrabold"
           style={{
             background: isEditMode
-              ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
+              ? 'linear-gradient(180deg, #d97a5c 0%, #c25c3c 100%)'
               : 'rgba(255,248,232,0.92)',
             color: isEditMode ? '#fff8e8' : '#4a2c08',
-            border: isEditMode ? '2px solid #6b4e15' : '1px solid rgba(107,78,21,0.14)',
+            border: isEditMode ? '2px solid #7f321d' : '1px solid rgba(107,78,21,0.14)',
             boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
           }}
         >
