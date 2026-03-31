@@ -87,21 +87,17 @@ const SHOP_ITEMS = [
 const VILLAGE_WORLD = {
   width: 1050,
   height: 675,
-  defaultOffset: { x: -130, y: -88 },
+  defaultOffset: { x: 0, y: 0 },
   overviewScale: 0.84,
   baseScale: 1,
-  panMinX: -560,
-  panMaxX: 80,
-  panMinY: -360,
-  panMaxY: 40,
-  decorationPaddingX: 90,
-  decorationPaddingY: 105,
-  characterPaddingX: 95,
-  characterPaddingY: 110,
-  buildingPaddingLeft: 90,
-  buildingPaddingRight: 165,
-  buildingPaddingTop: 100,
-  buildingPaddingBottom: 135,
+  decorationPaddingX: 100,
+  decorationPaddingY: 115,
+  characterPaddingX: 110,
+  characterPaddingY: 120,
+  buildingPaddingLeft: 110,
+  buildingPaddingRight: 190,
+  buildingPaddingTop: 110,
+  buildingPaddingBottom: 150,
 };
 
 const DEFAULT_BUILDINGS = [
@@ -1197,22 +1193,84 @@ function VillageWorldLayer({
   onCancelEdit,
 }) {
   const dragRef = useRef(null);
+  const viewportRef = useRef(null);
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 300 });
   const [offset, setOffset] = useState(VILLAGE_WORLD.defaultOffset);
 
   const worldWidth = VILLAGE_WORLD.width;
   const worldHeight = VILLAGE_WORLD.height;
   const scale = isOverview ? VILLAGE_WORLD.overviewScale : VILLAGE_WORLD.baseScale;
 
-  const clampPanOffset = useCallback((nextX, nextY) => {
-    return {
-      x: clamp(nextX, VILLAGE_WORLD.panMinX, VILLAGE_WORLD.panMaxX),
-      y: clamp(nextY, VILLAGE_WORLD.panMinY, VILLAGE_WORLD.panMaxY),
+  useEffect(() => {
+    const node = viewportRef.current;
+    if (!node) return undefined;
+
+    const updateSize = () => {
+      const rect = node.getBoundingClientRect();
+      setViewportSize({
+        width: rect.width || 0,
+        height: rect.height || 300,
+      });
     };
+
+    updateSize();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(updateSize);
+      observer.observe(node);
+      window.addEventListener('resize', updateSize);
+      return () => {
+        observer.disconnect();
+        window.removeEventListener('resize', updateSize);
+      };
+    }
+
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
   }, []);
 
+  const viewportWidth = Math.max(1, viewportSize.width || 0);
+  const viewportHeight = Math.max(1, viewportSize.height || 300);
+
+  const getPanBounds = useCallback(() => {
+    const scaledWidth = worldWidth * scale;
+    const scaledHeight = worldHeight * scale;
+
+    const minX = scaledWidth <= viewportWidth ? (viewportWidth - scaledWidth) / 2 : viewportWidth - scaledWidth;
+    const maxX = scaledWidth <= viewportWidth ? (viewportWidth - scaledWidth) / 2 : 0;
+
+    const minY = scaledHeight <= viewportHeight ? (viewportHeight - scaledHeight) / 2 : viewportHeight - scaledHeight;
+    const maxY = scaledHeight <= viewportHeight ? (viewportHeight - scaledHeight) / 2 : 0;
+
+    return { minX, maxX, minY, maxY };
+  }, [scale, viewportHeight, viewportWidth, worldHeight, worldWidth]);
+
+  const clampPanOffset = useCallback(
+    (nextX, nextY) => {
+      const { minX, maxX, minY, maxY } = getPanBounds();
+      return {
+        x: clamp(nextX, minX, maxX),
+        y: clamp(nextY, minY, maxY),
+      };
+    },
+    [getPanBounds]
+  );
+
   useEffect(() => {
-    setOffset((prev) => clampPanOffset(prev.x, prev.y));
-  }, [isOverview, clampPanOffset]);
+    const { minX, maxX, minY, maxY } = getPanBounds();
+
+    setOffset((prev) => {
+      const fallbackX = scaledCenter(viewportWidth, worldWidth, scale);
+      const fallbackY = scaledCenter(viewportHeight, worldHeight, scale);
+      const nextX = Number.isFinite(prev?.x) ? prev.x : fallbackX;
+      const nextY = Number.isFinite(prev?.y) ? prev.y : fallbackY;
+
+      return {
+        x: clamp(nextX, minX, maxX),
+        y: clamp(nextY, minY, maxY),
+      };
+    });
+  }, [getPanBounds, viewportWidth, viewportHeight, worldWidth, worldHeight, scale]);
 
   const buildings = useMemo(
     () => buildWorldBuildings({ userLevels, buildingLayout }),
@@ -1398,6 +1456,7 @@ function VillageWorldLayer({
     >
       <div className="px-4 pt-3 pb-2">
         <div
+          ref={viewportRef}
           className="relative overflow-hidden rounded-[28px]"
           style={{
             height: 300,
@@ -1554,6 +1613,10 @@ function VillageWorldLayer({
       </div>
     </div>
   );
+}
+
+function scaledCenter(viewportSize, worldSize, currentScale) {
+  return (viewportSize - worldSize * currentScale) / 2;
 }
 
 export default function Home() {
