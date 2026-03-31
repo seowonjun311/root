@@ -369,15 +369,14 @@ function groupActionGoals(actionGoals, today) {
           actionGoal?.targetDate
       );
 
-      if (!scheduledDate) {
-        scheduledItems.push(actionGoal);
-        return;
-      }
-
       const isCompleted =
         actionGoal?.status === 'completed' || actionGoal?.completed === true;
 
       if (isCompleted) {
+        return;
+      }
+
+      if (!scheduledDate) {
         scheduledItems.push(actionGoal);
         return;
       }
@@ -910,7 +909,17 @@ function VillageShopModal({ open, activeTab, onTabChange, points, onClose, onBuy
                   <img
                     src={item.image}
                     alt={item.label}
-                    className="max-h-[64px] max-w-full object-contain"
+                    draggable={false}
+                    style={{
+                      maxHeight: '64px',
+                      maxWidth: '100%',
+                      objectFit: 'contain',
+                      display: 'block',
+                      background: 'transparent',
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      boxShadow: 'none',
+                    }}
                   />
                 </div>
 
@@ -1107,11 +1116,18 @@ function DecorationSprite({ item }) {
     <img
       src={item.image}
       alt={item.type}
+      draggable={false}
       style={{
         width: item.size,
         height: item.size,
         objectFit: 'contain',
         display: 'block',
+        background: 'transparent',
+        backgroundColor: 'transparent',
+        border: 'none',
+        boxShadow: 'none',
+        userSelect: 'none',
+        WebkitUserDrag: 'none',
       }}
     />
   );
@@ -1418,8 +1434,19 @@ function VillageWorldLayer({
                     <img
                       src={npc.image || foxImg}
                       alt={npc.name}
-                      className="h-full w-full object-contain"
                       draggable={false}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        display: 'block',
+                        background: 'transparent',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        boxShadow: 'none',
+                        userSelect: 'none',
+                        WebkitUserDrag: 'none',
+                      }}
                     />
                   </div>
                 );
@@ -1905,7 +1932,7 @@ export default function Home() {
         ...currentVillage,
         ...nextState,
       };
-      toast.success(`${item.label}을(를) 구매했어요!`);
+      toast.success(`${item.label} 구매 완료! (-${item.price} 포인트)`);
     } catch (error) {
       console.error('handleVillagePurchase error:', error);
       toast.error('구매 중 오류가 발생했어요.');
