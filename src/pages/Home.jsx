@@ -606,7 +606,7 @@ function createDecoration(
   worldWidth = VILLAGE_WORLD.width,
   worldHeight = VILLAGE_WORLD.height
 ) {
-  const sizeMap = { grass: 34, tree: 83, flower: 30 };
+  const sizeMap = { grass: 34, tree: 124, flower: 30 };
 
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
@@ -666,8 +666,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       x: layoutMap.exercise?.x ?? 165,
       y: layoutMap.exercise?.y ?? 375,
       flipped: !!layoutMap.exercise?.flipped,
-      w: 200,
-      h: 160,
+      w: 300,
+      h: 240,
     },
     {
       id: 'study_building',
@@ -677,8 +677,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       x: layoutMap.study?.x ?? 325,
       y: layoutMap.study?.y ?? 420,
       flipped: !!layoutMap.study?.flipped,
-      w: 200,
-      h: 160,
+      w: 300,
+      h: 240,
     },
     {
       id: 'mental_building',
@@ -688,8 +688,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       x: layoutMap.mental?.x ?? 575,
       y: layoutMap.mental?.y ?? 405,
       flipped: !!layoutMap.mental?.flipped,
-      w: 200,
-      h: 160,
+      w: 300,
+      h: 240,
     },
     {
       id: 'daily_building',
@@ -699,8 +699,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       x: layoutMap.daily?.x ?? 775,
       y: layoutMap.daily?.y ?? 340,
       flipped: !!layoutMap.daily?.flipped,
-      w: 200,
-      h: 160,
+      w: 300,
+      h: 240,
     },
   ];
 }
@@ -1258,8 +1258,6 @@ function VillageOverlayBar({
   nickname,
   level,
   points,
-  isOverview,
-  onToggleOverview,
   onOpenShop,
   onOpenBag,
 }) {
@@ -1299,48 +1297,34 @@ function VillageOverlayBar({
 
           <button
             type="button"
+            aria-label="가방 열기"
             onClick={onOpenBag}
-            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+            className="flex h-12 w-12 items-center justify-center rounded-full"
             style={{
-              background: '#fff',
+              background: 'linear-gradient(180deg, #fffaf0 0%, #f3e0b7 100%)',
               color: '#4a2c08',
-              border: '1px solid rgba(107,78,21,0.14)',
+              border: '2px solid rgba(107,78,21,0.22)',
               boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+              fontSize: '22px',
             }}
           >
-            가방
+            🎒
           </button>
 
           <button
             type="button"
+            aria-label="상점 열기"
             onClick={onOpenShop}
-            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+            className="flex h-12 w-12 items-center justify-center rounded-full"
             style={{
-              background: '#fff',
+              background: 'linear-gradient(180deg, #fffaf0 0%, #f3e0b7 100%)',
               color: '#4a2c08',
-              border: '1px solid rgba(107,78,21,0.14)',
+              border: '2px solid rgba(107,78,21,0.22)',
               boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+              fontSize: '22px',
             }}
           >
-            상점
-          </button>
-
-          <button
-            type="button"
-            onClick={onToggleOverview}
-            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
-            style={{
-              background: isOverview
-                ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
-                : 'rgba(255,248,232,0.9)',
-              color: isOverview ? '#fff8e8' : '#4a2c08',
-              border: isOverview
-                ? '2px solid #6b4e15'
-                : '1px solid rgba(107,78,21,0.14)',
-              boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
-            }}
-          >
-            {isOverview ? '기본보기' : '전체보기'}
+            🏪
           </button>
         </div>
       </div>
@@ -1397,13 +1381,16 @@ function VillageWorldLayer({
   onCancelEdit,
 }) {
   const dragRef = useRef(null);
+  const pinchRef = useRef({ startDistance: 0, startScale: VILLAGE_WORLD.baseScale });
+  const pointersRef = useRef(new Map());
   const viewportRef = useRef(null);
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 300 });
   const [offset, setOffset] = useState(VILLAGE_WORLD.defaultOffset);
+  const [zoomScale, setZoomScale] = useState(VILLAGE_WORLD.baseScale);
 
   const worldWidth = VILLAGE_WORLD.width;
   const worldHeight = VILLAGE_WORLD.height;
-  const scale = isOverview ? VILLAGE_WORLD.overviewScale : VILLAGE_WORLD.baseScale;
+  const scale = zoomScale;
 
   useEffect(() => {
     const node = viewportRef.current;
@@ -1476,6 +1463,12 @@ function VillageWorldLayer({
     });
   }, [getPanBounds, viewportWidth, viewportHeight, worldWidth, worldHeight, scale]);
 
+  const getDistance = useCallback((a, b) => {
+    const dx = a.clientX - b.clientX;
+    const dy = a.clientY - b.clientY;
+    return Math.hypot(dx, dy);
+  }, []);
+
   const buildings = useMemo(
     () => buildWorldBuildings({ userLevels, buildingLayout }),
     [userLevels, buildingLayout]
@@ -1484,6 +1477,20 @@ function VillageWorldLayer({
   const backgroundImage = getBackground(activeCategory, 'day');
 
   const handleWorldPointerDown = (e) => {
+    if (e.pointerType === 'touch') {
+      pointersRef.current.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
+
+      if (pointersRef.current.size === 2) {
+        const [first, second] = Array.from(pointersRef.current.values());
+        pinchRef.current = {
+          startDistance: getDistance(first, second),
+          startScale: scale,
+        };
+        dragRef.current = null;
+        return;
+      }
+    }
+
     dragRef.current = {
       mode: 'pan',
       startX: e.clientX,
@@ -1510,6 +1517,22 @@ function VillageWorldLayer({
 
   const handlePointerMove = useCallback(
     (e) => {
+      if (e.pointerType === 'touch' && pointersRef.current.has(e.pointerId)) {
+        pointersRef.current.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
+
+        if (pointersRef.current.size === 2) {
+          const [first, second] = Array.from(pointersRef.current.values());
+          const nextDistance = getDistance(first, second);
+          const startDistance = pinchRef.current.startDistance || nextDistance;
+          const rawScale = pinchRef.current.startScale * (nextDistance / Math.max(1, startDistance));
+          const nextScale = clamp(rawScale, 0.72, 1.45);
+
+          setZoomScale(nextScale);
+          dragRef.current = null;
+          return;
+        }
+      }
+
       const drag = dragRef.current;
       if (!drag) return;
 
@@ -1598,12 +1621,20 @@ function VillageWorldLayer({
         };
       }
     },
-    [scale, worldWidth, worldHeight, setDecorations, setCharacters, setBuildingLayout, clampPanOffset]
+    [scale, worldWidth, worldHeight, setDecorations, setCharacters, setBuildingLayout, clampPanOffset, getDistance]
   );
 
-  const handlePointerUp = useCallback(() => {
+  const handlePointerUp = useCallback((e) => {
+    if (typeof e?.pointerId !== 'undefined') {
+      pointersRef.current.delete(e.pointerId);
+    }
+
+    if (pointersRef.current.size < 2) {
+      pinchRef.current = { startDistance: 0, startScale: zoomScale };
+    }
+
     dragRef.current = null;
-  }, []);
+  }, [zoomScale]);
 
   useEffect(() => {
     window.addEventListener('pointermove', handlePointerMove);
@@ -1670,8 +1701,6 @@ function VillageWorldLayer({
             nickname={nickname}
             level={totalLevel}
             points={points}
-            isOverview={isOverview}
-            onToggleOverview={onToggleOverview}
             onOpenShop={onOpenShop}
             onOpenBag={onOpenBag}
           />
@@ -1686,8 +1715,9 @@ function VillageWorldLayer({
           />
 
           <div
-            className="absolute inset-0 touch-none overflow-hidden"
+            className="absolute inset-0 overflow-hidden"
             onPointerDown={handleWorldPointerDown}
+            style={{ touchAction: 'none' }}
           >
             <div
               className="absolute left-0 top-0"
