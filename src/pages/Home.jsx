@@ -56,7 +56,6 @@ const SHOP_ITEMS = [
   { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, image: flowerImg },
 ];
 
-// 배경 구도에 맞게 다시 줄인 건물 위치
 const DEFAULT_BUILDINGS = [
   { id: 'exercise_building', category: 'exercise', x: 88, y: 246, flipped: false },
   { id: 'study_building', category: 'study', x: 210, y: 278, flipped: false },
@@ -479,14 +478,14 @@ function createDecoration(subtype, worldWidth = WORLD_WIDTH, worldHeight = WORLD
   };
 }
 
-function createCharacter(type, worldWidth = WORLD_WIDTH, worldHeight = WORLD_HEIGHT) {
+function createCharacter(type) {
   return {
     id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
     type,
     image: getCharacterImage(type),
-    x: randomBetween(90, worldWidth - 90),
-    y: randomBetween(80, worldHeight - 70),
+    x: randomBetween(90, WORLD_WIDTH - 90),
+    y: randomBetween(80, WORLD_HEIGHT - 70),
     size: type === 'alpaca' ? 52 : 46,
     flipped: false,
   };
@@ -1202,6 +1201,7 @@ function DecorationSprite({ item }) {
         boxShadow: 'none',
         userSelect: 'none',
         WebkitUserDrag: 'none',
+        pointerEvents: 'none',
       }}
     />
   );
@@ -1331,6 +1331,7 @@ function VillageWorldLayer({
   const startObjectDrag = (e, objType, objId) => {
     if (!isEditMode) return;
     e.stopPropagation();
+    e.preventDefault();
 
     setSelectedObject({ type: objType, id: objId });
 
@@ -1403,18 +1404,18 @@ function VillageWorldLayer({
         }
 
         if (dragRef.current.objectType === 'building') {
-  setBuildingLayout((prev) =>
-    prev.map((item) =>
-      item.category === dragRef.current.objectId
-        ? {
-            ...item,
-            x: clamp(item.x + dx, 56, WORLD_WIDTH - 56),
-            y: clamp(item.y + dy, 56, WORLD_HEIGHT - 56),
-          }
-        : item
-    )
-  );
-}
+          setBuildingLayout((prev) =>
+            prev.map((item) =>
+              item.category === dragRef.current.objectId
+                ? {
+                    ...item,
+                    x: clamp(item.x + dx, 56, WORLD_WIDTH - 56),
+                    y: clamp(item.y + dy, 56, WORLD_HEIGHT - 56),
+                  }
+                : item
+            )
+          );
+        }
 
         dragRef.current.startX = e.clientX;
         dragRef.current.startY = e.clientY;
@@ -1437,23 +1438,11 @@ function VillageWorldLayer({
   }, [handlePointerMove, handlePointerUp]);
 
   useEffect(() => {
-  if (isEditMode) return;
+    if (isEditMode) return;
 
-  const timer = setInterval(() => {
-    setCharacters((prev) =>
-      prev.map((npc) => {
-        const nextX = clamp(npc.x + randomBetween(-30, 30), 50, WORLD_WIDTH - 50);
-        const nextY = clamp(npc.y + randomBetween(-25, 25), 50, WORLD_HEIGHT - 50);
-
-        return {
-          ...npc,
-          x: nextX,
-          y: nextY,
-          flipped: nextX < npc.x ? true : nextX > npc.x ? false : npc.flipped,
-        };
-      })
-    );
-  }, 2600);
+    const timer = setInterval(() => {
+      setCharacters((prev) => prev.map((npc) => moveNpcAvoidingBuildings(npc, buildingHitboxes)));
+    }, 2600);
 
     return () => clearInterval(timer);
   }, [isEditMode, setCharacters, buildingHitboxes]);
@@ -1517,6 +1506,7 @@ function VillageWorldLayer({
                   alt="village background"
                   className="absolute inset-0 h-full w-full object-cover"
                   draggable={false}
+                  style={{ pointerEvents: 'none' }}
                 />
               ) : (
                 <div className="absolute inset-0 bg-[#d8e8b0]" />
@@ -1539,6 +1529,8 @@ function VillageWorldLayer({
                       outlineOffset: '3px',
                       borderRadius: '999px',
                       cursor: isEditMode ? 'grab' : 'default',
+                      zIndex: 12,
+                      pointerEvents: 'auto',
                     }}
                   >
                     <DecorationSprite item={item} />
@@ -1566,6 +1558,8 @@ function VillageWorldLayer({
                       outlineOffset: '4px',
                       borderRadius: '20px',
                       cursor: isEditMode ? 'grab' : 'default',
+                      zIndex: 13,
+                      pointerEvents: 'auto',
                     }}
                   >
                     <img
@@ -1573,6 +1567,7 @@ function VillageWorldLayer({
                       alt={building.label}
                       className="h-full w-full object-contain"
                       draggable={false}
+                      style={{ pointerEvents: 'none' }}
                     />
                   </div>
                 );
@@ -1600,6 +1595,8 @@ function VillageWorldLayer({
                       outlineOffset: '3px',
                       borderRadius: '999px',
                       cursor: isEditMode ? 'grab' : 'default',
+                      zIndex: 14,
+                      pointerEvents: 'auto',
                     }}
                   >
                     <img
@@ -1617,6 +1614,7 @@ function VillageWorldLayer({
                         boxShadow: 'none',
                         userSelect: 'none',
                         WebkitUserDrag: 'none',
+                        pointerEvents: 'none',
                       }}
                     />
                   </div>
