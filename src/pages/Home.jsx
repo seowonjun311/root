@@ -1176,6 +1176,93 @@ function VillageBagModal({
   );
 }
 
+
+const BAG_ICON_SRC =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+      <defs>
+        <linearGradient id="bagBody" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f7d58b"/>
+          <stop offset="100%" stop-color="#c88a34"/>
+        </linearGradient>
+        <linearGradient id="bagFlap" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffeab6"/>
+          <stop offset="100%" stop-color="#ddb160"/>
+        </linearGradient>
+      </defs>
+      <path d="M40 38c0-13 10-23 24-23s24 10 24 23v6h-10v-6c0-7-5-13-14-13s-14 6-14 13v6H40z" fill="#8b5a22"/>
+      <rect x="22" y="42" width="84" height="68" rx="18" fill="url(#bagBody)" stroke="#7a4a17" stroke-width="6"/>
+      <path d="M28 48h72c6 0 11 5 11 11v10c0 6-5 11-11 11H28c-6 0-11-5-11-11V59c0-6 5-11 11-11z" fill="url(#bagFlap)" stroke="#7a4a17" stroke-width="5"/>
+      <circle cx="64" cy="64" r="8" fill="#8b5a22"/>
+      <path d="M36 93c10 8 46 8 56 0" fill="none" stroke="#f8e7b5" stroke-width="6" stroke-linecap="round" opacity="0.75"/>
+    </svg>
+  `);
+
+const SHOP_ICON_SRC =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+      <defs>
+        <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ff9f8b"/>
+          <stop offset="100%" stop-color="#d45b42"/>
+        </linearGradient>
+        <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fff0c8"/>
+          <stop offset="100%" stop-color="#e6c37a"/>
+        </linearGradient>
+      </defs>
+      <rect x="24" y="52" width="80" height="54" rx="10" fill="url(#wall)" stroke="#7a4a17" stroke-width="6"/>
+      <path d="M18 48l10-18h72l10 18" fill="url(#roof)" stroke="#7a4a17" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M20 48h88v14c0 5-4 9-9 9H29c-5 0-9-4-9-9V48z" fill="#fff7df" stroke="#7a4a17" stroke-width="5"/>
+      <rect x="35" y="70" width="20" height="36" rx="4" fill="#9fd3e6" stroke="#7a4a17" stroke-width="5"/>
+      <rect x="68" y="70" width="22" height="18" rx="4" fill="#9fd3e6" stroke="#7a4a17" stroke-width="5"/>
+      <path d="M64 20v14" stroke="#7a4a17" stroke-width="6" stroke-linecap="round"/>
+      <path d="M54 28h20" stroke="#7a4a17" stroke-width="6" stroke-linecap="round"/>
+    </svg>
+  `);
+
+function IconCircleButton({ iconSrc, label, onClick }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className="relative flex h-[58px] w-[58px] items-center justify-center rounded-full"
+      style={{
+        background: 'radial-gradient(circle at 30% 30%, #fffaf0 0%, #f3dfb7 55%, #ddb56a 100%)',
+        border: '2px solid rgba(107,78,21,0.24)',
+        boxShadow: '0 10px 18px rgba(50,30,0,0.12), inset 0 2px 0 rgba(255,255,255,0.6)',
+      }}
+    >
+      <span
+        className="pointer-events-none absolute inset-[5px] rounded-full"
+        style={{
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.08) 100%)',
+          border: '1px solid rgba(255,255,255,0.35)',
+        }}
+      />
+      <img
+        src={iconSrc}
+        alt={label}
+        draggable={false}
+        className="relative z-[1]"
+        style={{
+          width: 34,
+          height: 34,
+          objectFit: 'contain',
+          filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.14))',
+          userSelect: 'none',
+          WebkitUserDrag: 'none',
+        }}
+      />
+    </button>
+  );
+}
+
+
 function EditToolbar({
   isEditMode,
   selectedObject,
@@ -1189,18 +1276,18 @@ function EditToolbar({
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
-          onClick={onToggleEditMode}
-          className="pointer-events-auto rounded-full px-3 py-2 text-[12px] font-extrabold"
+          onClick={isEditMode ? onSave : onToggleEditMode}
+          className="pointer-events-auto rounded-full px-4 py-2.5 text-[12px] font-extrabold"
           style={{
             background: isEditMode
-              ? 'linear-gradient(180deg, #d97a5c 0%, #c25c3c 100%)'
+              ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
               : 'rgba(255,248,232,0.92)',
             color: isEditMode ? '#fff8e8' : '#4a2c08',
-            border: isEditMode ? '2px solid #7f321d' : '1px solid rgba(107,78,21,0.14)',
+            border: isEditMode ? '2px solid #6b4e15' : '1px solid rgba(107,78,21,0.14)',
             boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
           }}
         >
-          {isEditMode ? '편집 종료' : '편집모드'}
+          {isEditMode ? '저장' : '편집모드'}
         </button>
 
         {isEditMode ? (
@@ -1232,20 +1319,6 @@ function EditToolbar({
               }}
             >
               취소
-            </button>
-
-            <button
-              type="button"
-              onClick={onSave}
-              className="rounded-full px-3 py-2 text-[12px] font-extrabold"
-              style={{
-                background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
-                color: '#fff8e8',
-                border: '2px solid #6b4e15',
-                boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
-              }}
-            >
-              저장
             </button>
           </div>
         ) : null}
@@ -1295,37 +1368,17 @@ function VillageOverlayBar({
             포인트 {points}
           </div>
 
-          <button
-            type="button"
-            aria-label="가방 열기"
+          <IconCircleButton
+            iconSrc={BAG_ICON_SRC}
+            label="가방 열기"
             onClick={onOpenBag}
-            className="flex h-12 w-12 items-center justify-center rounded-full"
-            style={{
-              background: 'linear-gradient(180deg, #fffaf0 0%, #f3e0b7 100%)',
-              color: '#4a2c08',
-              border: '2px solid rgba(107,78,21,0.22)',
-              boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
-              fontSize: '22px',
-            }}
-          >
-            🎒
-          </button>
+          />
 
-          <button
-            type="button"
-            aria-label="상점 열기"
+          <IconCircleButton
+            iconSrc={SHOP_ICON_SRC}
+            label="상점 열기"
             onClick={onOpenShop}
-            className="flex h-12 w-12 items-center justify-center rounded-full"
-            style={{
-              background: 'linear-gradient(180deg, #fffaf0 0%, #f3e0b7 100%)',
-              color: '#4a2c08',
-              border: '2px solid rgba(107,78,21,0.22)',
-              boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
-              fontSize: '22px',
-            }}
-          >
-            🏪
-          </button>
+          />
         </div>
       </div>
     </div>
