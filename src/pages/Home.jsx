@@ -1403,18 +1403,18 @@ function VillageWorldLayer({
         }
 
         if (dragRef.current.objectType === 'building') {
-          setBuildingLayout((prev) =>
-            prev.map((item) =>
-              item.category === dragRef.current.objectId
-                ? {
-                    ...item,
-                    x: clamp(item.x + dx, 56, WORLD_WIDTH - 56),
-                    y: clamp(item.y + dy, 56, WORLD_HEIGHT - 56),
-                  }
-                : item
-            )
-          );
-        }
+  setBuildingLayout((prev) =>
+    prev.map((item) =>
+      item.category === dragRef.current.objectId
+        ? {
+            ...item,
+            x: clamp(item.x + dx, 56, WORLD_WIDTH - 56),
+            y: clamp(item.y + dy, 56, WORLD_HEIGHT - 56),
+          }
+        : item
+    )
+  );
+}
 
         dragRef.current.startX = e.clientX;
         dragRef.current.startY = e.clientY;
@@ -1437,11 +1437,23 @@ function VillageWorldLayer({
   }, [handlePointerMove, handlePointerUp]);
 
   useEffect(() => {
-    if (isEditMode) return;
+  if (isEditMode) return;
 
-    const timer = setInterval(() => {
-      setCharacters((prev) => prev.map((npc) => moveNpcAvoidingBuildings(npc, buildingHitboxes)));
-    }, 2600);
+  const timer = setInterval(() => {
+    setCharacters((prev) =>
+      prev.map((npc) => {
+        const nextX = clamp(npc.x + randomBetween(-30, 30), 50, WORLD_WIDTH - 50);
+        const nextY = clamp(npc.y + randomBetween(-25, 25), 50, WORLD_HEIGHT - 50);
+
+        return {
+          ...npc,
+          x: nextX,
+          y: nextY,
+          flipped: nextX < npc.x ? true : nextX > npc.x ? false : npc.flipped,
+        };
+      })
+    );
+  }, 2600);
 
     return () => clearInterval(timer);
   }, [isEditMode, setCharacters, buildingHitboxes]);
