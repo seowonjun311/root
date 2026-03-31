@@ -3,7 +3,7 @@
  */
 
 export const grassImg  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/379f4f306_grasspng.png';
-export const treeImg   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/bec1fef4c_treepng.png';
+export const treeImg   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/dd68b6a0f_treepng.png';
 export const flowerImg = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/773d33e8a_flowerpng.png';
 
 export const decorations = {
