@@ -101,21 +101,29 @@ const CATEGORY_WORLD_THEME = {
 };
 
 const SHOP_ITEMS = [
-  { id: 'grass_1', label: '잔디', type: 'decoration', subtype: 'grass', price: 3, emoji: '🌿' },
-  { id: 'tree_1', label: '나무', type: 'decoration', subtype: 'tree', price: 8, emoji: '🌳' },
-  { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, emoji: '🌸' },
-
   { id: 'fox_1', label: '여우', type: 'character', subtype: 'fox', price: 15, emoji: '🦊' },
   { id: 'alpaca_1', label: '알파카', type: 'character', subtype: 'alpaca', price: 18, emoji: '🦙' },
   { id: 'platypus_1', label: '오리너구리', type: 'character', subtype: 'platypus', price: 20, emoji: '🦫' },
+
+  { id: 'grass_1', label: '잔디', type: 'decoration', subtype: 'grass', price: 3, emoji: '🌿' },
+  { id: 'tree_1', label: '나무', type: 'decoration', subtype: 'tree', price: 8, emoji: '🌳' },
+  { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, emoji: '🌸' },
+];
+
+const DEFAULT_BUILDINGS = [
+  { id: 'exercise_building', category: 'exercise', x: 220, y: 500, flipped: false },
+  { id: 'study_building', category: 'study', x: 430, y: 560, flipped: false },
+  { id: 'mental_building', category: 'mental', x: 760, y: 540, flipped: false },
+  { id: 'daily_building', category: 'daily', x: 1010, y: 460, flipped: false },
 ];
 
 const DEFAULT_VILLAGE_DATA = {
   village_points: 0,
   village_decorations: [],
   village_characters: [
-    { id: 'starter_fox', name: '루', type: 'fox', x: 620, y: 470, size: 42 },
+    { id: 'starter_fox', name: '루', type: 'fox', x: 620, y: 470, size: 42, flipped: false },
   ],
+  village_buildings: DEFAULT_BUILDINGS,
 };
 
 function readGuestData() {
@@ -188,9 +196,7 @@ function normalizeDateOnly(value) {
 
 function normalizeCategoryValue(category, fallback = 'exercise') {
   const normalized = CATEGORY_ALIASES[category];
-  if (normalized && VALID_CATEGORIES.includes(normalized)) {
-    return normalized;
-  }
+  if (normalized && VALID_CATEGORIES.includes(normalized)) return normalized;
   return fallback;
 }
 
@@ -200,9 +206,16 @@ function resolveCategoryKey(category, fallback = '') {
   return CATEGORY_ALIASES[rawCategory] || rawCategory;
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function randomBetween(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
 function getGoalEndDate(goal) {
   if (!goal?.start_date || !goal?.duration_days) return null;
-
   const start = new Date(goal.start_date);
   if (Number.isNaN(start.getTime())) return null;
 
@@ -236,10 +249,8 @@ function getWeeklyLogsForAction(logs, actionGoalId) {
   return (logs || []).filter((log) => {
     if (log?.action_goal_id !== actionGoalId) return false;
     if (!log?.date) return false;
-
     const logDate = new Date(log.date);
     if (Number.isNaN(logDate.getTime())) return false;
-
     return logDate >= monday && logDate <= sunday;
   });
 }
@@ -269,8 +280,6 @@ function connectActionGoalsToGoals(goals = [], actionGoals = []) {
   const safeActionGoals = Array.isArray(actionGoals) ? actionGoals.filter(Boolean) : [];
 
   return safeActionGoals.map((actionGoal) => {
-    if (!actionGoal) return actionGoal;
-
     const categoryKey = resolveCategoryKey(actionGoal?.category, 'exercise');
     const resolvedGoalId = resolveGoalIdForActionGoal(actionGoal, safeGoals, categoryKey);
 
@@ -323,7 +332,6 @@ function getStreakForAction(logs, actionGoalId) {
     .filter(Boolean);
 
   const dateSet = new Set(completedDates);
-
   let streak = 0;
   const cursor = new Date();
   cursor.setHours(0, 0, 0, 0);
@@ -437,24 +445,12 @@ function groupActionGoals(actionGoals, today) {
   scheduledItems.sort((a, b) => {
     const aDate =
       normalizeDateOnly(
-        a?.scheduled_date ||
-          a?.scheduledDate ||
-          a?.date ||
-          a?.target_date ||
-          a?.targetDate ||
-          a?.selected_date ||
-          a?.selectedDate
+        a?.scheduled_date || a?.scheduledDate || a?.date || a?.target_date || a?.targetDate
       ) || '9999-12-31';
 
     const bDate =
       normalizeDateOnly(
-        b?.scheduled_date ||
-          b?.scheduledDate ||
-          b?.date ||
-          b?.target_date ||
-          b?.targetDate ||
-          b?.selected_date ||
-          b?.selectedDate
+        b?.scheduled_date || b?.scheduledDate || b?.date || b?.target_date || b?.targetDate
       ) || '9999-12-31';
 
     return aDate.localeCompare(bDate);
@@ -463,24 +459,12 @@ function groupActionGoals(actionGoals, today) {
   overdueItems.sort((a, b) => {
     const aDate =
       normalizeDateOnly(
-        a?.scheduled_date ||
-          a?.scheduledDate ||
-          a?.date ||
-          a?.target_date ||
-          a?.targetDate ||
-          a?.selected_date ||
-          a?.selectedDate
+        a?.scheduled_date || a?.scheduledDate || a?.date || a?.target_date || a?.targetDate
       ) || '0000-01-01';
 
     const bDate =
       normalizeDateOnly(
-        b?.scheduled_date ||
-          b?.scheduledDate ||
-          b?.date ||
-          b?.target_date ||
-          b?.targetDate ||
-          b?.selected_date ||
-          b?.selectedDate
+        b?.scheduled_date || b?.scheduledDate || b?.date || b?.target_date || b?.targetDate
       ) || '0000-01-01';
 
     return aDate.localeCompare(bDate);
@@ -521,21 +505,14 @@ function buildDerivedStats(logs = [], actionGoals = []) {
       stats.total_exercise_count += 1;
       stats.total_running_km += Number(log.distance_km || 0);
     }
-
     if (log.category === 'study') {
       stats.total_study_minutes += Number(log.duration_minutes || 0);
       if (!log.duration_minutes || Number(log.duration_minutes) === 0) {
         stats.total_study_minutes += 10;
       }
     }
-
-    if (log.category === 'mental') {
-      stats.total_mental_count += 1;
-    }
-
-    if (log.category === 'daily') {
-      stats.total_daily_count += 1;
-    }
+    if (log.category === 'mental') stats.total_mental_count += 1;
+    if (log.category === 'daily') stats.total_daily_count += 1;
   });
 
   const abstainGoalIds = new Set(
@@ -569,29 +546,16 @@ function validateGoalActionLogChain(goals = [], actionGoals = [], logs = []) {
   const goalIds = new Set((goals || []).map((goal) => goal?.id).filter(Boolean));
   const actionGoalIds = new Set((actionGoals || []).map((goal) => goal?.id).filter(Boolean));
 
-  const actionGoalsWithoutGoalId = (actionGoals || []).filter((goal) => !goal?.goal_id).length;
-  const logsWithoutGoalId = (logs || []).filter((log) => !log?.goal_id).length;
-  const logsWithUnknownActionGoal = (logs || []).filter(
-    (log) => log?.action_goal_id && !actionGoalIds.has(log.action_goal_id)
-  ).length;
-  const actionGoalsWithUnknownGoal = (actionGoals || []).filter(
-    (goal) => goal?.goal_id && !goalIds.has(goal.goal_id)
-  ).length;
-
   return {
-    actionGoalsWithoutGoalId,
-    logsWithoutGoalId,
-    logsWithUnknownActionGoal,
-    actionGoalsWithUnknownGoal,
+    actionGoalsWithoutGoalId: (actionGoals || []).filter((goal) => !goal?.goal_id).length,
+    logsWithoutGoalId: (logs || []).filter((log) => !log?.goal_id).length,
+    logsWithUnknownActionGoal: (logs || []).filter(
+      (log) => log?.action_goal_id && !actionGoalIds.has(log.action_goal_id)
+    ).length,
+    actionGoalsWithUnknownGoal: (actionGoals || []).filter(
+      (goal) => goal?.goal_id && !goalIds.has(goal.goal_id)
+    ).length,
   };
-}
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function randomBetween(min, max) {
-  return Math.random() * (max - min) + min;
 }
 
 function getCharacterEmoji(type) {
@@ -601,28 +565,19 @@ function getCharacterEmoji(type) {
 }
 
 function getVillageState(source) {
-  const villagePoints = Number(source?.village_points ?? DEFAULT_VILLAGE_DATA.village_points);
-
-  const decorations = Array.isArray(source?.village_decorations)
-    ? source.village_decorations
-    : DEFAULT_VILLAGE_DATA.village_decorations;
-
-  const characters =
-    Array.isArray(source?.village_characters) && source.village_characters.length > 0
-      ? source.village_characters
-      : DEFAULT_VILLAGE_DATA.village_characters;
-
   return {
-    village_points: villagePoints,
-    village_decorations: decorations,
-    village_characters: characters.map((character, index) => ({
-      id: character?.id || `npc_${index + 1}`,
-      name: character?.name || `주민 ${index + 1}`,
-      type: character?.type || 'fox',
-      x: Number(character?.x ?? randomBetween(280, 1080)),
-      y: Number(character?.y ?? randomBetween(240, 620)),
-      size: Number(character?.size ?? 42),
-    })),
+    village_points: Number(source?.village_points ?? DEFAULT_VILLAGE_DATA.village_points),
+    village_decorations: Array.isArray(source?.village_decorations)
+      ? source.village_decorations
+      : DEFAULT_VILLAGE_DATA.village_decorations,
+    village_characters:
+      Array.isArray(source?.village_characters) && source.village_characters.length > 0
+        ? source.village_characters
+        : DEFAULT_VILLAGE_DATA.village_characters,
+    village_buildings:
+      Array.isArray(source?.village_buildings) && source.village_buildings.length > 0
+        ? source.village_buildings
+        : DEFAULT_VILLAGE_DATA.village_buildings,
   };
 }
 
@@ -632,6 +587,7 @@ function createDecoration(subtype, worldWidth = 1400, worldHeight = 900) {
     type: subtype,
     x: randomBetween(180, worldWidth - 180),
     y: randomBetween(220, worldHeight - 140),
+    flipped: false,
   };
 
   if (subtype === 'tree') return { ...base, size: 44 };
@@ -642,26 +598,23 @@ function createDecoration(subtype, worldWidth = 1400, worldHeight = 900) {
 function createCharacter(type, worldWidth = 1400, worldHeight = 900) {
   return {
     id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-    name:
-      type === 'alpaca'
-        ? '파카'
-        : type === 'platypus'
-          ? '너구'
-          : '루',
+    name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
     type,
     x: randomBetween(280, worldWidth - 180),
     y: randomBetween(240, worldHeight - 150),
     size: type === 'alpaca' ? 46 : 42,
+    flipped: false,
   };
 }
 
-function buildWorldBuildings({ userLevels }) {
+function buildWorldBuildings({ userLevels, buildingLayout }) {
   const exerciseLevel = Number(userLevels?.exercise_level || 1);
   const studyLevel = Number(userLevels?.study_level || 1);
   const mentalLevel = Number(userLevels?.mental_level || 1);
   const dailyLevel = Number(userLevels?.daily_level || 1);
-
   const getStage = (level) => (level >= 7 ? 3 : level >= 3 ? 2 : 1);
+
+  const layoutMap = Object.fromEntries((buildingLayout || []).map((b) => [b.category, b]));
 
   return [
     {
@@ -669,8 +622,9 @@ function buildWorldBuildings({ userLevels }) {
       category: 'exercise',
       label: `체육관 Lv.${getStage(exerciseLevel)}`,
       emoji: '🏋️',
-      x: 220,
-      y: 500,
+      x: layoutMap.exercise?.x ?? 220,
+      y: layoutMap.exercise?.y ?? 500,
+      flipped: !!layoutMap.exercise?.flipped,
       w: 150,
       h: 110,
     },
@@ -679,8 +633,9 @@ function buildWorldBuildings({ userLevels }) {
       category: 'study',
       label: `도서관 Lv.${getStage(studyLevel)}`,
       emoji: '📚',
-      x: 430,
-      y: 560,
+      x: layoutMap.study?.x ?? 430,
+      y: layoutMap.study?.y ?? 560,
+      flipped: !!layoutMap.study?.flipped,
       w: 150,
       h: 110,
     },
@@ -689,8 +644,9 @@ function buildWorldBuildings({ userLevels }) {
       category: 'mental',
       label: `명상숲 Lv.${getStage(mentalLevel)}`,
       emoji: '🧘',
-      x: 760,
-      y: 540,
+      x: layoutMap.mental?.x ?? 760,
+      y: layoutMap.mental?.y ?? 540,
+      flipped: !!layoutMap.mental?.flipped,
       w: 150,
       h: 110,
     },
@@ -699,8 +655,9 @@ function buildWorldBuildings({ userLevels }) {
       category: 'daily',
       label: `생활공방 Lv.${getStage(dailyLevel)}`,
       emoji: '🧺',
-      x: 1010,
-      y: 460,
+      x: layoutMap.daily?.x ?? 1010,
+      y: layoutMap.daily?.y ?? 460,
+      flipped: !!layoutMap.daily?.flipped,
       w: 150,
       h: 110,
     },
@@ -877,7 +834,218 @@ function AddActionGoalButton({ onClick, categoryLabel }) {
   );
 }
 
-function VillageOverlayBar({ nickname, level, points, isOverview, onToggleOverview }) {
+function VillageShopModal({ open, activeTab, onTabChange, points, onClose, onBuy }) {
+  if (!open) return null;
+
+  const items = SHOP_ITEMS.filter((item) =>
+    activeTab === 'character' ? item.type === 'character' : item.type === 'decoration'
+  );
+
+  return (
+    <div className="fixed inset-0 z-[95] bg-black/45 px-4 py-8">
+      <div
+        className="mx-auto w-full max-w-md rounded-[28px] p-4"
+        style={{
+          background: 'linear-gradient(180deg, #fff7e8 0%, #f7e9cb 100%)',
+          border: '1px solid rgba(160,120,64,0.18)',
+          boxShadow: '0 18px 36px rgba(0,0,0,0.18)',
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[17px] font-extrabold" style={{ color: '#4a2c08' }}>
+              마을 상점
+            </div>
+            <div className="mt-1 text-[12px]" style={{ color: '#8a5a17' }}>
+              보유 포인트 {points}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full px-3 py-1.5 text-[12px] font-extrabold"
+            style={{
+              background: '#fff',
+              border: '1px solid rgba(160,120,64,0.14)',
+              color: '#4a2c08',
+            }}
+          >
+            닫기
+          </button>
+        </div>
+
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => onTabChange('character')}
+            className="h-11 flex-1 rounded-2xl text-sm font-extrabold"
+            style={{
+              background:
+                activeTab === 'character'
+                  ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
+                  : '#fff',
+              color: activeTab === 'character' ? '#fff8e8' : '#4a2c08',
+              border:
+                activeTab === 'character'
+                  ? '2px solid #6b4e15'
+                  : '1px solid rgba(160,120,64,0.14)',
+            }}
+          >
+            캐릭터
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onTabChange('decoration')}
+            className="h-11 flex-1 rounded-2xl text-sm font-extrabold"
+            style={{
+              background:
+                activeTab === 'decoration'
+                  ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
+                  : '#fff',
+              color: activeTab === 'decoration' ? '#fff8e8' : '#4a2c08',
+              border:
+                activeTab === 'decoration'
+                  ? '2px solid #6b4e15'
+                  : '1px solid rgba(160,120,64,0.14)',
+            }}
+          >
+            꾸미기
+          </button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          {items.map((item) => {
+            const disabled = points < item.price;
+
+            return (
+              <div
+                key={item.id}
+                className="rounded-2xl p-3"
+                style={{
+                  background: '#fffdf8',
+                  border: '1px solid rgba(160,120,64,0.14)',
+                }}
+              >
+                <div className="text-[24px]">{item.emoji}</div>
+                <div className="mt-1 text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
+                  {item.label}
+                </div>
+                <div className="text-[12px]" style={{ color: '#8a5a17' }}>
+                  {item.price} 포인트
+                </div>
+
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => onBuy(item)}
+                  className="mt-3 h-10 w-full rounded-2xl text-sm font-extrabold"
+                  style={{
+                    background: disabled
+                      ? '#ede5d2'
+                      : 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
+                    color: disabled ? '#9a8f7b' : '#fff8e8',
+                    border: disabled ? '1px solid #d4c8b0' : '2px solid #6b4e15',
+                  }}
+                >
+                  구매
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditToolbar({
+  isEditMode,
+  selectedObject,
+  onToggleEditMode,
+  onFlip,
+  onSave,
+  onCancel,
+}) {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={onToggleEditMode}
+          className="pointer-events-auto rounded-full px-3 py-2 text-[12px] font-extrabold"
+          style={{
+            background: isEditMode
+              ? 'linear-gradient(180deg, #d97a5c 0%, #c25c3c 100%)'
+              : 'rgba(255,248,232,0.92)',
+            color: isEditMode ? '#fff8e8' : '#4a2c08',
+            border: isEditMode ? '2px solid #7f321d' : '1px solid rgba(107,78,21,0.14)',
+            boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+          }}
+        >
+          {isEditMode ? '편집 종료' : '편집모드'}
+        </button>
+
+        {isEditMode ? (
+          <div className="pointer-events-auto flex items-center gap-2">
+            <button
+              type="button"
+              disabled={!selectedObject}
+              onClick={onFlip}
+              className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+              style={{
+                background: !selectedObject ? '#efe7d8' : '#fff',
+                color: !selectedObject ? '#a19380' : '#4a2c08',
+                border: '1px solid rgba(107,78,21,0.14)',
+                boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+              }}
+            >
+              좌우반전
+            </button>
+
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+              style={{
+                background: '#fff',
+                color: '#4a2c08',
+                border: '1px solid rgba(107,78,21,0.14)',
+                boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+              }}
+            >
+              취소
+            </button>
+
+            <button
+              type="button"
+              onClick={onSave}
+              className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+              style={{
+                background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
+                color: '#fff8e8',
+                border: '2px solid #6b4e15',
+                boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+              }}
+            >
+              저장
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function VillageOverlayBar({
+  nickname,
+  level,
+  points,
+  isOverview,
+  onToggleOverview,
+  onOpenShop,
+}) {
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3">
       <div className="flex items-start justify-between gap-2">
@@ -906,13 +1074,25 @@ function VillageOverlayBar({ nickname, level, points, isOverview, onToggleOvervi
               background: 'rgba(255,248,232,0.9)',
               color: '#4a2c08',
               border: '1px solid rgba(107,78,21,0.14)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
               boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
             }}
           >
             포인트 {points}
           </div>
+
+          <button
+            type="button"
+            onClick={onOpenShop}
+            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+            style={{
+              background: '#fff',
+              color: '#4a2c08',
+              border: '1px solid rgba(107,78,21,0.14)',
+              boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+            }}
+          >
+            상점
+          </button>
 
           <button
             type="button"
@@ -990,9 +1170,20 @@ function VillageWorldLayer({
   points,
   userLevels,
   decorations,
+  setDecorations,
   characters,
   setCharacters,
+  buildingLayout,
+  setBuildingLayout,
+  isEditMode,
+  selectedObject,
+  setSelectedObject,
   onToggleOverview,
+  onOpenShop,
+  onToggleEditMode,
+  onFlipSelected,
+  onSaveEdit,
+  onCancelEdit,
 }) {
   const dragRef = useRef(null);
   const [offset, setOffset] = useState({ x: -250, y: -190 });
@@ -1002,10 +1193,16 @@ function VillageWorldLayer({
   const worldHeight = 900;
   const scale = isOverview ? 0.62 : 1;
 
-  const buildings = useMemo(() => buildWorldBuildings({ userLevels }), [userLevels]);
+  const buildings = useMemo(
+    () => buildWorldBuildings({ userLevels, buildingLayout }),
+    [userLevels, buildingLayout]
+  );
 
-  const handlePointerDown = (e) => {
+  const handleWorldPointerDown = (e) => {
+    if (isEditMode) return;
+
     dragRef.current = {
+      mode: 'pan',
       startX: e.clientX,
       startY: e.clientY,
       originX: offset.x,
@@ -1013,17 +1210,85 @@ function VillageWorldLayer({
     };
   };
 
+  const startObjectDrag = (e, objType, objId) => {
+    if (!isEditMode) return;
+    e.stopPropagation();
+
+    setSelectedObject({ type: objType, id: objId });
+
+    dragRef.current = {
+      mode: 'object',
+      objectType: objType,
+      objectId: objId,
+      startX: e.clientX,
+      startY: e.clientY,
+    };
+  };
+
   const handlePointerMove = useCallback((e) => {
     if (!dragRef.current) return;
 
-    const dx = e.clientX - dragRef.current.startX;
-    const dy = e.clientY - dragRef.current.startY;
+    if (dragRef.current.mode === 'pan') {
+      const dx = e.clientX - dragRef.current.startX;
+      const dy = e.clientY - dragRef.current.startY;
 
-    setOffset({
-      x: dragRef.current.originX + dx,
-      y: dragRef.current.originY + dy,
-    });
-  }, [offset.x, offset.y]);
+      setOffset({
+        x: dragRef.current.originX + dx,
+        y: dragRef.current.originY + dy,
+      });
+      return;
+    }
+
+    if (dragRef.current.mode === 'object') {
+      const dx = (e.clientX - dragRef.current.startX) / scale;
+      const dy = (e.clientY - dragRef.current.startY) / scale;
+
+      if (dragRef.current.objectType === 'decoration') {
+        setDecorations((prev) =>
+          prev.map((item) =>
+            item.id === dragRef.current.objectId
+              ? {
+                  ...item,
+                  x: clamp(item.x + dx, 120, worldWidth - 120),
+                  y: clamp(item.y + dy, 140, worldHeight - 120),
+                }
+              : item
+          )
+        );
+      }
+
+      if (dragRef.current.objectType === 'character') {
+        setCharacters((prev) =>
+          prev.map((item) =>
+            item.id === dragRef.current.objectId
+              ? {
+                  ...item,
+                  x: clamp(item.x + dx, 120, worldWidth - 120),
+                  y: clamp(item.y + dy, 140, worldHeight - 120),
+                }
+              : item
+          )
+        );
+      }
+
+      if (dragRef.current.objectType === 'building') {
+        setBuildingLayout((prev) =>
+          prev.map((item) =>
+            item.category === dragRef.current.objectId
+              ? {
+                  ...item,
+                  x: clamp(item.x + dx, 120, worldWidth - 220),
+                  y: clamp(item.y + dy, 140, worldHeight - 180),
+                }
+              : item
+          )
+        );
+      }
+
+      dragRef.current.startX = e.clientX;
+      dragRef.current.startY = e.clientY;
+    }
+  }, [scale, setDecorations, setCharacters, setBuildingLayout]);
 
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
@@ -1032,7 +1297,6 @@ function VillageWorldLayer({
   useEffect(() => {
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup', handlePointerUp);
-
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
@@ -1040,18 +1304,21 @@ function VillageWorldLayer({
   }, [handlePointerMove, handlePointerUp]);
 
   useEffect(() => {
+    if (isEditMode) return;
+
     const timer = setInterval(() => {
       setCharacters((prev) =>
         prev.map((npc) => ({
           ...npc,
           x: clamp(npc.x + randomBetween(-90, 90), 120, worldWidth - 120),
           y: clamp(npc.y + randomBetween(-70, 70), 150, worldHeight - 120),
+          flipped: randomBetween(0, 1) > 0.5 ? !npc.flipped : npc.flipped,
         }))
       );
     }, 2600);
 
     return () => clearInterval(timer);
-  }, [setCharacters]);
+  }, [isEditMode, setCharacters]);
 
   return (
     <div
@@ -1078,11 +1345,21 @@ function VillageWorldLayer({
             points={points}
             isOverview={isOverview}
             onToggleOverview={onToggleOverview}
+            onOpenShop={onOpenShop}
+          />
+
+          <EditToolbar
+            isEditMode={isEditMode}
+            selectedObject={selectedObject}
+            onToggleEditMode={onToggleEditMode}
+            onFlip={onFlipSelected}
+            onSave={onSaveEdit}
+            onCancel={onCancelEdit}
           />
 
           <div
             className="absolute inset-0 touch-none overflow-hidden"
-            onPointerDown={handlePointerDown}
+            onPointerDown={handleWorldPointerDown}
           >
             <div
               className="absolute left-0 top-0"
@@ -1120,153 +1397,99 @@ function VillageWorldLayer({
                 }}
               />
 
-              <div
-                className="absolute left-[255px] top-[305px] h-[210px] w-[820px] rounded-[999px]"
-                style={{
-                  background: 'rgba(255,255,255,0.10)',
-                }}
-              />
+              {decorations.map((item) => {
+                const isSelected =
+                  selectedObject?.type === 'decoration' && selectedObject?.id === item.id;
 
-              {decorations.map((item) => (
-                <div
-                  key={item.id}
-                  className="absolute"
-                  style={{
-                    left: item.x,
-                    top: item.y,
-                    transform: 'translate(-50%, -50%)',
-                  }}
-                >
-                  <DecorationSprite item={item} />
-                </div>
-              ))}
+                return (
+                  <div
+                    key={item.id}
+                    className="absolute"
+                    onPointerDown={(e) => startObjectDrag(e, 'decoration', item.id)}
+                    style={{
+                      left: item.x,
+                      top: item.y,
+                      transform: `translate(-50%, -50%) scaleX(${item.flipped ? -1 : 1})`,
+                      outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
+                      outlineOffset: '3px',
+                      borderRadius: '999px',
+                      cursor: isEditMode ? 'grab' : 'default',
+                    }}
+                  >
+                    <DecorationSprite item={item} />
+                  </div>
+                );
+              })}
 
-              {buildings.map((building) => (
-                <div
-                  key={building.id}
-                  className="absolute rounded-[24px] border bg-white/78 backdrop-blur-sm"
-                  style={{
-                    left: building.x,
-                    top: building.y,
-                    width: building.w,
-                    height: building.h,
-                    borderColor: building.category === activeCategory ? theme.accent : theme.border,
-                    boxShadow:
-                      building.category === activeCategory
-                        ? `0 10px 22px rgba(0,0,0,0.10), 0 0 0 3px ${theme.border}`
-                        : '0 10px 20px rgba(0,0,0,0.08)',
-                  }}
-                >
-                  <div className="flex h-full flex-col items-center justify-center">
-                    <div className="text-[28px]">{building.emoji}</div>
-                    <div className="mt-1 text-[12px] font-extrabold text-slate-700">
-                      {building.label}
+              {buildings.map((building) => {
+                const isSelected =
+                  selectedObject?.type === 'building' &&
+                  selectedObject?.id === building.category;
+
+                return (
+                  <div
+                    key={building.id}
+                    className="absolute rounded-[24px] border bg-white/78 backdrop-blur-sm"
+                    onPointerDown={(e) => startObjectDrag(e, 'building', building.category)}
+                    style={{
+                      left: building.x,
+                      top: building.y,
+                      width: building.w,
+                      height: building.h,
+                      transform: `scaleX(${building.flipped ? -1 : 1})`,
+                      borderColor: building.category === activeCategory ? theme.accent : theme.border,
+                      boxShadow: isSelected
+                        ? '0 0 0 4px rgba(196,154,74,0.9), 0 10px 20px rgba(0,0,0,0.12)'
+                        : building.category === activeCategory
+                          ? `0 10px 22px rgba(0,0,0,0.10), 0 0 0 3px ${theme.border}`
+                          : '0 10px 20px rgba(0,0,0,0.08)',
+                      cursor: isEditMode ? 'grab' : 'default',
+                    }}
+                  >
+                    <div
+                      className="flex h-full flex-col items-center justify-center"
+                      style={{ transform: `scaleX(${building.flipped ? -1 : 1})` }}
+                    >
+                      <div className="text-[28px]">{building.emoji}</div>
+                      <div className="mt-1 text-[12px] font-extrabold text-slate-700">
+                        {building.label}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
-              {characters.map((npc) => (
-                <div
-                  key={npc.id}
-                  className="absolute"
-                  style={{
-                    left: npc.x,
-                    top: npc.y,
-                    width: npc.size,
-                    height: npc.size,
-                    transform: 'translate(-50%, -50%)',
-                    transition: 'left 2200ms ease-in-out, top 2200ms ease-in-out',
-                  }}
-                >
-                  <div className="relative flex h-full w-full items-center justify-center rounded-full bg-white/85 shadow">
-                    <span style={{ fontSize: npc.size * 0.55 }}>{getCharacterEmoji(npc.type)}</span>
+              {characters.map((npc) => {
+                const isSelected =
+                  selectedObject?.type === 'character' && selectedObject?.id === npc.id;
+
+                return (
+                  <div
+                    key={npc.id}
+                    className="absolute"
+                    onPointerDown={(e) => startObjectDrag(e, 'character', npc.id)}
+                    style={{
+                      left: npc.x,
+                      top: npc.y,
+                      width: npc.size,
+                      height: npc.size,
+                      transform: `translate(-50%, -50%) scaleX(${npc.flipped ? -1 : 1})`,
+                      transition: isEditMode ? 'none' : 'left 2200ms ease-in-out, top 2200ms ease-in-out',
+                      outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
+                      outlineOffset: '3px',
+                      borderRadius: '999px',
+                      cursor: isEditMode ? 'grab' : 'default',
+                    }}
+                  >
+                    <div className="relative flex h-full w-full items-center justify-center rounded-full bg-white/85 shadow">
+                      <span style={{ fontSize: npc.size * 0.55 }}>{getCharacterEmoji(npc.type)}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function VillageShop({ points, onBuy }) {
-  return (
-    <div
-      className="rounded-[24px] p-4"
-      style={{
-        background: 'linear-gradient(180deg, #fff7e8 0%, #f8ebcf 100%)',
-        border: '1px solid rgba(160,120,64,0.18)',
-        boxShadow: '0 10px 18px rgba(80,50,10,0.08)',
-      }}
-    >
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <div className="text-[16px] font-extrabold" style={{ color: '#4a2c08' }}>
-            마을 상점
-          </div>
-          <div className="mt-1 text-[12px]" style={{ color: '#8a5a17' }}>
-            포인트로 장식과 캐릭터를 구매할 수 있어요
-          </div>
-        </div>
-
-        <div
-          className="rounded-full px-3 py-1.5 text-[12px] font-extrabold"
-          style={{
-            background: '#fff',
-            border: '1px solid rgba(160,120,64,0.16)',
-            color: '#4a2c08',
-          }}
-        >
-          보유 {points}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        {SHOP_ITEMS.map((item) => {
-          const disabled = points < item.price;
-
-          return (
-            <div
-              key={item.id}
-              className="rounded-2xl p-3"
-              style={{
-                background: '#fffdf8',
-                border: '1px solid rgba(160,120,64,0.14)',
-              }}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <div className="text-[22px]">{item.emoji}</div>
-                  <div className="mt-1 text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
-                    {item.label}
-                  </div>
-                  <div className="text-[12px]" style={{ color: '#8a5a17' }}>
-                    {item.price} 포인트
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                disabled={disabled}
-                onClick={() => onBuy(item)}
-                className="mt-3 h-10 w-full rounded-2xl text-sm font-extrabold"
-                style={{
-                  background: disabled
-                    ? '#ede5d2'
-                    : 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
-                  color: disabled ? '#9a8f7b' : '#fff8e8',
-                  border: disabled ? '1px solid #d4c8b0' : '2px solid #6b4e15',
-                }}
-              >
-                구매
-              </button>
-            </div>
-          );
-        })}
       </div>
     </div>
   );
@@ -1296,13 +1519,22 @@ export default function Home() {
   const [expPopup, setExpPopup] = useState(null);
   const [pointPopup, setPointPopup] = useState(null);
   const [newTitle, setNewTitle] = useState(null);
+
+  const [isShopOpen, setIsShopOpen] = useState(false);
+  const [shopTab, setShopTab] = useState('character');
+
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedObject, setSelectedObject] = useState(null);
+
+  const [decorations, setDecorations] = useState([]);
+  const [characters, setCharacters] = useState(DEFAULT_VILLAGE_DATA.village_characters);
+  const [buildingLayout, setBuildingLayout] = useState(DEFAULT_BUILDINGS);
+
+  const originalVillageRef = useRef(null);
   const hasCategoryInteractionRef = useRef(false);
   const chainRepairOnceRef = useRef(false);
   const expPopupTimerRef = useRef(null);
   const pointPopupTimerRef = useRef(null);
-
-  const [decorations, setDecorations] = useState([]);
-  const [characters, setCharacters] = useState(DEFAULT_VILLAGE_DATA.village_characters);
 
   useEffect(() => {
     const handleUpdate = () => setGuestVersion((prev) => prev + 1);
@@ -1395,22 +1627,21 @@ export default function Home() {
     },
   });
 
-  const connectedActionGoals = useMemo(() => {
-    return connectActionGoalsToGoals(goals, actionGoals);
-  }, [goals, actionGoals]);
+  const connectedActionGoals = useMemo(
+    () => connectActionGoalsToGoals(goals, actionGoals),
+    [goals, actionGoals]
+  );
 
   useEffect(() => {
     if (!Array.isArray(actionGoals) || actionGoals.length === 0) return;
     if (chainRepairOnceRef.current) return;
 
     const needsRepair = actionGoals.some((goal) => {
-      if (!goal?.id) return false;
       const resolved = resolveGoalIdForActionGoal(goal, goals, activeCategory);
       return !goal?.goal_id || goal.goal_id !== resolved;
     });
 
     if (!needsRepair) return;
-
     chainRepairOnceRef.current = true;
 
     if (isGuest) {
@@ -1485,18 +1716,20 @@ export default function Home() {
     return buildDerivedStats(sourceLogs, connectedActionGoals || []);
   }, [isGuest, guestData, allLogs, connectedActionGoals]);
 
-  const ownedTitleIds = useMemo(() => {
-    return getOwnedTitleIds({ isGuest, user, guestData });
-  }, [isGuest, user, guestData, guestVersion]);
+  const ownedTitleIds = useMemo(
+    () => getOwnedTitleIds({ isGuest, user, guestData }),
+    [isGuest, user, guestData, guestVersion]
+  );
 
-  const unlockedTitles = useMemo(() => {
-    return getUnlockedTitles(derivedStats, ownedTitleIds);
-  }, [derivedStats, ownedTitleIds]);
+  const unlockedTitles = useMemo(
+    () => getUnlockedTitles(derivedStats, ownedTitleIds),
+    [derivedStats, ownedTitleIds]
+  );
 
   const equippedTitle = useMemo(() => {
     const equippedId = resolveEquippedTitleId({ isGuest, user, guestData, ownedTitleIds });
     return unlockedTitles.find((title) => title.id === equippedId) || null;
-  }, [isGuest, user, guestData, unlockedTitles, guestVersion, ownedTitleIds]);
+  }, [isGuest, user, guestData, unlockedTitles, ownedTitleIds]);
 
   useEffect(() => {
     ensureValidEquippedTitle({ isGuest, user, guestData, ownedTitleIds, queryClient })
@@ -1551,6 +1784,8 @@ export default function Home() {
     const village = getVillageState(source || {});
     setDecorations(village.village_decorations);
     setCharacters(village.village_characters);
+    setBuildingLayout(village.village_buildings);
+    originalVillageRef.current = village;
   }, [isGuest, guestData, user]);
 
   const handleCategoryChange = async (category) => {
@@ -1578,13 +1813,10 @@ export default function Home() {
   };
 
   const activeGoals = useMemo(() => {
-    const sourceGoals = goals || [];
-
-    return sourceGoals.filter((goal) => {
-      if (!goal) return false;
-      const goalCategory = normalizeCategoryValue(goal.category, '');
+    return (goals || []).filter((goal) => {
+      const goalCategory = normalizeCategoryValue(goal?.category, '');
       if (goalCategory !== activeCategory) return false;
-      if (goal.status && goal.status !== 'active') return false;
+      if (goal?.status && goal.status !== 'active') return false;
       return true;
     });
   }, [goals, activeCategory]);
@@ -1595,18 +1827,16 @@ export default function Home() {
     const goalIds = new Set(activeGoals.map((goal) => goal.id));
 
     return (connectedActionGoals || []).filter((actionGoal) => {
-      if (!actionGoal) return false;
-      const actionCategory = normalizeCategoryValue(actionGoal.category, '');
+      const actionCategory = normalizeCategoryValue(actionGoal?.category, '');
       if (actionCategory !== activeCategory) return false;
       if (
-        actionGoal.status &&
+        actionGoal?.status &&
         actionGoal.status !== 'active' &&
         actionGoal.status !== 'completed'
       ) {
         return false;
       }
-
-      if (!actionGoal.goal_id) return false;
+      if (!actionGoal?.goal_id) return false;
       if (goalIds.size === 0) return false;
 
       return goalIds.has(actionGoal.goal_id);
@@ -1619,10 +1849,7 @@ export default function Home() {
   }, [allLogs, activeGoal]);
 
   const today = getTodayString();
-
-  const grouped = useMemo(() => {
-    return groupActionGoals(activeActionGoals, today);
-  }, [activeActionGoals, today]);
+  const grouped = useMemo(() => groupActionGoals(activeActionGoals, today), [activeActionGoals, today]);
 
   const nickname = isGuest ? guestData?.nickname || '용사' : user?.nickname || '용사';
 
@@ -1637,12 +1864,10 @@ export default function Home() {
     if (isGuest) {
       try {
         await addOwnedTitle({ titleId, isGuest, user, queryClient });
-
         queryClient.removeQueries({ queryKey: ['guest-home-data'] });
         queryClient.removeQueries({ queryKey: ['guest-records-data'] });
         queryClient.invalidateQueries({ queryKey: ['guest-home-data'] });
         queryClient.invalidateQueries({ queryKey: ['guest-records-data'] });
-
         window.dispatchEvent(new Event('root-home-data-updated'));
         setGuestVersion((v) => v + 1);
       } catch (error) {
@@ -1681,6 +1906,28 @@ export default function Home() {
     }
   };
 
+  const saveVillageState = async (nextState) => {
+    if (isGuest) {
+      writeGuestDataPatch((prev) => ({
+        ...prev,
+        village_points: nextState.village_points,
+        village_decorations: nextState.village_decorations,
+        village_characters: nextState.village_characters,
+        village_buildings: nextState.village_buildings,
+      }));
+      window.dispatchEvent(new Event('root-home-data-updated'));
+      return;
+    }
+
+    await base44.auth.updateMe({
+      village_points: nextState.village_points,
+      village_decorations: nextState.village_decorations,
+      village_characters: nextState.village_characters,
+      village_buildings: nextState.village_buildings,
+    });
+    queryClient.invalidateQueries({ queryKey: ['me'] });
+  };
+
   const handleVillagePurchase = async (item) => {
     const source = isGuest ? guestData : user;
     const currentVillage = getVillageState(source || {});
@@ -1701,31 +1948,106 @@ export default function Home() {
       nextCharacters.push(createCharacter(item.subtype));
     }
 
-    try {
-      if (isGuest) {
-        writeGuestDataPatch((prev) => ({
-          ...prev,
-          village_points: nextPoints,
-          village_decorations: nextDecorations,
-          village_characters: nextCharacters,
-        }));
-        window.dispatchEvent(new Event('root-home-data-updated'));
-      } else {
-        await base44.auth.updateMe({
-          village_points: nextPoints,
-          village_decorations: nextDecorations,
-          village_characters: nextCharacters,
-        });
-        queryClient.invalidateQueries({ queryKey: ['me'] });
-      }
+    const nextState = {
+      village_points: nextPoints,
+      village_decorations: nextDecorations,
+      village_characters: nextCharacters,
+      village_buildings: buildingLayout,
+    };
 
+    try {
+      await saveVillageState(nextState);
       setDecorations(nextDecorations);
       setCharacters(nextCharacters);
+      originalVillageRef.current = {
+        ...currentVillage,
+        ...nextState,
+      };
       toast.success(`${item.label}을(를) 구매했어요!`);
     } catch (error) {
       console.error('handleVillagePurchase error:', error);
       toast.error('구매 중 오류가 발생했어요.');
     }
+  };
+
+  const handleToggleEditMode = () => {
+    if (!isEditMode) {
+      originalVillageRef.current = {
+        village_points: points,
+        village_decorations: decorations,
+        village_characters: characters,
+        village_buildings: buildingLayout,
+      };
+      setSelectedObject(null);
+      setIsEditMode(true);
+      return;
+    }
+
+    setIsEditMode(false);
+    setSelectedObject(null);
+  };
+
+  const handleFlipSelected = () => {
+    if (!selectedObject) return;
+
+    if (selectedObject.type === 'decoration') {
+      setDecorations((prev) =>
+        prev.map((item) =>
+          item.id === selectedObject.id ? { ...item, flipped: !item.flipped } : item
+        )
+      );
+    }
+
+    if (selectedObject.type === 'character') {
+      setCharacters((prev) =>
+        prev.map((item) =>
+          item.id === selectedObject.id ? { ...item, flipped: !item.flipped } : item
+        )
+      );
+    }
+
+    if (selectedObject.type === 'building') {
+      setBuildingLayout((prev) =>
+        prev.map((item) =>
+          item.category === selectedObject.id ? { ...item, flipped: !item.flipped } : item
+        )
+      );
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const source = isGuest ? guestData : user;
+      const currentVillage = getVillageState(source || {});
+
+      const nextState = {
+        village_points: currentVillage.village_points,
+        village_decorations: decorations,
+        village_characters: characters,
+        village_buildings: buildingLayout,
+      };
+
+      await saveVillageState(nextState);
+      originalVillageRef.current = nextState;
+      setIsEditMode(false);
+      setSelectedObject(null);
+      toast.success('마을 배치를 저장했어요!');
+    } catch (error) {
+      console.error('handleSaveEdit error:', error);
+      toast.error('배치 저장 중 오류가 발생했어요.');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    const original = originalVillageRef.current;
+    if (original) {
+      setDecorations(original.village_decorations || []);
+      setCharacters(original.village_characters || []);
+      setBuildingLayout(original.village_buildings || DEFAULT_BUILDINGS);
+    }
+    setSelectedObject(null);
+    setIsEditMode(false);
+    toast.success('편집을 취소했어요.');
   };
 
   const handleActionComplete = async (actionGoal, minutes = 0, extra = {}) => {
@@ -1740,7 +2062,6 @@ export default function Home() {
         resolveGoalIdForActionGoal(actionGoal, goals, activeCategory);
 
       if (!safeGoalId) {
-        console.error('goal_id를 찾지 못해 로그 생성을 중단했습니다.', actionGoal);
         toast.error('행동목표와 결과목표 연결이 끊어졌어요. 새로고침 후 다시 시도해 주세요.');
         return;
       }
@@ -1900,6 +2221,15 @@ export default function Home() {
         />
       ) : null}
 
+      <VillageShopModal
+        open={isShopOpen}
+        activeTab={shopTab}
+        onTabChange={setShopTab}
+        points={points}
+        onClose={() => setIsShopOpen(false)}
+        onBuy={handleVillagePurchase}
+      />
+
       <VillageWorldLayer
         activeCategory={activeCategory}
         isOverview={isOverview}
@@ -1908,9 +2238,23 @@ export default function Home() {
         points={points}
         userLevels={userLevels}
         decorations={decorations}
+        setDecorations={setDecorations}
         characters={characters}
         setCharacters={setCharacters}
+        buildingLayout={buildingLayout}
+        setBuildingLayout={setBuildingLayout}
+        isEditMode={isEditMode}
+        selectedObject={selectedObject}
+        setSelectedObject={setSelectedObject}
         onToggleOverview={() => setIsOverview((prev) => !prev)}
+        onOpenShop={() => {
+          setShopTab('character');
+          setIsShopOpen(true);
+        }}
+        onToggleEditMode={handleToggleEditMode}
+        onFlipSelected={handleFlipSelected}
+        onSaveEdit={handleSaveEdit}
+        onCancelEdit={handleCancelEdit}
       />
 
       <div
@@ -1932,11 +2276,6 @@ export default function Home() {
       </div>
 
       <div className="space-y-4 px-4 pt-4">
-        <VillageShop
-          points={points}
-          onBuy={handleVillagePurchase}
-        />
-
         {activeGoal ? (
           <GoalProgress goal={activeGoal} logs={goalLogs} />
         ) : (
