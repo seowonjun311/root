@@ -1,40 +1,26 @@
 /**
  * 캐릭터 이미지 에셋
- * 상태별, 카테고리별 캐릭터 이미지를 정의합니다.
  */
 
 // 기존 에셋 (호환성 유지)
 export const characterImg = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7660ae024_characterpng.png';
 
+// 캐릭터별 이미지
+export const foxImg      = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/f4c341abd_foxpng.png';
+export const platypusImg = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/22455bc06_platypuspng.png';
+export const alpacaImg   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/82a3fda82_alpacapng.png';
+
 export const characters = {
-  default: characterImg,
-
-  // 상태별 캐릭터
-  idle: characterImg,    // 기본 대기 상태
-  moving: characterImg,  // 이동 중 → 별도 이미지로 교체 가능
-  victory: characterImg, // 목표 달성 → 별도 이미지로 교체 가능
-
-  // 카테고리별 캐릭터 (필요 시 교체)
-  exercise: characterImg,
-  study: characterImg,
-  mental: characterImg,
-  daily: characterImg,
+  fox: foxImg,
+  platypus: platypusImg,
+  alpaca: alpacaImg,
 };
 
 /**
- * 상태에 맞는 캐릭터 이미지를 반환합니다.
- * @param {string} state - 'idle' | 'moving' | 'victory'
+ * 캐릭터 타입에 맞는 이미지를 반환합니다.
+ * @param {string} type - 'fox' | 'platypus' | 'alpaca'
  * @returns {string}
  */
-export function getCharacter(state = 'idle') {
-  return characters[state] ?? characterImg;
-}
-
-/**
- * 카테고리에 맞는 캐릭터 이미지를 반환합니다.
- * @param {string} category - 'exercise' | 'study' | 'mental' | 'daily'
- * @returns {string}
- */
-export function getCharacterByCategory(category) {
-  return characters[category] ?? characterImg;
+export function getCharacterImg(type) {
+  return characters[type] ?? foxImg;
 }
