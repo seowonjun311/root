@@ -116,6 +116,11 @@ const DEFAULT_VILLAGE_DATA = {
   village_buildings: DEFAULT_BUILDINGS,
 };
 
+const DEFAULT_VILLAGE_INVENTORY = {
+  village_inventory_characters: [],
+  village_inventory_decorations: [],
+};
+
 function readGuestData() {
   try {
     if (typeof guestDataPersistence?.getData === 'function') {
@@ -556,6 +561,23 @@ function getDecorationImage(type) {
   return grassImg;
 }
 
+function createInventoryItem(item) {
+  return {
+    id: `${item.type}_${item.subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+    shop_item_id: item.id,
+    type: item.type,
+    subtype: item.subtype,
+    label: item.label,
+  };
+}
+
+function createPlacedObjectFromInventory(inventoryItem, worldWidth = VILLAGE_WORLD.width, worldHeight = VILLAGE_WORLD.height) {
+  if (inventoryItem?.type === 'character') {
+    return createCharacter(inventoryItem.subtype, worldWidth, worldHeight);
+  }
+  return createDecoration(inventoryItem?.subtype || 'grass', worldWidth, worldHeight);
+}
+
 function getVillageState(source) {
   return {
     village_points: Number(source?.village_points ?? DEFAULT_VILLAGE_DATA.village_points),
@@ -570,6 +592,12 @@ function getVillageState(source) {
       Array.isArray(source?.village_buildings) && source.village_buildings.length > 0
         ? source.village_buildings
         : DEFAULT_VILLAGE_DATA.village_buildings,
+    village_inventory_characters: Array.isArray(source?.village_inventory_characters)
+      ? source.village_inventory_characters
+      : DEFAULT_VILLAGE_INVENTORY.village_inventory_characters,
+    village_inventory_decorations: Array.isArray(source?.village_inventory_decorations)
+      ? source.village_inventory_decorations
+      : DEFAULT_VILLAGE_INVENTORY.village_inventory_decorations,
   };
 }
 
@@ -990,6 +1018,164 @@ function VillageShopModal({ open, activeTab, onTabChange, points, onClose, onBuy
   );
 }
 
+function VillageBagModal({
+  open,
+  activeTab,
+  onTabChange,
+  inventoryCharacters,
+  inventoryDecorations,
+  onClose,
+  onPlaceItem,
+}) {
+  if (!open) return null;
+
+  const items = activeTab === 'character' ? inventoryCharacters : inventoryDecorations;
+
+  return (
+    <div className="fixed inset-0 z-[96] bg-black/45 px-4 py-8">
+      <div
+        className="mx-auto w-full max-w-md rounded-[28px] p-4"
+        style={{
+          background: 'linear-gradient(180deg, #fff7e8 0%, #f7e9cb 100%)',
+          border: '1px solid rgba(160,120,64,0.18)',
+          boxShadow: '0 18px 36px rgba(0,0,0,0.18)',
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[17px] font-extrabold" style={{ color: '#4a2c08' }}>
+              가방
+            </div>
+            <div className="mt-1 text-[12px]" style={{ color: '#8a5a17' }}>
+              구매한 캐릭터와 꾸미기를 보관해요
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full px-3 py-1.5 text-[12px] font-extrabold"
+            style={{
+              background: '#fff',
+              border: '1px solid rgba(160,120,64,0.14)',
+              color: '#4a2c08',
+            }}
+          >
+            닫기
+          </button>
+        </div>
+
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => onTabChange('character')}
+            className="h-11 flex-1 rounded-2xl text-sm font-extrabold"
+            style={{
+              background:
+                activeTab === 'character'
+                  ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
+                  : '#fff',
+              color: activeTab === 'character' ? '#fff8e8' : '#4a2c08',
+              border:
+                activeTab === 'character'
+                  ? '2px solid #6b4e15'
+                  : '1px solid rgba(160,120,64,0.14)',
+            }}
+          >
+            캐릭터 {inventoryCharacters.length}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onTabChange('decoration')}
+            className="h-11 flex-1 rounded-2xl text-sm font-extrabold"
+            style={{
+              background:
+                activeTab === 'decoration'
+                  ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
+                  : '#fff',
+              color: activeTab === 'decoration' ? '#fff8e8' : '#4a2c08',
+              border:
+                activeTab === 'decoration'
+                  ? '2px solid #6b4e15'
+                  : '1px solid rgba(160,120,64,0.14)',
+            }}
+          >
+            꾸미기 {inventoryDecorations.length}
+          </button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          {items.length === 0 ? (
+            <div
+              className="col-span-2 rounded-2xl px-4 py-6 text-center text-sm"
+              style={{
+                background: '#fffdf8',
+                border: '1px solid rgba(160,120,64,0.14)',
+                color: '#8a5a17',
+              }}
+            >
+              아직 가방에 들어있는 아이템이 없어요.
+            </div>
+          ) : (
+            items.map((item) => {
+              const itemImage = item.type === 'character'
+                ? getCharacterImage(item.subtype)
+                : getDecorationImage(item.subtype);
+
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-2xl p-3"
+                  style={{
+                    background: '#fffdf8',
+                    border: '1px solid rgba(160,120,64,0.14)',
+                  }}
+                >
+                  <div className="flex h-[68px] items-center justify-center">
+                    <img
+                      src={itemImage}
+                      alt={item.label}
+                      draggable={false}
+                      style={{
+                        maxHeight: '64px',
+                        maxWidth: '100%',
+                        objectFit: 'contain',
+                        display: 'block',
+                        background: 'transparent',
+                      }}
+                    />
+                  </div>
+
+                  <div className="mt-2 text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
+                    {item.label}
+                  </div>
+                  <div className="text-[12px]" style={{ color: '#8a5a17' }}>
+                    {item.type === 'character' ? '캐릭터' : '꾸미기'}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => onPlaceItem(item)}
+                    className="mt-3 h-10 w-full rounded-2xl text-sm font-extrabold"
+                    style={{
+                      background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
+                      color: '#fff8e8',
+                      border: '2px solid #6b4e15',
+                    }}
+                  >
+                    마을에 놓기
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EditToolbar({
   isEditMode,
   selectedObject,
@@ -1075,6 +1261,7 @@ function VillageOverlayBar({
   isOverview,
   onToggleOverview,
   onOpenShop,
+  onOpenBag,
 }) {
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3">
@@ -1109,6 +1296,20 @@ function VillageOverlayBar({
           >
             포인트 {points}
           </div>
+
+          <button
+            type="button"
+            onClick={onOpenBag}
+            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+            style={{
+              background: '#fff',
+              color: '#4a2c08',
+              border: '1px solid rgba(107,78,21,0.14)',
+              boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+            }}
+          >
+            가방
+          </button>
 
           <button
             type="button"
@@ -1187,6 +1388,7 @@ function VillageWorldLayer({
   setSelectedObject,
   onToggleOverview,
   onOpenShop,
+  onOpenBag,
   onToggleEditMode,
   onFlipSelected,
   onSaveEdit,
@@ -1471,6 +1673,7 @@ function VillageWorldLayer({
             isOverview={isOverview}
             onToggleOverview={onToggleOverview}
             onOpenShop={onOpenShop}
+            onOpenBag={onOpenBag}
           />
 
           <EditToolbar
@@ -1646,6 +1849,11 @@ export default function Home() {
 
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [shopTab, setShopTab] = useState('character');
+  const [isBagOpen, setIsBagOpen] = useState(false);
+  const [bagTab, setBagTab] = useState('character');
+
+  const [inventoryCharacters, setInventoryCharacters] = useState([]);
+  const [inventoryDecorations, setInventoryDecorations] = useState([]);
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedObject, setSelectedObject] = useState(null);
@@ -1913,11 +2121,13 @@ export default function Home() {
         image: getCharacterImage(item.type),
       }))
     );
+    setInventoryCharacters(Array.isArray(village.village_inventory_characters) ? village.village_inventory_characters : []);
+    setInventoryDecorations(Array.isArray(village.village_inventory_decorations) ? village.village_inventory_decorations : []);
     setBuildingLayout(
-    Array.isArray(village.village_buildings) && village.village_buildings.length > 0
-      ? village.village_buildings
-      : DEFAULT_BUILDINGS
-  );
+      Array.isArray(village.village_buildings) && village.village_buildings.length > 0
+        ? village.village_buildings
+        : DEFAULT_BUILDINGS
+    );
     originalVillageRef.current = village;
   }, [isGuest, guestData, user]);
 
@@ -2047,6 +2257,8 @@ export default function Home() {
         village_decorations: nextState.village_decorations.map(({ image, ...rest }) => rest),
         village_characters: nextState.village_characters.map(({ image, ...rest }) => rest),
         village_buildings: nextState.village_buildings,
+        village_inventory_characters: nextState.village_inventory_characters || [],
+        village_inventory_decorations: nextState.village_inventory_decorations || [],
       }));
       window.dispatchEvent(new Event('root-home-data-updated'));
       return;
@@ -2057,6 +2269,8 @@ export default function Home() {
       village_decorations: nextState.village_decorations.map(({ image, ...rest }) => rest),
       village_characters: nextState.village_characters.map(({ image, ...rest }) => rest),
       village_buildings: nextState.village_buildings,
+      village_inventory_characters: nextState.village_inventory_characters || [],
+      village_inventory_decorations: nextState.village_inventory_decorations || [],
     });
     queryClient.invalidateQueries({ queryKey: ['me'] });
   };
@@ -2072,34 +2286,82 @@ export default function Home() {
     }
 
     const nextPoints = currentPoints - item.price;
-    const nextDecorations = [...decorations];
-    const nextCharacters = [...characters];
+    const newInventoryItem = createInventoryItem(item);
+    const nextInventoryCharacters = [...inventoryCharacters];
+    const nextInventoryDecorations = [...inventoryDecorations];
 
     if (item.type === 'decoration') {
-      nextDecorations.push(createDecoration(item.subtype));
+      nextInventoryDecorations.push(newInventoryItem);
     } else if (item.type === 'character') {
-      nextCharacters.push(createCharacter(item.subtype));
+      nextInventoryCharacters.push(newInventoryItem);
     }
 
     const nextState = {
       village_points: nextPoints,
-      village_decorations: nextDecorations,
-      village_characters: nextCharacters,
+      village_decorations: decorations,
+      village_characters: characters,
       village_buildings: buildingLayout,
+      village_inventory_characters: nextInventoryCharacters,
+      village_inventory_decorations: nextInventoryDecorations,
     };
 
     try {
       await saveVillageState(nextState);
-      setDecorations(nextDecorations);
-      setCharacters(nextCharacters);
+      setInventoryCharacters(nextInventoryCharacters);
+      setInventoryDecorations(nextInventoryDecorations);
       originalVillageRef.current = {
         ...currentVillage,
         ...nextState,
       };
-      toast.success(`${item.label} 구매 완료! (-${item.price} 포인트)`);
+      toast.success(`${item.label} 구매 완료! 가방에 보관했어요. (-${item.price} 포인트)`);
     } catch (error) {
       console.error('handleVillagePurchase error:', error);
       toast.error('구매 중 오류가 발생했어요.');
+    }
+  };
+
+  const handlePlaceInventoryItem = async (inventoryItem) => {
+    const source = isGuest ? guestData : user;
+    const currentVillage = getVillageState(source || {});
+
+    const nextCharacters = [...characters];
+    const nextDecorations = [...decorations];
+    const nextInventoryCharacters = [...inventoryCharacters];
+    const nextInventoryDecorations = [...inventoryDecorations];
+
+    if (inventoryItem.type === 'character') {
+      nextCharacters.push(createPlacedObjectFromInventory(inventoryItem));
+      const removeIndex = nextInventoryCharacters.findIndex((item) => item.id === inventoryItem.id);
+      if (removeIndex >= 0) nextInventoryCharacters.splice(removeIndex, 1);
+    } else {
+      nextDecorations.push(createPlacedObjectFromInventory(inventoryItem));
+      const removeIndex = nextInventoryDecorations.findIndex((item) => item.id === inventoryItem.id);
+      if (removeIndex >= 0) nextInventoryDecorations.splice(removeIndex, 1);
+    }
+
+    const nextState = {
+      village_points: currentVillage.village_points,
+      village_decorations: nextDecorations,
+      village_characters: nextCharacters,
+      village_buildings: buildingLayout,
+      village_inventory_characters: nextInventoryCharacters,
+      village_inventory_decorations: nextInventoryDecorations,
+    };
+
+    try {
+      await saveVillageState(nextState);
+      setCharacters(nextCharacters);
+      setDecorations(nextDecorations);
+      setInventoryCharacters(nextInventoryCharacters);
+      setInventoryDecorations(nextInventoryDecorations);
+      originalVillageRef.current = {
+        ...currentVillage,
+        ...nextState,
+      };
+      toast.success(`${inventoryItem.label}을(를) 마을에 놓았어요!`);
+    } catch (error) {
+      console.error('handlePlaceInventoryItem error:', error);
+      toast.error('가방 아이템 배치 중 오류가 발생했어요.');
     }
   };
 
@@ -2110,6 +2372,8 @@ export default function Home() {
         village_decorations: decorations,
         village_characters: characters,
         village_buildings: buildingLayout,
+        village_inventory_characters: inventoryCharacters,
+        village_inventory_decorations: inventoryDecorations,
       };
       setSelectedObject(null);
       setIsEditMode(true);
@@ -2158,6 +2422,8 @@ export default function Home() {
         village_decorations: decorations,
         village_characters: characters,
         village_buildings: buildingLayout,
+        village_inventory_characters: inventoryCharacters,
+        village_inventory_decorations: inventoryDecorations,
       };
 
       await saveVillageState(nextState);
@@ -2187,6 +2453,8 @@ export default function Home() {
         }))
       );
       setBuildingLayout(original.village_buildings || DEFAULT_BUILDINGS);
+      setInventoryCharacters(original.village_inventory_characters || []);
+      setInventoryDecorations(original.village_inventory_decorations || []);
     }
     setSelectedObject(null);
     setIsEditMode(false);
@@ -2372,6 +2640,16 @@ export default function Home() {
         onBuy={handleVillagePurchase}
       />
 
+      <VillageBagModal
+        open={isBagOpen}
+        activeTab={bagTab}
+        onTabChange={setBagTab}
+        inventoryCharacters={inventoryCharacters}
+        inventoryDecorations={inventoryDecorations}
+        onClose={() => setIsBagOpen(false)}
+        onPlaceItem={handlePlaceInventoryItem}
+      />
+
       <VillageWorldLayer
         activeCategory={activeCategory}
         isOverview={isOverview}
@@ -2392,6 +2670,10 @@ export default function Home() {
         onOpenShop={() => {
           setShopTab('character');
           setIsShopOpen(true);
+        }}
+        onOpenBag={() => {
+          setBagTab('character');
+          setIsBagOpen(true);
         }}
         onToggleEditMode={handleToggleEditMode}
         onFlipSelected={handleFlipSelected}
