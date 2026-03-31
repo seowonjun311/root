@@ -243,20 +243,20 @@ function SimpleWeekRow({ logs = [] }) {
   );
 
   return (
-    <div className="mt-2 flex items-center justify-between gap-1">
+    <div className="mt-1 flex items-center justify-between gap-1">
       {DAY_LABELS.map((day, index) => {
         const isDone = doneSet.has(index);
 
         return (
-          <div key={day} className="flex flex-col items-center gap-1 flex-1 min-w-0">
+          <div key={day} className="flex flex-col items-center gap-0.5 flex-1 min-w-0">
             <span
-              className="text-[10px] font-semibold leading-none"
+              className="text-[9px] font-semibold leading-none"
               style={{ color: '#9a7b47' }}
             >
               {day}
             </span>
             <div
-              className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold"
+              className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold"
               style={{
                 background: isDone ? '#c7973a' : '#f5ecda',
                 border: isDone ? '1px solid #a9771f' : '1px solid #e8dbc0',
@@ -708,7 +708,7 @@ export default function ActionGoalCard({
             e.stopPropagation();
             handleConfirm();
           }}
-          className="h-8 px-3 rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0"
+          className="h-7 px-2.5 rounded-lg text-[10px] font-bold flex items-center gap-1 shrink-0"
           style={{
             background: '#c8ab6b',
             color: '#5f4310',
@@ -724,7 +724,7 @@ export default function ActionGoalCard({
         return (
           <span
             onClick={(e) => e.stopPropagation()}
-            className="h-8 px-3 rounded-xl text-[11px] font-bold flex items-center shrink-0"
+            className="h-7 px-2.5 rounded-lg text-[10px] font-bold flex items-center shrink-0"
             style={{
               background: '#e5d6b8',
               color: '#8f6a33',
@@ -741,7 +741,7 @@ export default function ActionGoalCard({
             e.stopPropagation();
             handleTimerToggle();
           }}
-          className="h-8 px-3 rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0"
+          className="h-7 px-2.5 rounded-lg text-[10px] font-bold flex items-center gap-1 shrink-0"
           style={
             isRunning
               ? {
@@ -773,7 +773,7 @@ export default function ActionGoalCard({
       return (
         <span
           onClick={(e) => e.stopPropagation()}
-          className="h-8 px-3 rounded-xl text-[11px] font-bold flex items-center shrink-0"
+          className="h-7 px-2.5 rounded-lg text-[10px] font-bold flex items-center shrink-0"
           style={{
             background: '#e5d6b8',
             color: '#8f6a33',
@@ -790,7 +790,7 @@ export default function ActionGoalCard({
           e.stopPropagation();
           handleConfirm();
         }}
-        className="h-8 px-3 rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0"
+        className="h-7 px-2.5 rounded-lg text-[10px] font-bold flex items-center gap-1 shrink-0"
         style={{
           background: '#c8ab6b',
           color: '#5f4310',
@@ -825,10 +825,10 @@ export default function ActionGoalCard({
         onChange={(e) => handlePhotoSelected(e, 'camera')}
       />
 
-      <div ref={cardRef} className="relative w-[75%] min-w-[260px] mx-auto">
+      <div ref={cardRef} className="relative">
         <div
           onClick={() => setShowCalendar((prev) => !prev)}
-          className="rounded-2xl px-4 py-3 cursor-pointer"
+          className="rounded-2xl px-3 py-2 cursor-pointer"
           style={{
             background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 60%, #f0e0bc 100%)',
             border: '1.5px solid #d7b97b',
@@ -837,16 +837,16 @@ export default function ActionGoalCard({
         >
           <div className="flex items-start gap-2">
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
               style={{
                 background: 'rgba(255,255,255,0.28)',
                 border: '1px solid rgba(122,80,32,0.10)',
               }}
             >
               {doneToday ? (
-                <Check className="w-4 h-4" style={{ color: '#4ca86a' }} />
+                <Check className="w-3.5 h-3.5" style={{ color: '#4ca86a' }} />
               ) : (
-                <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#d2b06a' }} />
+                <div className="w-2 h-2 rounded-full" style={{ background: '#d2b06a' }} />
               )}
             </div>
 
@@ -854,7 +854,7 @@ export default function ActionGoalCard({
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div
-                    className="truncate text-[15px] font-bold leading-tight"
+                    className="truncate text-[13px] font-bold leading-tight"
                     style={{ color: '#3a1f04' }}
                   >
                     {actionGoal.title}
@@ -862,7 +862,7 @@ export default function ActionGoalCard({
 
                   {isOneTime ? (
                     <div
-                      className="mt-1 text-[11px] font-semibold leading-none"
+                      className="mt-0.5 text-[10px] font-semibold leading-none"
                       style={{ color: '#8f6a33' }}
                     >
                       {oneTimeSubText}
@@ -870,7 +870,7 @@ export default function ActionGoalCard({
                   ) : null}
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1 shrink-0">
                   {renderActionButton()}
 
                   <button
@@ -878,14 +878,14 @@ export default function ActionGoalCard({
                       e.stopPropagation();
                       setShowMenu(true);
                     }}
-                    className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0"
+                    className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0"
                     style={{
                       background: 'rgba(122,80,32,0.08)',
                       color: '#7a5020',
                     }}
                     aria-label="행동 목표 관리"
                   >
-                    <Pencil className="w-3.5 h-3.5" />
+                    <Pencil className="w-3 h-3" />
                   </button>
                 </div>
               </div>
