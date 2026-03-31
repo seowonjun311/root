@@ -825,7 +825,7 @@ export default function ActionGoalCard({
         onChange={(e) => handlePhotoSelected(e, 'camera')}
       />
 
-      <div ref={cardRef} className="relative">
+      <div ref={cardRef} className="relative" w-[75%] mx-auto>
         <div
           onClick={() => setShowCalendar((prev) => !prev)}
           className="rounded-2xl px-4 py-3 cursor-pointer"
