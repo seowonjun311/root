@@ -7,7 +7,6 @@ import {
   addOwnedTitle,
   ensureValidEquippedTitle,
   getOwnedTitleIds,
-  resolveEquippedTitleId,
   setEquippedTitle,
 } from '@/lib/titleStorage';
 import { toast } from 'sonner';
@@ -49,6 +48,11 @@ const CATEGORY_ALIASES = {
 
 const VALID_CATEGORIES = Object.keys(CATEGORY_LABELS);
 
+// ✅ 마을 크기 축소: 기존 1400x900 → 절반으로 축소 (면적으로 약 1/4)
+const WORLD_WIDTH = 700;
+const WORLD_HEIGHT = 450;
+const VIEWPORT_HEIGHT = 300;
+
 const TITLES = [
   { id: 'common_first_step', name: '첫 걸음을 뗀 자', description: '첫 행동목표를 완료한 용사', metric: 'total_actions', value: 1, category: 'common' },
   { id: 'common_route_walker', name: '루트를 걷는 자', description: '전체 행동목표 100회 달성', metric: 'total_actions', value: 100, category: 'common' },
@@ -84,18 +88,19 @@ const SHOP_ITEMS = [
   { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, image: flowerImg },
 ];
 
+// ✅ 좌표도 절반 수준으로 조정
 const DEFAULT_BUILDINGS = [
-  { id: 'exercise_building', category: 'exercise', x: 220, y: 500, flipped: false },
-  { id: 'study_building', category: 'study', x: 430, y: 560, flipped: false },
-  { id: 'mental_building', category: 'mental', x: 760, y: 540, flipped: false },
-  { id: 'daily_building', category: 'daily', x: 1010, y: 460, flipped: false },
+  { id: 'exercise_building', category: 'exercise', x: 110, y: 250, flipped: false },
+  { id: 'study_building', category: 'study', x: 215, y: 280, flipped: false },
+  { id: 'mental_building', category: 'mental', x: 380, y: 270, flipped: false },
+  { id: 'daily_building', category: 'daily', x: 505, y: 230, flipped: false },
 ];
 
 const DEFAULT_VILLAGE_DATA = {
   village_points: 0,
   village_decorations: [],
   village_characters: [
-    { id: 'starter_fox', name: '루', type: 'fox', x: 620, y: 470, size: 52, flipped: false },
+    { id: 'starter_fox', name: '루', type: 'fox', x: 310, y: 235, size: 52, flipped: false },
   ],
   village_buildings: DEFAULT_BUILDINGS,
 };
@@ -557,29 +562,29 @@ function getVillageState(source) {
   };
 }
 
-function createDecoration(subtype, worldWidth = 1400, worldHeight = 900) {
-  const sizeMap = { grass: 34, tree: 62, flower: 30 };
+function createDecoration(subtype, worldWidth = WORLD_WIDTH, worldHeight = WORLD_HEIGHT) {
+  const sizeMap = { grass: 24, tree: 48, flower: 22 };
 
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     type: subtype,
     image: getDecorationImage(subtype),
-    x: randomBetween(180, worldWidth - 180),
-    y: randomBetween(220, worldHeight - 140),
+    x: randomBetween(80, worldWidth - 80),
+    y: randomBetween(80, worldHeight - 60),
     flipped: false,
-    size: sizeMap[subtype] || 32,
+    size: sizeMap[subtype] || 24,
   };
 }
 
-function createCharacter(type, worldWidth = 1400, worldHeight = 900) {
+function createCharacter(type, worldWidth = WORLD_WIDTH, worldHeight = WORLD_HEIGHT) {
   return {
     id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
     type,
     image: getCharacterImage(type),
-    x: randomBetween(280, worldWidth - 180),
-    y: randomBetween(240, worldHeight - 150),
-    size: type === 'alpaca' ? 56 : 52,
+    x: randomBetween(120, worldWidth - 80),
+    y: randomBetween(100, worldHeight - 60),
+    size: type === 'alpaca' ? 52 : 46,
     flipped: false,
   };
 }
@@ -599,44 +604,44 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'exercise',
       label: `체육관 Lv.${getStage(exerciseLevel)}`,
       image: getBuilding('exercise', getStage(exerciseLevel)),
-      x: layoutMap.exercise?.x ?? 220,
-      y: layoutMap.exercise?.y ?? 500,
+      x: layoutMap.exercise?.x ?? 110,
+      y: layoutMap.exercise?.y ?? 250,
       flipped: !!layoutMap.exercise?.flipped,
-      w: 150,
-      h: 120,
+      w: 96,
+      h: 76,
     },
     {
       id: 'study_building',
       category: 'study',
       label: `도서관 Lv.${getStage(studyLevel)}`,
       image: getBuilding('study', getStage(studyLevel)),
-      x: layoutMap.study?.x ?? 430,
-      y: layoutMap.study?.y ?? 560,
+      x: layoutMap.study?.x ?? 215,
+      y: layoutMap.study?.y ?? 280,
       flipped: !!layoutMap.study?.flipped,
-      w: 150,
-      h: 120,
+      w: 96,
+      h: 76,
     },
     {
       id: 'mental_building',
       category: 'mental',
       label: `명상숲 Lv.${getStage(mentalLevel)}`,
       image: getBuilding('mental', getStage(mentalLevel)),
-      x: layoutMap.mental?.x ?? 760,
-      y: layoutMap.mental?.y ?? 540,
+      x: layoutMap.mental?.x ?? 380,
+      y: layoutMap.mental?.y ?? 270,
       flipped: !!layoutMap.mental?.flipped,
-      w: 150,
-      h: 120,
+      w: 96,
+      h: 76,
     },
     {
       id: 'daily_building',
       category: 'daily',
       label: `생활공방 Lv.${getStage(dailyLevel)}`,
       image: getBuilding('daily', getStage(dailyLevel)),
-      x: layoutMap.daily?.x ?? 1010,
-      y: layoutMap.daily?.y ?? 460,
+      x: layoutMap.daily?.x ?? 505,
+      y: layoutMap.daily?.y ?? 230,
       flipped: !!layoutMap.daily?.flipped,
-      w: 150,
-      h: 120,
+      w: 96,
+      h: 76,
     },
   ];
 }
@@ -1133,6 +1138,37 @@ function DecorationSprite({ item }) {
   );
 }
 
+function getOffsetBounds(viewportWidth, viewportHeight, worldWidth, worldHeight, scale) {
+  const scaledWidth = worldWidth * scale;
+  const scaledHeight = worldHeight * scale;
+
+  const centeredX = (viewportWidth - scaledWidth) / 2;
+  const centeredY = (viewportHeight - scaledHeight) / 2;
+
+  let minX;
+  let maxX;
+  let minY;
+  let maxY;
+
+  if (scaledWidth <= viewportWidth) {
+    minX = centeredX;
+    maxX = centeredX;
+  } else {
+    minX = viewportWidth - scaledWidth;
+    maxX = 0;
+  }
+
+  if (scaledHeight <= viewportHeight) {
+    minY = centeredY;
+    maxY = centeredY;
+  } else {
+    minY = viewportHeight - scaledHeight;
+    maxY = 0;
+  }
+
+  return { minX, maxX, minY, maxY };
+}
+
 function VillageWorldLayer({
   activeCategory,
   isOverview,
@@ -1157,11 +1193,23 @@ function VillageWorldLayer({
   onCancelEdit,
 }) {
   const dragRef = useRef(null);
-  const [offset, setOffset] = useState({ x: -250, y: -190 });
+  const viewportRef = useRef(null);
+  const [viewportWidth, setViewportWidth] = useState(0);
 
-  const worldWidth = 1400;
-  const worldHeight = 900;
-  const scale = isOverview ? 0.62 : 1;
+  const scale = isOverview ? 0.9 : 1;
+
+  const initialBounds = getOffsetBounds(
+    viewportWidth || 1,
+    VIEWPORT_HEIGHT,
+    WORLD_WIDTH,
+    WORLD_HEIGHT,
+    scale
+  );
+
+  const [offset, setOffset] = useState({
+    x: initialBounds.maxX,
+    y: initialBounds.maxY,
+  });
 
   const buildings = useMemo(
     () => buildWorldBuildings({ userLevels, buildingLayout }),
@@ -1169,6 +1217,32 @@ function VillageWorldLayer({
   );
 
   const backgroundImage = getBackground(activeCategory, 'day');
+
+  useEffect(() => {
+    const updateSize = () => {
+      if (!viewportRef.current) return;
+      setViewportWidth(viewportRef.current.clientWidth);
+    };
+
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+
+  useEffect(() => {
+    if (!viewportWidth) return;
+    const bounds = getOffsetBounds(
+      viewportWidth,
+      VIEWPORT_HEIGHT,
+      WORLD_WIDTH,
+      WORLD_HEIGHT,
+      scale
+    );
+    setOffset((prev) => ({
+      x: clamp(prev.x, bounds.minX, bounds.maxX),
+      y: clamp(prev.y, bounds.minY, bounds.maxY),
+    }));
+  }, [viewportWidth, scale]);
 
   const handleWorldPointerDown = (e) => {
     if (isEditMode) return;
@@ -1204,9 +1278,20 @@ function VillageWorldLayer({
       const dx = e.clientX - dragRef.current.startX;
       const dy = e.clientY - dragRef.current.startY;
 
+      const bounds = getOffsetBounds(
+        viewportWidth || 1,
+        VIEWPORT_HEIGHT,
+        WORLD_WIDTH,
+        WORLD_HEIGHT,
+        scale
+      );
+
+      const nextX = dragRef.current.originX + dx;
+      const nextY = dragRef.current.originY + dy;
+
       setOffset({
-        x: dragRef.current.originX + dx,
-        y: dragRef.current.originY + dy,
+        x: clamp(nextX, bounds.minX, bounds.maxX),
+        y: clamp(nextY, bounds.minY, bounds.maxY),
       });
       return;
     }
@@ -1214,6 +1299,7 @@ function VillageWorldLayer({
     if (dragRef.current.mode === 'object') {
       const dx = (e.clientX - dragRef.current.startX) / scale;
       const dy = (e.clientY - dragRef.current.startY) / scale;
+      const margin = 40;
 
       if (dragRef.current.objectType === 'decoration') {
         setDecorations((prev) =>
@@ -1221,8 +1307,8 @@ function VillageWorldLayer({
             item.id === dragRef.current.objectId
               ? {
                   ...item,
-                  x: clamp(item.x + dx, 120, worldWidth - 120),
-                  y: clamp(item.y + dy, 140, worldHeight - 120),
+                  x: clamp(item.x + dx, margin, WORLD_WIDTH - margin),
+                  y: clamp(item.y + dy, margin, WORLD_HEIGHT - margin),
                 }
               : item
           )
@@ -1235,8 +1321,8 @@ function VillageWorldLayer({
             item.id === dragRef.current.objectId
               ? {
                   ...item,
-                  x: clamp(item.x + dx, 120, worldWidth - 120),
-                  y: clamp(item.y + dy, 140, worldHeight - 120),
+                  x: clamp(item.x + dx, margin, WORLD_WIDTH - margin),
+                  y: clamp(item.y + dy, margin, WORLD_HEIGHT - margin),
                 }
               : item
           )
@@ -1249,8 +1335,8 @@ function VillageWorldLayer({
             item.category === dragRef.current.objectId
               ? {
                   ...item,
-                  x: clamp(item.x + dx, 120, worldWidth - 220),
-                  y: clamp(item.y + dy, 140, worldHeight - 180),
+                  x: clamp(item.x + dx, 60, WORLD_WIDTH - 60),
+                  y: clamp(item.y + dy, 60, WORLD_HEIGHT - 60),
                 }
               : item
           )
@@ -1260,7 +1346,7 @@ function VillageWorldLayer({
       dragRef.current.startX = e.clientX;
       dragRef.current.startY = e.clientY;
     }
-  }, [scale, setDecorations, setCharacters, setBuildingLayout, offset.x, offset.y]);
+  }, [scale, setDecorations, setCharacters, setBuildingLayout, viewportWidth]);
 
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
@@ -1282,8 +1368,8 @@ function VillageWorldLayer({
       setCharacters((prev) =>
         prev.map((npc) => ({
           ...npc,
-          x: clamp(npc.x + randomBetween(-90, 90), 120, worldWidth - 120),
-          y: clamp(npc.y + randomBetween(-70, 70), 150, worldHeight - 120),
+          x: clamp(npc.x + randomBetween(-30, 30), 50, WORLD_WIDTH - 50),
+          y: clamp(npc.y + randomBetween(-25, 25), 50, WORLD_HEIGHT - 50),
           flipped: randomBetween(0, 1) > 0.5 ? !npc.flipped : npc.flipped,
         }))
       );
@@ -1303,9 +1389,10 @@ function VillageWorldLayer({
     >
       <div className="px-4 pt-3 pb-2">
         <div
+          ref={viewportRef}
           className="relative overflow-hidden rounded-[28px]"
           style={{
-            height: 300,
+            height: VIEWPORT_HEIGHT,
             border: '1px solid rgba(160,120,64,0.18)',
             boxShadow: '0 12px 24px rgba(80,50,10,0.08)',
           }}
@@ -1335,8 +1422,8 @@ function VillageWorldLayer({
             <div
               className="absolute left-0 top-0"
               style={{
-                width: worldWidth,
-                height: worldHeight,
+                width: WORLD_WIDTH,
+                height: WORLD_HEIGHT,
                 transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
                 transformOrigin: 'top left',
                 transition: dragRef.current ? 'none' : 'transform 300ms ease',
@@ -1683,11 +1770,6 @@ export default function Home() {
   const ownedTitleIds = useMemo(
     () => getOwnedTitleIds({ isGuest, user, guestData }),
     [isGuest, user, guestData, guestVersion]
-  );
-
-  const unlockedTitles = useMemo(
-    () => getUnlockedTitles(derivedStats, ownedTitleIds),
-    [derivedStats, ownedTitleIds]
   );
 
   useEffect(() => {
