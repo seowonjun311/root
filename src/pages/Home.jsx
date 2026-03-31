@@ -606,7 +606,7 @@ function createDecoration(
   worldWidth = VILLAGE_WORLD.width,
   worldHeight = VILLAGE_WORLD.height
 ) {
-  const sizeMap = { grass: 34, tree: 124, flower: 30 };
+  const sizeMap = { grass: 34, tree: 83, flower: 30 };
 
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
@@ -666,8 +666,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       x: layoutMap.exercise?.x ?? 165,
       y: layoutMap.exercise?.y ?? 375,
       flipped: !!layoutMap.exercise?.flipped,
-      w: 300,
-      h: 240,
+      w: 200,
+      h: 160,
     },
     {
       id: 'study_building',
@@ -677,8 +677,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       x: layoutMap.study?.x ?? 325,
       y: layoutMap.study?.y ?? 420,
       flipped: !!layoutMap.study?.flipped,
-      w: 300,
-      h: 240,
+      w: 200,
+      h: 160,
     },
     {
       id: 'mental_building',
@@ -688,8 +688,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       x: layoutMap.mental?.x ?? 575,
       y: layoutMap.mental?.y ?? 405,
       flipped: !!layoutMap.mental?.flipped,
-      w: 300,
-      h: 240,
+      w: 200,
+      h: 160,
     },
     {
       id: 'daily_building',
@@ -699,8 +699,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       x: layoutMap.daily?.x ?? 775,
       y: layoutMap.daily?.y ?? 340,
       flipped: !!layoutMap.daily?.flipped,
-      w: 300,
-      h: 240,
+      w: 200,
+      h: 160,
     },
   ];
 }
