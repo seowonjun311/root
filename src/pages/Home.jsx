@@ -18,7 +18,7 @@ import ActionGoalCard from '@/components/home/ActionGoalCard';
 import EmptyGoalState from '@/components/home/EmptyGoalState';
 
 import { getBackground } from '@/assets/root/backgrounds';
-import { gymLv1 as gymLv1Img, libraryLv1 as libraryLv1Img, meditationLv1 as meditationLv1Img, workshopLv1 as workshopLv1Img } from '@/assets/root/buildings';
+import { getBuilding } from '@/assets/root/buildings';
 import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
 import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
 
@@ -95,7 +95,7 @@ const DEFAULT_VILLAGE_DATA = {
   village_points: 0,
   village_decorations: [],
   village_characters: [
-    { id: 'starter_fox', name: '루', type: 'fox', x: 620, y: 470, size: 42, flipped: false },
+    { id: 'starter_fox', name: '루', type: 'fox', x: 620, y: 470, size: 52, flipped: false },
   ],
   village_buildings: DEFAULT_BUILDINGS,
 };
@@ -529,6 +529,18 @@ function validateGoalActionLogChain(goals = [], actionGoals = [], logs = []) {
   };
 }
 
+function getCharacterImage(type) {
+  if (type === 'alpaca') return alpacaImg;
+  if (type === 'platypus') return platypusImg;
+  return foxImg;
+}
+
+function getDecorationImage(type) {
+  if (type === 'tree') return treeImg;
+  if (type === 'flower') return flowerImg;
+  return grassImg;
+}
+
 function getVillageState(source) {
   return {
     village_points: Number(source?.village_points ?? DEFAULT_VILLAGE_DATA.village_points),
@@ -547,12 +559,6 @@ function getVillageState(source) {
 }
 
 function createDecoration(subtype, worldWidth = 1400, worldHeight = 900) {
-  const imageMap = {
-    grass: grassImg,
-    tree: treeImg,
-    flower: flowerImg,
-  };
-
   const sizeMap = {
     grass: 34,
     tree: 62,
@@ -562,7 +568,7 @@ function createDecoration(subtype, worldWidth = 1400, worldHeight = 900) {
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     type: subtype,
-    image: imageMap[subtype],
+    image: getDecorationImage(subtype),
     x: randomBetween(180, worldWidth - 180),
     y: randomBetween(220, worldHeight - 140),
     flipped: false,
@@ -571,17 +577,11 @@ function createDecoration(subtype, worldWidth = 1400, worldHeight = 900) {
 }
 
 function createCharacter(type, worldWidth = 1400, worldHeight = 900) {
-  const imageMap = {
-    fox: foxImg,
-    alpaca: alpacaImg,
-    platypus: platypusImg,
-  };
-
   return {
     id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
     type,
-    image: imageMap[type],
+    image: getCharacterImage(type),
     x: randomBetween(280, worldWidth - 180),
     y: randomBetween(240, worldHeight - 150),
     size: type === 'alpaca' ? 56 : 52,
@@ -594,8 +594,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
   const studyLevel = Number(userLevels?.study_level || 1);
   const mentalLevel = Number(userLevels?.mental_level || 1);
   const dailyLevel = Number(userLevels?.daily_level || 1);
-  const getStage = (level) => (level >= 7 ? 3 : level >= 3 ? 2 : 1);
 
+  const getStage = (level) => (level >= 7 ? 3 : level >= 3 ? 2 : 1);
   const layoutMap = Object.fromEntries((buildingLayout || []).map((b) => [b.category, b]));
 
   return [
@@ -603,7 +603,7 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       id: 'exercise_building',
       category: 'exercise',
       label: `체육관 Lv.${getStage(exerciseLevel)}`,
-      image: gymLv1Img,
+      image: getBuilding('exercise', getStage(exerciseLevel)),
       x: layoutMap.exercise?.x ?? 220,
       y: layoutMap.exercise?.y ?? 500,
       flipped: !!layoutMap.exercise?.flipped,
@@ -614,7 +614,7 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       id: 'study_building',
       category: 'study',
       label: `도서관 Lv.${getStage(studyLevel)}`,
-      image: libraryLv1Img,
+      image: getBuilding('study', getStage(studyLevel)),
       x: layoutMap.study?.x ?? 430,
       y: layoutMap.study?.y ?? 560,
       flipped: !!layoutMap.study?.flipped,
@@ -625,7 +625,7 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       id: 'mental_building',
       category: 'mental',
       label: `명상숲 Lv.${getStage(mentalLevel)}`,
-      image: meditationLv1Img,
+      image: getBuilding('mental', getStage(mentalLevel)),
       x: layoutMap.mental?.x ?? 760,
       y: layoutMap.mental?.y ?? 540,
       flipped: !!layoutMap.mental?.flipped,
@@ -636,7 +636,7 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       id: 'daily_building',
       category: 'daily',
       label: `생활공방 Lv.${getStage(dailyLevel)}`,
-      image: workshopLv1Img,
+      image: getBuilding('daily', getStage(dailyLevel)),
       x: layoutMap.daily?.x ?? 1010,
       y: layoutMap.daily?.y ?? 460,
       flipped: !!layoutMap.daily?.flipped,
@@ -1726,23 +1726,13 @@ export default function Home() {
     setDecorations(
       (village.village_decorations || []).map((item) => ({
         ...item,
-        image:
-          item.type === 'tree'
-            ? treeImg
-            : item.type === 'flower'
-              ? flowerImg
-              : grassImg,
+        image: getDecorationImage(item.type),
       }))
     );
     setCharacters(
       (village.village_characters || []).map((item) => ({
         ...item,
-        image:
-          item.type === 'alpaca'
-            ? alpacaImg
-            : item.type === 'platypus'
-              ? platypusImg
-              : foxImg,
+        image: getCharacterImage(item.type),
       }))
     );
     setBuildingLayout(village.village_buildings);
@@ -2002,8 +1992,18 @@ export default function Home() {
   const handleCancelEdit = () => {
     const original = originalVillageRef.current;
     if (original) {
-      setDecorations(original.village_decorations || []);
-      setCharacters(original.village_characters || []);
+      setDecorations(
+        (original.village_decorations || []).map((item) => ({
+          ...item,
+          image: getDecorationImage(item.type),
+        }))
+      );
+      setCharacters(
+        (original.village_characters || []).map((item) => ({
+          ...item,
+          image: getCharacterImage(item.type),
+        }))
+      );
       setBuildingLayout(original.village_buildings || DEFAULT_BUILDINGS);
     }
     setSelectedObject(null);
