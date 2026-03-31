@@ -2,14 +2,7 @@ import React, { useEffect, lazy, Suspense } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClientInstance } from '@/lib/query-client';
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  useLocation,
-  Navigate,
-  useNavigate,
-} from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { NavigationProvider } from '@/lib/NavigationContext';
@@ -32,7 +25,7 @@ const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Home = lazy(() => import('./pages/Home'));
 const Records = lazy(() => import('./pages/Records'));
-const Titles = lazy(() => import('./pages/Titles'));
+const Memo = lazy(() => import('./pages/Memo'));
 const AppSettings = lazy(() => import('./pages/AppSettings'));
 
 const PageFallback = () => (
@@ -100,7 +93,6 @@ const AppRoutes = () => {
         event.stopImmediatePropagation();
         return;
       }
-
       navigationStackManager.handleAndroidBackButton(event);
     };
 
@@ -200,10 +192,10 @@ const AppRoutes = () => {
                 />
 
                 <Route
-                  path="/Badges"
+                  path="/Memo"
                   element={
                     <Suspense fallback={<PageFallback />}>
-                      <Titles />
+                      <Memo />
                     </Suspense>
                   }
                 />
@@ -218,7 +210,8 @@ const AppRoutes = () => {
                 />
 
                 <Route path="/Record" element={<Navigate to="/Records" replace />} />
-                <Route path="/Badge" element={<Navigate to="/Badges" replace />} />
+                <Route path="/Badge" element={<Navigate to="/Memo" replace />} />
+                <Route path="/Badges" element={<Navigate to="/Memo" replace />} />
                 <Route path="/Settings" element={<Navigate to="/AppSettings" replace />} />
               </Route>
 
@@ -255,10 +248,7 @@ const AppRoutes = () => {
 function App() {
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const apply = (dark) => {
-      document.documentElement.classList.toggle('dark', dark);
-    };
+    const apply = (dark) => document.documentElement.classList.toggle('dark', dark);
 
     apply(mq.matches);
 
@@ -280,34 +270,56 @@ function App() {
         });
 
         const splashScreen = document.getElementById('splash-screen');
-        if (splashScreen) {
+        if (splashScreen && !splashScreen.classList.contains('hidden')) {
+          splashScreen.style.transition = 'opacity 0.3s ease-out';
           splashScreen.style.opacity = '0';
-          splashScreen.style.pointerEvents = 'none';
+
           setTimeout(() => {
-            splashScreen.remove();
-          }, 350);
+            splashScreen.classList.add('hidden');
+            splashScreen.style.opacity = '1';
+          }, 300);
         }
       } catch (error) {
-        console.error('[App] Splash hide error:', error);
+        console.warn('[App] Splash screen removal error:', error);
+        const splashScreen = document.getElementById('splash-screen');
+        if (splashScreen) {
+          splashScreen.classList.add('hidden');
+        }
       }
     };
 
     hideSplash();
   }, []);
 
+  useEffect(() => {
+    try {
+      guestDataPersistence.startBackgroundCleanup();
+    } catch (error) {
+      console.warn('[App] Guest data cleanup initialization error:', error);
+    }
+
+    return () => {
+      try {
+        guestDataPersistence.stopBackgroundCleanup();
+      } catch (error) {
+        console.warn('[App] Guest data cleanup stop error:', error);
+      }
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClientInstance}>
       <AuthProvider>
-        <NavigationProvider>
-          <AnimationStateProvider>
-            <TabNavigationProvider>
-              <Router>
+        <Router>
+          <NavigationProvider>
+            <AnimationStateProvider>
+              <TabNavigationProvider>
                 <AppRoutes />
                 <Toaster />
-              </Router>
-            </TabNavigationProvider>
-          </AnimationStateProvider>
-        </NavigationProvider>
+              </TabNavigationProvider>
+            </AnimationStateProvider>
+          </NavigationProvider>
+        </Router>
       </AuthProvider>
     </QueryClientProvider>
   );
