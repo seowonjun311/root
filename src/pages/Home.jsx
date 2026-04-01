@@ -84,41 +84,20 @@ const SHOP_ITEMS = [
   { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, image: flowerImg },
 ];
 
-const VILLAGE_WORLD = {
-  width: 1050,
-  height: 675,
-  defaultOffset: { x: 0, y: 0 },
-  overviewScale: 0.84,
-  baseScale: 1,
-  decorationPaddingX: 100,
-  decorationPaddingY: 115,
-  characterPaddingX: 110,
-  characterPaddingY: 120,
-  buildingPaddingLeft: 110,
-  buildingPaddingRight: 190,
-  buildingPaddingTop: 110,
-  buildingPaddingBottom: 150,
-};
-
 const DEFAULT_BUILDINGS = [
-  { id: 'exercise_building', category: 'exercise', x: 165, y: 375, flipped: false },
-  { id: 'study_building', category: 'study', x: 325, y: 420, flipped: false },
-  { id: 'mental_building', category: 'mental', x: 575, y: 405, flipped: false },
-  { id: 'daily_building', category: 'daily', x: 775, y: 340, flipped: false },
+  { id: 'exercise_building', category: 'exercise', x: 220, y: 500, flipped: false },
+  { id: 'study_building', category: 'study', x: 430, y: 560, flipped: false },
+  { id: 'mental_building', category: 'mental', x: 760, y: 540, flipped: false },
+  { id: 'daily_building', category: 'daily', x: 1010, y: 460, flipped: false },
 ];
 
 const DEFAULT_VILLAGE_DATA = {
   village_points: 0,
   village_decorations: [],
   village_characters: [
-    { id: 'starter_fox', name: '루', type: 'fox', x: 495, y: 350, size: 52, flipped: false },
+    { id: 'starter_fox', name: '루', type: 'fox', x: 620, y: 470, size: 52, flipped: false },
   ],
   village_buildings: DEFAULT_BUILDINGS,
-};
-
-const DEFAULT_VILLAGE_INVENTORY = {
-  village_inventory_characters: [],
-  village_inventory_decorations: [],
 };
 
 function readGuestData() {
@@ -207,6 +186,91 @@ function clamp(value, min, max) {
 
 function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
+}
+
+
+function getCollisionSize(item, kind) {
+  if (kind === 'building') return { w: 220, h: 170 };
+  if (kind === 'character') return { w: 54, h: 54 };
+
+  if (item?.type === 'tree') return { w: 95, h: 95 };
+  if (item?.type === 'flower') return { w: 34, h: 34 };
+  if (item?.type === 'grass') return { w: 34, h: 34 };
+
+  return { w: 40, h: 40 };
+}
+
+function getHitBox(item, kind, nextX = item?.x, nextY = item?.y) {
+  const { w, h } = getCollisionSize(item, kind);
+
+  return {
+    left: nextX - w / 2,
+    right: nextX + w / 2,
+    top: nextY - h / 2,
+    bottom: nextY + h / 2,
+  };
+}
+
+function isBoxOverlapping(a, b) {
+  return !(
+    a.right <= b.left ||
+    a.left >= b.right ||
+    a.bottom <= b.top ||
+    a.top >= b.bottom
+  );
+}
+
+function canPlaceObject({
+  movingType,
+  movingItem,
+  nextX,
+  nextY,
+  decorations = [],
+  characters = [],
+  buildings = [],
+}) {
+  const movingBox = getHitBox(movingItem, movingType, nextX, nextY);
+
+  for (const building of buildings) {
+    const isSame =
+      movingType === 'building' &&
+      (building.category === movingItem.category || building.id === movingItem.id);
+
+    if (isSame) continue;
+
+    const targetBox = getHitBox(building, 'building');
+    if (isBoxOverlapping(movingBox, targetBox)) return false;
+  }
+
+  for (const deco of decorations) {
+    const isSame = movingType === 'decoration' && deco.id === movingItem.id;
+    if (isSame) continue;
+
+    const allowCharacterOnSmallDeco =
+      movingType === 'character' && (deco.type === 'flower' || deco.type === 'grass');
+
+    if (allowCharacterOnSmallDeco) continue;
+
+    const allowSmallDecoOverlap =
+      movingType === 'decoration' &&
+      (movingItem.type === 'flower' || movingItem.type === 'grass') &&
+      (deco.type === 'flower' || deco.type === 'grass');
+
+    if (allowSmallDecoOverlap) continue;
+
+    const targetBox = getHitBox(deco, 'decoration');
+    if (isBoxOverlapping(movingBox, targetBox)) return false;
+  }
+
+  for (const character of characters) {
+    const isSame = movingType === 'character' && character.id === movingItem.id;
+    if (isSame) continue;
+
+    const targetBox = getHitBox(character, 'character');
+    if (isBoxOverlapping(movingBox, targetBox)) return false;
+  }
+
+  return true;
 }
 
 function getGoalEndDate(goal) {
@@ -561,23 +625,6 @@ function getDecorationImage(type) {
   return grassImg;
 }
 
-function createInventoryItem(item) {
-  return {
-    id: `${item.type}_${item.subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-    shop_item_id: item.id,
-    type: item.type,
-    subtype: item.subtype,
-    label: item.label,
-  };
-}
-
-function createPlacedObjectFromInventory(inventoryItem, worldWidth = VILLAGE_WORLD.width, worldHeight = VILLAGE_WORLD.height) {
-  if (inventoryItem?.type === 'character') {
-    return createCharacter(inventoryItem.subtype, worldWidth, worldHeight);
-  }
-  return createDecoration(inventoryItem?.subtype || 'grass', worldWidth, worldHeight);
-}
-
 function getVillageState(source) {
   return {
     village_points: Number(source?.village_points ?? DEFAULT_VILLAGE_DATA.village_points),
@@ -592,57 +639,31 @@ function getVillageState(source) {
       Array.isArray(source?.village_buildings) && source.village_buildings.length > 0
         ? source.village_buildings
         : DEFAULT_VILLAGE_DATA.village_buildings,
-    village_inventory_characters: Array.isArray(source?.village_inventory_characters)
-      ? source.village_inventory_characters
-      : DEFAULT_VILLAGE_INVENTORY.village_inventory_characters,
-    village_inventory_decorations: Array.isArray(source?.village_inventory_decorations)
-      ? source.village_inventory_decorations
-      : DEFAULT_VILLAGE_INVENTORY.village_inventory_decorations,
   };
 }
 
-function createDecoration(
-  subtype,
-  worldWidth = VILLAGE_WORLD.width,
-  worldHeight = VILLAGE_WORLD.height
-) {
-  const sizeMap = { grass: 34, tree: 124, flower: 30 };
+function createDecoration(subtype, worldWidth = 1400, worldHeight = 900) {
+  const sizeMap = { grass: 34, tree: 62, flower: 30 };
 
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     type: subtype,
     image: getDecorationImage(subtype),
-    x: randomBetween(
-      VILLAGE_WORLD.decorationPaddingX,
-      worldWidth - VILLAGE_WORLD.decorationPaddingX
-    ),
-    y: randomBetween(
-      VILLAGE_WORLD.decorationPaddingY,
-      worldHeight - VILLAGE_WORLD.decorationPaddingY
-    ),
+    x: randomBetween(180, worldWidth - 180),
+    y: randomBetween(220, worldHeight - 140),
     flipped: false,
     size: sizeMap[subtype] || 32,
   };
 }
 
-function createCharacter(
-  type,
-  worldWidth = VILLAGE_WORLD.width,
-  worldHeight = VILLAGE_WORLD.height
-) {
+function createCharacter(type, worldWidth = 1400, worldHeight = 900) {
   return {
     id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
     type,
     image: getCharacterImage(type),
-    x: randomBetween(
-      VILLAGE_WORLD.characterPaddingX + 70,
-      worldWidth - (VILLAGE_WORLD.characterPaddingX + 70)
-    ),
-    y: randomBetween(
-      VILLAGE_WORLD.characterPaddingY + 30,
-      worldHeight - (VILLAGE_WORLD.characterPaddingY + 40)
-    ),
+    x: randomBetween(280, worldWidth - 180),
+    y: randomBetween(240, worldHeight - 150),
     size: type === 'alpaca' ? 56 : 52,
     flipped: false,
   };
@@ -663,44 +684,44 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'exercise',
       label: `체육관 Lv.${getStage(exerciseLevel)}`,
       image: getBuilding('exercise', getStage(exerciseLevel)),
-      x: layoutMap.exercise?.x ?? 165,
-      y: layoutMap.exercise?.y ?? 375,
+      x: layoutMap.exercise?.x ?? 220,
+      y: layoutMap.exercise?.y ?? 500,
       flipped: !!layoutMap.exercise?.flipped,
-      w: 300,
-      h: 240,
+      w: 150,
+      h: 120,
     },
     {
       id: 'study_building',
       category: 'study',
       label: `도서관 Lv.${getStage(studyLevel)}`,
       image: getBuilding('study', getStage(studyLevel)),
-      x: layoutMap.study?.x ?? 325,
-      y: layoutMap.study?.y ?? 420,
+      x: layoutMap.study?.x ?? 430,
+      y: layoutMap.study?.y ?? 560,
       flipped: !!layoutMap.study?.flipped,
-      w: 300,
-      h: 240,
+      w: 150,
+      h: 120,
     },
     {
       id: 'mental_building',
       category: 'mental',
       label: `명상숲 Lv.${getStage(mentalLevel)}`,
       image: getBuilding('mental', getStage(mentalLevel)),
-      x: layoutMap.mental?.x ?? 575,
-      y: layoutMap.mental?.y ?? 405,
+      x: layoutMap.mental?.x ?? 760,
+      y: layoutMap.mental?.y ?? 540,
       flipped: !!layoutMap.mental?.flipped,
-      w: 300,
-      h: 240,
+      w: 150,
+      h: 120,
     },
     {
       id: 'daily_building',
       category: 'daily',
       label: `생활공방 Lv.${getStage(dailyLevel)}`,
       image: getBuilding('daily', getStage(dailyLevel)),
-      x: layoutMap.daily?.x ?? 775,
-      y: layoutMap.daily?.y ?? 340,
+      x: layoutMap.daily?.x ?? 1010,
+      y: layoutMap.daily?.y ?? 460,
       flipped: !!layoutMap.daily?.flipped,
-      w: 300,
-      h: 240,
+      w: 150,
+      h: 120,
     },
   ];
 }
@@ -1018,251 +1039,6 @@ function VillageShopModal({ open, activeTab, onTabChange, points, onClose, onBuy
   );
 }
 
-function VillageBagModal({
-  open,
-  activeTab,
-  onTabChange,
-  inventoryCharacters,
-  inventoryDecorations,
-  onClose,
-  onPlaceItem,
-}) {
-  if (!open) return null;
-
-  const items = activeTab === 'character' ? inventoryCharacters : inventoryDecorations;
-
-  return (
-    <div className="fixed inset-0 z-[96] bg-black/45 px-4 py-8">
-      <div
-        className="mx-auto w-full max-w-md rounded-[28px] p-4"
-        style={{
-          background: 'linear-gradient(180deg, #fff7e8 0%, #f7e9cb 100%)',
-          border: '1px solid rgba(160,120,64,0.18)',
-          boxShadow: '0 18px 36px rgba(0,0,0,0.18)',
-        }}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-[17px] font-extrabold" style={{ color: '#4a2c08' }}>
-              가방
-            </div>
-            <div className="mt-1 text-[12px]" style={{ color: '#8a5a17' }}>
-              구매한 캐릭터와 꾸미기를 보관해요
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full px-3 py-1.5 text-[12px] font-extrabold"
-            style={{
-              background: '#fff',
-              border: '1px solid rgba(160,120,64,0.14)',
-              color: '#4a2c08',
-            }}
-          >
-            닫기
-          </button>
-        </div>
-
-        <div className="mt-4 flex gap-2">
-          <button
-            type="button"
-            onClick={() => onTabChange('character')}
-            className="h-11 flex-1 rounded-2xl text-sm font-extrabold"
-            style={{
-              background:
-                activeTab === 'character'
-                  ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
-                  : '#fff',
-              color: activeTab === 'character' ? '#fff8e8' : '#4a2c08',
-              border:
-                activeTab === 'character'
-                  ? '2px solid #6b4e15'
-                  : '1px solid rgba(160,120,64,0.14)',
-            }}
-          >
-            캐릭터 {inventoryCharacters.length}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onTabChange('decoration')}
-            className="h-11 flex-1 rounded-2xl text-sm font-extrabold"
-            style={{
-              background:
-                activeTab === 'decoration'
-                  ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
-                  : '#fff',
-              color: activeTab === 'decoration' ? '#fff8e8' : '#4a2c08',
-              border:
-                activeTab === 'decoration'
-                  ? '2px solid #6b4e15'
-                  : '1px solid rgba(160,120,64,0.14)',
-            }}
-          >
-            꾸미기 {inventoryDecorations.length}
-          </button>
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          {items.length === 0 ? (
-            <div
-              className="col-span-2 rounded-2xl px-4 py-6 text-center text-sm"
-              style={{
-                background: '#fffdf8',
-                border: '1px solid rgba(160,120,64,0.14)',
-                color: '#8a5a17',
-              }}
-            >
-              아직 가방에 들어있는 아이템이 없어요.
-            </div>
-          ) : (
-            items.map((item) => {
-              const itemImage = item.type === 'character'
-                ? getCharacterImage(item.subtype)
-                : getDecorationImage(item.subtype);
-
-              return (
-                <div
-                  key={item.id}
-                  className="rounded-2xl p-3"
-                  style={{
-                    background: '#fffdf8',
-                    border: '1px solid rgba(160,120,64,0.14)',
-                  }}
-                >
-                  <div className="flex h-[68px] items-center justify-center">
-                    <img
-                      src={itemImage}
-                      alt={item.label}
-                      draggable={false}
-                      style={{
-                        maxHeight: '64px',
-                        maxWidth: '100%',
-                        objectFit: 'contain',
-                        display: 'block',
-                        background: 'transparent',
-                      }}
-                    />
-                  </div>
-
-                  <div className="mt-2 text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
-                    {item.label}
-                  </div>
-                  <div className="text-[12px]" style={{ color: '#8a5a17' }}>
-                    {item.type === 'character' ? '캐릭터' : '꾸미기'}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => onPlaceItem(item)}
-                    className="mt-3 h-10 w-full rounded-2xl text-sm font-extrabold"
-                    style={{
-                      background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
-                      color: '#fff8e8',
-                      border: '2px solid #6b4e15',
-                    }}
-                  >
-                    마을에 놓기
-                  </button>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-const BAG_ICON_SRC =
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-      <defs>
-        <linearGradient id="bagBody" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#f7d58b"/>
-          <stop offset="100%" stop-color="#c88a34"/>
-        </linearGradient>
-        <linearGradient id="bagFlap" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#ffeab6"/>
-          <stop offset="100%" stop-color="#ddb160"/>
-        </linearGradient>
-      </defs>
-      <path d="M40 38c0-13 10-23 24-23s24 10 24 23v6h-10v-6c0-7-5-13-14-13s-14 6-14 13v6H40z" fill="#8b5a22"/>
-      <rect x="22" y="42" width="84" height="68" rx="18" fill="url(#bagBody)" stroke="#7a4a17" stroke-width="6"/>
-      <path d="M28 48h72c6 0 11 5 11 11v10c0 6-5 11-11 11H28c-6 0-11-5-11-11V59c0-6 5-11 11-11z" fill="url(#bagFlap)" stroke="#7a4a17" stroke-width="5"/>
-      <circle cx="64" cy="64" r="8" fill="#8b5a22"/>
-      <path d="M36 93c10 8 46 8 56 0" fill="none" stroke="#f8e7b5" stroke-width="6" stroke-linecap="round" opacity="0.75"/>
-    </svg>
-  `);
-
-const SHOP_ICON_SRC =
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-      <defs>
-        <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#ff9f8b"/>
-          <stop offset="100%" stop-color="#d45b42"/>
-        </linearGradient>
-        <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#fff0c8"/>
-          <stop offset="100%" stop-color="#e6c37a"/>
-        </linearGradient>
-      </defs>
-      <rect x="24" y="52" width="80" height="54" rx="10" fill="url(#wall)" stroke="#7a4a17" stroke-width="6"/>
-      <path d="M18 48l10-18h72l10 18" fill="url(#roof)" stroke="#7a4a17" stroke-width="6" stroke-linejoin="round"/>
-      <path d="M20 48h88v14c0 5-4 9-9 9H29c-5 0-9-4-9-9V48z" fill="#fff7df" stroke="#7a4a17" stroke-width="5"/>
-      <rect x="35" y="70" width="20" height="36" rx="4" fill="#9fd3e6" stroke="#7a4a17" stroke-width="5"/>
-      <rect x="68" y="70" width="22" height="18" rx="4" fill="#9fd3e6" stroke="#7a4a17" stroke-width="5"/>
-      <path d="M64 20v14" stroke="#7a4a17" stroke-width="6" stroke-linecap="round"/>
-      <path d="M54 28h20" stroke="#7a4a17" stroke-width="6" stroke-linecap="round"/>
-    </svg>
-  `);
-
-function IconCircleButton({ iconSrc, label, onClick, size = 48 }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className="relative flex h-[58px] w-[58px] items-center justify-center rounded-full"
-      style={{
-        background: 'radial-gradient(circle at 30% 30%, #fffaf0 0%, #f3dfb7 55%, #ddb56a 100%)',
-        border: '2px solid rgba(107,78,21,0.24)',
-        boxShadow: '0 10px 18px rgba(50,30,0,0.12), inset 0 2px 0 rgba(255,255,255,0.6)',
-      }}
-    >
-      <span
-        className="pointer-events-none absolute inset-[5px] rounded-full"
-        style={{
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.08) 100%)',
-          border: '1px solid rgba(255,255,255,0.35)',
-        }}
-      />
-      <img
-        src={iconSrc}
-        alt={label}
-        draggable={false}
-        className="relative z-[1]"
-        style={{
-          width: 34,
-          height: 34,
-          objectFit: 'contain',
-          filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.14))',
-          userSelect: 'none',
-          WebkitUserDrag: 'none',
-        }}
-      />
-    </button>
-  );
-}
-
-
 function EditToolbar({
   isEditMode,
   selectedObject,
@@ -1287,7 +1063,7 @@ function EditToolbar({
             boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
           }}
         >
-          {isEditMode ? '저장' : '편집모드'}
+          {isEditMode ? '편집 종료' : '편집모드'}
         </button>
 
         {isEditMode ? (
@@ -1320,6 +1096,20 @@ function EditToolbar({
             >
               취소
             </button>
+
+            <button
+              type="button"
+              onClick={onSave}
+              className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+              style={{
+                background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)',
+                color: '#fff8e8',
+                border: '2px solid #6b4e15',
+                boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+              }}
+            >
+              저장
+            </button>
           </div>
         ) : null}
       </div>
@@ -1331,14 +1121,15 @@ function VillageOverlayBar({
   nickname,
   level,
   points,
+  isOverview,
+  onToggleOverview,
   onOpenShop,
-  onOpenBag,
 }) {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-20 px-3 pt-2 pb-3">
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3">
       <div className="flex items-start justify-between gap-2">
         <div
-          className="pointer-events-auto flex items-center gap-2 rounded-2xl px-3 py-2"
+          className="pointer-events-auto rounded-2xl px-3 py-2"
           style={{
             background: 'rgba(255,248,232,0.82)',
             border: '1px solid rgba(107,78,21,0.14)',
@@ -1350,46 +1141,55 @@ function VillageOverlayBar({
           <div className="text-[11px] font-bold" style={{ color: '#8a5a17' }}>
             {nickname}
           </div>
-          <div
-            className="rounded-full px-2 py-0.5 text-[11px] font-extrabold"
-            style={{
-              background: 'rgba(196,154,74,0.16)',
-              color: '#6f4a12',
-              border: '1px solid rgba(196,154,74,0.2)',
-              lineHeight: 1.1,
-            }}
-          >
-            Lv.{level}
+          <div className="text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
+            전체 Lv.{level}
           </div>
         </div>
 
-        <div className="pointer-events-auto flex items-start gap-2">
+        <div className="pointer-events-auto flex items-center gap-2">
           <div
-            className="rounded-full px-3 py-1.5 text-[11px] font-extrabold"
+            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
             style={{
               background: 'rgba(255,248,232,0.9)',
               color: '#4a2c08',
               border: '1px solid rgba(107,78,21,0.14)',
               boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
-              marginTop: '-2px',
             }}
           >
             포인트 {points}
           </div>
 
-          <IconCircleButton
-            iconSrc={BAG_ICON_SRC}
-            label="가방 열기"
-            onClick={onOpenBag}
-            size={42}
-          />
-
-          <IconCircleButton
-            iconSrc={SHOP_ICON_SRC}
-            label="상점 열기"
+          <button
+            type="button"
             onClick={onOpenShop}
-            size={42}
-          />
+            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+            style={{
+              background: '#fff',
+              color: '#4a2c08',
+              border: '1px solid rgba(107,78,21,0.14)',
+              boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+            }}
+          >
+            상점
+          </button>
+
+          <button
+            type="button"
+            onClick={onToggleOverview}
+            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+            style={{
+              background: isOverview
+                ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
+                : 'rgba(255,248,232,0.9)',
+              color: isOverview ? '#fff8e8' : '#4a2c08',
+              border: isOverview
+                ? '2px solid #6b4e15'
+                : '1px solid rgba(107,78,21,0.14)',
+              boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+            }}
+          >
+            {isOverview ? '기본보기' : '전체보기'}
+          </button>
         </div>
       </div>
     </div>
@@ -1397,16 +1197,14 @@ function VillageOverlayBar({
 }
 
 function DecorationSprite({ item }) {
-  const displaySize = item.type === 'tree' ? item.size * 2 : item.size;
-
   return (
     <img
       src={item.image}
       alt={item.type}
       draggable={false}
       style={{
-        width: displaySize,
-        height: displaySize,
+        width: item.size,
+        height: item.size,
         objectFit: 'contain',
         display: 'block',
         background: 'transparent',
@@ -1438,123 +1236,33 @@ function VillageWorldLayer({
   setSelectedObject,
   onToggleOverview,
   onOpenShop,
-  onOpenBag,
   onToggleEditMode,
   onFlipSelected,
   onSaveEdit,
   onCancelEdit,
 }) {
   const dragRef = useRef(null);
-  const pinchRef = useRef({ startDistance: 0, startScale: VILLAGE_WORLD.baseScale });
-  const pointersRef = useRef(new Map());
-  const viewportRef = useRef(null);
-  const [viewportSize, setViewportSize] = useState({ width: 0, height: 300 });
-  const [offset, setOffset] = useState(VILLAGE_WORLD.defaultOffset);
-  const [zoomScale, setZoomScale] = useState(VILLAGE_WORLD.baseScale);
+  const [offset, setOffset] = useState({ x: -250, y: -190 });
 
-  const worldWidth = VILLAGE_WORLD.width;
-  const worldHeight = VILLAGE_WORLD.height;
-  const scale = zoomScale;
-
-  useEffect(() => {
-    const node = viewportRef.current;
-    if (!node) return undefined;
-
-    const updateSize = () => {
-      const rect = node.getBoundingClientRect();
-      setViewportSize({
-        width: rect.width || 0,
-        height: rect.height || 300,
-      });
-    };
-
-    updateSize();
-
-    if (typeof ResizeObserver !== 'undefined') {
-      const observer = new ResizeObserver(updateSize);
-      observer.observe(node);
-      window.addEventListener('resize', updateSize);
-      return () => {
-        observer.disconnect();
-        window.removeEventListener('resize', updateSize);
-      };
-    }
-
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
-  }, []);
-
-  const viewportWidth = Math.max(1, viewportSize.width || 0);
-  const viewportHeight = Math.max(1, viewportSize.height || 300);
-
-  const getPanBounds = useCallback(() => {
-    const scaledWidth = worldWidth * scale;
-    const scaledHeight = worldHeight * scale;
-
-    const minX = scaledWidth <= viewportWidth ? (viewportWidth - scaledWidth) / 2 : viewportWidth - scaledWidth;
-    const maxX = scaledWidth <= viewportWidth ? (viewportWidth - scaledWidth) / 2 : 0;
-
-    const minY = scaledHeight <= viewportHeight ? (viewportHeight - scaledHeight) / 2 : viewportHeight - scaledHeight;
-    const maxY = scaledHeight <= viewportHeight ? (viewportHeight - scaledHeight) / 2 : 0;
-
-    return { minX, maxX, minY, maxY };
-  }, [scale, viewportHeight, viewportWidth, worldHeight, worldWidth]);
-
-  const clampPanOffset = useCallback(
-    (nextX, nextY) => {
-      const { minX, maxX, minY, maxY } = getPanBounds();
-      return {
-        x: clamp(nextX, minX, maxX),
-        y: clamp(nextY, minY, maxY),
-      };
-    },
-    [getPanBounds]
-  );
-
-  useEffect(() => {
-    const { minX, maxX, minY, maxY } = getPanBounds();
-
-    setOffset((prev) => {
-      const fallbackX = scaledCenter(viewportWidth, worldWidth, scale);
-      const fallbackY = scaledCenter(viewportHeight, worldHeight, scale);
-      const nextX = Number.isFinite(prev?.x) ? prev.x : fallbackX;
-      const nextY = Number.isFinite(prev?.y) ? prev.y : fallbackY;
-
-      return {
-        x: clamp(nextX, minX, maxX),
-        y: clamp(nextY, minY, maxY),
-      };
-    });
-  }, [getPanBounds, viewportWidth, viewportHeight, worldWidth, worldHeight, scale]);
-
-  const getDistance = useCallback((a, b) => {
-    const dx = a.clientX - b.clientX;
-    const dy = a.clientY - b.clientY;
-    return Math.hypot(dx, dy);
-  }, []);
+  const worldWidth = 1400;
+  const worldHeight = 900;
+  const scale = isOverview ? 0.62 : 1;
 
   const buildings = useMemo(
     () => buildWorldBuildings({ userLevels, buildingLayout }),
     [userLevels, buildingLayout]
   );
+  const currentCollisionBuildings = useMemo(() => {
+    return (buildingLayout || []).map((item) => ({
+      ...item,
+      id: item.id || `${item.category}_building`,
+      category: item.category,
+    }));
+  }, [buildingLayout]);
 
   const backgroundImage = getBackground(activeCategory, 'day');
 
   const handleWorldPointerDown = (e) => {
-    if (e.pointerType === 'touch') {
-      pointersRef.current.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
-
-      if (pointersRef.current.size === 2) {
-        const [first, second] = Array.from(pointersRef.current.values());
-        pinchRef.current = {
-          startDistance: getDistance(first, second),
-          startScale: scale,
-        };
-        dragRef.current = null;
-        return;
-      }
-    }
-
     dragRef.current = {
       mode: 'pan',
       startX: e.clientX,
@@ -1579,131 +1287,127 @@ function VillageWorldLayer({
     };
   };
 
-  const handlePointerMove = useCallback(
-    (e) => {
-      if (e.pointerType === 'touch' && pointersRef.current.has(e.pointerId)) {
-        pointersRef.current.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
+  const handlePointerMove = useCallback((e) => {
+    const drag = dragRef.current;
+    if (!drag) return;
 
-        if (pointersRef.current.size === 2) {
-          const [first, second] = Array.from(pointersRef.current.values());
-          const nextDistance = getDistance(first, second);
-          const startDistance = pinchRef.current.startDistance || nextDistance;
-          const rawScale = pinchRef.current.startScale * (nextDistance / Math.max(1, startDistance));
-          const nextScale = clamp(rawScale, 0.72, 1.45);
+    if (drag.mode === 'pan') {
+      const dx = e.clientX - drag.startX;
+      const dy = e.clientY - drag.startY;
 
-          setZoomScale(nextScale);
-          dragRef.current = null;
-          return;
-        }
-      }
-
-      const drag = dragRef.current;
-      if (!drag) return;
-
-      if (drag.mode === 'pan') {
-        const dx = e.clientX - drag.startX;
-        const dy = e.clientY - drag.startY;
-
-        setOffset(clampPanOffset(drag.originX + dx, drag.originY + dy));
-        return;
-      }
-
-      if (drag.mode === 'object') {
-        const dx = (e.clientX - drag.startX) / scale;
-        const dy = (e.clientY - drag.startY) / scale;
-
-        if (drag.objectType === 'decoration') {
-          setDecorations((prev) =>
-            prev.map((item) =>
-              item.id === drag.objectId
-                ? {
-                    ...item,
-                    x: clamp(
-                      item.x + dx,
-                      VILLAGE_WORLD.decorationPaddingX,
-                      worldWidth - VILLAGE_WORLD.decorationPaddingX
-                    ),
-                    y: clamp(
-                      item.y + dy,
-                      VILLAGE_WORLD.decorationPaddingY,
-                      worldHeight - VILLAGE_WORLD.decorationPaddingY
-                    ),
-                  }
-                : item
-            )
-          );
-        }
-
-        if (drag.objectType === 'character') {
-          setCharacters((prev) =>
-            prev.map((item) =>
-              item.id === drag.objectId
-                ? {
-                    ...item,
-                    x: clamp(
-                      item.x + dx,
-                      VILLAGE_WORLD.characterPaddingX,
-                      worldWidth - VILLAGE_WORLD.characterPaddingX
-                    ),
-                    y: clamp(
-                      item.y + dy,
-                      VILLAGE_WORLD.characterPaddingY,
-                      worldHeight - VILLAGE_WORLD.characterPaddingY
-                    ),
-                  }
-                : item
-            )
-          );
-        }
-
-        if (drag.objectType === 'building') {
-          setBuildingLayout((prev) =>
-            prev.map((item) =>
-              item.category === drag.objectId
-                ? {
-                    ...item,
-                    x: clamp(
-                      item.x + dx,
-                      VILLAGE_WORLD.buildingPaddingLeft,
-                      worldWidth - VILLAGE_WORLD.buildingPaddingRight
-                    ),
-                    y: clamp(
-                      item.y + dy,
-                      VILLAGE_WORLD.buildingPaddingTop,
-                      worldHeight - VILLAGE_WORLD.buildingPaddingBottom
-                    ),
-                  }
-                : item
-            )
-          );
-        }
-
-        dragRef.current = {
-          ...drag,
-          startX: e.clientX,
-          startY: e.clientY,
-        };
-      }
-    },
-    [scale, worldWidth, worldHeight, setDecorations, setCharacters, setBuildingLayout, clampPanOffset, getDistance]
-  );
-
-  const handlePointerUp = useCallback((e) => {
-    if (typeof e?.pointerId !== 'undefined') {
-      pointersRef.current.delete(e.pointerId);
+      setOffset({
+        x: drag.originX + dx,
+        y: drag.originY + dy,
+      });
+      return;
     }
 
-    if (pointersRef.current.size < 2) {
-      pinchRef.current = { startDistance: 0, startScale: zoomScale };
-    }
+    if (drag.mode === 'object') {
+      const dx = (e.clientX - drag.startX) / scale;
+      const dy = (e.clientY - drag.startY) / scale;
 
+      if (drag.objectType === 'decoration') {
+        setDecorations((prev) =>
+          prev.map((item) => {
+            if (item.id !== drag.objectId) return item;
+
+            const nextX = clamp(item.x + dx, 120, worldWidth - 120);
+            const nextY = clamp(item.y + dy, 140, worldHeight - 120);
+
+            const allowed = canPlaceObject({
+              movingType: 'decoration',
+              movingItem: item,
+              nextX,
+              nextY,
+              decorations: prev,
+              characters,
+              buildings: currentCollisionBuildings,
+            });
+
+            if (!allowed) return item;
+
+            return {
+              ...item,
+              x: nextX,
+              y: nextY,
+            };
+          })
+        );
+      }
+
+      if (drag.objectType === 'character') {
+        setCharacters((prev) =>
+          prev.map((item) => {
+            if (item.id !== drag.objectId) return item;
+
+            const nextX = clamp(item.x + dx, 120, worldWidth - 120);
+            const nextY = clamp(item.y + dy, 140, worldHeight - 120);
+
+            const allowed = canPlaceObject({
+              movingType: 'character',
+              movingItem: item,
+              nextX,
+              nextY,
+              decorations,
+              characters: prev,
+              buildings: currentCollisionBuildings,
+            });
+
+            if (!allowed) return item;
+
+            return {
+              ...item,
+              x: nextX,
+              y: nextY,
+            };
+          })
+        );
+      }
+
+      if (drag.objectType === 'building') {
+        setBuildingLayout((prev) =>
+          prev.map((item) => {
+            if (item.category !== drag.objectId) return item;
+
+            const nextX = clamp(item.x + dx, 140, worldWidth - 340);
+            const nextY = clamp(item.y + dy, 150, worldHeight - 280);
+
+            const allowed = canPlaceObject({
+              movingType: 'building',
+              movingItem: item,
+              nextX,
+              nextY,
+              decorations,
+              characters,
+              buildings: prev,
+            });
+
+            if (!allowed) return item;
+
+            return {
+              ...item,
+              x: nextX,
+              y: nextY,
+            };
+          })
+        );
+      }
+
+      dragRef.current = {
+        ...drag,
+        startX: e.clientX,
+        startY: e.clientY,
+      };
+    }
+  }, [scale, worldWidth, worldHeight, decorations, characters, currentCollisionBuildings, setDecorations, setCharacters, setBuildingLayout]);
+
+  const handlePointerUp = useCallback(() => {
     dragRef.current = null;
-  }, [zoomScale]);
+  }, []);
 
   useEffect(() => {
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup', handlePointerUp);
-
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
@@ -1715,45 +1419,29 @@ function VillageWorldLayer({
 
     const timer = setInterval(() => {
       setCharacters((prev) =>
-        prev.map((npc, index) => {
-          const isMain = index === 0 || npc.id === 'starter_fox';
-          const rangeX = isMain ? 42 : 55;
-          const rangeY = isMain ? 34 : 42;
-
-          return {
-            ...npc,
-            x: clamp(
-              npc.x + randomBetween(-rangeX, rangeX),
-              VILLAGE_WORLD.characterPaddingX,
-              worldWidth - VILLAGE_WORLD.characterPaddingX
-            ),
-            y: clamp(
-              npc.y + randomBetween(-rangeY, rangeY),
-              VILLAGE_WORLD.characterPaddingY,
-              worldHeight - VILLAGE_WORLD.characterPaddingY
-            ),
-            flipped: randomBetween(0, 1) > 0.5 ? !npc.flipped : npc.flipped,
-          };
-        })
+        prev.map((npc) => ({
+          ...npc,
+          x: clamp(npc.x + randomBetween(-90, 90), 120, worldWidth - 120),
+          y: clamp(npc.y + randomBetween(-70, 70), 150, worldHeight - 120),
+          flipped: randomBetween(0, 1) > 0.5 ? !npc.flipped : npc.flipped,
+        }))
       );
     }, 2600);
 
     return () => clearInterval(timer);
-  }, [isEditMode, setCharacters, worldWidth, worldHeight]);
+  }, [isEditMode, setCharacters]);
 
   return (
     <div
       className="sticky top-0 z-40 overflow-hidden"
       style={{
-        background:
-          'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 100%)',
+        background: 'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 100%)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
       }}
     >
       <div className="px-4 pt-3 pb-2">
         <div
-          ref={viewportRef}
           className="relative overflow-hidden rounded-[28px]"
           style={{
             height: 300,
@@ -1765,8 +1453,9 @@ function VillageWorldLayer({
             nickname={nickname}
             level={totalLevel}
             points={points}
+            isOverview={isOverview}
+            onToggleOverview={onToggleOverview}
             onOpenShop={onOpenShop}
-            onOpenBag={onOpenBag}
           />
 
           <EditToolbar
@@ -1779,9 +1468,8 @@ function VillageWorldLayer({
           />
 
           <div
-            className="absolute inset-0 overflow-hidden"
+            className="absolute inset-0 touch-none overflow-hidden"
             onPointerDown={handleWorldPointerDown}
-            style={{ touchAction: 'none' }}
           >
             <div
               className="absolute left-0 top-0"
@@ -1875,9 +1563,7 @@ function VillageWorldLayer({
                       width: npc.size,
                       height: npc.size,
                       transform: `translate(-50%, -50%) scaleX(${npc.flipped ? -1 : 1})`,
-                      transition: isEditMode
-                        ? 'none'
-                        : 'left 2200ms ease-in-out, top 2200ms ease-in-out',
+                      transition: isEditMode ? 'none' : 'left 2200ms ease-in-out, top 2200ms ease-in-out',
                       outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
                       outlineOffset: '3px',
                       borderRadius: '999px',
@@ -1912,10 +1598,6 @@ function VillageWorldLayer({
   );
 }
 
-function scaledCenter(viewportSize, worldSize, currentScale) {
-  return (viewportSize - worldSize * currentScale) / 2;
-}
-
 export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -1943,11 +1625,6 @@ export default function Home() {
 
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [shopTab, setShopTab] = useState('character');
-  const [isBagOpen, setIsBagOpen] = useState(false);
-  const [bagTab, setBagTab] = useState('character');
-
-  const [inventoryCharacters, setInventoryCharacters] = useState([]);
-  const [inventoryDecorations, setInventoryDecorations] = useState([]);
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedObject, setSelectedObject] = useState(null);
@@ -2215,13 +1892,7 @@ export default function Home() {
         image: getCharacterImage(item.type),
       }))
     );
-    setInventoryCharacters(Array.isArray(village.village_inventory_characters) ? village.village_inventory_characters : []);
-    setInventoryDecorations(Array.isArray(village.village_inventory_decorations) ? village.village_inventory_decorations : []);
-    setBuildingLayout(
-      Array.isArray(village.village_buildings) && village.village_buildings.length > 0
-        ? village.village_buildings
-        : DEFAULT_BUILDINGS
-    );
+    setBuildingLayout(village.village_buildings);
     originalVillageRef.current = village;
   }, [isGuest, guestData, user]);
 
@@ -2351,8 +2022,6 @@ export default function Home() {
         village_decorations: nextState.village_decorations.map(({ image, ...rest }) => rest),
         village_characters: nextState.village_characters.map(({ image, ...rest }) => rest),
         village_buildings: nextState.village_buildings,
-        village_inventory_characters: nextState.village_inventory_characters || [],
-        village_inventory_decorations: nextState.village_inventory_decorations || [],
       }));
       window.dispatchEvent(new Event('root-home-data-updated'));
       return;
@@ -2363,8 +2032,6 @@ export default function Home() {
       village_decorations: nextState.village_decorations.map(({ image, ...rest }) => rest),
       village_characters: nextState.village_characters.map(({ image, ...rest }) => rest),
       village_buildings: nextState.village_buildings,
-      village_inventory_characters: nextState.village_inventory_characters || [],
-      village_inventory_decorations: nextState.village_inventory_decorations || [],
     });
     queryClient.invalidateQueries({ queryKey: ['me'] });
   };
@@ -2380,82 +2047,34 @@ export default function Home() {
     }
 
     const nextPoints = currentPoints - item.price;
-    const newInventoryItem = createInventoryItem(item);
-    const nextInventoryCharacters = [...inventoryCharacters];
-    const nextInventoryDecorations = [...inventoryDecorations];
+    const nextDecorations = [...decorations];
+    const nextCharacters = [...characters];
 
     if (item.type === 'decoration') {
-      nextInventoryDecorations.push(newInventoryItem);
+      nextDecorations.push(createDecoration(item.subtype));
     } else if (item.type === 'character') {
-      nextInventoryCharacters.push(newInventoryItem);
+      nextCharacters.push(createCharacter(item.subtype));
     }
 
     const nextState = {
       village_points: nextPoints,
-      village_decorations: decorations,
-      village_characters: characters,
-      village_buildings: buildingLayout,
-      village_inventory_characters: nextInventoryCharacters,
-      village_inventory_decorations: nextInventoryDecorations,
-    };
-
-    try {
-      await saveVillageState(nextState);
-      setInventoryCharacters(nextInventoryCharacters);
-      setInventoryDecorations(nextInventoryDecorations);
-      originalVillageRef.current = {
-        ...currentVillage,
-        ...nextState,
-      };
-      toast.success(`${item.label} 구매 완료! 가방에 보관했어요. (-${item.price} 포인트)`);
-    } catch (error) {
-      console.error('handleVillagePurchase error:', error);
-      toast.error('구매 중 오류가 발생했어요.');
-    }
-  };
-
-  const handlePlaceInventoryItem = async (inventoryItem) => {
-    const source = isGuest ? guestData : user;
-    const currentVillage = getVillageState(source || {});
-
-    const nextCharacters = [...characters];
-    const nextDecorations = [...decorations];
-    const nextInventoryCharacters = [...inventoryCharacters];
-    const nextInventoryDecorations = [...inventoryDecorations];
-
-    if (inventoryItem.type === 'character') {
-      nextCharacters.push(createPlacedObjectFromInventory(inventoryItem));
-      const removeIndex = nextInventoryCharacters.findIndex((item) => item.id === inventoryItem.id);
-      if (removeIndex >= 0) nextInventoryCharacters.splice(removeIndex, 1);
-    } else {
-      nextDecorations.push(createPlacedObjectFromInventory(inventoryItem));
-      const removeIndex = nextInventoryDecorations.findIndex((item) => item.id === inventoryItem.id);
-      if (removeIndex >= 0) nextInventoryDecorations.splice(removeIndex, 1);
-    }
-
-    const nextState = {
-      village_points: currentVillage.village_points,
       village_decorations: nextDecorations,
       village_characters: nextCharacters,
       village_buildings: buildingLayout,
-      village_inventory_characters: nextInventoryCharacters,
-      village_inventory_decorations: nextInventoryDecorations,
     };
 
     try {
       await saveVillageState(nextState);
-      setCharacters(nextCharacters);
       setDecorations(nextDecorations);
-      setInventoryCharacters(nextInventoryCharacters);
-      setInventoryDecorations(nextInventoryDecorations);
+      setCharacters(nextCharacters);
       originalVillageRef.current = {
         ...currentVillage,
         ...nextState,
       };
-      toast.success(`${inventoryItem.label}을(를) 마을에 놓았어요!`);
+      toast.success(`${item.label} 구매 완료! (-${item.price} 포인트)`);
     } catch (error) {
-      console.error('handlePlaceInventoryItem error:', error);
-      toast.error('가방 아이템 배치 중 오류가 발생했어요.');
+      console.error('handleVillagePurchase error:', error);
+      toast.error('구매 중 오류가 발생했어요.');
     }
   };
 
@@ -2466,8 +2085,6 @@ export default function Home() {
         village_decorations: decorations,
         village_characters: characters,
         village_buildings: buildingLayout,
-        village_inventory_characters: inventoryCharacters,
-        village_inventory_decorations: inventoryDecorations,
       };
       setSelectedObject(null);
       setIsEditMode(true);
@@ -2516,8 +2133,6 @@ export default function Home() {
         village_decorations: decorations,
         village_characters: characters,
         village_buildings: buildingLayout,
-        village_inventory_characters: inventoryCharacters,
-        village_inventory_decorations: inventoryDecorations,
       };
 
       await saveVillageState(nextState);
@@ -2547,8 +2162,6 @@ export default function Home() {
         }))
       );
       setBuildingLayout(original.village_buildings || DEFAULT_BUILDINGS);
-      setInventoryCharacters(original.village_inventory_characters || []);
-      setInventoryDecorations(original.village_inventory_decorations || []);
     }
     setSelectedObject(null);
     setIsEditMode(false);
@@ -2734,16 +2347,6 @@ export default function Home() {
         onBuy={handleVillagePurchase}
       />
 
-      <VillageBagModal
-        open={isBagOpen}
-        activeTab={bagTab}
-        onTabChange={setBagTab}
-        inventoryCharacters={inventoryCharacters}
-        inventoryDecorations={inventoryDecorations}
-        onClose={() => setIsBagOpen(false)}
-        onPlaceItem={handlePlaceInventoryItem}
-      />
-
       <VillageWorldLayer
         activeCategory={activeCategory}
         isOverview={isOverview}
@@ -2764,10 +2367,6 @@ export default function Home() {
         onOpenShop={() => {
           setShopTab('character');
           setIsShopOpen(true);
-        }}
-        onOpenBag={() => {
-          setBagTab('character');
-          setIsBagOpen(true);
         }}
         onToggleEditMode={handleToggleEditMode}
         onFlipSelected={handleFlipSelected}
