@@ -7,7 +7,6 @@ import {
   addOwnedTitle,
   ensureValidEquippedTitle,
   getOwnedTitleIds,
-  resolveEquippedTitleId,
   setEquippedTitle,
 } from '@/lib/titleStorage';
 import { toast } from 'sonner';
@@ -84,18 +83,28 @@ const SHOP_ITEMS = [
   { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, image: flowerImg },
 ];
 
+/* =========================
+   마름모 타일(아이소메트릭) 설정
+========================= */
+const TILE_W = 96;
+const TILE_H = 48;
+const GRID_COLS = 12;
+const GRID_ROWS = 12;
+const GRID_ORIGIN_X = 700;
+const GRID_ORIGIN_Y = 210;
+
 const DEFAULT_BUILDINGS = [
-  { id: 'exercise_building', category: 'exercise', x: 220, y: 500, flipped: false },
-  { id: 'study_building', category: 'study', x: 430, y: 560, flipped: false },
-  { id: 'mental_building', category: 'mental', x: 760, y: 540, flipped: false },
-  { id: 'daily_building', category: 'daily', x: 1010, y: 460, flipped: false },
+  { id: 'exercise_building', category: 'exercise', col: 2, row: 5, flipped: false },
+  { id: 'study_building', category: 'study', col: 4, row: 6, flipped: false },
+  { id: 'mental_building', category: 'mental', col: 7, row: 5, flipped: false },
+  { id: 'daily_building', category: 'daily', col: 9, row: 4, flipped: false },
 ];
 
 const DEFAULT_VILLAGE_DATA = {
   village_points: 0,
   village_decorations: [],
   village_characters: [
-    { id: 'starter_fox', name: '루', type: 'fox', x: 620, y: 470, size: 52, flipped: false },
+    { id: 'starter_fox', name: '루', type: 'fox', col: 5, row: 5, size: 52, flipped: false },
   ],
   village_buildings: DEFAULT_BUILDINGS,
 };
@@ -193,98 +202,126 @@ function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
 }
 
-function getCollisionSize(item, kind) {
-  if (kind === 'building') return { w: 220, h: 150 };
-  if (kind === 'character') return { w: 42, h: 42 };
-
-  if (item?.type === 'tree') return { w: 82, h: 82 };
-  if (item?.type === 'flower') return { w: 24, h: 24 };
-  if (item?.type === 'grass') return { w: 24, h: 24 };
-
-  return { w: 32, h: 32 };
-}
-
-function getHitBox(item, kind, nextX = item?.x, nextY = item?.y) {
-  const { w, h } = getCollisionSize(item, kind);
+/* =========================
+   마름모 그리드 유틸
+========================= */
+function gridToScreen(col, row) {
   return {
-    left: nextX - w / 2,
-    right: nextX + w / 2,
-    top: nextY - h / 2,
-    bottom: nextY + h / 2,
+    x: GRID_ORIGIN_X + (col - row) * (TILE_W / 2),
+    y: GRID_ORIGIN_Y + (col + row) * (TILE_H / 2),
   };
 }
 
-function isBoxOverlapping(a, b) {
-  return !(
-    a.right <= b.left ||
-    a.left >= b.right ||
-    a.bottom <= b.top ||
-    a.top >= b.bottom
-  );
+function screenToGrid(x, y) {
+  const localX = x - GRID_ORIGIN_X;
+  const localY = y - GRID_ORIGIN_Y;
+
+  const col = Math.round(localY / TILE_H + localX / TILE_W);
+  const row = Math.round(localY / TILE_H - localX / TILE_W);
+
+  return {
+    col: clamp(col, 0, GRID_COLS - 1),
+    row: clamp(row, 0, GRID_ROWS - 1),
+  };
+}
+
+function getObjectTileSize(item, kind) {
+  if (kind === 'building') return { cols: 2, rows: 2 };
+  return { cols: 1, rows: 1 };
+}
+
+function getOccupiedTiles(item, kind, nextCol = item?.col, nextRow = item?.row) {
+  const { cols, rows } = getObjectTileSize(item, kind);
+  const tiles = [];
+
+  for (let c = 0; c < cols; c += 1) {
+    for (let r = 0; r < rows; r += 1) {
+      tiles.push({
+        col: nextCol + c,
+        row: nextRow + r,
+      });
+    }
+  }
+
+  return tiles;
+}
+
+function isInsideGrid(col, row) {
+  return col >= 0 && row >= 0 && col < GRID_COLS && row < GRID_ROWS;
 }
 
 function canPlaceObject({
   movingType,
   movingItem,
-  nextX,
-  nextY,
+  nextCol,
+  nextRow,
   decorations = [],
   characters = [],
   buildings = [],
 }) {
-  const movingBox = getHitBox(movingItem, movingType, nextX, nextY);
+  const nextTiles = getOccupiedTiles(movingItem, movingType, nextCol, nextRow);
 
-  for (const building of buildings) {
-    const isSameBuilding =
-      movingType === 'building' &&
-      ((movingItem?.id && building?.id && movingItem.id === building.id) ||
-        (movingItem?.category &&
-          building?.category &&
-          movingItem.category === building.category));
-
-    if (isSameBuilding) continue;
-
-    const targetBox = getHitBox(building, 'building');
-    if (isBoxOverlapping(movingBox, targetBox)) return false;
+  for (const tile of nextTiles) {
+    if (!isInsideGrid(tile.col, tile.row)) return false;
   }
 
-  for (const deco of decorations) {
-    const isSameDeco =
-      movingType === 'decoration' &&
-      movingItem?.id &&
-      deco?.id &&
-      movingItem.id === deco.id;
+  const taken = new Map();
 
-    if (isSameDeco) continue;
+  const registerTiles = (items, kind) => {
+    items.forEach((item) => {
+      let isSame = false;
 
-    const movingIsSmallDeco =
-      movingType === 'decoration' &&
-      (movingItem?.type === 'flower' || movingItem?.type === 'grass');
+      if (kind === 'building') {
+        isSame =
+          movingType === 'building' &&
+          ((movingItem?.id && item?.id && movingItem.id === item.id) ||
+            (movingItem?.category &&
+              item?.category &&
+              movingItem.category === item.category));
+      }
 
-    const targetIsSmallDeco =
-      deco?.type === 'flower' || deco?.type === 'grass';
+      if (kind === 'decoration') {
+        isSame =
+          movingType === 'decoration' &&
+          movingItem?.id &&
+          item?.id &&
+          movingItem.id === item.id;
+      }
 
-    if (movingIsSmallDeco && targetIsSmallDeco) continue;
-    if (movingType === 'character' && targetIsSmallDeco) continue;
+      if (kind === 'character') {
+        isSame =
+          movingType === 'character' &&
+          movingItem?.id &&
+          item?.id &&
+          movingItem.id === item.id;
+      }
 
-    const targetBox = getHitBox(deco, 'decoration');
-    if (isBoxOverlapping(movingBox, targetBox)) return false;
-  }
+      if (isSame) return;
 
-  for (const character of characters) {
-    const isSameCharacter =
-      movingType === 'character' &&
-      movingItem?.id &&
-      character?.id &&
-      movingItem.id === character.id;
+      const occupied = getOccupiedTiles(item, kind);
+      occupied.forEach((tile) => {
+        taken.set(`${tile.col},${tile.row}`, item.id);
+      });
+    });
+  };
 
-    if (isSameCharacter) continue;
+  registerTiles(buildings, 'building');
+  registerTiles(decorations, 'decoration');
+  registerTiles(characters, 'character');
 
-    const targetBox = getHitBox(character, 'character');
-    if (isBoxOverlapping(movingBox, targetBox)) return false;
+  for (const tile of nextTiles) {
+    if (taken.has(`${tile.col},${tile.row}`)) return false;
   }
 
   return true;
+}
+
+function getObjectScreenPosition(item, kind) {
+  const { x, y } = gridToScreen(item.col, item.row);
+
+  if (kind === 'building') return { x, y: y + 18 };
+  if (kind === 'character') return { x, y: y + 8 };
+  return { x, y: y + 10 };
 }
 
 function getGoalEndDate(goal) {
@@ -471,9 +508,7 @@ function groupActionGoals(actionGoals, today) {
       const isCompleted =
         actionGoal?.status === 'completed' || actionGoal?.completed === true;
 
-      if (isCompleted) {
-        return;
-      }
+      if (isCompleted) return;
 
       if (!scheduledDate) {
         scheduledItems.push(actionGoal);
@@ -639,7 +674,6 @@ function getDecorationImage(type) {
   return grassImg;
 }
 
-
 function createInventoryItem(item) {
   return {
     id: `${item.type}_${item.subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
@@ -650,11 +684,11 @@ function createInventoryItem(item) {
   };
 }
 
-function createPlacedObjectFromInventory(inventoryItem, worldWidth = 1400, worldHeight = 900) {
+function createPlacedObjectFromInventory(inventoryItem) {
   if (inventoryItem?.type === 'character') {
-    return createCharacter(inventoryItem.subtype, worldWidth, worldHeight);
+    return createCharacter(inventoryItem.subtype);
   }
-  return createDecoration(inventoryItem?.subtype || 'grass', worldWidth, worldHeight);
+  return createDecoration(inventoryItem?.subtype || 'grass');
 }
 
 function getVillageState(source) {
@@ -680,28 +714,28 @@ function getVillageState(source) {
   };
 }
 
-function createDecoration(subtype, worldWidth = 1400, worldHeight = 900) {
+function createDecoration(subtype) {
   const sizeMap = { grass: 34, tree: 62, flower: 30 };
 
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     type: subtype,
     image: getDecorationImage(subtype),
-    x: randomBetween(180, worldWidth - 180),
-    y: randomBetween(220, worldHeight - 140),
+    col: Math.floor(randomBetween(1, GRID_COLS - 2)),
+    row: Math.floor(randomBetween(1, GRID_ROWS - 2)),
     flipped: false,
     size: sizeMap[subtype] || 32,
   };
 }
 
-function createCharacter(type, worldWidth = 1400, worldHeight = 900) {
+function createCharacter(type) {
   return {
     id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
     type,
     image: getCharacterImage(type),
-    x: randomBetween(280, worldWidth - 180),
-    y: randomBetween(240, worldHeight - 150),
+    col: Math.floor(randomBetween(2, GRID_COLS - 2)),
+    row: Math.floor(randomBetween(2, GRID_ROWS - 2)),
     size: type === 'alpaca' ? 56 : 52,
     flipped: false,
   };
@@ -722,8 +756,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'exercise',
       label: `체육관 Lv.${getStage(exerciseLevel)}`,
       image: getBuilding('exercise', getStage(exerciseLevel)),
-      x: layoutMap.exercise?.x ?? 220,
-      y: layoutMap.exercise?.y ?? 500,
+      col: layoutMap.exercise?.col ?? 2,
+      row: layoutMap.exercise?.row ?? 5,
       flipped: !!layoutMap.exercise?.flipped,
       w: 150,
       h: 120,
@@ -733,8 +767,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'study',
       label: `도서관 Lv.${getStage(studyLevel)}`,
       image: getBuilding('study', getStage(studyLevel)),
-      x: layoutMap.study?.x ?? 430,
-      y: layoutMap.study?.y ?? 560,
+      col: layoutMap.study?.col ?? 4,
+      row: layoutMap.study?.row ?? 6,
       flipped: !!layoutMap.study?.flipped,
       w: 150,
       h: 120,
@@ -744,8 +778,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'mental',
       label: `명상숲 Lv.${getStage(mentalLevel)}`,
       image: getBuilding('mental', getStage(mentalLevel)),
-      x: layoutMap.mental?.x ?? 760,
-      y: layoutMap.mental?.y ?? 540,
+      col: layoutMap.mental?.col ?? 7,
+      row: layoutMap.mental?.row ?? 5,
       flipped: !!layoutMap.mental?.flipped,
       w: 150,
       h: 120,
@@ -755,8 +789,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'daily',
       label: `생활공방 Lv.${getStage(dailyLevel)}`,
       image: getBuilding('daily', getStage(dailyLevel)),
-      x: layoutMap.daily?.x ?? 1010,
-      y: layoutMap.daily?.y ?? 460,
+      col: layoutMap.daily?.col ?? 9,
+      row: layoutMap.daily?.row ?? 4,
       flipped: !!layoutMap.daily?.flipped,
       w: 150,
       h: 120,
@@ -1077,7 +1111,6 @@ function VillageShopModal({ open, activeTab, onTabChange, points, onClose, onBuy
   );
 }
 
-
 function VillageBagModal({
   open,
   activeTab,
@@ -1268,6 +1301,8 @@ function VillageOverlayBar({
   points,
   onOpenShop,
   onOpenBag,
+  onToggleOverview,
+  isOverview,
 }) {
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3">
@@ -1292,6 +1327,9 @@ function VillageOverlayBar({
           <div className="rounded-full px-3 py-2 text-[12px] font-extrabold" style={{ background: 'rgba(255,248,232,0.9)', color: '#4a2c08', border: '1px solid rgba(107,78,21,0.14)', boxShadow: '0 8px 16px rgba(50,30,0,0.08)' }}>
             포인트 {points}
           </div>
+          <button type="button" onClick={onToggleOverview} className="rounded-full px-3 py-2 text-[12px] font-extrabold" style={{ background: '#fff', color: '#4a2c08', border: '1px solid rgba(107,78,21,0.14)', boxShadow: '0 8px 16px rgba(50,30,0,0.08)' }}>
+            {isOverview ? '확대' : '전체보기'}
+          </button>
           <button type="button" onClick={onOpenBag} className="rounded-full px-3 py-2 text-[12px] font-extrabold" style={{ background: '#fff', color: '#4a2c08', border: '1px solid rgba(107,78,21,0.14)', boxShadow: '0 8px 16px rgba(50,30,0,0.08)' }}>가방</button>
           <button type="button" onClick={onOpenShop} className="rounded-full px-3 py-2 text-[12px] font-extrabold" style={{ background: '#fff', color: '#4a2c08', border: '1px solid rgba(107,78,21,0.14)', boxShadow: '0 8px 16px rgba(50,30,0,0.08)' }}>상점</button>
         </div>
@@ -1344,13 +1382,15 @@ function VillageWorldLayer({
   onSaveEdit,
   onCancelEdit,
   onStoreSelected,
+  isOverview,
+  onToggleOverview,
 }) {
   const dragRef = useRef(null);
   const [offset, setOffset] = useState({ x: -180, y: -140 });
 
   const worldWidth = 1400;
   const worldHeight = 900;
-  const scale = 1;
+  const scale = isOverview ? 0.78 : 1;
 
   const buildings = useMemo(
     () => buildWorldBuildings({ userLevels, buildingLayout }),
@@ -1367,6 +1407,8 @@ function VillageWorldLayer({
   const backgroundImage = getBackground(activeCategory, 'day');
 
   const handleWorldPointerDown = (e) => {
+    if (isEditMode) return;
+
     dragRef.current = {
       mode: 'pan',
       startX: e.clientX,
@@ -1382,12 +1424,24 @@ function VillageWorldLayer({
 
     setSelectedObject({ type: objType, id: objId });
 
+    let sourceItem = null;
+
+    if (objType === 'decoration') {
+      sourceItem = decorations.find((item) => item.id === objId) || null;
+    } else if (objType === 'character') {
+      sourceItem = characters.find((item) => item.id === objId) || null;
+    } else if (objType === 'building') {
+      sourceItem = buildingLayout.find((item) => item.category === objId) || null;
+    }
+
     dragRef.current = {
       mode: 'object',
       objectType: objType,
       objectId: objId,
       startX: e.clientX,
       startY: e.clientY,
+      startCol: sourceItem?.col ?? 0,
+      startRow: sourceItem?.row ?? 0,
     };
   };
 
@@ -1410,39 +1464,28 @@ function VillageWorldLayer({
       const dx = (e.clientX - drag.startX) / scale;
       const dy = (e.clientY - drag.startY) / scale;
 
+      const startScreen = gridToScreen(drag.startCol, drag.startRow);
+      const previewX = startScreen.x + dx;
+      const previewY = startScreen.y + dy;
+      const { col, row } = screenToGrid(previewX, previewY);
+
       if (drag.objectType === 'decoration') {
         setDecorations((prev) =>
           prev.map((item) => {
             if (item.id !== drag.objectId) return item;
 
-            const nextX = clamp(item.x + dx, 100, worldWidth - 100);
-            const nextY = clamp(item.y + dy, 100, worldHeight - 100);
-
-            const currentBox = getHitBox(item, 'decoration', item.x, item.y);
-            const nextBox = getHitBox(item, 'decoration', nextX, nextY);
-            const currentCollides = !canPlaceObject({
+            const canPlace = canPlaceObject({
               movingType: 'decoration',
               movingItem: item,
-              nextX: item.x,
-              nextY: item.y,
-              decorations: prev,
-              characters,
-              buildings: currentCollisionBuildings,
-            });
-            const nextCollides = !canPlaceObject({
-              movingType: 'decoration',
-              movingItem: item,
-              nextX,
-              nextY,
+              nextCol: col,
+              nextRow: row,
               decorations: prev,
               characters,
               buildings: currentCollisionBuildings,
             });
 
-            if (!nextCollides || currentCollides) {
-              return { ...item, x: nextX, y: nextY };
-            }
-            return item;
+            if (!canPlace) return item;
+            return { ...item, col, row };
           })
         );
       }
@@ -1452,32 +1495,18 @@ function VillageWorldLayer({
           prev.map((item) => {
             if (item.id !== drag.objectId) return item;
 
-            const nextX = clamp(item.x + dx, 100, worldWidth - 100);
-            const nextY = clamp(item.y + dy, 100, worldHeight - 100);
-
-            const currentCollides = !canPlaceObject({
+            const canPlace = canPlaceObject({
               movingType: 'character',
               movingItem: item,
-              nextX: item.x,
-              nextY: item.y,
-              decorations,
-              characters: prev,
-              buildings: currentCollisionBuildings,
-            });
-            const nextCollides = !canPlaceObject({
-              movingType: 'character',
-              movingItem: item,
-              nextX,
-              nextY,
+              nextCol: col,
+              nextRow: row,
               decorations,
               characters: prev,
               buildings: currentCollisionBuildings,
             });
 
-            if (!nextCollides || currentCollides) {
-              return { ...item, x: nextX, y: nextY };
-            }
-            return item;
+            if (!canPlace) return item;
+            return { ...item, col, row };
           })
         );
       }
@@ -1487,32 +1516,18 @@ function VillageWorldLayer({
           prev.map((item) => {
             if (item.category !== drag.objectId) return item;
 
-            const nextX = clamp(item.x + dx, 40, worldWidth - 340);
-            const nextY = clamp(item.y + dy, 40, worldHeight - 280);
-
-            const currentCollides = !canPlaceObject({
+            const canPlace = canPlaceObject({
               movingType: 'building',
               movingItem: item,
-              nextX: item.x,
-              nextY: item.y,
-              decorations,
-              characters,
-              buildings: prev,
-            });
-            const nextCollides = !canPlaceObject({
-              movingType: 'building',
-              movingItem: item,
-              nextX,
-              nextY,
+              nextCol: col,
+              nextRow: row,
               decorations,
               characters,
               buildings: prev,
             });
 
-            if (!nextCollides || currentCollides) {
-              return { ...item, x: nextX, y: nextY };
-            }
-            return item;
+            if (!canPlace) return item;
+            return { ...item, col, row };
           })
         );
       }
@@ -1521,9 +1536,11 @@ function VillageWorldLayer({
         ...drag,
         startX: e.clientX,
         startY: e.clientY,
+        startCol: col,
+        startRow: row,
       };
     }
-  }, [scale, decorations, characters, currentCollisionBuildings]);
+  }, [scale, decorations, characters, currentCollisionBuildings, setDecorations, setCharacters, setBuildingLayout]);
 
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
@@ -1543,32 +1560,114 @@ function VillageWorldLayer({
 
     const timer = setInterval(() => {
       setCharacters((prev) =>
-        prev.map((npc) => ({
-          ...npc,
-          x: clamp(npc.x + randomBetween(-60, 60), 100, worldWidth - 100),
-          y: clamp(npc.y + randomBetween(-45, 45), 100, worldHeight - 100),
-          flipped: randomBetween(0, 1) > 0.5 ? !npc.flipped : npc.flipped,
-        }))
+        prev.map((npc) => {
+          const nextCol = clamp(npc.col + Math.round(randomBetween(-1, 1)), 0, GRID_COLS - 1);
+          const nextRow = clamp(npc.row + Math.round(randomBetween(-1, 1)), 0, GRID_ROWS - 1);
+
+          const canPlace = canPlaceObject({
+            movingType: 'character',
+            movingItem: npc,
+            nextCol,
+            nextRow,
+            decorations,
+            characters: prev,
+            buildings: currentCollisionBuildings,
+          });
+
+          return {
+            ...npc,
+            col: canPlace ? nextCol : npc.col,
+            row: canPlace ? nextRow : npc.row,
+            flipped: randomBetween(0, 1) > 0.5 ? !npc.flipped : npc.flipped,
+          };
+        })
       );
-    }, 2600);
+    }, 2400);
 
     return () => clearInterval(timer);
-  }, [isEditMode, setCharacters]);
+  }, [isEditMode, setCharacters, decorations, currentCollisionBuildings]);
 
   return (
     <div className="sticky top-0 z-40 overflow-hidden" style={{ background: 'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 100%)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
       <div className="px-4 pt-3 pb-2">
         <div className="relative overflow-hidden rounded-[28px]" style={{ height: 300, border: '1px solid rgba(160,120,64,0.18)', boxShadow: '0 12px 24px rgba(80,50,10,0.08)' }}>
-          <VillageOverlayBar nickname={nickname} level={totalLevel} points={points} onOpenShop={onOpenShop} onOpenBag={onOpenBag} />
-          <EditToolbar isEditMode={isEditMode} selectedObject={selectedObject} onToggleEditMode={onToggleEditMode} onFlip={onFlipSelected} onSave={onSaveEdit} onCancel={onCancelEdit} onStoreSelected={onStoreSelected} />
+          <VillageOverlayBar
+            nickname={nickname}
+            level={totalLevel}
+            points={points}
+            onOpenShop={onOpenShop}
+            onOpenBag={onOpenBag}
+            onToggleOverview={onToggleOverview}
+            isOverview={isOverview}
+          />
+
+          <EditToolbar
+            isEditMode={isEditMode}
+            selectedObject={selectedObject}
+            onToggleEditMode={onToggleEditMode}
+            onFlip={onFlipSelected}
+            onSave={onSaveEdit}
+            onCancel={onCancelEdit}
+            onStoreSelected={onStoreSelected}
+          />
+
           <div className="absolute inset-0 touch-none overflow-hidden" onPointerDown={handleWorldPointerDown}>
-            <div className="absolute left-0 top-0" style={{ width: worldWidth, height: worldHeight, transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`, transformOrigin: 'top left', transition: dragRef.current ? 'none' : 'transform 300ms ease' }}>
-              {backgroundImage ? <img src={backgroundImage} alt="village background" className="absolute inset-0 h-full w-full object-cover" draggable={false} /> : <div className="absolute inset-0 bg-[#d8e8b0]" />}
+            <div
+              className="absolute left-0 top-0"
+              style={{
+                width: worldWidth,
+                height: worldHeight,
+                transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+                transformOrigin: 'top left',
+                transition: dragRef.current ? 'none' : 'transform 300ms ease',
+              }}
+            >
+              {backgroundImage ? (
+                <img src={backgroundImage} alt="village background" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+              ) : (
+                <div className="absolute inset-0 bg-[#d8e8b0]" />
+              )}
+
+              {Array.from({ length: GRID_ROWS }).map((_, row) =>
+                Array.from({ length: GRID_COLS }).map((__, col) => {
+                  const pos = gridToScreen(col, row);
+                  return (
+                    <div
+                      key={`tile-${col}-${row}`}
+                      className="absolute pointer-events-none"
+                      style={{
+                        left: pos.x - TILE_W / 2,
+                        top: pos.y - TILE_H / 2,
+                        width: TILE_W,
+                        height: TILE_H,
+                        transform: 'rotate(45deg)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        background: 'rgba(255,255,255,0.02)',
+                      }}
+                    />
+                  );
+                })
+              )}
 
               {decorations.map((item) => {
                 const isSelected = selectedObject?.type === 'decoration' && selectedObject?.id === item.id;
+                const pos = getObjectScreenPosition(item, 'decoration');
+
                 return (
-                  <div key={item.id} className="absolute" onPointerDown={(e) => startObjectDrag(e, 'decoration', item.id)} style={{ left: item.x, top: item.y, transform: `translate(-50%, -50%) scaleX(${item.flipped ? -1 : 1})`, outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none', outlineOffset: '3px', borderRadius: '999px', cursor: isEditMode ? 'grab' : 'default' }}>
+                  <div
+                    key={item.id}
+                    className="absolute"
+                    onPointerDown={(e) => startObjectDrag(e, 'decoration', item.id)}
+                    style={{
+                      left: pos.x,
+                      top: pos.y,
+                      transform: `translate(-50%, -100%) scaleX(${item.flipped ? -1 : 1})`,
+                      outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
+                      outlineOffset: '3px',
+                      borderRadius: '999px',
+                      cursor: isEditMode ? 'grab' : 'default',
+                    }}
+                  >
                     <DecorationSprite item={item} />
                   </div>
                 );
@@ -1576,8 +1675,25 @@ function VillageWorldLayer({
 
               {buildings.map((building) => {
                 const isSelected = selectedObject?.type === 'building' && selectedObject?.id === building.category;
+                const pos = getObjectScreenPosition(building, 'building');
+
                 return (
-                  <div key={building.id} className="absolute" onPointerDown={(e) => startObjectDrag(e, 'building', building.category)} style={{ left: building.x, top: building.y, width: 300, height: 240, transform: `scaleX(${building.flipped ? -1 : 1})`, outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none', outlineOffset: '4px', borderRadius: '20px', cursor: isEditMode ? 'grab' : 'default' }}>
+                  <div
+                    key={building.id}
+                    className="absolute"
+                    onPointerDown={(e) => startObjectDrag(e, 'building', building.category)}
+                    style={{
+                      left: pos.x,
+                      top: pos.y,
+                      width: 300,
+                      height: 240,
+                      transform: `translate(-50%, -100%) scaleX(${building.flipped ? -1 : 1})`,
+                      outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
+                      outlineOffset: '4px',
+                      borderRadius: '20px',
+                      cursor: isEditMode ? 'grab' : 'default',
+                    }}
+                  >
                     <img src={building.image} alt={building.label} className="h-full w-full object-contain" draggable={false} />
                   </div>
                 );
@@ -1585,9 +1701,43 @@ function VillageWorldLayer({
 
               {characters.map((npc) => {
                 const isSelected = selectedObject?.type === 'character' && selectedObject?.id === npc.id;
+                const pos = getObjectScreenPosition(npc, 'character');
+
                 return (
-                  <div key={npc.id} className="absolute" onPointerDown={(e) => startObjectDrag(e, 'character', npc.id)} style={{ left: npc.x, top: npc.y, width: npc.size, height: npc.size, transform: `translate(-50%, -50%) scaleX(${npc.flipped ? -1 : 1})`, transition: isEditMode ? 'none' : 'left 2200ms ease-in-out, top 2200ms ease-in-out', outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none', outlineOffset: '3px', borderRadius: '999px', cursor: isEditMode ? 'grab' : 'default' }}>
-                    <img src={npc.image || foxImg} alt={npc.name} draggable={false} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', background: 'transparent', backgroundColor: 'transparent', border: 'none', boxShadow: 'none', userSelect: 'none', WebkitUserDrag: 'none' }} />
+                  <div
+                    key={npc.id}
+                    className="absolute"
+                    onPointerDown={(e) => startObjectDrag(e, 'character', npc.id)}
+                    style={{
+                      left: pos.x,
+                      top: pos.y,
+                      width: npc.size,
+                      height: npc.size,
+                      transform: `translate(-50%, -100%) scaleX(${npc.flipped ? -1 : 1})`,
+                      transition: isEditMode ? 'none' : 'left 2200ms ease-in-out, top 2200ms ease-in-out',
+                      outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
+                      outlineOffset: '3px',
+                      borderRadius: '999px',
+                      cursor: isEditMode ? 'grab' : 'default',
+                    }}
+                  >
+                    <img
+                      src={npc.image || foxImg}
+                      alt={npc.name}
+                      draggable={false}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        display: 'block',
+                        background: 'transparent',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        boxShadow: 'none',
+                        userSelect: 'none',
+                        WebkitUserDrag: 'none',
+                      }}
+                    />
                   </div>
                 );
               })}
@@ -1830,11 +1980,6 @@ export default function Home() {
     [isGuest, user, guestData, guestVersion]
   );
 
-  const unlockedTitles = useMemo(
-    () => getUnlockedTitles(derivedStats, ownedTitleIds),
-    [derivedStats, ownedTitleIds]
-  );
-
   useEffect(() => {
     ensureValidEquippedTitle({ isGuest, user, guestData, ownedTitleIds, queryClient })
       .then((nextGuest) => {
@@ -1886,6 +2031,7 @@ export default function Home() {
   useEffect(() => {
     const source = isGuest ? guestData : user;
     const village = getVillageState(source || {});
+
     setDecorations(
       (village.village_decorations || []).map((item) => ({
         ...item,
@@ -2214,7 +2360,6 @@ export default function Home() {
     }
   };
 
-
   const handleToggleEditMode = () => {
     if (isEditMode) {
       handleSaveEdit();
@@ -2304,7 +2449,7 @@ export default function Home() {
     }
   };
 
-const handleActionComplete = async (actionGoal, minutes = 0, extra = {}) => {
+  const handleActionComplete = async (actionGoal, minutes = 0, extra = {}) => {
     try {
       const now = new Date().toISOString();
       const todayStr = getTodayString();
