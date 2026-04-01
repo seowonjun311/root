@@ -193,6 +193,100 @@ function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
 }
 
+function getCollisionSize(item, kind) {
+  if (kind === 'building') return { w: 220, h: 150 };
+  if (kind === 'character') return { w: 42, h: 42 };
+
+  if (item?.type === 'tree') return { w: 82, h: 82 };
+  if (item?.type === 'flower') return { w: 24, h: 24 };
+  if (item?.type === 'grass') return { w: 24, h: 24 };
+
+  return { w: 32, h: 32 };
+}
+
+function getHitBox(item, kind, nextX = item?.x, nextY = item?.y) {
+  const { w, h } = getCollisionSize(item, kind);
+  return {
+    left: nextX - w / 2,
+    right: nextX + w / 2,
+    top: nextY - h / 2,
+    bottom: nextY + h / 2,
+  };
+}
+
+function isBoxOverlapping(a, b) {
+  return !(
+    a.right <= b.left ||
+    a.left >= b.right ||
+    a.bottom <= b.top ||
+    a.top >= b.bottom
+  );
+}
+
+function canPlaceObject({
+  movingType,
+  movingItem,
+  nextX,
+  nextY,
+  decorations = [],
+  characters = [],
+  buildings = [],
+}) {
+  const movingBox = getHitBox(movingItem, movingType, nextX, nextY);
+
+  for (const building of buildings) {
+    const isSameBuilding =
+      movingType === 'building' &&
+      ((movingItem?.id && building?.id && movingItem.id === building.id) ||
+        (movingItem?.category &&
+          building?.category &&
+          movingItem.category === building.category));
+
+    if (isSameBuilding) continue;
+
+    const targetBox = getHitBox(building, 'building');
+    if (isBoxOverlapping(movingBox, targetBox)) return false;
+  }
+
+  for (const deco of decorations) {
+    const isSameDeco =
+      movingType === 'decoration' &&
+      movingItem?.id &&
+      deco?.id &&
+      movingItem.id === deco.id;
+
+    if (isSameDeco) continue;
+
+    const movingIsSmallDeco =
+      movingType === 'decoration' &&
+      (movingItem?.type === 'flower' || movingItem?.type === 'grass');
+
+    const targetIsSmallDeco =
+      deco?.type === 'flower' || deco?.type === 'grass';
+
+    if (movingIsSmallDeco && targetIsSmallDeco) continue;
+    if (movingType === 'character' && targetIsSmallDeco) continue;
+
+    const targetBox = getHitBox(deco, 'decoration');
+    if (isBoxOverlapping(movingBox, targetBox)) return false;
+  }
+
+  for (const character of characters) {
+    const isSameCharacter =
+      movingType === 'character' &&
+      movingItem?.id &&
+      character?.id &&
+      movingItem.id === character.id;
+
+    if (isSameCharacter) continue;
+
+    const targetBox = getHitBox(character, 'character');
+    if (isBoxOverlapping(movingBox, targetBox)) return false;
+  }
+
+  return true;
+}
+
 function getGoalEndDate(goal) {
   if (!goal?.start_date || !goal?.duration_days) return null;
   const start = new Date(goal.start_date);
