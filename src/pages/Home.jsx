@@ -324,6 +324,22 @@ function getObjectScreenPosition(item, kind) {
   return { x, y: y + 10 };
 }
 
+function getPreviewTiles(item, kind, col, row) {
+  return getOccupiedTiles(item, kind, col, row);
+}
+
+function getPreviewColor(valid) {
+  return valid
+    ? {
+        border: '2px solid rgba(34,197,94,0.95)',
+        background: 'rgba(34,197,94,0.18)',
+      }
+    : {
+        border: '2px solid rgba(239,68,68,0.95)',
+        background: 'rgba(239,68,68,0.18)',
+      };
+}
+
 function getGoalEndDate(goal) {
   if (!goal?.start_date || !goal?.duration_days) return null;
   const start = new Date(goal.start_date);
@@ -759,8 +775,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       col: layoutMap.exercise?.col ?? 2,
       row: layoutMap.exercise?.row ?? 5,
       flipped: !!layoutMap.exercise?.flipped,
-      w: 150,
-      h: 120,
+      w: 112,
+      h: 90,
     },
     {
       id: 'study_building',
@@ -770,8 +786,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       col: layoutMap.study?.col ?? 4,
       row: layoutMap.study?.row ?? 6,
       flipped: !!layoutMap.study?.flipped,
-      w: 150,
-      h: 120,
+      w: 112,
+      h: 90,
     },
     {
       id: 'mental_building',
@@ -781,8 +797,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       col: layoutMap.mental?.col ?? 7,
       row: layoutMap.mental?.row ?? 5,
       flipped: !!layoutMap.mental?.flipped,
-      w: 150,
-      h: 120,
+      w: 112,
+      h: 90,
     },
     {
       id: 'daily_building',
@@ -792,8 +808,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       col: layoutMap.daily?.col ?? 9,
       row: layoutMap.daily?.row ?? 4,
       flipped: !!layoutMap.daily?.flipped,
-      w: 150,
-      h: 120,
+      w: 112,
+      h: 90,
     },
   ];
 }
@@ -1219,6 +1235,7 @@ function EditToolbar({
   onSave,
   onCancel,
   onStoreSelected,
+  canSave = true,
 }) {
   const canStore =
     selectedObject &&
@@ -1229,18 +1246,22 @@ function EditToolbar({
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
+          disabled={isEditMode && !canSave}
           onClick={isEditMode ? onSave : onToggleEditMode}
           className="pointer-events-auto rounded-full px-3 py-2 text-[12px] font-extrabold"
           style={{
             background: isEditMode
-              ? 'linear-gradient(180deg, #d97a5c 0%, #c25c3c 100%)'
+              ? canSave
+                ? 'linear-gradient(180deg, #d97a5c 0%, #c25c3c 100%)'
+                : '#d9d1c4'
               : 'rgba(255,248,232,0.92)',
             color: isEditMode ? '#fff8e8' : '#4a2c08',
             border: isEditMode ? '2px solid #7f321d' : '1px solid rgba(107,78,21,0.14)',
             boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+            opacity: isEditMode && !canSave ? 0.65 : 1,
           }}
         >
-          {isEditMode ? '저장' : '편집모드'}
+          {isEditMode ? (canSave ? '저장' : '배치 불가') : '편집모드'}
         </button>
 
         {isEditMode ? (
@@ -1384,6 +1405,8 @@ function VillageWorldLayer({
   onStoreSelected,
   isOverview,
   onToggleOverview,
+  placementPreview,
+  setPlacementPreview,
 }) {
   const dragRef = useRef(null);
   const [offset, setOffset] = useState({ x: -180, y: -140 });
@@ -1469,6 +1492,38 @@ function VillageWorldLayer({
       const previewY = startScreen.y + dy;
       const { col, row } = screenToGrid(previewX, previewY);
 
+      let previewItem = null;
+
+      if (drag.objectType === 'decoration') {
+        previewItem = decorations.find((item) => item.id === drag.objectId) || null;
+      }
+      if (drag.objectType === 'character') {
+        previewItem = characters.find((item) => item.id === drag.objectId) || null;
+      }
+      if (drag.objectType === 'building') {
+        previewItem = buildingLayout.find((item) => item.category === drag.objectId) || null;
+      }
+
+      if (previewItem) {
+        const previewValid = canPlaceObject({
+          movingType: drag.objectType,
+          movingItem: previewItem,
+          nextCol: col,
+          nextRow: row,
+          decorations,
+          characters,
+          buildings: drag.objectType === 'building' ? buildingLayout : currentCollisionBuildings,
+        });
+
+        setPlacementPreview({
+          type: drag.objectType,
+          col,
+          row,
+          item: previewItem,
+          valid: previewValid,
+        });
+      }
+
       if (drag.objectType === 'decoration') {
         setDecorations((prev) =>
           prev.map((item) => {
@@ -1540,11 +1595,12 @@ function VillageWorldLayer({
         startRow: row,
       };
     }
-  }, [scale, decorations, characters, currentCollisionBuildings, setDecorations, setCharacters, setBuildingLayout]);
+  }, [scale, decorations, characters, currentCollisionBuildings, setDecorations, setCharacters, setBuildingLayout, buildingLayout, setPlacementPreview]);
 
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
-  }, []);
+    setPlacementPreview(null);
+  }, [setPlacementPreview]);
 
   useEffect(() => {
     window.addEventListener('pointermove', handlePointerMove);
@@ -1609,6 +1665,7 @@ function VillageWorldLayer({
             onSave={onSaveEdit}
             onCancel={onCancelEdit}
             onStoreSelected={onStoreSelected}
+            canSave={!placementPreview || placementPreview.valid}
           />
 
           <div className="absolute inset-0 touch-none overflow-hidden" onPointerDown={handleWorldPointerDown}>
@@ -1649,6 +1706,35 @@ function VillageWorldLayer({
                 })
               )}
 
+              {isEditMode && placementPreview
+                ? getPreviewTiles(
+                    placementPreview.item,
+                    placementPreview.type,
+                    placementPreview.col,
+                    placementPreview.row
+                  ).map((tile) => {
+                    const pos = gridToScreen(tile.col, tile.row);
+                    const color = getPreviewColor(placementPreview.valid);
+
+                    return (
+                      <div
+                        key={`preview-${tile.col}-${tile.row}`}
+                        className="absolute pointer-events-none"
+                        style={{
+                          left: pos.x - TILE_W / 2,
+                          top: pos.y - TILE_H / 2,
+                          width: TILE_W,
+                          height: TILE_H,
+                          transform: 'rotate(45deg)',
+                          border: color.border,
+                          background: color.background,
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    );
+                  })
+                : null}
+
               {decorations.map((item) => {
                 const isSelected = selectedObject?.type === 'decoration' && selectedObject?.id === item.id;
                 const pos = getObjectScreenPosition(item, 'decoration');
@@ -1685,8 +1771,8 @@ function VillageWorldLayer({
                     style={{
                       left: pos.x,
                       top: pos.y,
-                      width: 300,
-                      height: 240,
+                      width: 225,
+                      height: 180,
                       transform: `translate(-50%, -100%) scaleX(${building.flipped ? -1 : 1})`,
                       outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
                       outlineOffset: '4px',
@@ -1784,6 +1870,7 @@ export default function Home() {
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedObject, setSelectedObject] = useState(null);
+  const [placementPreview, setPlacementPreview] = useState(null);
 
   const [decorations, setDecorations] = useState([]);
   const [characters, setCharacters] = useState(DEFAULT_VILLAGE_DATA.village_characters);
@@ -2349,6 +2436,7 @@ export default function Home() {
       setInventoryCharacters(nextInventoryCharacters);
       setInventoryDecorations(nextInventoryDecorations);
       setSelectedObject(null);
+      setPlacementPreview(null);
       originalVillageRef.current = {
         ...currentVillage,
         ...nextState,
@@ -2366,10 +2454,16 @@ export default function Home() {
       return;
     }
     setSelectedObject(null);
+    setPlacementPreview(null);
     setIsEditMode(true);
   };
 
   const handleSaveEdit = async () => {
+    if (placementPreview && !placementPreview.valid) {
+      toast.error('빨간 칸 상태에서는 저장할 수 없어요.');
+      return;
+    }
+
     const source = isGuest ? guestData : user;
     const currentVillage = getVillageState(source || {});
 
@@ -2390,6 +2484,7 @@ export default function Home() {
       };
       setIsEditMode(false);
       setSelectedObject(null);
+      setPlacementPreview(null);
       toast.success('마을 편집이 저장되었어요.');
     } catch (error) {
       console.error('handleSaveEdit error:', error);
@@ -2416,6 +2511,7 @@ export default function Home() {
     setInventoryCharacters(village.village_inventory_characters || []);
     setInventoryDecorations(village.village_inventory_decorations || []);
     setSelectedObject(null);
+    setPlacementPreview(null);
     setIsEditMode(false);
   };
 
@@ -2654,6 +2750,8 @@ export default function Home() {
         isEditMode={isEditMode}
         selectedObject={selectedObject}
         setSelectedObject={setSelectedObject}
+        placementPreview={placementPreview}
+        setPlacementPreview={setPlacementPreview}
         onToggleOverview={() => setIsOverview((prev) => !prev)}
         onOpenShop={() => {
           setShopTab('character');
