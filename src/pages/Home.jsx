@@ -100,6 +100,11 @@ const DEFAULT_VILLAGE_DATA = {
   village_buildings: DEFAULT_BUILDINGS,
 };
 
+const DEFAULT_VILLAGE_INVENTORY = {
+  village_inventory_characters: [],
+  village_inventory_decorations: [],
+};
+
 function readGuestData() {
   try {
     if (typeof guestDataPersistence?.getData === 'function') {
@@ -1924,23 +1929,36 @@ export default function Home() {
   };
 
   const saveVillageState = async (nextState) => {
+    const safeState = {
+      village_points: Number(nextState?.village_points || 0),
+      village_decorations: Array.isArray(nextState?.village_decorations) ? nextState.village_decorations : [],
+      village_characters: Array.isArray(nextState?.village_characters) ? nextState.village_characters : [],
+      village_buildings: Array.isArray(nextState?.village_buildings) ? nextState.village_buildings : [],
+      village_inventory_characters: Array.isArray(nextState?.village_inventory_characters) ? nextState.village_inventory_characters : [],
+      village_inventory_decorations: Array.isArray(nextState?.village_inventory_decorations) ? nextState.village_inventory_decorations : [],
+    };
+
     if (isGuest) {
       writeGuestDataPatch((prev) => ({
         ...prev,
-        village_points: nextState.village_points,
-        village_decorations: nextState.village_decorations.map(({ image, ...rest }) => rest),
-        village_characters: nextState.village_characters.map(({ image, ...rest }) => rest),
-        village_buildings: nextState.village_buildings,
+        village_points: safeState.village_points,
+        village_decorations: safeState.village_decorations.map(({ image, ...rest }) => rest),
+        village_characters: safeState.village_characters.map(({ image, ...rest }) => rest),
+        village_buildings: safeState.village_buildings,
+        village_inventory_characters: safeState.village_inventory_characters,
+        village_inventory_decorations: safeState.village_inventory_decorations,
       }));
       window.dispatchEvent(new Event('root-home-data-updated'));
       return;
     }
 
     await base44.auth.updateMe({
-      village_points: nextState.village_points,
-      village_decorations: nextState.village_decorations.map(({ image, ...rest }) => rest),
-      village_characters: nextState.village_characters.map(({ image, ...rest }) => rest),
-      village_buildings: nextState.village_buildings,
+      village_points: safeState.village_points,
+      village_decorations: safeState.village_decorations.map(({ image, ...rest }) => rest),
+      village_characters: safeState.village_characters.map(({ image, ...rest }) => rest),
+      village_buildings: safeState.village_buildings,
+      village_inventory_characters: safeState.village_inventory_characters,
+      village_inventory_decorations: safeState.village_inventory_decorations,
     });
     queryClient.invalidateQueries({ queryKey: ['me'] });
   };
@@ -2099,6 +2117,96 @@ export default function Home() {
     } catch (error) {
       console.error('handleStoreSelected error:', error);
       toast.error('가방에 넣는 중 오류가 발생했어요.');
+    }
+  };
+
+
+  const handleToggleEditMode = () => {
+    if (isEditMode) {
+      handleSaveEdit();
+      return;
+    }
+    setSelectedObject(null);
+    setIsEditMode(true);
+  };
+
+  const handleSaveEdit = async () => {
+    const source = isGuest ? guestData : user;
+    const currentVillage = getVillageState(source || {});
+
+    const nextState = {
+      village_points: currentVillage.village_points,
+      village_decorations: decorations,
+      village_characters: characters,
+      village_buildings: buildingLayout,
+      village_inventory_characters: inventoryCharacters,
+      village_inventory_decorations: inventoryDecorations,
+    };
+
+    try {
+      await saveVillageState(nextState);
+      originalVillageRef.current = {
+        ...currentVillage,
+        ...nextState,
+      };
+      setIsEditMode(false);
+      setSelectedObject(null);
+      toast.success('마을 편집이 저장되었어요.');
+    } catch (error) {
+      console.error('handleSaveEdit error:', error);
+      toast.error('마을 저장 중 오류가 발생했어요.');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    const village = originalVillageRef.current || getVillageState(isGuest ? guestData : user || {});
+
+    setDecorations(
+      (village.village_decorations || []).map((item) => ({
+        ...item,
+        image: getDecorationImage(item.type),
+      }))
+    );
+    setCharacters(
+      (village.village_characters || []).map((item) => ({
+        ...item,
+        image: getCharacterImage(item.type),
+      }))
+    );
+    setBuildingLayout(village.village_buildings || DEFAULT_BUILDINGS);
+    setInventoryCharacters(village.village_inventory_characters || []);
+    setInventoryDecorations(village.village_inventory_decorations || []);
+    setSelectedObject(null);
+    setIsEditMode(false);
+  };
+
+  const handleFlipSelected = () => {
+    if (!selectedObject) return;
+
+    if (selectedObject.type === 'decoration') {
+      setDecorations((prev) =>
+        prev.map((item) =>
+          item.id === selectedObject.id ? { ...item, flipped: !item.flipped } : item
+        )
+      );
+      return;
+    }
+
+    if (selectedObject.type === 'character') {
+      setCharacters((prev) =>
+        prev.map((item) =>
+          item.id === selectedObject.id ? { ...item, flipped: !item.flipped } : item
+        )
+      );
+      return;
+    }
+
+    if (selectedObject.type === 'building') {
+      setBuildingLayout((prev) =>
+        prev.map((item) =>
+          item.category === selectedObject.id ? { ...item, flipped: !item.flipped } : item
+        )
+      );
     }
   };
 
