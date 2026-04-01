@@ -85,17 +85,17 @@ const SHOP_ITEMS = [
 ];
 
 const DEFAULT_BUILDINGS = [
-  { id: 'exercise_building', category: 'exercise', x: 220, y: 500, flipped: false },
-  { id: 'study_building', category: 'study', x: 430, y: 560, flipped: false },
-  { id: 'mental_building', category: 'mental', x: 760, y: 540, flipped: false },
-  { id: 'daily_building', category: 'daily', x: 1010, y: 460, flipped: false },
+  { id: 'exercise_building', category: 'exercise', x: 150, y: 390, flipped: false },
+  { id: 'study_building', category: 'study', x: 500, y: 360, flipped: false },
+  { id: 'mental_building', category: 'mental', x: 60, y: 120, flipped: false },
+  { id: 'daily_building', category: 'daily', x: 390, y: 90, flipped: false },
 ];
 
 const DEFAULT_VILLAGE_DATA = {
   village_points: 0,
   village_decorations: [],
   village_characters: [
-    { id: 'starter_fox', name: '루', type: 'fox', x: 620, y: 470, size: 52, flipped: false },
+    { id: 'starter_fox', name: '루', type: 'fox', x: 850, y: 520, size: 52, flipped: false },
   ],
   village_buildings: DEFAULT_BUILDINGS,
 };
@@ -190,19 +190,18 @@ function randomBetween(min, max) {
 
 
 function getCollisionSize(item, kind) {
-  if (kind === 'building') return { w: 220, h: 170 };
-  if (kind === 'character') return { w: 54, h: 54 };
+  if (kind === 'building') return { w: 220, h: 150 };
+  if (kind === 'character') return { w: 42, h: 42 };
 
-  if (item?.type === 'tree') return { w: 95, h: 95 };
-  if (item?.type === 'flower') return { w: 34, h: 34 };
-  if (item?.type === 'grass') return { w: 34, h: 34 };
+  if (item?.type === 'tree') return { w: 82, h: 82 };
+  if (item?.type === 'flower') return { w: 24, h: 24 };
+  if (item?.type === 'grass') return { w: 24, h: 24 };
 
-  return { w: 40, h: 40 };
+  return { w: 32, h: 32 };
 }
 
 function getHitBox(item, kind, nextX = item?.x, nextY = item?.y) {
   const { w, h } = getCollisionSize(item, kind);
-
   return {
     left: nextX - w / 2,
     right: nextX + w / 2,
@@ -220,6 +219,19 @@ function isBoxOverlapping(a, b) {
   );
 }
 
+function isSameObject(a, b, movingType) {
+  if (!a || !b) return false;
+
+  if (movingType === 'building') {
+    return (
+      (a.id && b.id && a.id === b.id) ||
+      (a.category && b.category && a.category === b.category)
+    );
+  }
+
+  return a.id && b.id && a.id === b.id;
+}
+
 function canPlaceObject({
   movingType,
   movingItem,
@@ -232,39 +244,30 @@ function canPlaceObject({
   const movingBox = getHitBox(movingItem, movingType, nextX, nextY);
 
   for (const building of buildings) {
-    const isSame =
-      movingType === 'building' &&
-      (building.category === movingItem.category || building.id === movingItem.id);
-
-    if (isSame) continue;
+    if (isSameObject(movingItem, building, movingType)) continue;
 
     const targetBox = getHitBox(building, 'building');
     if (isBoxOverlapping(movingBox, targetBox)) return false;
   }
 
   for (const deco of decorations) {
-    const isSame = movingType === 'decoration' && deco.id === movingItem.id;
-    if (isSame) continue;
+    if (isSameObject(movingItem, deco, movingType)) continue;
 
-    const allowCharacterOnSmallDeco =
-      movingType === 'character' && (deco.type === 'flower' || deco.type === 'grass');
-
-    if (allowCharacterOnSmallDeco) continue;
-
-    const allowSmallDecoOverlap =
+    const movingIsSmallDeco =
       movingType === 'decoration' &&
-      (movingItem.type === 'flower' || movingItem.type === 'grass') &&
-      (deco.type === 'flower' || deco.type === 'grass');
+      (movingItem?.type === 'flower' || movingItem?.type === 'grass');
 
-    if (allowSmallDecoOverlap) continue;
+    const targetIsSmallDeco = deco?.type === 'flower' || deco?.type === 'grass';
+
+    if (movingIsSmallDeco && targetIsSmallDeco) continue;
+    if (movingType === 'character' && targetIsSmallDeco) continue;
 
     const targetBox = getHitBox(deco, 'decoration');
     if (isBoxOverlapping(movingBox, targetBox)) return false;
   }
 
   for (const character of characters) {
-    const isSame = movingType === 'character' && character.id === movingItem.id;
-    if (isSame) continue;
+    if (isSameObject(movingItem, character, movingType)) continue;
 
     const targetBox = getHitBox(character, 'character');
     if (isBoxOverlapping(movingBox, targetBox)) return false;
@@ -684,8 +687,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'exercise',
       label: `체육관 Lv.${getStage(exerciseLevel)}`,
       image: getBuilding('exercise', getStage(exerciseLevel)),
-      x: layoutMap.exercise?.x ?? 220,
-      y: layoutMap.exercise?.y ?? 500,
+      x: layoutMap.exercise?.x ?? 150,
+      y: layoutMap.exercise?.y ?? 390,
       flipped: !!layoutMap.exercise?.flipped,
       w: 150,
       h: 120,
@@ -695,8 +698,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'study',
       label: `도서관 Lv.${getStage(studyLevel)}`,
       image: getBuilding('study', getStage(studyLevel)),
-      x: layoutMap.study?.x ?? 430,
-      y: layoutMap.study?.y ?? 560,
+      x: layoutMap.study?.x ?? 500,
+      y: layoutMap.study?.y ?? 360,
       flipped: !!layoutMap.study?.flipped,
       w: 150,
       h: 120,
@@ -706,8 +709,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'mental',
       label: `명상숲 Lv.${getStage(mentalLevel)}`,
       image: getBuilding('mental', getStage(mentalLevel)),
-      x: layoutMap.mental?.x ?? 760,
-      y: layoutMap.mental?.y ?? 540,
+      x: layoutMap.mental?.x ?? 60,
+      y: layoutMap.mental?.y ?? 120,
       flipped: !!layoutMap.mental?.flipped,
       w: 150,
       h: 120,
@@ -717,8 +720,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'daily',
       label: `생활공방 Lv.${getStage(dailyLevel)}`,
       image: getBuilding('daily', getStage(dailyLevel)),
-      x: layoutMap.daily?.x ?? 1010,
-      y: layoutMap.daily?.y ?? 460,
+      x: layoutMap.daily?.x ?? 390,
+      y: layoutMap.daily?.y ?? 90,
       flipped: !!layoutMap.daily?.flipped,
       w: 150,
       h: 120,
@@ -1311,8 +1314,8 @@ function VillageWorldLayer({
           prev.map((item) => {
             if (item.id !== drag.objectId) return item;
 
-            const nextX = clamp(item.x + dx, 120, worldWidth - 120);
-            const nextY = clamp(item.y + dy, 140, worldHeight - 120);
+            const nextX = clamp(item.x + dx, VILLAGE_WORLD.decorationPaddingX, worldWidth - VILLAGE_WORLD.decorationPaddingX);
+            const nextY = clamp(item.y + dy, VILLAGE_WORLD.decorationPaddingY, worldHeight - VILLAGE_WORLD.decorationPaddingY);
 
             const allowed = canPlaceObject({
               movingType: 'decoration',
@@ -1340,8 +1343,8 @@ function VillageWorldLayer({
           prev.map((item) => {
             if (item.id !== drag.objectId) return item;
 
-            const nextX = clamp(item.x + dx, 120, worldWidth - 120);
-            const nextY = clamp(item.y + dy, 140, worldHeight - 120);
+            const nextX = clamp(item.x + dx, VILLAGE_WORLD.characterPaddingX, worldWidth - VILLAGE_WORLD.characterPaddingX);
+            const nextY = clamp(item.y + dy, VILLAGE_WORLD.characterPaddingY, worldHeight - VILLAGE_WORLD.characterPaddingY);
 
             const allowed = canPlaceObject({
               movingType: 'character',
@@ -1369,8 +1372,8 @@ function VillageWorldLayer({
           prev.map((item) => {
             if (item.category !== drag.objectId) return item;
 
-            const nextX = clamp(item.x + dx, 140, worldWidth - 340);
-            const nextY = clamp(item.y + dy, 150, worldHeight - 280);
+            const nextX = clamp(item.x + dx, VILLAGE_WORLD.buildingPaddingLeft, worldWidth - 300 - 20);
+            const nextY = clamp(item.y + dy, VILLAGE_WORLD.buildingPaddingTop, worldHeight - 240 - 20);
 
             const allowed = canPlaceObject({
               movingType: 'building',
