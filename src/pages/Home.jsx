@@ -209,10 +209,10 @@ function randomBetween(min, max) {
 
 
 function getCollisionSize(item, kind) {
-  if (kind === 'building') return { w: 150, h: 120 };
-  if (kind === 'character') return { w: 44, h: 44 };
+  if (kind === 'building') return { w: 220, h: 150 };
+  if (kind === 'character') return { w: 42, h: 42 };
 
-  if (item?.type === 'tree') return { w: 72, h: 72 };
+  if (item?.type === 'tree') return { w: 82, h: 82 };
   if (item?.type === 'flower') return { w: 24, h: 24 };
   if (item?.type === 'grass') return { w: 24, h: 24 };
 
@@ -293,48 +293,6 @@ function canPlaceObject({
   }
 
   return true;
-}
-
-function countPlacementOverlaps({
-  movingType,
-  movingItem,
-  nextX,
-  nextY,
-  decorations = [],
-  characters = [],
-  buildings = [],
-}) {
-  const movingBox = getHitBox(movingItem, movingType, nextX, nextY);
-  let count = 0;
-
-  for (const building of buildings) {
-    if (isSameObject(movingItem, building, movingType)) continue;
-    const targetBox = getHitBox(building, 'building');
-    if (isBoxOverlapping(movingBox, targetBox)) count += 1;
-  }
-
-  for (const deco of decorations) {
-    if (isSameObject(movingItem, deco, movingType)) continue;
-
-    const movingIsSmallDeco =
-      movingType === 'decoration' &&
-      (movingItem?.type === 'flower' || movingItem?.type === 'grass');
-    const targetIsSmallDeco = deco?.type === 'flower' || deco?.type === 'grass';
-
-    if (movingIsSmallDeco && targetIsSmallDeco) continue;
-    if (movingType === 'character' && targetIsSmallDeco) continue;
-
-    const targetBox = getHitBox(deco, 'decoration');
-    if (isBoxOverlapping(movingBox, targetBox)) count += 1;
-  }
-
-  for (const character of characters) {
-    if (isSameObject(movingItem, character, movingType)) continue;
-    const targetBox = getHitBox(character, 'character');
-    if (isBoxOverlapping(movingBox, targetBox)) count += 1;
-  }
-
-  return count;
 }
 
 function getGoalEndDate(goal) {
@@ -706,7 +664,11 @@ function getVillageState(source) {
   };
 }
 
-function createDecoration(subtype, worldWidth = VILLAGE_WORLD.width, worldHeight = VILLAGE_WORLD.height) {
+function createDecoration(
+  subtype,
+  worldWidth = VILLAGE_WORLD.width,
+  worldHeight = VILLAGE_WORLD.height
+) {
   const sizeMap = { grass: 34, tree: 62, flower: 30 };
 
   return {
@@ -720,7 +682,11 @@ function createDecoration(subtype, worldWidth = VILLAGE_WORLD.width, worldHeight
   };
 }
 
-function createCharacter(type, worldWidth = VILLAGE_WORLD.width, worldHeight = VILLAGE_WORLD.height) {
+function createCharacter(
+  type,
+  worldWidth = VILLAGE_WORLD.width,
+  worldHeight = VILLAGE_WORLD.height
+) {
   return {
     id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
@@ -730,6 +696,123 @@ function createCharacter(type, worldWidth = VILLAGE_WORLD.width, worldHeight = V
     y: randomBetween(240, worldHeight - 150),
     size: type === 'alpaca' ? 56 : 52,
     flipped: false,
+  };
+}
+
+function findFreePosition({
+  movingType,
+  movingItem,
+  decorations = [],
+  characters = [],
+  buildings = [],
+  worldWidth = VILLAGE_WORLD.width,
+  worldHeight = VILLAGE_WORLD.height,
+}) {
+  const paddingX = movingType === 'building' ? 120 : movingType === 'character' ? 40 : 40;
+  const paddingY = movingType === 'building' ? 100 : movingType === 'character' ? 40 : 40;
+
+  const startX = clamp(movingItem?.x ?? worldWidth / 2, paddingX, worldWidth - paddingX);
+  const startY = clamp(movingItem?.y ?? worldHeight / 2, paddingY, worldHeight - paddingY);
+
+  if (
+    canPlaceObject({
+      movingType,
+      movingItem,
+      nextX: startX,
+      nextY: startY,
+      decorations,
+      characters,
+      buildings,
+    })
+  ) {
+    return { x: startX, y: startY };
+  }
+
+  const step = 28;
+  const maxRadius = Math.max(worldWidth, worldHeight);
+
+  for (let radius = step; radius <= maxRadius; radius += step) {
+    for (let angle = 0; angle < 360; angle += 20) {
+      const rad = (angle * Math.PI) / 180;
+      const nextX = clamp(startX + Math.cos(rad) * radius, paddingX, worldWidth - paddingX);
+      const nextY = clamp(startY + Math.sin(rad) * radius, paddingY, worldHeight - paddingY);
+
+      if (
+        canPlaceObject({
+          movingType,
+          movingItem,
+          nextX,
+          nextY,
+          decorations,
+          characters,
+          buildings,
+        })
+      ) {
+        return { x: nextX, y: nextY };
+      }
+    }
+  }
+
+  return { x: startX, y: startY };
+}
+
+function normalizeVillagePlacement({
+  decorations = [],
+  characters = [],
+  buildings = [],
+  worldWidth = VILLAGE_WORLD.width,
+  worldHeight = VILLAGE_WORLD.height,
+}) {
+  const normalizedBuildings = [];
+
+  for (const rawBuilding of buildings || []) {
+    const item = { ...rawBuilding };
+    const fixed = findFreePosition({
+      movingType: 'building',
+      movingItem: item,
+      decorations: [],
+      characters: [],
+      buildings: normalizedBuildings,
+      worldWidth,
+      worldHeight,
+    });
+    normalizedBuildings.push({ ...item, x: fixed.x, y: fixed.y });
+  }
+
+  const normalizedDecorations = [];
+  for (const rawDeco of decorations || []) {
+    const item = { ...rawDeco };
+    const fixed = findFreePosition({
+      movingType: 'decoration',
+      movingItem: item,
+      decorations: normalizedDecorations,
+      characters: [],
+      buildings: normalizedBuildings,
+      worldWidth,
+      worldHeight,
+    });
+    normalizedDecorations.push({ ...item, x: fixed.x, y: fixed.y });
+  }
+
+  const normalizedCharacters = [];
+  for (const rawCharacter of characters || []) {
+    const item = { ...rawCharacter };
+    const fixed = findFreePosition({
+      movingType: 'character',
+      movingItem: item,
+      decorations: normalizedDecorations,
+      characters: normalizedCharacters,
+      buildings: normalizedBuildings,
+      worldWidth,
+      worldHeight,
+    });
+    normalizedCharacters.push({ ...item, x: fixed.x, y: fixed.y });
+  }
+
+  return {
+    buildings: normalizedBuildings,
+    decorations: normalizedDecorations,
+    characters: normalizedCharacters,
   };
 }
 
@@ -1160,7 +1243,6 @@ function EditToolbar({
             >
               취소
             </button>
-
           </div>
         ) : null}
       </div>
@@ -1293,17 +1375,23 @@ function VillageWorldLayer({
   onCancelEdit,
 }) {
   const dragRef = useRef(null);
-  const [offset, setOffset] = useState({ x: -180, y: -120 });
+  const [offset, setOffset] = useState({ x: -250, y: -190 });
 
   const worldWidth = VILLAGE_WORLD.width;
   const worldHeight = VILLAGE_WORLD.height;
-  const scale = isOverview ? 0.72 : 1;
+  const scale = isOverview ? 0.62 : 1;
 
   const buildings = useMemo(
     () => buildWorldBuildings({ userLevels, buildingLayout }),
     [userLevels, buildingLayout]
   );
-  const currentCollisionBuildings = buildings;
+  const currentCollisionBuildings = useMemo(() => {
+    return (buildingLayout || []).map((item) => ({
+      ...item,
+      id: item.id || `${item.category}_building`,
+      category: item.category,
+    }));
+  }, [buildingLayout]);
 
   const backgroundImage = getBackground(activeCategory, 'day');
 
@@ -1359,17 +1447,7 @@ function VillageWorldLayer({
             const nextX = clamp(item.x + dx, VILLAGE_WORLD.decorationPaddingX, worldWidth - VILLAGE_WORLD.decorationPaddingX);
             const nextY = clamp(item.y + dy, VILLAGE_WORLD.decorationPaddingY, worldHeight - VILLAGE_WORLD.decorationPaddingY);
 
-            const currentOverlapCount = countPlacementOverlaps({
-              movingType: 'decoration',
-              movingItem: item,
-              nextX: item.x,
-              nextY: item.y,
-              decorations: prev,
-              characters,
-              buildings: currentCollisionBuildings,
-            });
-
-            const nextOverlapCount = countPlacementOverlaps({
+            const allowed = canPlaceObject({
               movingType: 'decoration',
               movingItem: item,
               nextX,
@@ -1379,7 +1457,7 @@ function VillageWorldLayer({
               buildings: currentCollisionBuildings,
             });
 
-            if (nextOverlapCount > 0 && nextOverlapCount >= currentOverlapCount) return item;
+            if (!allowed) return item;
 
             return {
               ...item,
@@ -1398,17 +1476,7 @@ function VillageWorldLayer({
             const nextX = clamp(item.x + dx, VILLAGE_WORLD.characterPaddingX, worldWidth - VILLAGE_WORLD.characterPaddingX);
             const nextY = clamp(item.y + dy, VILLAGE_WORLD.characterPaddingY, worldHeight - VILLAGE_WORLD.characterPaddingY);
 
-            const currentOverlapCount = countPlacementOverlaps({
-              movingType: 'character',
-              movingItem: item,
-              nextX: item.x,
-              nextY: item.y,
-              decorations,
-              characters: prev,
-              buildings: currentCollisionBuildings,
-            });
-
-            const nextOverlapCount = countPlacementOverlaps({
+            const allowed = canPlaceObject({
               movingType: 'character',
               movingItem: item,
               nextX,
@@ -1418,7 +1486,7 @@ function VillageWorldLayer({
               buildings: currentCollisionBuildings,
             });
 
-            if (nextOverlapCount > 0 && nextOverlapCount >= currentOverlapCount) return item;
+            if (!allowed) return item;
 
             return {
               ...item,
@@ -1434,20 +1502,10 @@ function VillageWorldLayer({
           prev.map((item) => {
             if (item.category !== drag.objectId) return item;
 
-            const nextX = clamp(item.x + dx, VILLAGE_WORLD.buildingPaddingLeft, worldWidth - 150 - 20);
-            const nextY = clamp(item.y + dy, VILLAGE_WORLD.buildingPaddingTop, worldHeight - 120 - 20);
+            const nextX = clamp(item.x + dx, VILLAGE_WORLD.buildingPaddingLeft, worldWidth - 300 - 20);
+            const nextY = clamp(item.y + dy, VILLAGE_WORLD.buildingPaddingTop, worldHeight - 240 - 20);
 
-            const currentOverlapCount = countPlacementOverlaps({
-              movingType: 'building',
-              movingItem: item,
-              nextX: item.x,
-              nextY: item.y,
-              decorations,
-              characters,
-              buildings: prev,
-            });
-
-            const nextOverlapCount = countPlacementOverlaps({
+            const allowed = canPlaceObject({
               movingType: 'building',
               movingItem: item,
               nextX,
@@ -1457,7 +1515,7 @@ function VillageWorldLayer({
               buildings: prev,
             });
 
-            if (nextOverlapCount > 0 && nextOverlapCount >= currentOverlapCount) return item;
+            if (!allowed) return item;
 
             return {
               ...item,
@@ -1474,7 +1532,7 @@ function VillageWorldLayer({
         startY: e.clientY,
       };
     }
-  }, [scale, worldWidth, worldHeight, decorations, characters, currentCollisionBuildings, countPlacementOverlaps, setDecorations, setCharacters, setBuildingLayout]);
+  }, [scale, worldWidth, worldHeight, decorations, characters, currentCollisionBuildings, setDecorations, setCharacters, setBuildingLayout]);
 
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
@@ -1955,20 +2013,36 @@ export default function Home() {
   useEffect(() => {
     const source = isGuest ? guestData : user;
     const village = getVillageState(source || {});
-    setDecorations(
-      (village.village_decorations || []).map((item) => ({
-        ...item,
-        image: getDecorationImage(item.type),
-      }))
-    );
-    setCharacters(
-      (village.village_characters || []).map((item) => ({
-        ...item,
-        image: getCharacterImage(item.type),
-      }))
-    );
-    setBuildingLayout(village.village_buildings);
-    originalVillageRef.current = village;
+
+    const rawDecorations = (village.village_decorations || []).map((item) => ({
+      ...item,
+      image: getDecorationImage(item.type),
+    }));
+    const rawCharacters = (village.village_characters || []).map((item) => ({
+      ...item,
+      image: getCharacterImage(item.type),
+    }));
+    const rawBuildings = Array.isArray(village.village_buildings) && village.village_buildings.length > 0
+      ? village.village_buildings
+      : DEFAULT_BUILDINGS;
+
+    const normalizedVillage = normalizeVillagePlacement({
+      decorations: rawDecorations,
+      characters: rawCharacters,
+      buildings: rawBuildings,
+      worldWidth: VILLAGE_WORLD.width,
+      worldHeight: VILLAGE_WORLD.height,
+    });
+
+    setDecorations(normalizedVillage.decorations);
+    setCharacters(normalizedVillage.characters);
+    setBuildingLayout(normalizedVillage.buildings);
+    originalVillageRef.current = {
+      ...village,
+      village_decorations: normalizedVillage.decorations,
+      village_characters: normalizedVillage.characters,
+      village_buildings: normalizedVillage.buildings,
+    };
   }, [isGuest, guestData, user]);
 
   const handleCategoryChange = async (category) => {
@@ -2122,26 +2196,55 @@ export default function Home() {
     }
 
     const nextPoints = currentPoints - item.price;
-    const nextDecorations = [...decorations];
-    const nextCharacters = [...characters];
+    let nextDecorations = [...decorations];
+    let nextCharacters = [...characters];
 
     if (item.type === 'decoration') {
-      nextDecorations.push(createDecoration(item.subtype));
+      const created = createDecoration(item.subtype, VILLAGE_WORLD.width, VILLAGE_WORLD.height);
+      const fixed = findFreePosition({
+        movingType: 'decoration',
+        movingItem: created,
+        decorations: nextDecorations,
+        characters: nextCharacters,
+        buildings: buildingLayout,
+        worldWidth: VILLAGE_WORLD.width,
+        worldHeight: VILLAGE_WORLD.height,
+      });
+      nextDecorations.push({ ...created, x: fixed.x, y: fixed.y });
     } else if (item.type === 'character') {
-      nextCharacters.push(createCharacter(item.subtype));
+      const created = createCharacter(item.subtype, VILLAGE_WORLD.width, VILLAGE_WORLD.height);
+      const fixed = findFreePosition({
+        movingType: 'character',
+        movingItem: created,
+        decorations: nextDecorations,
+        characters: nextCharacters,
+        buildings: buildingLayout,
+        worldWidth: VILLAGE_WORLD.width,
+        worldHeight: VILLAGE_WORLD.height,
+      });
+      nextCharacters.push({ ...created, x: fixed.x, y: fixed.y });
     }
+
+    const normalizedVillage = normalizeVillagePlacement({
+      decorations: nextDecorations,
+      characters: nextCharacters,
+      buildings: buildingLayout,
+      worldWidth: VILLAGE_WORLD.width,
+      worldHeight: VILLAGE_WORLD.height,
+    });
 
     const nextState = {
       village_points: nextPoints,
-      village_decorations: nextDecorations,
-      village_characters: nextCharacters,
-      village_buildings: buildingLayout,
+      village_decorations: normalizedVillage.decorations,
+      village_characters: normalizedVillage.characters,
+      village_buildings: normalizedVillage.buildings,
     };
 
     try {
       await saveVillageState(nextState);
-      setDecorations(nextDecorations);
-      setCharacters(nextCharacters);
+      setDecorations(nextState.village_decorations);
+      setCharacters(nextState.village_characters);
+      setBuildingLayout(nextState.village_buildings);
       originalVillageRef.current = {
         ...currentVillage,
         ...nextState,
@@ -2203,14 +2306,25 @@ export default function Home() {
       const source = isGuest ? guestData : user;
       const currentVillage = getVillageState(source || {});
 
+      const normalizedVillage = normalizeVillagePlacement({
+        decorations,
+        characters,
+        buildings: buildingLayout,
+        worldWidth: VILLAGE_WORLD.width,
+        worldHeight: VILLAGE_WORLD.height,
+      });
+
       const nextState = {
         village_points: currentVillage.village_points,
-        village_decorations: decorations,
-        village_characters: characters,
-        village_buildings: buildingLayout,
+        village_decorations: normalizedVillage.decorations,
+        village_characters: normalizedVillage.characters,
+        village_buildings: normalizedVillage.buildings,
       };
 
       await saveVillageState(nextState);
+      setDecorations(nextState.village_decorations);
+      setCharacters(nextState.village_characters);
+      setBuildingLayout(nextState.village_buildings);
       originalVillageRef.current = nextState;
       setIsEditMode(false);
       setSelectedObject(null);
