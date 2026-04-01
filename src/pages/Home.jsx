@@ -49,6 +49,25 @@ const CATEGORY_ALIASES = {
 
 const VALID_CATEGORIES = Object.keys(CATEGORY_LABELS);
 
+const VILLAGE_WORLD = {
+  width: 1200,
+  height: 800,
+
+  // 건물 이동 범위
+  buildingPaddingLeft: 120,
+  buildingPaddingRight: 120,
+  buildingPaddingTop: 100,
+  buildingPaddingBottom: 100,
+
+  // 꾸미기 이동 범위
+  decorationPaddingX: 40,
+  decorationPaddingY: 40,
+
+  // 캐릭터 이동 범위
+  characterPaddingX: 40,
+  characterPaddingY: 40,
+};
+
 const TITLES = [
   { id: 'common_first_step', name: '첫 걸음을 뗀 자', description: '첫 행동목표를 완료한 용사', metric: 'total_actions', value: 1, category: 'common' },
   { id: 'common_route_walker', name: '루트를 걷는 자', description: '전체 행동목표 100회 달성', metric: 'total_actions', value: 100, category: 'common' },
