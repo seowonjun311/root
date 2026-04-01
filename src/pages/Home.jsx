@@ -49,25 +49,6 @@ const CATEGORY_ALIASES = {
 
 const VALID_CATEGORIES = Object.keys(CATEGORY_LABELS);
 
-const VILLAGE_WORLD = {
-  width: 1200,
-  height: 800,
-
-  // 건물 이동 범위
-  buildingPaddingLeft: 120,
-  buildingPaddingRight: 120,
-  buildingPaddingTop: 100,
-  buildingPaddingBottom: 100,
-
-  // 꾸미기 이동 범위
-  decorationPaddingX: 40,
-  decorationPaddingY: 40,
-
-  // 캐릭터 이동 범위
-  characterPaddingX: 40,
-  characterPaddingY: 40,
-};
-
 const TITLES = [
   { id: 'common_first_step', name: '첫 걸음을 뗀 자', description: '첫 행동목표를 완료한 용사', metric: 'total_actions', value: 1, category: 'common' },
   { id: 'common_route_walker', name: '루트를 걷는 자', description: '전체 행동목표 100회 달성', metric: 'total_actions', value: 100, category: 'common' },
@@ -104,17 +85,17 @@ const SHOP_ITEMS = [
 ];
 
 const DEFAULT_BUILDINGS = [
-  { id: 'exercise_building', category: 'exercise', x: 150, y: 390, flipped: false },
-  { id: 'study_building', category: 'study', x: 500, y: 360, flipped: false },
-  { id: 'mental_building', category: 'mental', x: 60, y: 120, flipped: false },
-  { id: 'daily_building', category: 'daily', x: 390, y: 90, flipped: false },
+  { id: 'exercise_building', category: 'exercise', x: 220, y: 500, flipped: false },
+  { id: 'study_building', category: 'study', x: 430, y: 560, flipped: false },
+  { id: 'mental_building', category: 'mental', x: 760, y: 540, flipped: false },
+  { id: 'daily_building', category: 'daily', x: 1010, y: 460, flipped: false },
 ];
 
 const DEFAULT_VILLAGE_DATA = {
   village_points: 0,
   village_decorations: [],
   village_characters: [
-    { id: 'starter_fox', name: '루', type: 'fox', x: 850, y: 520, size: 52, flipped: false },
+    { id: 'starter_fox', name: '루', type: 'fox', x: 620, y: 470, size: 52, flipped: false },
   ],
   village_buildings: DEFAULT_BUILDINGS,
 };
@@ -205,94 +186,6 @@ function clamp(value, min, max) {
 
 function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
-}
-
-
-function getCollisionSize(item, kind) {
-  if (kind === 'building') return { w: 220, h: 150 };
-  if (kind === 'character') return { w: 42, h: 42 };
-
-  if (item?.type === 'tree') return { w: 82, h: 82 };
-  if (item?.type === 'flower') return { w: 24, h: 24 };
-  if (item?.type === 'grass') return { w: 24, h: 24 };
-
-  return { w: 32, h: 32 };
-}
-
-function getHitBox(item, kind, nextX = item?.x, nextY = item?.y) {
-  const { w, h } = getCollisionSize(item, kind);
-  return {
-    left: nextX - w / 2,
-    right: nextX + w / 2,
-    top: nextY - h / 2,
-    bottom: nextY + h / 2,
-  };
-}
-
-function isBoxOverlapping(a, b) {
-  return !(
-    a.right <= b.left ||
-    a.left >= b.right ||
-    a.bottom <= b.top ||
-    a.top >= b.bottom
-  );
-}
-
-function isSameObject(a, b, movingType) {
-  if (!a || !b) return false;
-
-  if (movingType === 'building') {
-    return (
-      (a.id && b.id && a.id === b.id) ||
-      (a.category && b.category && a.category === b.category)
-    );
-  }
-
-  return a.id && b.id && a.id === b.id;
-}
-
-function canPlaceObject({
-  movingType,
-  movingItem,
-  nextX,
-  nextY,
-  decorations = [],
-  characters = [],
-  buildings = [],
-}) {
-  const movingBox = getHitBox(movingItem, movingType, nextX, nextY);
-
-  for (const building of buildings) {
-    if (isSameObject(movingItem, building, movingType)) continue;
-
-    const targetBox = getHitBox(building, 'building');
-    if (isBoxOverlapping(movingBox, targetBox)) return false;
-  }
-
-  for (const deco of decorations) {
-    if (isSameObject(movingItem, deco, movingType)) continue;
-
-    const movingIsSmallDeco =
-      movingType === 'decoration' &&
-      (movingItem?.type === 'flower' || movingItem?.type === 'grass');
-
-    const targetIsSmallDeco = deco?.type === 'flower' || deco?.type === 'grass';
-
-    if (movingIsSmallDeco && targetIsSmallDeco) continue;
-    if (movingType === 'character' && targetIsSmallDeco) continue;
-
-    const targetBox = getHitBox(deco, 'decoration');
-    if (isBoxOverlapping(movingBox, targetBox)) return false;
-  }
-
-  for (const character of characters) {
-    if (isSameObject(movingItem, character, movingType)) continue;
-
-    const targetBox = getHitBox(character, 'character');
-    if (isBoxOverlapping(movingBox, targetBox)) return false;
-  }
-
-  return true;
 }
 
 function getGoalEndDate(goal) {
@@ -647,6 +540,24 @@ function getDecorationImage(type) {
   return grassImg;
 }
 
+
+function createInventoryItem(item) {
+  return {
+    id: `${item.type}_${item.subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+    shop_item_id: item.id,
+    type: item.type,
+    subtype: item.subtype,
+    label: item.label,
+  };
+}
+
+function createPlacedObjectFromInventory(inventoryItem, worldWidth = 1400, worldHeight = 900) {
+  if (inventoryItem?.type === 'character') {
+    return createCharacter(inventoryItem.subtype, worldWidth, worldHeight);
+  }
+  return createDecoration(inventoryItem?.subtype || 'grass', worldWidth, worldHeight);
+}
+
 function getVillageState(source) {
   return {
     village_points: Number(source?.village_points ?? DEFAULT_VILLAGE_DATA.village_points),
@@ -661,14 +572,16 @@ function getVillageState(source) {
       Array.isArray(source?.village_buildings) && source.village_buildings.length > 0
         ? source.village_buildings
         : DEFAULT_VILLAGE_DATA.village_buildings,
+    village_inventory_characters: Array.isArray(source?.village_inventory_characters)
+      ? source.village_inventory_characters
+      : DEFAULT_VILLAGE_INVENTORY.village_inventory_characters,
+    village_inventory_decorations: Array.isArray(source?.village_inventory_decorations)
+      ? source.village_inventory_decorations
+      : DEFAULT_VILLAGE_INVENTORY.village_inventory_decorations,
   };
 }
 
-function createDecoration(
-  subtype,
-  worldWidth = VILLAGE_WORLD.width,
-  worldHeight = VILLAGE_WORLD.height
-) {
+function createDecoration(subtype, worldWidth = 1400, worldHeight = 900) {
   const sizeMap = { grass: 34, tree: 62, flower: 30 };
 
   return {
@@ -682,11 +595,7 @@ function createDecoration(
   };
 }
 
-function createCharacter(
-  type,
-  worldWidth = VILLAGE_WORLD.width,
-  worldHeight = VILLAGE_WORLD.height
-) {
+function createCharacter(type, worldWidth = 1400, worldHeight = 900) {
   return {
     id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
@@ -696,123 +605,6 @@ function createCharacter(
     y: randomBetween(240, worldHeight - 150),
     size: type === 'alpaca' ? 56 : 52,
     flipped: false,
-  };
-}
-
-function findFreePosition({
-  movingType,
-  movingItem,
-  decorations = [],
-  characters = [],
-  buildings = [],
-  worldWidth = VILLAGE_WORLD.width,
-  worldHeight = VILLAGE_WORLD.height,
-}) {
-  const paddingX = movingType === 'building' ? 120 : movingType === 'character' ? 40 : 40;
-  const paddingY = movingType === 'building' ? 100 : movingType === 'character' ? 40 : 40;
-
-  const startX = clamp(movingItem?.x ?? worldWidth / 2, paddingX, worldWidth - paddingX);
-  const startY = clamp(movingItem?.y ?? worldHeight / 2, paddingY, worldHeight - paddingY);
-
-  if (
-    canPlaceObject({
-      movingType,
-      movingItem,
-      nextX: startX,
-      nextY: startY,
-      decorations,
-      characters,
-      buildings,
-    })
-  ) {
-    return { x: startX, y: startY };
-  }
-
-  const step = 28;
-  const maxRadius = Math.max(worldWidth, worldHeight);
-
-  for (let radius = step; radius <= maxRadius; radius += step) {
-    for (let angle = 0; angle < 360; angle += 20) {
-      const rad = (angle * Math.PI) / 180;
-      const nextX = clamp(startX + Math.cos(rad) * radius, paddingX, worldWidth - paddingX);
-      const nextY = clamp(startY + Math.sin(rad) * radius, paddingY, worldHeight - paddingY);
-
-      if (
-        canPlaceObject({
-          movingType,
-          movingItem,
-          nextX,
-          nextY,
-          decorations,
-          characters,
-          buildings,
-        })
-      ) {
-        return { x: nextX, y: nextY };
-      }
-    }
-  }
-
-  return { x: startX, y: startY };
-}
-
-function normalizeVillagePlacement({
-  decorations = [],
-  characters = [],
-  buildings = [],
-  worldWidth = VILLAGE_WORLD.width,
-  worldHeight = VILLAGE_WORLD.height,
-}) {
-  const normalizedBuildings = [];
-
-  for (const rawBuilding of buildings || []) {
-    const item = { ...rawBuilding };
-    const fixed = findFreePosition({
-      movingType: 'building',
-      movingItem: item,
-      decorations: [],
-      characters: [],
-      buildings: normalizedBuildings,
-      worldWidth,
-      worldHeight,
-    });
-    normalizedBuildings.push({ ...item, x: fixed.x, y: fixed.y });
-  }
-
-  const normalizedDecorations = [];
-  for (const rawDeco of decorations || []) {
-    const item = { ...rawDeco };
-    const fixed = findFreePosition({
-      movingType: 'decoration',
-      movingItem: item,
-      decorations: normalizedDecorations,
-      characters: [],
-      buildings: normalizedBuildings,
-      worldWidth,
-      worldHeight,
-    });
-    normalizedDecorations.push({ ...item, x: fixed.x, y: fixed.y });
-  }
-
-  const normalizedCharacters = [];
-  for (const rawCharacter of characters || []) {
-    const item = { ...rawCharacter };
-    const fixed = findFreePosition({
-      movingType: 'character',
-      movingItem: item,
-      decorations: normalizedDecorations,
-      characters: normalizedCharacters,
-      buildings: normalizedBuildings,
-      worldWidth,
-      worldHeight,
-    });
-    normalizedCharacters.push({ ...item, x: fixed.x, y: fixed.y });
-  }
-
-  return {
-    buildings: normalizedBuildings,
-    decorations: normalizedDecorations,
-    characters: normalizedCharacters,
   };
 }
 
@@ -831,8 +623,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'exercise',
       label: `체육관 Lv.${getStage(exerciseLevel)}`,
       image: getBuilding('exercise', getStage(exerciseLevel)),
-      x: layoutMap.exercise?.x ?? 150,
-      y: layoutMap.exercise?.y ?? 390,
+      x: layoutMap.exercise?.x ?? 220,
+      y: layoutMap.exercise?.y ?? 500,
       flipped: !!layoutMap.exercise?.flipped,
       w: 150,
       h: 120,
@@ -842,8 +634,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'study',
       label: `도서관 Lv.${getStage(studyLevel)}`,
       image: getBuilding('study', getStage(studyLevel)),
-      x: layoutMap.study?.x ?? 500,
-      y: layoutMap.study?.y ?? 360,
+      x: layoutMap.study?.x ?? 430,
+      y: layoutMap.study?.y ?? 560,
       flipped: !!layoutMap.study?.flipped,
       w: 150,
       h: 120,
@@ -853,8 +645,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'mental',
       label: `명상숲 Lv.${getStage(mentalLevel)}`,
       image: getBuilding('mental', getStage(mentalLevel)),
-      x: layoutMap.mental?.x ?? 60,
-      y: layoutMap.mental?.y ?? 120,
+      x: layoutMap.mental?.x ?? 760,
+      y: layoutMap.mental?.y ?? 540,
       flipped: !!layoutMap.mental?.flipped,
       w: 150,
       h: 120,
@@ -864,8 +656,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'daily',
       label: `생활공방 Lv.${getStage(dailyLevel)}`,
       image: getBuilding('daily', getStage(dailyLevel)),
-      x: layoutMap.daily?.x ?? 390,
-      y: layoutMap.daily?.y ?? 90,
+      x: layoutMap.daily?.x ?? 1010,
+      y: layoutMap.daily?.y ?? 460,
       flipped: !!layoutMap.daily?.flipped,
       w: 150,
       h: 120,
@@ -1186,6 +978,107 @@ function VillageShopModal({ open, activeTab, onTabChange, points, onClose, onBuy
   );
 }
 
+
+function VillageBagModal({
+  open,
+  activeTab,
+  onTabChange,
+  inventoryCharacters,
+  inventoryDecorations,
+  onClose,
+  onPlaceItem,
+}) {
+  if (!open) return null;
+
+  const items = activeTab === 'character' ? inventoryCharacters : inventoryDecorations;
+
+  return (
+    <div className="fixed inset-0 z-[96] bg-black/45 px-4 py-8">
+      <div
+        className="mx-auto w-full max-w-md rounded-[28px] p-4"
+        style={{
+          background: 'linear-gradient(180deg, #fff7e8 0%, #f7e9cb 100%)',
+          border: '1px solid rgba(160,120,64,0.18)',
+          boxShadow: '0 18px 36px rgba(0,0,0,0.18)',
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[17px] font-extrabold" style={{ color: '#4a2c08' }}>
+              가방
+            </div>
+            <div className="mt-1 text-[12px]" style={{ color: '#8a5a17' }}>
+              보관 중인 캐릭터와 꾸미기
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full px-3 py-1.5 text-[12px] font-extrabold"
+            style={{ background: '#fff', border: '1px solid rgba(160,120,64,0.14)', color: '#4a2c08' }}
+          >
+            닫기
+          </button>
+        </div>
+
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => onTabChange('character')}
+            className="h-11 flex-1 rounded-2xl text-sm font-extrabold"
+            style={{
+              background: activeTab === 'character' ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)' : '#fff',
+              color: activeTab === 'character' ? '#fff8e8' : '#4a2c08',
+              border: activeTab === 'character' ? '2px solid #6b4e15' : '1px solid rgba(160,120,64,0.14)',
+            }}
+          >
+            캐릭터 {inventoryCharacters.length}
+          </button>
+          <button
+            type="button"
+            onClick={() => onTabChange('decoration')}
+            className="h-11 flex-1 rounded-2xl text-sm font-extrabold"
+            style={{
+              background: activeTab === 'decoration' ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)' : '#fff',
+              color: activeTab === 'decoration' ? '#fff8e8' : '#4a2c08',
+              border: activeTab === 'decoration' ? '2px solid #6b4e15' : '1px solid rgba(160,120,64,0.14)',
+            }}
+          >
+            꾸미기 {inventoryDecorations.length}
+          </button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          {items.length === 0 ? (
+            <div className="col-span-2 rounded-2xl px-4 py-6 text-center text-sm" style={{ background: '#fffdf8', border: '1px solid rgba(160,120,64,0.14)', color: '#8a5a17' }}>
+              가방에 보관된 아이템이 없어요.
+            </div>
+          ) : items.map((item) => {
+            const itemImage = item.type === 'character' ? getCharacterImage(item.subtype) : getDecorationImage(item.subtype);
+            return (
+              <div key={item.id} className="rounded-2xl p-3" style={{ background: '#fffdf8', border: '1px solid rgba(160,120,64,0.14)' }}>
+                <div className="flex h-[68px] items-center justify-center">
+                  <img src={itemImage} alt={item.label} draggable={false} style={{ maxHeight: '64px', maxWidth: '100%', objectFit: 'contain', display: 'block', background: 'transparent' }} />
+                </div>
+                <div className="mt-2 text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>{item.label}</div>
+                <div className="text-[12px]" style={{ color: '#8a5a17' }}>{item.type === 'character' ? '캐릭터' : '꾸미기'}</div>
+                <button
+                  type="button"
+                  onClick={() => onPlaceItem(item)}
+                  className="mt-3 h-10 w-full rounded-2xl text-sm font-extrabold"
+                  style={{ background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)', color: '#fff8e8', border: '2px solid #6b4e15' }}
+                >
+                  마을에 꺼내기
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EditToolbar({
   isEditMode,
   selectedObject,
@@ -1193,7 +1086,12 @@ function EditToolbar({
   onFlip,
   onSave,
   onCancel,
+  onStoreSelected,
 }) {
+  const canStore =
+    selectedObject &&
+    (selectedObject.type === 'character' || selectedObject.type === 'decoration');
+
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-3">
       <div className="flex items-center justify-between gap-2">
@@ -1232,6 +1130,21 @@ function EditToolbar({
 
             <button
               type="button"
+              disabled={!canStore}
+              onClick={onStoreSelected}
+              className="rounded-full px-3 py-2 text-[12px] font-extrabold"
+              style={{
+                background: !canStore ? '#efe7d8' : '#fff',
+                color: !canStore ? '#a19380' : '#4a2c08',
+                border: '1px solid rgba(107,78,21,0.14)',
+                boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
+              }}
+            >
+              가방에 넣기
+            </button>
+
+            <button
+              type="button"
               onClick={onCancel}
               className="rounded-full px-3 py-2 text-[12px] font-extrabold"
               style={{
@@ -1254,9 +1167,8 @@ function VillageOverlayBar({
   nickname,
   level,
   points,
-  isOverview,
-  onToggleOverview,
   onOpenShop,
+  onOpenBag,
 }) {
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3">
@@ -1271,58 +1183,18 @@ function VillageOverlayBar({
             boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
           }}
         >
-          <div className="text-[11px] font-bold" style={{ color: '#8a5a17' }}>
-            {nickname}
-          </div>
-          <div className="text-[14px] font-extrabold" style={{ color: '#4a2c08' }}>
-            전체 Lv.{level}
+          <div className="flex items-center gap-2">
+            <div className="text-[11px] font-bold" style={{ color: '#8a5a17' }}>{nickname}</div>
+            <div className="rounded-full px-2 py-0.5 text-[11px] font-extrabold" style={{ background: 'rgba(196,154,74,0.16)', color: '#6f4a12', border: '1px solid rgba(196,154,74,0.2)' }}>Lv.{level}</div>
           </div>
         </div>
 
         <div className="pointer-events-auto flex items-center gap-2">
-          <div
-            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
-            style={{
-              background: 'rgba(255,248,232,0.9)',
-              color: '#4a2c08',
-              border: '1px solid rgba(107,78,21,0.14)',
-              boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
-            }}
-          >
+          <div className="rounded-full px-3 py-2 text-[12px] font-extrabold" style={{ background: 'rgba(255,248,232,0.9)', color: '#4a2c08', border: '1px solid rgba(107,78,21,0.14)', boxShadow: '0 8px 16px rgba(50,30,0,0.08)' }}>
             포인트 {points}
           </div>
-
-          <button
-            type="button"
-            onClick={onOpenShop}
-            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
-            style={{
-              background: '#fff',
-              color: '#4a2c08',
-              border: '1px solid rgba(107,78,21,0.14)',
-              boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
-            }}
-          >
-            상점
-          </button>
-
-          <button
-            type="button"
-            onClick={onToggleOverview}
-            className="rounded-full px-3 py-2 text-[12px] font-extrabold"
-            style={{
-              background: isOverview
-                ? 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)'
-                : 'rgba(255,248,232,0.9)',
-              color: isOverview ? '#fff8e8' : '#4a2c08',
-              border: isOverview
-                ? '2px solid #6b4e15'
-                : '1px solid rgba(107,78,21,0.14)',
-              boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
-            }}
-          >
-            {isOverview ? '기본보기' : '전체보기'}
-          </button>
+          <button type="button" onClick={onOpenBag} className="rounded-full px-3 py-2 text-[12px] font-extrabold" style={{ background: '#fff', color: '#4a2c08', border: '1px solid rgba(107,78,21,0.14)', boxShadow: '0 8px 16px rgba(50,30,0,0.08)' }}>가방</button>
+          <button type="button" onClick={onOpenShop} className="rounded-full px-3 py-2 text-[12px] font-extrabold" style={{ background: '#fff', color: '#4a2c08', border: '1px solid rgba(107,78,21,0.14)', boxShadow: '0 8px 16px rgba(50,30,0,0.08)' }}>상점</button>
         </div>
       </div>
     </div>
@@ -1353,7 +1225,6 @@ function DecorationSprite({ item }) {
 
 function VillageWorldLayer({
   activeCategory,
-  isOverview,
   nickname,
   totalLevel,
   points,
@@ -1367,31 +1238,32 @@ function VillageWorldLayer({
   isEditMode,
   selectedObject,
   setSelectedObject,
-  onToggleOverview,
   onOpenShop,
+  onOpenBag,
   onToggleEditMode,
   onFlipSelected,
   onSaveEdit,
   onCancelEdit,
+  onStoreSelected,
 }) {
   const dragRef = useRef(null);
-  const [offset, setOffset] = useState({ x: -250, y: -190 });
+  const [offset, setOffset] = useState({ x: -180, y: -140 });
 
-  const worldWidth = VILLAGE_WORLD.width;
-  const worldHeight = VILLAGE_WORLD.height;
-  const scale = isOverview ? 0.62 : 1;
+  const worldWidth = 1400;
+  const worldHeight = 900;
+  const scale = 1;
 
   const buildings = useMemo(
     () => buildWorldBuildings({ userLevels, buildingLayout }),
     [userLevels, buildingLayout]
   );
+
   const currentCollisionBuildings = useMemo(() => {
-    return (buildingLayout || []).map((item) => ({
+    return buildWorldBuildings({ userLevels, buildingLayout }).map((item) => ({
       ...item,
-      id: item.id || `${item.category}_building`,
       category: item.category,
     }));
-  }, [buildingLayout]);
+  }, [userLevels, buildingLayout]);
 
   const backgroundImage = getBackground(activeCategory, 'day');
 
@@ -1444,10 +1316,21 @@ function VillageWorldLayer({
           prev.map((item) => {
             if (item.id !== drag.objectId) return item;
 
-            const nextX = clamp(item.x + dx, VILLAGE_WORLD.decorationPaddingX, worldWidth - VILLAGE_WORLD.decorationPaddingX);
-            const nextY = clamp(item.y + dy, VILLAGE_WORLD.decorationPaddingY, worldHeight - VILLAGE_WORLD.decorationPaddingY);
+            const nextX = clamp(item.x + dx, 100, worldWidth - 100);
+            const nextY = clamp(item.y + dy, 100, worldHeight - 100);
 
-            const allowed = canPlaceObject({
+            const currentBox = getHitBox(item, 'decoration', item.x, item.y);
+            const nextBox = getHitBox(item, 'decoration', nextX, nextY);
+            const currentCollides = !canPlaceObject({
+              movingType: 'decoration',
+              movingItem: item,
+              nextX: item.x,
+              nextY: item.y,
+              decorations: prev,
+              characters,
+              buildings: currentCollisionBuildings,
+            });
+            const nextCollides = !canPlaceObject({
               movingType: 'decoration',
               movingItem: item,
               nextX,
@@ -1457,13 +1340,10 @@ function VillageWorldLayer({
               buildings: currentCollisionBuildings,
             });
 
-            if (!allowed) return item;
-
-            return {
-              ...item,
-              x: nextX,
-              y: nextY,
-            };
+            if (!nextCollides || currentCollides) {
+              return { ...item, x: nextX, y: nextY };
+            }
+            return item;
           })
         );
       }
@@ -1473,10 +1353,19 @@ function VillageWorldLayer({
           prev.map((item) => {
             if (item.id !== drag.objectId) return item;
 
-            const nextX = clamp(item.x + dx, VILLAGE_WORLD.characterPaddingX, worldWidth - VILLAGE_WORLD.characterPaddingX);
-            const nextY = clamp(item.y + dy, VILLAGE_WORLD.characterPaddingY, worldHeight - VILLAGE_WORLD.characterPaddingY);
+            const nextX = clamp(item.x + dx, 100, worldWidth - 100);
+            const nextY = clamp(item.y + dy, 100, worldHeight - 100);
 
-            const allowed = canPlaceObject({
+            const currentCollides = !canPlaceObject({
+              movingType: 'character',
+              movingItem: item,
+              nextX: item.x,
+              nextY: item.y,
+              decorations,
+              characters: prev,
+              buildings: currentCollisionBuildings,
+            });
+            const nextCollides = !canPlaceObject({
               movingType: 'character',
               movingItem: item,
               nextX,
@@ -1486,13 +1375,10 @@ function VillageWorldLayer({
               buildings: currentCollisionBuildings,
             });
 
-            if (!allowed) return item;
-
-            return {
-              ...item,
-              x: nextX,
-              y: nextY,
-            };
+            if (!nextCollides || currentCollides) {
+              return { ...item, x: nextX, y: nextY };
+            }
+            return item;
           })
         );
       }
@@ -1502,10 +1388,19 @@ function VillageWorldLayer({
           prev.map((item) => {
             if (item.category !== drag.objectId) return item;
 
-            const nextX = clamp(item.x + dx, VILLAGE_WORLD.buildingPaddingLeft, worldWidth - 300 - 20);
-            const nextY = clamp(item.y + dy, VILLAGE_WORLD.buildingPaddingTop, worldHeight - 240 - 20);
+            const nextX = clamp(item.x + dx, 40, worldWidth - 340);
+            const nextY = clamp(item.y + dy, 40, worldHeight - 280);
 
-            const allowed = canPlaceObject({
+            const currentCollides = !canPlaceObject({
+              movingType: 'building',
+              movingItem: item,
+              nextX: item.x,
+              nextY: item.y,
+              decorations,
+              characters,
+              buildings: prev,
+            });
+            const nextCollides = !canPlaceObject({
               movingType: 'building',
               movingItem: item,
               nextX,
@@ -1515,13 +1410,10 @@ function VillageWorldLayer({
               buildings: prev,
             });
 
-            if (!allowed) return item;
-
-            return {
-              ...item,
-              x: nextX,
-              y: nextY,
-            };
+            if (!nextCollides || currentCollides) {
+              return { ...item, x: nextX, y: nextY };
+            }
+            return item;
           })
         );
       }
@@ -1532,7 +1424,7 @@ function VillageWorldLayer({
         startY: e.clientY,
       };
     }
-  }, [scale, worldWidth, worldHeight, decorations, characters, currentCollisionBuildings, setDecorations, setCharacters, setBuildingLayout]);
+  }, [scale, decorations, characters, currentCollisionBuildings]);
 
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
@@ -1554,8 +1446,8 @@ function VillageWorldLayer({
       setCharacters((prev) =>
         prev.map((npc) => ({
           ...npc,
-          x: clamp(npc.x + randomBetween(-90, 90), 120, worldWidth - 120),
-          y: clamp(npc.y + randomBetween(-70, 70), 150, worldHeight - 120),
+          x: clamp(npc.x + randomBetween(-60, 60), 100, worldWidth - 100),
+          y: clamp(npc.y + randomBetween(-45, 45), 100, worldHeight - 100),
           flipped: randomBetween(0, 1) > 0.5 ? !npc.flipped : npc.flipped,
         }))
       );
@@ -1565,161 +1457,38 @@ function VillageWorldLayer({
   }, [isEditMode, setCharacters]);
 
   return (
-    <div
-      className="sticky top-0 z-40 overflow-hidden"
-      style={{
-        background: 'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 100%)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-      }}
-    >
+    <div className="sticky top-0 z-40 overflow-hidden" style={{ background: 'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 100%)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
       <div className="px-4 pt-3 pb-2">
-        <div
-          className="relative overflow-hidden rounded-[28px]"
-          style={{
-            height: 300,
-            border: '1px solid rgba(160,120,64,0.18)',
-            boxShadow: '0 12px 24px rgba(80,50,10,0.08)',
-          }}
-        >
-          <VillageOverlayBar
-            nickname={nickname}
-            level={totalLevel}
-            points={points}
-            isOverview={isOverview}
-            onToggleOverview={onToggleOverview}
-            onOpenShop={onOpenShop}
-          />
-
-          <EditToolbar
-            isEditMode={isEditMode}
-            selectedObject={selectedObject}
-            onToggleEditMode={onToggleEditMode}
-            onFlip={onFlipSelected}
-            onSave={onSaveEdit}
-            onCancel={onCancelEdit}
-          />
-
-          <div
-            className="absolute inset-0 touch-none overflow-hidden"
-            onPointerDown={handleWorldPointerDown}
-          >
-            <div
-              className="absolute left-0 top-0"
-              style={{
-                width: worldWidth,
-                height: worldHeight,
-                transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-                transformOrigin: 'top left',
-                transition: dragRef.current ? 'none' : 'transform 300ms ease',
-              }}
-            >
-              {backgroundImage ? (
-                <img
-                  src={backgroundImage}
-                  alt="village background"
-                  className="absolute inset-0 h-full w-full object-cover"
-                  draggable={false}
-                />
-              ) : (
-                <div className="absolute inset-0 bg-[#d8e8b0]" />
-              )}
+        <div className="relative overflow-hidden rounded-[28px]" style={{ height: 300, border: '1px solid rgba(160,120,64,0.18)', boxShadow: '0 12px 24px rgba(80,50,10,0.08)' }}>
+          <VillageOverlayBar nickname={nickname} level={totalLevel} points={points} onOpenShop={onOpenShop} onOpenBag={onOpenBag} />
+          <EditToolbar isEditMode={isEditMode} selectedObject={selectedObject} onToggleEditMode={onToggleEditMode} onFlip={onFlipSelected} onSave={onSaveEdit} onCancel={onCancelEdit} onStoreSelected={onStoreSelected} />
+          <div className="absolute inset-0 touch-none overflow-hidden" onPointerDown={handleWorldPointerDown}>
+            <div className="absolute left-0 top-0" style={{ width: worldWidth, height: worldHeight, transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`, transformOrigin: 'top left', transition: dragRef.current ? 'none' : 'transform 300ms ease' }}>
+              {backgroundImage ? <img src={backgroundImage} alt="village background" className="absolute inset-0 h-full w-full object-cover" draggable={false} /> : <div className="absolute inset-0 bg-[#d8e8b0]" />}
 
               {decorations.map((item) => {
-                const isSelected =
-                  selectedObject?.type === 'decoration' && selectedObject?.id === item.id;
-
+                const isSelected = selectedObject?.type === 'decoration' && selectedObject?.id === item.id;
                 return (
-                  <div
-                    key={item.id}
-                    className="absolute"
-                    onPointerDown={(e) => startObjectDrag(e, 'decoration', item.id)}
-                    style={{
-                      left: item.x,
-                      top: item.y,
-                      transform: `translate(-50%, -50%) scaleX(${item.flipped ? -1 : 1})`,
-                      outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
-                      outlineOffset: '3px',
-                      borderRadius: '999px',
-                      cursor: isEditMode ? 'grab' : 'default',
-                    }}
-                  >
+                  <div key={item.id} className="absolute" onPointerDown={(e) => startObjectDrag(e, 'decoration', item.id)} style={{ left: item.x, top: item.y, transform: `translate(-50%, -50%) scaleX(${item.flipped ? -1 : 1})`, outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none', outlineOffset: '3px', borderRadius: '999px', cursor: isEditMode ? 'grab' : 'default' }}>
                     <DecorationSprite item={item} />
                   </div>
                 );
               })}
 
               {buildings.map((building) => {
-                const isSelected =
-                  selectedObject?.type === 'building' &&
-                  selectedObject?.id === building.category;
-
+                const isSelected = selectedObject?.type === 'building' && selectedObject?.id === building.category;
                 return (
-                  <div
-                    key={building.id}
-                    className="absolute"
-                    onPointerDown={(e) => startObjectDrag(e, 'building', building.category)}
-                    style={{
-                      left: building.x,
-                      top: building.y,
-                      width: building.w,
-                      height: building.h,
-                      transform: `scaleX(${building.flipped ? -1 : 1})`,
-                      outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
-                      outlineOffset: '4px',
-                      borderRadius: '20px',
-                      cursor: isEditMode ? 'grab' : 'default',
-                    }}
-                  >
-                    <img
-                      src={building.image}
-                      alt={building.label}
-                      className="h-full w-full object-contain"
-                      draggable={false}
-                    />
+                  <div key={building.id} className="absolute" onPointerDown={(e) => startObjectDrag(e, 'building', building.category)} style={{ left: building.x, top: building.y, width: 300, height: 240, transform: `scaleX(${building.flipped ? -1 : 1})`, outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none', outlineOffset: '4px', borderRadius: '20px', cursor: isEditMode ? 'grab' : 'default' }}>
+                    <img src={building.image} alt={building.label} className="h-full w-full object-contain" draggable={false} />
                   </div>
                 );
               })}
 
               {characters.map((npc) => {
-                const isSelected =
-                  selectedObject?.type === 'character' && selectedObject?.id === npc.id;
-
+                const isSelected = selectedObject?.type === 'character' && selectedObject?.id === npc.id;
                 return (
-                  <div
-                    key={npc.id}
-                    className="absolute"
-                    onPointerDown={(e) => startObjectDrag(e, 'character', npc.id)}
-                    style={{
-                      left: npc.x,
-                      top: npc.y,
-                      width: npc.size,
-                      height: npc.size,
-                      transform: `translate(-50%, -50%) scaleX(${npc.flipped ? -1 : 1})`,
-                      transition: isEditMode ? 'none' : 'left 2200ms ease-in-out, top 2200ms ease-in-out',
-                      outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
-                      outlineOffset: '3px',
-                      borderRadius: '999px',
-                      cursor: isEditMode ? 'grab' : 'default',
-                    }}
-                  >
-                    <img
-                      src={npc.image || foxImg}
-                      alt={npc.name}
-                      draggable={false}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                        display: 'block',
-                        background: 'transparent',
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        boxShadow: 'none',
-                        userSelect: 'none',
-                        WebkitUserDrag: 'none',
-                      }}
-                    />
+                  <div key={npc.id} className="absolute" onPointerDown={(e) => startObjectDrag(e, 'character', npc.id)} style={{ left: npc.x, top: npc.y, width: npc.size, height: npc.size, transform: `translate(-50%, -50%) scaleX(${npc.flipped ? -1 : 1})`, transition: isEditMode ? 'none' : 'left 2200ms ease-in-out, top 2200ms ease-in-out', outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none', outlineOffset: '3px', borderRadius: '999px', cursor: isEditMode ? 'grab' : 'default' }}>
+                    <img src={npc.image || foxImg} alt={npc.name} draggable={false} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', background: 'transparent', backgroundColor: 'transparent', border: 'none', boxShadow: 'none', userSelect: 'none', WebkitUserDrag: 'none' }} />
                   </div>
                 );
               })}
@@ -1758,6 +1527,11 @@ export default function Home() {
 
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [shopTab, setShopTab] = useState('character');
+  const [isBagOpen, setIsBagOpen] = useState(false);
+  const [bagTab, setBagTab] = useState('character');
+
+  const [inventoryCharacters, setInventoryCharacters] = useState([]);
+  const [inventoryDecorations, setInventoryDecorations] = useState([]);
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedObject, setSelectedObject] = useState(null);
@@ -2013,36 +1787,22 @@ export default function Home() {
   useEffect(() => {
     const source = isGuest ? guestData : user;
     const village = getVillageState(source || {});
-
-    const rawDecorations = (village.village_decorations || []).map((item) => ({
-      ...item,
-      image: getDecorationImage(item.type),
-    }));
-    const rawCharacters = (village.village_characters || []).map((item) => ({
-      ...item,
-      image: getCharacterImage(item.type),
-    }));
-    const rawBuildings = Array.isArray(village.village_buildings) && village.village_buildings.length > 0
-      ? village.village_buildings
-      : DEFAULT_BUILDINGS;
-
-    const normalizedVillage = normalizeVillagePlacement({
-      decorations: rawDecorations,
-      characters: rawCharacters,
-      buildings: rawBuildings,
-      worldWidth: VILLAGE_WORLD.width,
-      worldHeight: VILLAGE_WORLD.height,
-    });
-
-    setDecorations(normalizedVillage.decorations);
-    setCharacters(normalizedVillage.characters);
-    setBuildingLayout(normalizedVillage.buildings);
-    originalVillageRef.current = {
-      ...village,
-      village_decorations: normalizedVillage.decorations,
-      village_characters: normalizedVillage.characters,
-      village_buildings: normalizedVillage.buildings,
-    };
+    setDecorations(
+      (village.village_decorations || []).map((item) => ({
+        ...item,
+        image: getDecorationImage(item.type),
+      }))
+    );
+    setCharacters(
+      (village.village_characters || []).map((item) => ({
+        ...item,
+        image: getCharacterImage(item.type),
+      }))
+    );
+    setBuildingLayout(village.village_buildings);
+    setInventoryCharacters(village.village_inventory_characters || []);
+    setInventoryDecorations(village.village_inventory_decorations || []);
+    originalVillageRef.current = village;
   }, [isGuest, guestData, user]);
 
   const handleCategoryChange = async (category) => {
@@ -2196,168 +1956,153 @@ export default function Home() {
     }
 
     const nextPoints = currentPoints - item.price;
-    let nextDecorations = [...decorations];
-    let nextCharacters = [...characters];
+    const newInventoryItem = createInventoryItem(item);
+    const nextInventoryCharacters = [...inventoryCharacters];
+    const nextInventoryDecorations = [...inventoryDecorations];
 
     if (item.type === 'decoration') {
-      const created = createDecoration(item.subtype, VILLAGE_WORLD.width, VILLAGE_WORLD.height);
-      const fixed = findFreePosition({
-        movingType: 'decoration',
-        movingItem: created,
-        decorations: nextDecorations,
-        characters: nextCharacters,
-        buildings: buildingLayout,
-        worldWidth: VILLAGE_WORLD.width,
-        worldHeight: VILLAGE_WORLD.height,
-      });
-      nextDecorations.push({ ...created, x: fixed.x, y: fixed.y });
-    } else if (item.type === 'character') {
-      const created = createCharacter(item.subtype, VILLAGE_WORLD.width, VILLAGE_WORLD.height);
-      const fixed = findFreePosition({
-        movingType: 'character',
-        movingItem: created,
-        decorations: nextDecorations,
-        characters: nextCharacters,
-        buildings: buildingLayout,
-        worldWidth: VILLAGE_WORLD.width,
-        worldHeight: VILLAGE_WORLD.height,
-      });
-      nextCharacters.push({ ...created, x: fixed.x, y: fixed.y });
+      nextInventoryDecorations.push(newInventoryItem);
+    } else {
+      nextInventoryCharacters.push(newInventoryItem);
     }
-
-    const normalizedVillage = normalizeVillagePlacement({
-      decorations: nextDecorations,
-      characters: nextCharacters,
-      buildings: buildingLayout,
-      worldWidth: VILLAGE_WORLD.width,
-      worldHeight: VILLAGE_WORLD.height,
-    });
 
     const nextState = {
       village_points: nextPoints,
-      village_decorations: normalizedVillage.decorations,
-      village_characters: normalizedVillage.characters,
-      village_buildings: normalizedVillage.buildings,
+      village_decorations: decorations,
+      village_characters: characters,
+      village_buildings: buildingLayout,
+      village_inventory_characters: nextInventoryCharacters,
+      village_inventory_decorations: nextInventoryDecorations,
     };
 
     try {
       await saveVillageState(nextState);
-      setDecorations(nextState.village_decorations);
-      setCharacters(nextState.village_characters);
-      setBuildingLayout(nextState.village_buildings);
+      setInventoryCharacters(nextInventoryCharacters);
+      setInventoryDecorations(nextInventoryDecorations);
       originalVillageRef.current = {
         ...currentVillage,
         ...nextState,
       };
-      toast.success(`${item.label} 구매 완료! (-${item.price} 포인트)`);
+      toast.success(`${item.label} 구매 완료! 가방에 보관했어요. (-${item.price} 포인트)`);
     } catch (error) {
       console.error('handleVillagePurchase error:', error);
       toast.error('구매 중 오류가 발생했어요.');
     }
   };
 
-  const handleToggleEditMode = () => {
-    if (!isEditMode) {
-      originalVillageRef.current = {
-        village_points: points,
-        village_decorations: decorations,
-        village_characters: characters,
-        village_buildings: buildingLayout,
-      };
-      setSelectedObject(null);
-      setIsEditMode(true);
-      return;
+  const handlePlaceInventoryItem = async (inventoryItem) => {
+    const source = isGuest ? guestData : user;
+    const currentVillage = getVillageState(source || {});
+
+    const nextCharacters = [...characters];
+    const nextDecorations = [...decorations];
+    const nextInventoryCharacters = [...inventoryCharacters];
+    const nextInventoryDecorations = [...inventoryDecorations];
+
+    if (inventoryItem.type === 'character') {
+      nextCharacters.push(createPlacedObjectFromInventory(inventoryItem));
+      const removeIndex = nextInventoryCharacters.findIndex((item) => item.id === inventoryItem.id);
+      if (removeIndex >= 0) nextInventoryCharacters.splice(removeIndex, 1);
+    } else {
+      nextDecorations.push(createPlacedObjectFromInventory(inventoryItem));
+      const removeIndex = nextInventoryDecorations.findIndex((item) => item.id === inventoryItem.id);
+      if (removeIndex >= 0) nextInventoryDecorations.splice(removeIndex, 1);
     }
 
-    setIsEditMode(false);
-    setSelectedObject(null);
+    const nextState = {
+      village_points: currentVillage.village_points,
+      village_decorations: nextDecorations,
+      village_characters: nextCharacters,
+      village_buildings: buildingLayout,
+      village_inventory_characters: nextInventoryCharacters,
+      village_inventory_decorations: nextInventoryDecorations,
+    };
+
+    try {
+      await saveVillageState(nextState);
+      setCharacters(nextCharacters);
+      setDecorations(nextDecorations);
+      setInventoryCharacters(nextInventoryCharacters);
+      setInventoryDecorations(nextInventoryDecorations);
+      originalVillageRef.current = {
+        ...currentVillage,
+        ...nextState,
+      };
+      toast.success(`${inventoryItem.label}을(를) 마을에 꺼냈어요!`);
+    } catch (error) {
+      console.error('handlePlaceInventoryItem error:', error);
+      toast.error('가방에서 꺼내는 중 오류가 발생했어요.');
+    }
   };
 
-  const handleFlipSelected = () => {
+  const handleStoreSelected = async () => {
     if (!selectedObject) return;
+    if (selectedObject.type !== 'character' && selectedObject.type !== 'decoration') return;
 
-    if (selectedObject.type === 'decoration') {
-      setDecorations((prev) =>
-        prev.map((item) =>
-          item.id === selectedObject.id ? { ...item, flipped: !item.flipped } : item
-        )
-      );
-    }
+    const source = isGuest ? guestData : user;
+    const currentVillage = getVillageState(source || {});
+    const nextCharacters = [...characters];
+    const nextDecorations = [...decorations];
+    const nextInventoryCharacters = [...inventoryCharacters];
+    const nextInventoryDecorations = [...inventoryDecorations];
 
     if (selectedObject.type === 'character') {
-      setCharacters((prev) =>
-        prev.map((item) =>
-          item.id === selectedObject.id ? { ...item, flipped: !item.flipped } : item
-        )
-      );
-    }
-
-    if (selectedObject.type === 'building') {
-      setBuildingLayout((prev) =>
-        prev.map((item) =>
-          item.category === selectedObject.id ? { ...item, flipped: !item.flipped } : item
-        )
-      );
-    }
-  };
-
-  const handleSaveEdit = async () => {
-    try {
-      const source = isGuest ? guestData : user;
-      const currentVillage = getVillageState(source || {});
-
-      const normalizedVillage = normalizeVillagePlacement({
-        decorations,
-        characters,
-        buildings: buildingLayout,
-        worldWidth: VILLAGE_WORLD.width,
-        worldHeight: VILLAGE_WORLD.height,
+      const target = nextCharacters.find((item) => item.id === selectedObject.id);
+      if (!target || target.id === 'starter_fox') {
+        toast.error('기본 캐릭터는 가방에 넣을 수 없어요.');
+        return;
+      }
+      const removeIndex = nextCharacters.findIndex((item) => item.id === selectedObject.id);
+      if (removeIndex >= 0) nextCharacters.splice(removeIndex, 1);
+      nextInventoryCharacters.push({
+        id: `inv_${target.type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+        type: 'character',
+        subtype: target.type,
+        label: target.name || (target.type === 'alpaca' ? '알파카' : target.type === 'platypus' ? '오리너구리' : '여우'),
       });
+    }
 
-      const nextState = {
-        village_points: currentVillage.village_points,
-        village_decorations: normalizedVillage.decorations,
-        village_characters: normalizedVillage.characters,
-        village_buildings: normalizedVillage.buildings,
-      };
+    if (selectedObject.type === 'decoration') {
+      const target = nextDecorations.find((item) => item.id === selectedObject.id);
+      if (!target) return;
+      const removeIndex = nextDecorations.findIndex((item) => item.id === selectedObject.id);
+      if (removeIndex >= 0) nextDecorations.splice(removeIndex, 1);
+      nextInventoryDecorations.push({
+        id: `inv_${target.type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+        type: 'decoration',
+        subtype: target.type,
+        label: target.type === 'tree' ? '나무' : target.type === 'flower' ? '꽃' : '잔디',
+      });
+    }
 
+    const nextState = {
+      village_points: currentVillage.village_points,
+      village_decorations: nextDecorations,
+      village_characters: nextCharacters,
+      village_buildings: buildingLayout,
+      village_inventory_characters: nextInventoryCharacters,
+      village_inventory_decorations: nextInventoryDecorations,
+    };
+
+    try {
       await saveVillageState(nextState);
-      setDecorations(nextState.village_decorations);
-      setCharacters(nextState.village_characters);
-      setBuildingLayout(nextState.village_buildings);
-      originalVillageRef.current = nextState;
-      setIsEditMode(false);
+      setCharacters(nextCharacters);
+      setDecorations(nextDecorations);
+      setInventoryCharacters(nextInventoryCharacters);
+      setInventoryDecorations(nextInventoryDecorations);
       setSelectedObject(null);
-      toast.success('마을 배치를 저장했어요!');
+      originalVillageRef.current = {
+        ...currentVillage,
+        ...nextState,
+      };
+      toast.success('가방에 넣었어요!');
     } catch (error) {
-      console.error('handleSaveEdit error:', error);
-      toast.error('배치 저장 중 오류가 발생했어요.');
+      console.error('handleStoreSelected error:', error);
+      toast.error('가방에 넣는 중 오류가 발생했어요.');
     }
   };
 
-  const handleCancelEdit = () => {
-    const original = originalVillageRef.current;
-    if (original) {
-      setDecorations(
-        (original.village_decorations || []).map((item) => ({
-          ...item,
-          image: getDecorationImage(item.type),
-        }))
-      );
-      setCharacters(
-        (original.village_characters || []).map((item) => ({
-          ...item,
-          image: getCharacterImage(item.type),
-        }))
-      );
-      setBuildingLayout(original.village_buildings || DEFAULT_BUILDINGS);
-    }
-    setSelectedObject(null);
-    setIsEditMode(false);
-    toast.success('편집을 취소했어요.');
-  };
-
-  const handleActionComplete = async (actionGoal, minutes = 0, extra = {}) => {
+const handleActionComplete = async (actionGoal, minutes = 0, extra = {}) => {
     try {
       const now = new Date().toISOString();
       const todayStr = getTodayString();
@@ -2536,6 +2281,16 @@ export default function Home() {
         onBuy={handleVillagePurchase}
       />
 
+      <VillageBagModal
+        open={isBagOpen}
+        activeTab={bagTab}
+        onTabChange={setBagTab}
+        inventoryCharacters={inventoryCharacters}
+        inventoryDecorations={inventoryDecorations}
+        onClose={() => setIsBagOpen(false)}
+        onPlaceItem={handlePlaceInventoryItem}
+      />
+
       <VillageWorldLayer
         activeCategory={activeCategory}
         isOverview={isOverview}
@@ -2557,10 +2312,15 @@ export default function Home() {
           setShopTab('character');
           setIsShopOpen(true);
         }}
+        onOpenBag={() => {
+          setBagTab('character');
+          setIsBagOpen(true);
+        }}
         onToggleEditMode={handleToggleEditMode}
         onFlipSelected={handleFlipSelected}
         onSaveEdit={handleSaveEdit}
         onCancelEdit={handleCancelEdit}
+        onStoreSelected={handleStoreSelected}
       />
 
       <div
