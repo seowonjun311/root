@@ -257,7 +257,8 @@ export default function CreateGoalForm({ category }) {
   const { triggerHaptic } = useHapticFeedback();
   const paramGoalId = new URLSearchParams(window.location.search).get('goalId');
   const isAddingActionOnlyEarly = !!paramGoalId;
-  const formContainerRef = isAddingActionOnlyEarly ? null : useScrollIntoViewOnFocus();
+  const scrollRef = useScrollIntoViewOnFocus();
+  const formContainerRef = isAddingActionOnlyEarly ? null : scrollRef;
 
   const today = new Date().toISOString().split('T')[0];
 

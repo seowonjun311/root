@@ -198,10 +198,8 @@ export default function GoalProgress({ goal, logs = [] }) {
 
   const [editTargetDate, setEditTargetDate] = useState(initialTargetDate);
 
-  if (!goal) return null;
-
   const isGuest = String(goal?.id || '').startsWith('local_');
-  const isStudyGoal = goal.category === 'study';
+  const isStudyGoal = goal?.category === 'study';
 
   const updateMutation = useMutation({
     mutationFn: (updateData) => base44.entities.Goal.update(goal.id, updateData),
@@ -233,6 +231,8 @@ export default function GoalProgress({ goal, logs = [] }) {
       toast.error('결과목표 삭제에 실패했습니다.');
     },
   });
+
+  if (!goal) return null;
 
   const title = goal.title || goal.goal_title || '결과 목표';
   const displayPercent = Math.max(dateInfo.percent, logInfo.logPercent);

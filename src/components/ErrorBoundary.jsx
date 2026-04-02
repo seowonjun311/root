@@ -73,7 +73,7 @@ function ErrorFallbackUI({ error, onRetry }) {
             : '예상치 못한 오류가 발생했습니다.'}
         </p>
 
-        {process.env.NODE_ENV === 'development' && (
+        {import.meta.env.DEV && (
           <p className="text-xs text-muted-foreground bg-secondary/30 rounded p-2 mb-4 text-left font-mono">
             {error?.message || '알 수 없는 오류'}
           </p>
