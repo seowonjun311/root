@@ -99,6 +99,12 @@ const GRID_ORIGIN_Y = 220;
 
 const WORLD_WIDTH = 2560;
 const WORLD_HEIGHT = 1700;
+const OUTER_TILE_PADDING = 5;
+const WORLD_VIEWPORT_HEIGHT = 300;
+const WORLD_EDGE_MARGIN_LEFT = 560;
+const WORLD_EDGE_MARGIN_RIGHT = 560;
+const WORLD_EDGE_MARGIN_TOP = 440;
+const WORLD_EDGE_MARGIN_BOTTOM = 520;
 
 const TILE_KIND = {
   BASE_GRASS: 'base_grass',
@@ -848,12 +854,14 @@ function getGrassVariant(col, row) {
   return seed === 0 || seed === 3 ? TILE_KIND.VARIANT_GRASS : TILE_KIND.BASE_GRASS;
 }
 
-function buildTileMap(cols, rows) {
+function buildTileMap(cols, rows, padding = OUTER_TILE_PADDING) {
   const tiles = [];
 
-  for (let row = 0; row < rows; row += 1) {
-    for (let col = 0; col < cols; col += 1) {
-      const kind = isPathTile(col, row) ? TILE_KIND.PATH : getGrassVariant(col, row);
+  for (let row = -padding; row < rows + padding; row += 1) {
+    for (let col = -padding; col < cols + padding; col += 1) {
+      const isMainGrid = col >= 0 && row >= 0 && col < cols && row < rows;
+      const kind = isMainGrid && isPathTile(col, row) ? TILE_KIND.PATH : getGrassVariant(col, row);
+
       tiles.push({
         id: `tile-${col}-${row}`,
         col,
@@ -870,205 +878,124 @@ function buildBorderTrees() {
   const result = [];
   let idCounter = 0;
 
-  const randomFromSeed = (seed) => pseudoRandom(seed * 1.137 + 17.73);
-  const pickImage = (seed) => {
-    const idx =
-      Math.floor(randomFromSeed(seed + 11) * BORDER_TREE_IMAGES.length) %
-      BORDER_TREE_IMAGES.length;
+  const treeSizeFromSeed = (seed, depth = 0) => {
+    const r = pseudoRandom(seed + depth * 13);
+    return Math.round(220 + r * 92 - depth * 8);
+  };
+
+  const imageFromSeed = (seed) => {
+    const idx = Math.floor(pseudoRandom(seed + 11) * BORDER_TREE_IMAGES.length) % BORDER_TREE_IMAGES.length;
     return BORDER_TREE_IMAGES[idx];
   };
 
-  const buildTree = ({
-    anchorCol,
-    anchorRow,
-    offsetX = 0,
-    offsetY = 0,
-    depthBias = 0,
-    sizeBias = 0,
-    layer = 0,
-  }) => {
-    const seed = anchorCol * 1000 + anchorRow * 100 + depthBias * 17 + layer * 53;
-    const pos = gridToScreen(anchorCol, anchorRow);
+  const flipFromSeed = (seed) => pseudoRandom(seed + 33) > 0.5;
+  const opacityFromSeed = (seed) => 0.92 + pseudoRandom(seed + 57) * 0.08;
+  const rotationFromSeed = (seed) => (pseudoRandom(seed + 71) - 0.5) * 4;
 
-    const width = Math.round(210 + randomFromSeed(seed + 1) * 95 + sizeBias);
-    const height = Math.round(width * (1.18 + randomFromSeed(seed + 2) * 0.18));
+  const pushTree = (col, row, options = {}) => {
+    const {
+      offsetX = 0,
+      offsetY = 0,
+      depth = 0,
+      extraWidth = 0,
+    } = options;
 
-    return {
+    const seed = col * 1000 + row * 100 + depth * 17 + extraWidth;
+    const pos = gridToScreen(col, row);
+
+    result.push({
       id: `border-tree-${idCounter++}`,
-      x: pos.x + offsetX,
-      y: pos.y + offsetY,
-      width,
-      height,
-      image: pickImage(seed),
-      flipped: randomFromSeed(seed + 33) > 0.5,
-      rotate: (randomFromSeed(seed + 44) - 0.5) * 4,
-      opacity: 0.94 + randomFromSeed(seed + 55) * 0.06,
-      anchorCol,
-      anchorRow,
-      depthBias,
-      zIndex: 50 + anchorRow + anchorCol + depthBias + layer,
-    };
+      x: pos.x + offsetX + (pseudoRandom(seed + 5) - 0.5) * 26,
+      y: pos.y + offsetY + (pseudoRandom(seed + 9) - 0.5) * 20,
+      width: treeSizeFromSeed(seed, depth) + extraWidth,
+      image: imageFromSeed(seed),
+      flipped: flipFromSeed(seed),
+      opacity: opacityFromSeed(seed),
+      rotation: rotationFromSeed(seed),
+      zIndex: 60 + (row + OUTER_TILE_PADDING) * 8 + depth * 3 + col,
+    });
   };
 
-  const pushCluster = ({
-    col,
-    row,
-    count,
-    spreadX = 40,
-    spreadY = 24,
-    depthBias = 0,
-    sizeBias = 0,
-    layer = 0,
-  }) => {
-    for (let i = 0; i < count; i += 1) {
-      const seed = col * 1000 + row * 100 + i * 19 + depthBias * 7 + layer * 29;
-      const offsetX = (randomFromSeed(seed + 1) - 0.5) * spreadX;
-      const offsetY = (randomFromSeed(seed + 2) - 0.5) * spreadY;
-
-      result.push(
-        buildTree({
-          anchorCol: col,
-          anchorRow: row,
-          offsetX,
-          offsetY,
-          depthBias: depthBias + i,
-          sizeBias: sizeBias + (randomFromSeed(seed + 3) - 0.5) * 24,
-          layer,
-        })
-      );
+  const pushCluster = (centerCol, centerRow, radius = 2, depthBase = 0) => {
+    for (let row = centerRow - radius; row <= centerRow + radius; row += 1) {
+      for (let col = centerCol - radius; col <= centerCol + radius; col += 1) {
+        const distance = Math.abs(col - centerCol) + Math.abs(row - centerRow);
+        if (distance > radius + 1) continue;
+        pushTree(col, row, {
+          offsetX: (col - centerCol) * 18,
+          offsetY: (row - centerRow) * 10,
+          depth: depthBase + distance,
+          extraWidth: Math.max(0, 24 - distance * 8),
+        });
+      }
     }
   };
 
-  for (let col = -2; col <= GRID_COLS + 1; col += 1) {
-    pushCluster({
-      col,
-      row: -2,
-      count: col % 2 === 0 ? 2 : 1,
-      spreadX: 46,
-      spreadY: 22,
-      depthBias: 2,
-      sizeBias: 8,
-      layer: 0,
-    });
-
+  for (let col = -OUTER_TILE_PADDING; col <= GRID_COLS + OUTER_TILE_PADDING - 1; col += 1) {
+    pushTree(col, -3, { offsetY: -58, depth: 0, extraWidth: 42 });
+    pushTree(col, -2, { offsetY: -20, depth: 1, extraWidth: 18 });
     if (col % 2 === 0) {
-      pushCluster({
-        col,
-        row: -3,
-        count: 1,
-        spreadX: 34,
-        spreadY: 18,
-        depthBias: 0,
-        sizeBias: -8,
-        layer: 1,
-      });
+      pushTree(col, -4, { offsetX: 18, offsetY: -88, depth: 2, extraWidth: 12 });
     }
   }
 
-  for (let col = -2; col <= GRID_COLS + 1; col += 1) {
-    pushCluster({
-      col,
-      row: GRID_ROWS + 1,
-      count: col % 2 === 0 ? 2 : 1,
-      spreadX: 50,
-      spreadY: 28,
-      depthBias: 4,
-      sizeBias: 18,
-      layer: 2,
-    });
-
-    if (col % 2 === 1) {
-      pushCluster({
-        col,
-        row: GRID_ROWS + 2,
-        count: 1,
-        spreadX: 38,
-        spreadY: 22,
-        depthBias: 2,
-        sizeBias: -6,
-        layer: 3,
-      });
+  for (let col = -OUTER_TILE_PADDING; col <= GRID_COLS + OUTER_TILE_PADDING - 1; col += 1) {
+    pushTree(col, GRID_ROWS + 1, { offsetY: 42, depth: 0, extraWidth: 48 });
+    pushTree(col, GRID_ROWS + 2, { offsetY: 82, depth: 1, extraWidth: 24 });
+    if (col % 2 !== 0) {
+      pushTree(col, GRID_ROWS + 3, { offsetX: -14, offsetY: 124, depth: 2, extraWidth: 10 });
     }
   }
 
-  for (let row = -2; row <= GRID_ROWS + 1; row += 1) {
-    pushCluster({
-      col: -2,
-      row,
-      count: row % 2 === 0 ? 2 : 1,
-      spreadX: 34,
-      spreadY: 36,
-      depthBias: 2,
-      sizeBias: 4,
-      layer: 1,
-    });
-
+  for (let row = -OUTER_TILE_PADDING; row <= GRID_ROWS + OUTER_TILE_PADDING - 1; row += 1) {
+    pushTree(-3, row, { offsetX: -82, depth: 0, extraWidth: 44 });
+    pushTree(-2, row, { offsetX: -38, depth: 1, extraWidth: 18 });
     if (row % 2 === 0) {
-      pushCluster({
-        col: -3,
-        row,
-        count: 1,
-        spreadX: 26,
-        spreadY: 30,
-        depthBias: 0,
-        sizeBias: -10,
-        layer: 0,
-      });
+      pushTree(-4, row, { offsetX: -124, offsetY: -8, depth: 2, extraWidth: 8 });
     }
   }
 
-  for (let row = -2; row <= GRID_ROWS + 1; row += 1) {
-    pushCluster({
-      col: GRID_COLS + 1,
-      row,
-      count: row % 2 === 1 ? 2 : 1,
-      spreadX: 34,
-      spreadY: 36,
-      depthBias: 2,
-      sizeBias: 6,
-      layer: 1,
-    });
-
-    if (row % 2 === 1) {
-      pushCluster({
-        col: GRID_COLS + 2,
-        row,
-        count: 1,
-        spreadX: 26,
-        spreadY: 30,
-        depthBias: 0,
-        sizeBias: -10,
-        layer: 0,
-      });
+  for (let row = -OUTER_TILE_PADDING; row <= GRID_ROWS + OUTER_TILE_PADDING - 1; row += 1) {
+    pushTree(GRID_COLS + 1, row, { offsetX: 38, depth: 0, extraWidth: 44 });
+    pushTree(GRID_COLS + 2, row, { offsetX: 84, depth: 1, extraWidth: 20 });
+    if (row % 2 !== 0) {
+      pushTree(GRID_COLS + 3, row, { offsetX: 126, offsetY: -4, depth: 2, extraWidth: 10 });
     }
   }
 
-  const cornerSeeds = [
-    { col: -3, row: -3, layer: 0 },
-    { col: GRID_COLS + 2, row: -3, layer: 0 },
-    { col: -3, row: GRID_ROWS + 2, layer: 2 },
-    { col: GRID_COLS + 2, row: GRID_ROWS + 2, layer: 2 },
-  ];
+  pushCluster(-4, -4, 3, 0);
+  pushCluster(GRID_COLS + 3, -4, 3, 0);
+  pushCluster(-4, GRID_ROWS + 3, 3, 0);
+  pushCluster(GRID_COLS + 3, GRID_ROWS + 3, 3, 0);
 
-  cornerSeeds.forEach((corner, index) => {
-    pushCluster({
-      col: corner.col,
-      row: corner.row,
-      count: 3 + (index % 2),
-      spreadX: 42,
-      spreadY: 26,
-      depthBias: 3,
-      sizeBias: 12,
-      layer: corner.layer,
-    });
-  });
+  return result.sort((a, b) => a.zIndex - b.zIndex);
+}
 
-  result.sort((a, b) => a.zIndex - b.zIndex);
+function getWorldPanBounds(viewportWidth, viewportHeight, scale) {
+  const minVisibleX = -WORLD_EDGE_MARGIN_LEFT;
+  const maxVisibleX = WORLD_WIDTH + WORLD_EDGE_MARGIN_RIGHT;
+  const minVisibleY = -WORLD_EDGE_MARGIN_TOP;
+  const maxVisibleY = WORLD_HEIGHT + WORLD_EDGE_MARGIN_BOTTOM;
 
-  return result.map((tree, index) => ({
-    ...tree,
-    zIndex: 120 + index,
-  }));
+  const minOffsetX = viewportWidth - maxVisibleX * scale;
+  const maxOffsetX = -minVisibleX * scale;
+  const minOffsetY = viewportHeight - maxVisibleY * scale;
+  const maxOffsetY = -minVisibleY * scale;
+
+  return { minOffsetX, maxOffsetX, minOffsetY, maxOffsetY };
+}
+
+function clampWorldOffset(nextOffset, viewportWidth, viewportHeight, scale) {
+  const { minOffsetX, maxOffsetX, minOffsetY, maxOffsetY } = getWorldPanBounds(
+    viewportWidth,
+    viewportHeight,
+    scale
+  );
+
+  return {
+    x: clamp(nextOffset.x, minOffsetX, maxOffsetX),
+    y: clamp(nextOffset.y, minOffsetY, maxOffsetY),
+  };
 }
 
 function Section({ title, count, emptyText, children }) {
@@ -1665,6 +1592,8 @@ function VillageWorldLayer({
   setPlacementPreview,
 }) {
   const dragRef = useRef(null);
+  const viewportRef = useRef(null);
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: WORLD_VIEWPORT_HEIGHT });
   const [offset, setOffset] = useState({ x: -860, y: -80 });
 
   const scale = isOverview ? 0.56 : 0.92;
@@ -1681,7 +1610,7 @@ function VillageWorldLayer({
     }));
   }, [userLevels, buildingLayout]);
 
-  const tileMap = useMemo(() => buildTileMap(GRID_COLS, GRID_ROWS), []);
+  const tileMap = useMemo(() => buildTileMap(GRID_COLS, GRID_ROWS, OUTER_TILE_PADDING), []);
   const borderTrees = useMemo(() => buildBorderTrees(), []);
 
   const handleWorldPointerDown = (e) => {
@@ -1731,10 +1660,17 @@ function VillageWorldLayer({
       const dx = e.clientX - drag.startX;
       const dy = e.clientY - drag.startY;
 
-      setOffset({
-        x: drag.originX + dx,
-        y: drag.originY + dy,
-      });
+      setOffset(
+        clampWorldOffset(
+          {
+            x: drag.originX + dx,
+            y: drag.originY + dy,
+          },
+          viewportSize.width,
+          viewportSize.height,
+          scale
+        )
+      );
       return;
     }
 
@@ -1858,6 +1794,21 @@ function VillageWorldLayer({
   }, [setPlacementPreview]);
 
   useEffect(() => {
+    const updateViewportSize = () => {
+      const rect = viewportRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setViewportSize({
+        width: rect.width,
+        height: rect.height || WORLD_VIEWPORT_HEIGHT,
+      });
+    };
+
+    updateViewportSize();
+    window.addEventListener('resize', updateViewportSize);
+    return () => window.removeEventListener('resize', updateViewportSize);
+  }, []);
+
+  useEffect(() => {
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup', handlePointerUp);
     return () => {
@@ -1865,6 +1816,11 @@ function VillageWorldLayer({
       window.removeEventListener('pointerup', handlePointerUp);
     };
   }, [handlePointerMove, handlePointerUp]);
+
+  useEffect(() => {
+    if (!viewportSize.width) return;
+    setOffset((prev) => clampWorldOffset(prev, viewportSize.width, viewportSize.height, scale));
+  }, [viewportSize, scale]);
 
   useEffect(() => {
     if (isEditMode) return;
@@ -1909,9 +1865,10 @@ function VillageWorldLayer({
     >
       <div className="px-4 pt-3 pb-2">
         <div
+          ref={viewportRef}
           className="relative overflow-hidden rounded-[28px]"
           style={{
-            height: 300,
+            height: WORLD_VIEWPORT_HEIGHT,
             border: '1px solid rgba(160,120,64,0.18)',
             boxShadow: '0 12px 24px rgba(80,50,10,0.08)',
             background: 'linear-gradient(180deg, #cfe8ff 0%, #eef8ff 26%, #dfeec5 60%, #cfe1a6 100%)',
@@ -1995,9 +1952,10 @@ function VillageWorldLayer({
                     top: tree.y,
                     width: tree.width,
                     height: 'auto',
-                    transform: `translate(-50%, -100%) scaleX(${tree.flipped ? -1 : 1})`,
+                    transform: `translate(-50%, -100%) scaleX(${tree.flipped ? -1 : 1}) rotate(${tree.rotation ?? 0}deg)`,
                     transformOrigin: 'bottom center',
                     zIndex: tree.zIndex,
+                    opacity: tree.opacity ?? 1,
                     userSelect: 'none',
                     WebkitUserDrag: 'none',
                   }}
