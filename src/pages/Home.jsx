@@ -103,8 +103,11 @@ const OUTER_TILE_PADDING = 5;
 const WORLD_VIEWPORT_HEIGHT = 300;
 const WORLD_EDGE_MARGIN_LEFT = 110;
 const WORLD_EDGE_MARGIN_RIGHT = 110;
-const WORLD_EDGE_MARGIN_TOP = 140;
-const WORLD_EDGE_MARGIN_BOTTOM = 0;
+const WORLD_EDGE_MARGIN_TOP = 40;
+const WORLD_EDGE_MARGIN_BOTTOM = -300;
+
+const VIEW_DIAMOND_CORNER_LIMIT_X = 300;
+const VIEW_DIAMOND_CORNER_LIMIT_Y = 300;
 
 const TILE_KIND = {
   BASE_GRASS: 'base_grass',
@@ -1046,6 +1049,86 @@ function getWorldPanBounds(viewportWidth, viewportHeight, scale) {
   return { minOffsetX, maxOffsetX, minOffsetY, maxOffsetY };
 }
 
+function getPlayableDiamondBounds() {
+  const top = gridToScreen(0, 0);
+  const right = gridToScreen(GRID_COLS - 1, 0);
+  const left = gridToScreen(0, GRID_ROWS - 1);
+  const bottom = gridToScreen(GRID_COLS - 1, GRID_ROWS - 1);
+
+  return {
+    centerX: GRID_ORIGIN_X,
+    centerY: (top.y + bottom.y) / 2,
+    radiusX: GRID_ORIGIN_X - left.x + VIEW_DIAMOND_CORNER_LIMIT_X,
+    radiusY: ((bottom.y - top.y) / 2) + VIEW_DIAMOND_CORNER_LIMIT_Y,
+  };
+}
+
+function projectPointIntoDiamond(point, diamond) {
+  const dx = point.x - diamond.centerX;
+  const dy = point.y - diamond.centerY;
+  const normalized = Math.abs(dx) / diamond.radiusX + Math.abs(dy) / diamond.radiusY;
+
+  if (normalized <= 1) return null;
+
+  const scaleDown = 1 / normalized;
+  return {
+    x: diamond.centerX + dx * scaleDown,
+    y: diamond.centerY + dy * scaleDown,
+  };
+}
+
+function getViewportWorldCorners(offset, viewportWidth, viewportHeight, scale) {
+  return [
+    { x: (0 - offset.x) / scale, y: (0 - offset.y) / scale },
+    { x: (viewportWidth - offset.x) / scale, y: (0 - offset.y) / scale },
+    { x: (viewportWidth - offset.x) / scale, y: (viewportHeight - offset.y) / scale },
+    { x: (0 - offset.x) / scale, y: (viewportHeight - offset.y) / scale },
+  ];
+}
+
+function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, scale) {
+  let corrected = { ...nextOffset };
+  const diamond = getPlayableDiamondBounds();
+
+  for (let i = 0; i < 10; i += 1) {
+    const corners = getViewportWorldCorners(corrected, viewportWidth, viewportHeight, scale);
+    const corrections = [];
+
+    corners.forEach((corner) => {
+      const projected = projectPointIntoDiamond(corner, diamond);
+      if (!projected) return;
+
+      corrections.push({
+        x: -(projected.x - corner.x) * scale,
+        y: -(projected.y - corner.y) * scale,
+      });
+    });
+
+    if (!corrections.length) break;
+
+    const avgCorrection = corrections.reduce(
+      (acc, item) => ({
+        x: acc.x + item.x / corrections.length,
+        y: acc.y + item.y / corrections.length,
+      }),
+      { x: 0, y: 0 }
+    );
+
+    corrected = {
+      x: corrected.x + avgCorrection.x,
+      y: corrected.y + avgCorrection.y,
+    };
+
+    const rectBounds = getWorldPanBounds(viewportWidth, viewportHeight, scale);
+    corrected = {
+      x: clamp(corrected.x, rectBounds.minOffsetX, rectBounds.maxOffsetX),
+      y: clamp(corrected.y, rectBounds.minOffsetY, rectBounds.maxOffsetY),
+    };
+  }
+
+  return corrected;
+}
+
 function clampWorldOffset(nextOffset, viewportWidth, viewportHeight, scale) {
   const { minOffsetX, maxOffsetX, minOffsetY, maxOffsetY } = getWorldPanBounds(
     viewportWidth,
@@ -1053,10 +1136,12 @@ function clampWorldOffset(nextOffset, viewportWidth, viewportHeight, scale) {
     scale
   );
 
-  return {
+  const rectClamped = {
     x: clamp(nextOffset.x, minOffsetX, maxOffsetX),
     y: clamp(nextOffset.y, minOffsetY, maxOffsetY),
   };
+
+  return clampWorldOffsetToDiamond(rectClamped, viewportWidth, viewportHeight, scale);
 }
 
 function Section({ title, count, emptyText, children }) {
