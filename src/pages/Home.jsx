@@ -1209,14 +1209,14 @@ function buildBorderTrees() {
     });
   }
 
-  const cleaned = result.filter((item) => {
-    if (item.kind !== 'tree') return true;
+const cleaned = result.filter((item) => {
+  if (item.kind !== 'tree') return true;
 
-    const isRightSideTree = item.col >= GRID_COLS + 1;
-    const isTooLow = item.row >= GRID_ROWS - 7;
+  const isRightSide = item.col >= GRID_COLS - 2;
+  const isBottom = item.row >= GRID_ROWS - 10;
 
-    return !(isRightSideTree && isTooLow);
-  });
+  return !(isRightSide && isBottom);
+});
 
   return cleaned.sort((a, b) => a.zIndex - b.zIndex);
 }
