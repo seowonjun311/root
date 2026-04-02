@@ -20,10 +20,13 @@ import { getBuilding } from '@/assets/root/buildings';
 import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
 import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
 
-/* =========================
-   타일맵 이미지 추가
-========================= */
-import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
+import baseGrassTileImg from '@/assets/root/tiles/baseGrassTile.png';
+import variantGrassTileImg from '@/assets/root/tiles/variantGrassTile.png';
+import pathTileImg from '@/assets/root/tiles/pathTile.png';
+
+import borderTree1Img from '@/assets/root/borderTrees/borderTree1.png';
+import borderTree2Img from '@/assets/root/borderTrees/borderTree2.png';
+import borderTree3Img from '@/assets/root/borderTrees/borderTree3.png';
 
 const CATEGORY_ROUTE_MAP = {
   exercise: '/CreateGoalExercise',
@@ -88,8 +91,7 @@ const SHOP_ITEMS = [
 ];
 
 /* =========================
-   마름모 타일(아이소메트릭) 설정
-   기존보다 넓은 진짜 타일맵
+   타일맵 기본 설정
 ========================= */
 const TILE_W = 128;
 const TILE_H = 64;
@@ -97,20 +99,19 @@ const TILE_H = 64;
 const GRID_COLS = 20;
 const GRID_ROWS = 20;
 
-/* 월드 중심에 맵이 오도록 조정 */
 const GRID_ORIGIN_X = 1280;
 const GRID_ORIGIN_Y = 220;
 
-/* 월드 전체 크기 */
 const WORLD_WIDTH = 2560;
 const WORLD_HEIGHT = 1700;
 
-/* 배경 타일 종류 */
 const TILE_KIND = {
   BASE_GRASS: 'base_grass',
   VARIANT_GRASS: 'variant_grass',
   PATH: 'path',
 };
+
+const BORDER_TREE_IMAGES = [borderTree1Img, borderTree2Img, borderTree3Img];
 
 const DEFAULT_BUILDINGS = [
   { id: 'exercise_building', category: 'exercise', col: 6, row: 10, flipped: false },
@@ -221,8 +222,13 @@ function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
 }
 
+function pseudoRandom(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
 /* =========================
-   마름모 그리드 유틸
+   마름모 좌표 유틸
 ========================= */
 function gridToScreen(col, row) {
   return {
@@ -827,7 +833,7 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
 }
 
 /* =========================
-   타일맵 생성 유틸
+   타일 / 경계숲 생성
 ========================= */
 function getTileImageByKind(kind) {
   if (kind === TILE_KIND.PATH) return pathTileImg;
@@ -836,11 +842,9 @@ function getTileImageByKind(kind) {
 }
 
 function isPathTile(col, row) {
-  /* 아래쪽 중앙 -> 중간 한번 꺾기 -> 오른쪽 위 방향 */
-  const pathA = Math.abs((col - row) - 1) <= 0; // 대각선 중심 길
-  const pathB = row >= 9 && row <= 12 && col >= 8 && col <= 11; // 중앙 연결부
-  const pathC = row >= 4 && row <= 8 && col - row === 3; // 살짝 옆으로 난 길
-
+  const pathA = Math.abs((col - row) - 1) <= 0;
+  const pathB = row >= 9 && row <= 12 && col >= 8 && col <= 11;
+  const pathC = row >= 4 && row <= 8 && col - row === 3;
   return pathA || pathB || pathC;
 }
 
@@ -865,6 +869,64 @@ function buildTileMap(cols, rows) {
   }
 
   return tiles;
+}
+
+function buildBorderTrees() {
+  const result = [];
+  let idCounter = 0;
+
+  const treeSizeFromSeed = (seed) => {
+    const r = pseudoRandom(seed);
+    return Math.round(220 + r * 80);
+  };
+
+  const imageFromSeed = (seed) => {
+    const idx = Math.floor(pseudoRandom(seed + 11) * BORDER_TREE_IMAGES.length) % BORDER_TREE_IMAGES.length;
+    return BORDER_TREE_IMAGES[idx];
+  };
+
+  const flipFromSeed = (seed) => pseudoRandom(seed + 33) > 0.5;
+
+  const pushTree = (col, row, offsetX = 0, offsetY = 0, depthBias = 0) => {
+    const seed = col * 1000 + row * 100 + depthBias;
+    const pos = gridToScreen(col, row);
+
+    result.push({
+      id: `border-tree-${idCounter++}`,
+      x: pos.x + offsetX,
+      y: pos.y + offsetY,
+      width: treeSizeFromSeed(seed),
+      image: imageFromSeed(seed),
+      flipped: flipFromSeed(seed),
+      zIndex: 50 + row + col + depthBias,
+    });
+  };
+
+  /* 상단 */
+  for (let col = -1; col <= GRID_COLS; col += 1) {
+    pushTree(col, -2, 0, -10, 2);
+    if (col % 2 === 0) pushTree(col, -3, 16, -28, 1);
+  }
+
+  /* 하단 */
+  for (let col = -1; col <= GRID_COLS; col += 1) {
+    pushTree(col, GRID_ROWS + 1, 0, 26, 3);
+    if (col % 2 === 1) pushTree(col, GRID_ROWS + 2, -18, 46, 1);
+  }
+
+  /* 좌측 */
+  for (let row = -1; row <= GRID_ROWS; row += 1) {
+    pushTree(-2, row, -26, 6, 2);
+    if (row % 2 === 0) pushTree(-3, row, -54, -6, 1);
+  }
+
+  /* 우측 */
+  for (let row = -1; row <= GRID_ROWS; row += 1) {
+    pushTree(GRID_COLS + 1, row, 26, 6, 2);
+    if (row % 2 === 1) pushTree(GRID_COLS + 2, row, 58, -4, 1);
+  }
+
+  return result;
 }
 
 function Section({ title, count, emptyText, children }) {
@@ -1461,7 +1523,6 @@ function VillageWorldLayer({
   setPlacementPreview,
 }) {
   const dragRef = useRef(null);
-
   const [offset, setOffset] = useState({ x: -860, y: -80 });
 
   const scale = isOverview ? 0.56 : 0.92;
@@ -1479,6 +1540,7 @@ function VillageWorldLayer({
   }, [userLevels, buildingLayout]);
 
   const tileMap = useMemo(() => buildTileMap(GRID_COLS, GRID_ROWS), []);
+  const borderTrees = useMemo(() => buildBorderTrees(), []);
 
   const handleWorldPointerDown = (e) => {
     if (isEditMode) return;
@@ -1745,7 +1807,6 @@ function VillageWorldLayer({
                 transition: dragRef.current ? 'none' : 'transform 300ms ease',
               }}
             >
-              {/* 하늘/잔디 바탕 */}
               <div
                 className="absolute inset-0"
                 style={{
@@ -1754,7 +1815,7 @@ function VillageWorldLayer({
                 }}
               />
 
-              {/* 타일맵 렌더링 */}
+              {/* 타일 */}
               {tileMap.map((tile) => {
                 const pos = gridToScreen(tile.col, tile.row);
                 const tileImg = getTileImageByKind(tile.kind);
@@ -1772,7 +1833,6 @@ function VillageWorldLayer({
                       width: TILE_W,
                       height: TILE_H,
                       objectFit: 'contain',
-                      imageRendering: 'auto',
                       userSelect: 'none',
                       WebkitUserDrag: 'none',
                     }}
@@ -1780,7 +1840,29 @@ function VillageWorldLayer({
                 );
               })}
 
-              {/* 편집모드 미리보기 칸 */}
+              {/* 경계 숲 */}
+              {borderTrees.map((tree) => (
+                <img
+                  key={tree.id}
+                  src={tree.image}
+                  alt=""
+                  draggable={false}
+                  className="pointer-events-none absolute select-none"
+                  style={{
+                    left: tree.x,
+                    top: tree.y,
+                    width: tree.width,
+                    height: 'auto',
+                    transform: `translate(-50%, -100%) scaleX(${tree.flipped ? -1 : 1})`,
+                    transformOrigin: 'bottom center',
+                    zIndex: tree.zIndex,
+                    userSelect: 'none',
+                    WebkitUserDrag: 'none',
+                  }}
+                />
+              ))}
+
+              {/* 편집 미리보기 */}
               {isEditMode && placementPreview
                 ? getPreviewTiles(
                     placementPreview.item,
@@ -1804,6 +1886,7 @@ function VillageWorldLayer({
                           border: color.border,
                           background: color.background,
                           boxSizing: 'border-box',
+                          zIndex: 2000,
                         }}
                       />
                     );
@@ -1828,6 +1911,7 @@ function VillageWorldLayer({
                       outlineOffset: '3px',
                       borderRadius: '999px',
                       cursor: isEditMode ? 'grab' : 'default',
+                      zIndex: 3000 + item.row,
                     }}
                   >
                     <DecorationSprite item={item} />
@@ -1855,6 +1939,7 @@ function VillageWorldLayer({
                       outlineOffset: '4px',
                       borderRadius: '20px',
                       cursor: isEditMode ? 'grab' : 'default',
+                      zIndex: 4000 + building.row,
                     }}
                   >
                     <img src={building.image} alt={building.label} className="h-full w-full object-contain" draggable={false} />
@@ -1883,6 +1968,7 @@ function VillageWorldLayer({
                       outlineOffset: '3px',
                       borderRadius: '999px',
                       cursor: isEditMode ? 'grab' : 'default',
+                      zIndex: 5000 + npc.row,
                     }}
                   >
                     <img
@@ -2134,11 +2220,6 @@ export default function Home() {
     if (isGuest) return getDefaultUserLevels(guestData?.actionLogs || []);
     return getDefaultUserLevels(allLogs || []);
   }, [isGuest, guestData, allLogs]);
-
-  const derivedStats = useMemo(() => {
-    const sourceLogs = isGuest ? guestData?.actionLogs || [] : allLogs || [];
-    return buildDerivedStats(sourceLogs, connectedActionGoals || []);
-  }, [isGuest, guestData, allLogs, connectedActionGoals]);
 
   const ownedTitleIds = useMemo(
     () => getOwnedTitleIds({ isGuest, user, guestData }),
