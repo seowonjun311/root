@@ -22,7 +22,7 @@ import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
 
 import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
 import { borderTree1Img, borderTree2Img, borderTree3Img } from '@/assets/root/borderTrees/index.js';
-import { borderBush1Img } from '@/assets/root/borderBushes/index.js';
+import borderBush1Img from '@/assets/root/borderBushes/borderBush1.png';
 
 const CATEGORY_ROUTE_MAP = {
   exercise: '/CreateGoalExercise',
@@ -1060,10 +1060,19 @@ function buildBorderTrees() {
   }
 
   for (let row = -OUTER_TILE_PADDING - 2; row <= GRID_ROWS + OUTER_TILE_PADDING + 1; row += 1) {
-    pushTree(GRID_COLS + 1, row, { offsetX: 30, depth: 0, extraWidth: 12 });
-    pushTree(GRID_COLS + 2, row, { offsetX: 78, depth: 1, extraWidth: 26 });
-    pushTree(GRID_COLS + 3, row, { offsetX: 126, depth: 2, extraWidth: 42 });
-    pushTree(GRID_COLS + 4, row, { offsetX: 172, offsetY: -10, depth: 3, extraWidth: 62 });
+    const isBottomRightZone = row >= GRID_ROWS - 3;
+
+    if (isBottomRightZone) {
+      pushBush(GRID_COLS + 1, row, { offsetX: 24, offsetY: 18, depth: 0, extraWidth: 20, zBoost: 2 });
+      pushBush(GRID_COLS + 2, row, { offsetX: 70, offsetY: 34, depth: 1, extraWidth: 18, zBoost: 2 });
+      pushBush(GRID_COLS + 3, row, { offsetX: 118, offsetY: 52, depth: 2, extraWidth: 16, zBoost: 2 });
+      pushBush(GRID_COLS + 4, row, { offsetX: 166, offsetY: 72, depth: 3, extraWidth: 12, zBoost: 2 });
+    } else {
+      pushTree(GRID_COLS + 1, row, { offsetX: 30, depth: 0, extraWidth: 12 });
+      pushTree(GRID_COLS + 2, row, { offsetX: 78, depth: 1, extraWidth: 26 });
+      pushTree(GRID_COLS + 3, row, { offsetX: 126, depth: 2, extraWidth: 42 });
+      pushTree(GRID_COLS + 4, row, { offsetX: 172, offsetY: -10, depth: 3, extraWidth: 62 });
+    }
   }
 
   for (let col = -OUTER_TILE_PADDING - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 1; col += 1) {
@@ -1078,11 +1087,14 @@ function buildBorderTrees() {
   pushTreeCluster(GRID_COLS + 5, -6, 5, 0, 24, 16);
   pushBushCluster(-6, GRID_ROWS + 5, 5, 0, 20, 12);
   pushBushCluster(GRID_COLS + 5, GRID_ROWS + 5, 5, 0, 20, 12);
+  pushBushCluster(GRID_COLS + 7, GRID_ROWS + 6, 6, 0, 22, 14);
+  pushBushCluster(GRID_COLS + 8, GRID_ROWS + 3, 4, 1, 18, 10);
 
   pushTreeCluster(-7, -1, 4, 1, 20, 14);
   pushTreeCluster(GRID_COLS + 6, -1, 4, 1, 20, 14);
   pushBushCluster(-7, GRID_ROWS + 1, 4, 1, 18, 10);
   pushBushCluster(GRID_COLS + 6, GRID_ROWS + 1, 4, 1, 18, 10);
+  pushBushCluster(GRID_COLS + 8, GRID_ROWS + 2, 5, 1, 20, 12);
 
   for (let col = -OUTER_TILE_PADDING - 4; col <= 2; col += 1) {
     pushBush(col, GRID_ROWS + 4, { offsetX: -8, offsetY: 98, depth: 2, extraWidth: 12 });
