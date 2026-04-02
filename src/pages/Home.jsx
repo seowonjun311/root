@@ -933,6 +933,7 @@ function buildTileMap(cols, rows, padding = OUTER_TILE_PADDING) {
   return tiles;
 }
 
+
 function buildBorderTrees() {
   const result = [];
   let idCounter = 0;
@@ -1078,6 +1079,7 @@ function buildBorderTrees() {
     }
   };
 
+  // 위쪽 큰 나무
   for (let col = -OUTER_TILE_PADDING - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 1; col += 1) {
     pushTree(col, -4, { offsetY: -96, depth: 0, extraWidth: 58, region: 'top' });
     pushTree(col, -3, { offsetY: -56, depth: 1, extraWidth: 36, region: 'top' });
@@ -1094,6 +1096,7 @@ function buildBorderTrees() {
     }
   }
 
+  // 왼쪽 큰 나무
   for (let row = -OUTER_TILE_PADDING - 2; row <= GRID_ROWS + OUTER_TILE_PADDING + 1; row += 1) {
     pushTree(-5, row, { offsetX: -164, offsetY: -12, depth: 0, extraWidth: 64, region: 'left' });
     pushTree(-4, row, { offsetX: -118, offsetY: -6, depth: 1, extraWidth: 42, region: 'left' });
@@ -1101,6 +1104,7 @@ function buildBorderTrees() {
     pushTree(-2, row, { offsetX: -26, depth: 3, extraWidth: 8, region: 'left' });
   }
 
+  // 오른쪽: 아래쪽은 수풀만
   for (let row = -OUTER_TILE_PADDING - 2; row <= GRID_ROWS + OUTER_TILE_PADDING + 1; row += 1) {
     const isBottomRightZone = row >= GRID_ROWS - 12;
 
@@ -1109,7 +1113,7 @@ function buildBorderTrees() {
         offsetX: 18,
         offsetY: 18,
         depth: 0,
-        extraWidth: 28,
+        extraWidth: 32,
         zBoost: 3,
         region: 'right-bottom',
       });
@@ -1117,7 +1121,7 @@ function buildBorderTrees() {
         offsetX: 64,
         offsetY: 34,
         depth: 1,
-        extraWidth: 26,
+        extraWidth: 30,
         zBoost: 3,
         region: 'right-bottom',
       });
@@ -1125,7 +1129,7 @@ function buildBorderTrees() {
         offsetX: 112,
         offsetY: 54,
         depth: 2,
-        extraWidth: 24,
+        extraWidth: 28,
         zBoost: 3,
         region: 'right-bottom',
       });
@@ -1133,7 +1137,7 @@ function buildBorderTrees() {
         offsetX: 164,
         offsetY: 78,
         depth: 3,
-        extraWidth: 20,
+        extraWidth: 24,
         zBoost: 3,
         region: 'right-bottom',
       });
@@ -1141,7 +1145,7 @@ function buildBorderTrees() {
         offsetX: 214,
         offsetY: 102,
         depth: 4,
-        extraWidth: 16,
+        extraWidth: 20,
         zBoost: 3,
         region: 'right-bottom',
       });
@@ -1149,6 +1153,14 @@ function buildBorderTrees() {
         offsetX: 262,
         offsetY: 126,
         depth: 5,
+        extraWidth: 16,
+        zBoost: 3,
+        region: 'right-bottom',
+      });
+      pushBush(GRID_COLS + 7, row, {
+        offsetX: 306,
+        offsetY: 148,
+        depth: 6,
         extraWidth: 12,
         zBoost: 3,
         region: 'right-bottom',
@@ -1167,40 +1179,93 @@ function buildBorderTrees() {
     }
   }
 
+  // 아래 수풀
   for (let col = -OUTER_TILE_PADDING - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 1; col += 1) {
     pushBush(col, GRID_ROWS + 1, { offsetY: 26, depth: 0, extraWidth: 24, region: 'bottom' });
-    pushBush(col, GRID_ROWS + 2, { offsetY: 54, depth: 1, extraWidth: 16, region: 'bottom' });
+    pushBush(col, GRID_ROWS + 2, { offsetY: 54, depth: 1, extraWidth: 18, region: 'bottom' });
 
     if (col % 2 === 0) {
       pushBush(col, GRID_ROWS + 3, {
         offsetX: 12,
         offsetY: 80,
         depth: 2,
-        extraWidth: 8,
+        extraWidth: 12,
         region: 'bottom',
       });
     }
   }
 
+  // 코너/보강
   pushTreeCluster(-6, -6, 5, 0, 24, 16, 'top-left');
   pushTreeCluster(GRID_COLS + 5, -6, 5, 0, 24, 16, 'top-right');
   pushBushCluster(-6, GRID_ROWS + 5, 5, 0, 20, 12, 'bottom-left');
-  pushBushCluster(GRID_COLS + 5, GRID_ROWS + 5, 5, 0, 20, 12, 'bottom-right');
-  pushBushCluster(GRID_COLS + 7, GRID_ROWS + 6, 6, 0, 22, 14, 'bottom-right');
-  pushBushCluster(GRID_COLS + 8, GRID_ROWS + 3, 5, 1, 20, 12, 'bottom-right');
-  pushBushCluster(GRID_COLS + 9, GRID_ROWS + 7, 5, 1, 22, 14, 'bottom-right');
-  pushBushCluster(GRID_COLS + 10, GRID_ROWS + 4, 4, 2, 18, 10, 'bottom-right');
+
+  pushBushCluster(GRID_COLS + 5, GRID_ROWS + 5, 6, 0, 22, 14, 'bottom-right');
+  pushBushCluster(GRID_COLS + 7, GRID_ROWS + 6, 7, 0, 24, 15, 'bottom-right');
+  pushBushCluster(GRID_COLS + 8, GRID_ROWS + 3, 6, 1, 22, 13, 'bottom-right');
+  pushBushCluster(GRID_COLS + 9, GRID_ROWS + 7, 6, 1, 24, 15, 'bottom-right');
+  pushBushCluster(GRID_COLS + 10, GRID_ROWS + 4, 5, 2, 20, 12, 'bottom-right');
+  pushBushCluster(GRID_COLS + 11, GRID_ROWS + 1, 7, 0, 24, 14, 'bottom-right');
+  pushBushCluster(GRID_COLS + 12, GRID_ROWS + 4, 6, 1, 24, 14, 'bottom-right');
+  pushBushCluster(GRID_COLS + 13, GRID_ROWS - 1, 5, 1, 22, 12, 'bottom-right');
+  pushBushCluster(GRID_COLS + 9, GRID_ROWS - 2, 5, 1, 20, 11, 'bottom-right');
 
   pushTreeCluster(-7, -1, 4, 1, 20, 14, 'top-left-side');
   pushTreeCluster(GRID_COLS + 6, -1, 4, 1, 20, 14, 'top-right-side');
   pushBushCluster(-7, GRID_ROWS + 1, 4, 1, 18, 10, 'bottom-left-side');
-  pushBushCluster(GRID_COLS + 6, GRID_ROWS + 1, 4, 1, 18, 10, 'bottom-right-side');
-  pushBushCluster(GRID_COLS + 8, GRID_ROWS + 2, 5, 1, 20, 12, 'bottom-right-side');
-  pushBushCluster(GRID_COLS + 11, GRID_ROWS + 1, 6, 0, 22, 12, 'bottom-right-side');
-  pushBushCluster(GRID_COLS + 12, GRID_ROWS + 4, 5, 1, 22, 12, 'bottom-right-side');
-  pushBushCluster(GRID_COLS + 13, GRID_ROWS - 1, 4, 1, 20, 10, 'bottom-right-side');
-  pushBushCluster(GRID_COLS + 9, GRID_ROWS - 2, 4, 1, 18, 10, 'bottom-right-side');
+  pushBushCluster(GRID_COLS + 6, GRID_ROWS + 1, 5, 1, 20, 12, 'bottom-right-side');
+  pushBushCluster(GRID_COLS + 8, GRID_ROWS + 2, 6, 1, 22, 13, 'bottom-right-side');
 
+  // 오른쪽 아래 빈 구간 직접 메우기
+  for (let col = GRID_COLS - 1; col <= GRID_COLS + OUTER_TILE_PADDING + 8; col += 1) {
+    pushBush(col, GRID_ROWS + 4, {
+      offsetX: 8,
+      offsetY: 98,
+      depth: 2,
+      extraWidth: 18,
+      region: 'bottom-right-fill',
+    });
+    pushBush(col, GRID_ROWS + 5, {
+      offsetX: 16,
+      offsetY: 122,
+      depth: 3,
+      extraWidth: 14,
+      region: 'bottom-right-fill',
+    });
+  }
+
+  // 화면에 보이는 오른쪽 아래 빈 삼각형을 수풀로 채우는 추가 대각선
+  for (let step = 0; step <= 10; step += 1) {
+    pushBush(GRID_COLS + 2 + step, GRID_ROWS - 5 + step, {
+      offsetX: 80 + step * 22,
+      offsetY: 32 + step * 22,
+      depth: 1 + Math.floor(step / 2),
+      extraWidth: Math.max(8, 22 - step),
+      region: 'bottom-right-diagonal',
+      zBoost: 3,
+    });
+    pushBush(GRID_COLS + 1 + step, GRID_ROWS - 3 + step, {
+      offsetX: 48 + step * 18,
+      offsetY: 62 + step * 20,
+      depth: 2 + Math.floor(step / 2),
+      extraWidth: Math.max(6, 18 - step),
+      region: 'bottom-right-diagonal',
+      zBoost: 3,
+    });
+  }
+
+  for (let step = 0; step <= 7; step += 1) {
+    pushBush(GRID_COLS + 5 + step, GRID_ROWS - 7 + step, {
+      offsetX: 160 + step * 18,
+      offsetY: 10 + step * 24,
+      depth: 1 + step,
+      extraWidth: Math.max(6, 18 - step),
+      region: 'bottom-right-cap',
+      zBoost: 4,
+    });
+  }
+
+  // 왼쪽 아래 약간 보강
   for (let col = -OUTER_TILE_PADDING - 4; col <= 2; col += 1) {
     pushBush(col, GRID_ROWS + 4, {
       offsetX: -8,
@@ -1211,38 +1276,23 @@ function buildBorderTrees() {
     });
   }
 
-  for (let col = GRID_COLS - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 4; col += 1) {
-    pushBush(col, GRID_ROWS + 4, {
-      offsetX: 8,
-      offsetY: 98,
-      depth: 2,
-      extraWidth: 12,
-      region: 'bottom-right-fill',
-    });
-  }
-
-  const bottomRightStart = gridToScreen(GRID_COLS - 5, GRID_ROWS - 11);
-  const bottomRightHardStart = gridToScreen(GRID_COLS - 2, GRID_ROWS - 8);
-  const bottomRightDeepStart = gridToScreen(GRID_COLS + 1, GRID_ROWS - 5);
+  // 오른쪽 아래 큰 나무는 실제 화면 기준으로 강제 제거
+  const bottomRightStart = gridToScreen(GRID_COLS - 6, GRID_ROWS - 12);
+  const bottomRightHardStart = gridToScreen(GRID_COLS - 3, GRID_ROWS - 9);
 
   const cleaned = result.filter((item) => {
     if (item.kind !== 'tree') return true;
 
-    const isRightVisualZone =
-      item.x >= bottomRightStart.x - 10 &&
-      item.y >= bottomRightStart.y - 150;
+    const isVisualBottomRight =
+      item.x >= bottomRightStart.x - 40 &&
+      item.y >= bottomRightStart.y - 180;
 
     const isHardBottomRight =
-      item.x >= bottomRightHardStart.x - 60 &&
-      item.y >= bottomRightHardStart.y - 220;
+      item.x >= bottomRightHardStart.x - 100 &&
+      item.y >= bottomRightHardStart.y - 260;
 
-    const isDeepBottomRight =
-      item.x >= bottomRightDeepStart.x - 120 &&
-      item.y >= bottomRightDeepStart.y - 260;
-
-    if (isRightVisualZone) return false;
+    if (isVisualBottomRight) return false;
     if (isHardBottomRight) return false;
-    if (isDeepBottomRight) return false;
 
     return true;
   });
