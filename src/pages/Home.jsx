@@ -23,9 +23,7 @@ import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
 /* =========================
    타일맵 이미지 추가
 ========================= */
-import baseGrassTileImg from '@/assets/root/tiles/baseGrassTile.png';
-import variantGrassTileImg from '@/assets/root/tiles/variantGrassTile.png';
-import pathTileImg from '@/assets/root/tiles/pathTile.png';
+import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
 
 const CATEGORY_ROUTE_MAP = {
   exercise: '/CreateGoalExercise',

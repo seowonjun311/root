@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         console.log('[AuthContext] App resumed from background, rechecking auth');
-        checkAppState();
+        checkAppState(true); // silent: 로딩 스피너 없이 재확인
       }
     };
     
@@ -26,9 +26,9 @@ export const AuthProvider = ({ children }) => {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  const checkAppState = async () => {
+  const checkAppState = async (silent = false) => {
     try {
-      setIsLoadingPublicSettings(true);
+      if (!silent) setIsLoadingPublicSettings(true);
       setAuthError(null);
       
       // Try to authenticate the user with base44 SDK
