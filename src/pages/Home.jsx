@@ -948,18 +948,23 @@ function buildBorderTrees() {
   };
 
   const treeImageFromSeed = (seed) => {
-    const idx = Math.floor(pseudoRandom(seed + 11) * BORDER_TREE_IMAGES.length) % BORDER_TREE_IMAGES.length;
+    const idx =
+      Math.floor(pseudoRandom(seed + 11) * BORDER_TREE_IMAGES.length) %
+      BORDER_TREE_IMAGES.length;
     return BORDER_TREE_IMAGES[idx];
   };
 
   const bushImageFromSeed = (seed) => {
-    const idx = Math.floor(pseudoRandom(seed + 13) * BORDER_BUSH_IMAGES.length) % BORDER_BUSH_IMAGES.length;
+    const idx =
+      Math.floor(pseudoRandom(seed + 13) * BORDER_BUSH_IMAGES.length) %
+      BORDER_BUSH_IMAGES.length;
     return BORDER_BUSH_IMAGES[idx];
   };
 
   const flipFromSeed = (seed) => pseudoRandom(seed + 33) > 0.5;
   const opacityFromSeed = (seed) => 0.9 + pseudoRandom(seed + 57) * 0.1;
-  const rotationFromSeed = (seed, amount = 5) => (pseudoRandom(seed + 71) - 0.5) * amount;
+  const rotationFromSeed = (seed, amount = 5) =>
+    (pseudoRandom(seed + 71) - 0.5) * amount;
 
   const pushTree = (col, row, options = {}) => {
     const {
@@ -968,6 +973,7 @@ function buildBorderTrees() {
       depth = 0,
       extraWidth = 0,
       zBoost = 0,
+      region = '',
     } = options;
 
     const seed = col * 1000 + row * 100 + depth * 17 + extraWidth + zBoost;
@@ -975,6 +981,10 @@ function buildBorderTrees() {
 
     result.push({
       id: `border-tree-${idCounter++}`,
+      kind: 'tree',
+      region,
+      col,
+      row,
       x: pos.x + offsetX + (pseudoRandom(seed + 5) - 0.5) * 34,
       y: pos.y + offsetY + (pseudoRandom(seed + 9) - 0.5) * 26,
       width: treeSizeFromSeed(seed, depth) + extraWidth,
@@ -993,6 +1003,7 @@ function buildBorderTrees() {
       depth = 0,
       extraWidth = 0,
       zBoost = 0,
+      region = '',
     } = options;
 
     const seed = col * 1200 + row * 140 + depth * 19 + extraWidth + zBoost;
@@ -1000,6 +1011,10 @@ function buildBorderTrees() {
 
     result.push({
       id: `border-bush-${idCounter++}`,
+      kind: 'bush',
+      region,
+      col,
+      row,
       x: pos.x + offsetX + (pseudoRandom(seed + 3) - 0.5) * 18,
       y: pos.y + offsetY + (pseudoRandom(seed + 7) - 0.5) * 10,
       width: bushWidthFromSeed(seed, depth) + extraWidth,
@@ -1011,99 +1026,199 @@ function buildBorderTrees() {
     });
   };
 
-  const pushTreeCluster = (centerCol, centerRow, radius = 3, depthBase = 0, spreadX = 18, spreadY = 12) => {
+  const pushTreeCluster = (
+    centerCol,
+    centerRow,
+    radius = 3,
+    depthBase = 0,
+    spreadX = 18,
+    spreadY = 12,
+    region = ''
+  ) => {
     for (let row = centerRow - radius; row <= centerRow + radius; row += 1) {
       for (let col = centerCol - radius; col <= centerCol + radius; col += 1) {
         const distance = Math.abs(col - centerCol) + Math.abs(row - centerRow);
         if (distance > radius + 1) continue;
+
         pushTree(col, row, {
           offsetX: (col - centerCol) * spreadX,
           offsetY: (row - centerRow) * spreadY,
           depth: depthBase + distance,
           extraWidth: Math.max(0, 34 - distance * 7),
           zBoost: radius - distance,
+          region,
         });
       }
     }
   };
 
-  const pushBushCluster = (centerCol, centerRow, radius = 3, depthBase = 0, spreadX = 14, spreadY = 8) => {
+  const pushBushCluster = (
+    centerCol,
+    centerRow,
+    radius = 3,
+    depthBase = 0,
+    spreadX = 14,
+    spreadY = 8,
+    region = ''
+  ) => {
     for (let row = centerRow - radius; row <= centerRow + radius; row += 1) {
       for (let col = centerCol - radius; col <= centerCol + radius; col += 1) {
         const distance = Math.abs(col - centerCol) + Math.abs(row - centerRow);
         if (distance > radius + 1) continue;
+
         pushBush(col, row, {
           offsetX: (col - centerCol) * spreadX,
           offsetY: (row - centerRow) * spreadY,
           depth: depthBase + distance,
           extraWidth: Math.max(0, 18 - distance * 4),
           zBoost: radius - distance,
+          region,
         });
       }
     }
   };
 
   for (let col = -OUTER_TILE_PADDING - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 1; col += 1) {
-    pushTree(col, -4, { offsetY: -96, depth: 0, extraWidth: 58 });
-    pushTree(col, -3, { offsetY: -56, depth: 1, extraWidth: 36 });
-    pushTree(col, -2, { offsetY: -16, depth: 2, extraWidth: 16 });
+    pushTree(col, -4, { offsetY: -96, depth: 0, extraWidth: 58, region: 'top' });
+    pushTree(col, -3, { offsetY: -56, depth: 1, extraWidth: 36, region: 'top' });
+    pushTree(col, -2, { offsetY: -16, depth: 2, extraWidth: 16, region: 'top' });
+
     if (col % 2 === 0) {
-      pushTree(col, -5, { offsetX: 24, offsetY: -132, depth: 3, extraWidth: 18 });
+      pushTree(col, -5, {
+        offsetX: 24,
+        offsetY: -132,
+        depth: 3,
+        extraWidth: 18,
+        region: 'top',
+      });
     }
   }
 
   for (let row = -OUTER_TILE_PADDING - 2; row <= GRID_ROWS + OUTER_TILE_PADDING + 1; row += 1) {
-    pushTree(-5, row, { offsetX: -164, offsetY: -12, depth: 0, extraWidth: 64 });
-    pushTree(-4, row, { offsetX: -118, offsetY: -6, depth: 1, extraWidth: 42 });
-    pushTree(-3, row, { offsetX: -72, depth: 2, extraWidth: 20 });
-    pushTree(-2, row, { offsetX: -26, depth: 3, extraWidth: 8 });
+    pushTree(-5, row, { offsetX: -164, offsetY: -12, depth: 0, extraWidth: 64, region: 'left' });
+    pushTree(-4, row, { offsetX: -118, offsetY: -6, depth: 1, extraWidth: 42, region: 'left' });
+    pushTree(-3, row, { offsetX: -72, depth: 2, extraWidth: 20, region: 'left' });
+    pushTree(-2, row, { offsetX: -26, depth: 3, extraWidth: 8, region: 'left' });
   }
 
   for (let row = -OUTER_TILE_PADDING - 2; row <= GRID_ROWS + OUTER_TILE_PADDING + 1; row += 1) {
-    const isBottomRightZone = row >= GRID_ROWS - 3;
+    const isBottomRightZone = row >= GRID_ROWS - 7;
 
     if (isBottomRightZone) {
-      pushBush(GRID_COLS + 1, row, { offsetX: 24, offsetY: 18, depth: 0, extraWidth: 20, zBoost: 2 });
-      pushBush(GRID_COLS + 2, row, { offsetX: 70, offsetY: 34, depth: 1, extraWidth: 18, zBoost: 2 });
-      pushBush(GRID_COLS + 3, row, { offsetX: 118, offsetY: 52, depth: 2, extraWidth: 16, zBoost: 2 });
-      pushBush(GRID_COLS + 4, row, { offsetX: 166, offsetY: 72, depth: 3, extraWidth: 12, zBoost: 2 });
+      pushBush(GRID_COLS + 1, row, {
+        offsetX: 24,
+        offsetY: 20,
+        depth: 0,
+        extraWidth: 22,
+        zBoost: 2,
+        region: 'right-bottom',
+      });
+      pushBush(GRID_COLS + 2, row, {
+        offsetX: 72,
+        offsetY: 38,
+        depth: 1,
+        extraWidth: 20,
+        zBoost: 2,
+        region: 'right-bottom',
+      });
+      pushBush(GRID_COLS + 3, row, {
+        offsetX: 124,
+        offsetY: 58,
+        depth: 2,
+        extraWidth: 18,
+        zBoost: 2,
+        region: 'right-bottom',
+      });
+      pushBush(GRID_COLS + 4, row, {
+        offsetX: 178,
+        offsetY: 82,
+        depth: 3,
+        extraWidth: 14,
+        zBoost: 2,
+        region: 'right-bottom',
+      });
+      pushBush(GRID_COLS + 5, row, {
+        offsetX: 226,
+        offsetY: 106,
+        depth: 4,
+        extraWidth: 10,
+        zBoost: 2,
+        region: 'right-bottom',
+      });
     } else {
-      pushTree(GRID_COLS + 1, row, { offsetX: 30, depth: 0, extraWidth: 12 });
-      pushTree(GRID_COLS + 2, row, { offsetX: 78, depth: 1, extraWidth: 26 });
-      pushTree(GRID_COLS + 3, row, { offsetX: 126, depth: 2, extraWidth: 42 });
-      pushTree(GRID_COLS + 4, row, { offsetX: 172, offsetY: -10, depth: 3, extraWidth: 62 });
+      pushTree(GRID_COLS + 1, row, { offsetX: 30, depth: 0, extraWidth: 12, region: 'right' });
+      pushTree(GRID_COLS + 2, row, { offsetX: 78, depth: 1, extraWidth: 26, region: 'right' });
+      pushTree(GRID_COLS + 3, row, { offsetX: 126, depth: 2, extraWidth: 42, region: 'right' });
+      pushTree(GRID_COLS + 4, row, {
+        offsetX: 172,
+        offsetY: -10,
+        depth: 3,
+        extraWidth: 62,
+        region: 'right',
+      });
     }
   }
 
   for (let col = -OUTER_TILE_PADDING - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 1; col += 1) {
-    pushBush(col, GRID_ROWS + 1, { offsetY: 26, depth: 0, extraWidth: 24 });
-    pushBush(col, GRID_ROWS + 2, { offsetY: 54, depth: 1, extraWidth: 16 });
+    pushBush(col, GRID_ROWS + 1, { offsetY: 26, depth: 0, extraWidth: 24, region: 'bottom' });
+    pushBush(col, GRID_ROWS + 2, { offsetY: 54, depth: 1, extraWidth: 16, region: 'bottom' });
+
     if (col % 2 === 0) {
-      pushBush(col, GRID_ROWS + 3, { offsetX: 12, offsetY: 80, depth: 2, extraWidth: 8 });
+      pushBush(col, GRID_ROWS + 3, {
+        offsetX: 12,
+        offsetY: 80,
+        depth: 2,
+        extraWidth: 8,
+        region: 'bottom',
+      });
     }
   }
 
-  pushTreeCluster(-6, -6, 5, 0, 24, 16);
-  pushTreeCluster(GRID_COLS + 5, -6, 5, 0, 24, 16);
-  pushBushCluster(-6, GRID_ROWS + 5, 5, 0, 20, 12);
-  pushBushCluster(GRID_COLS + 5, GRID_ROWS + 5, 5, 0, 20, 12);
-  pushBushCluster(GRID_COLS + 7, GRID_ROWS + 6, 6, 0, 22, 14);
-  pushBushCluster(GRID_COLS + 8, GRID_ROWS + 3, 4, 1, 18, 10);
+  pushTreeCluster(-6, -6, 5, 0, 24, 16, 'top-left');
+  pushTreeCluster(GRID_COLS + 5, -6, 5, 0, 24, 16, 'top-right');
+  pushBushCluster(-6, GRID_ROWS + 5, 5, 0, 20, 12, 'bottom-left');
+  pushBushCluster(GRID_COLS + 5, GRID_ROWS + 5, 5, 0, 20, 12, 'bottom-right');
+  pushBushCluster(GRID_COLS + 7, GRID_ROWS + 6, 6, 0, 22, 14, 'bottom-right');
+  pushBushCluster(GRID_COLS + 8, GRID_ROWS + 3, 5, 1, 20, 12, 'bottom-right');
+  pushBushCluster(GRID_COLS + 9, GRID_ROWS + 7, 5, 1, 22, 14, 'bottom-right');
+  pushBushCluster(GRID_COLS + 10, GRID_ROWS + 4, 4, 2, 18, 10, 'bottom-right');
 
-  pushTreeCluster(-7, -1, 4, 1, 20, 14);
-  pushTreeCluster(GRID_COLS + 6, -1, 4, 1, 20, 14);
-  pushBushCluster(-7, GRID_ROWS + 1, 4, 1, 18, 10);
-  pushBushCluster(GRID_COLS + 6, GRID_ROWS + 1, 4, 1, 18, 10);
-  pushBushCluster(GRID_COLS + 8, GRID_ROWS + 2, 5, 1, 20, 12);
+  pushTreeCluster(-7, -1, 4, 1, 20, 14, 'top-left-side');
+  pushTreeCluster(GRID_COLS + 6, -1, 4, 1, 20, 14, 'top-right-side');
+  pushBushCluster(-7, GRID_ROWS + 1, 4, 1, 18, 10, 'bottom-left-side');
+  pushBushCluster(GRID_COLS + 6, GRID_ROWS + 1, 4, 1, 18, 10, 'bottom-right-side');
+  pushBushCluster(GRID_COLS + 8, GRID_ROWS + 2, 5, 1, 20, 12, 'bottom-right-side');
 
   for (let col = -OUTER_TILE_PADDING - 4; col <= 2; col += 1) {
-    pushBush(col, GRID_ROWS + 4, { offsetX: -8, offsetY: 98, depth: 2, extraWidth: 12 });
-  }
-  for (let col = GRID_COLS - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 4; col += 1) {
-    pushBush(col, GRID_ROWS + 4, { offsetX: 8, offsetY: 98, depth: 2, extraWidth: 12 });
+    pushBush(col, GRID_ROWS + 4, {
+      offsetX: -8,
+      offsetY: 98,
+      depth: 2,
+      extraWidth: 12,
+      region: 'bottom-left-fill',
+    });
   }
 
-  return result.sort((a, b) => a.zIndex - b.zIndex);
+  for (let col = GRID_COLS - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 4; col += 1) {
+    pushBush(col, GRID_ROWS + 4, {
+      offsetX: 8,
+      offsetY: 98,
+      depth: 2,
+      extraWidth: 12,
+      region: 'bottom-right-fill',
+    });
+  }
+
+  const cleaned = result.filter((item) => {
+    if (item.kind !== 'tree') return true;
+
+    const isRightSideTree = item.col >= GRID_COLS + 1;
+    const isTooLow = item.row >= GRID_ROWS - 7;
+
+    return !(isRightSideTree && isTooLow);
+  });
+
+  return cleaned.sort((a, b) => a.zIndex - b.zIndex);
 }
 
 function getWorldPanBounds(viewportWidth, viewportHeight, scale) {
@@ -2003,7 +2118,7 @@ function VillageWorldLayer({
         startRow: row,
       };
     }
-  }, [scale, decorations, characters, currentCollisionBuildings, setDecorations, setCharacters, setBuildingLayout, buildingLayout, setPlacementPreview]);
+  }, [scale, viewportSize.width, viewportSize.height, decorations, characters, currentCollisionBuildings, setDecorations, setCharacters, setBuildingLayout, buildingLayout, setPlacementPreview]);
 
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
@@ -2131,7 +2246,6 @@ function VillageWorldLayer({
                 }}
               />
 
-              {/* 타일 */}
               {tileMap.map((tile) => {
                 const pos = gridToScreen(tile.col, tile.row);
                 const tileImg = getTileImageByKind(tile.kind);
@@ -2156,7 +2270,6 @@ function VillageWorldLayer({
                 );
               })}
 
-              {/* 경계 숲 */}
               {borderTrees.map((tree) => (
                 <img
                   key={tree.id}
@@ -2179,7 +2292,6 @@ function VillageWorldLayer({
                 />
               ))}
 
-              {/* 편집 미리보기 */}
               {isEditMode && placementPreview
                 ? getPreviewTiles(
                     placementPreview.item,
@@ -2210,7 +2322,6 @@ function VillageWorldLayer({
                   })
                 : null}
 
-              {/* 장식 */}
               {decorations.map((item) => {
                 const isSelected = selectedObject?.type === 'decoration' && selectedObject?.id === item.id;
                 const pos = getObjectScreenPosition(item, 'decoration');
@@ -2236,7 +2347,6 @@ function VillageWorldLayer({
                 );
               })}
 
-              {/* 건물 */}
               {buildings.map((building) => {
                 const isSelected = selectedObject?.type === 'building' && selectedObject?.id === building.category;
                 const pos = getObjectScreenPosition(building, 'building');
@@ -2264,7 +2374,6 @@ function VillageWorldLayer({
                 );
               })}
 
-              {/* 캐릭터 */}
               {characters.map((npc) => {
                 const isSelected = selectedObject?.type === 'character' && selectedObject?.id === npc.id;
                 const pos = getObjectScreenPosition(npc, 'character');
