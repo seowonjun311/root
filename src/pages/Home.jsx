@@ -22,7 +22,7 @@ import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
 
 import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
 import { borderTree1Img, borderTree2Img, borderTree3Img } from '@/assets/root/borderTrees/index.js';
-import borderBush1Img from '@/assets/root/borderBushes/borderBush1.png';
+import { borderBush1Img } from '@/assets/root/borderBushes/index.js';
 
 const CATEGORY_ROUTE_MAP = {
   exercise: '/CreateGoalExercise',
