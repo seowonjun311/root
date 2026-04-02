@@ -870,58 +870,205 @@ function buildBorderTrees() {
   const result = [];
   let idCounter = 0;
 
-  const treeSizeFromSeed = (seed) => {
-    const r = pseudoRandom(seed);
-    return Math.round(220 + r * 80);
-  };
-
-  const imageFromSeed = (seed) => {
-    const idx = Math.floor(pseudoRandom(seed + 11) * BORDER_TREE_IMAGES.length) % BORDER_TREE_IMAGES.length;
+  const randomFromSeed = (seed) => pseudoRandom(seed * 1.137 + 17.73);
+  const pickImage = (seed) => {
+    const idx =
+      Math.floor(randomFromSeed(seed + 11) * BORDER_TREE_IMAGES.length) %
+      BORDER_TREE_IMAGES.length;
     return BORDER_TREE_IMAGES[idx];
   };
 
-  const flipFromSeed = (seed) => pseudoRandom(seed + 33) > 0.5;
+  const buildTree = ({
+    anchorCol,
+    anchorRow,
+    offsetX = 0,
+    offsetY = 0,
+    depthBias = 0,
+    sizeBias = 0,
+    layer = 0,
+  }) => {
+    const seed = anchorCol * 1000 + anchorRow * 100 + depthBias * 17 + layer * 53;
+    const pos = gridToScreen(anchorCol, anchorRow);
 
-  const pushTree = (col, row, offsetX = 0, offsetY = 0, depthBias = 0) => {
-    const seed = col * 1000 + row * 100 + depthBias;
-    const pos = gridToScreen(col, row);
+    const width = Math.round(210 + randomFromSeed(seed + 1) * 95 + sizeBias);
+    const height = Math.round(width * (1.18 + randomFromSeed(seed + 2) * 0.18));
 
-    result.push({
+    return {
       id: `border-tree-${idCounter++}`,
       x: pos.x + offsetX,
       y: pos.y + offsetY,
-      width: treeSizeFromSeed(seed),
-      image: imageFromSeed(seed),
-      flipped: flipFromSeed(seed),
-      zIndex: 50 + row + col + depthBias,
-    });
+      width,
+      height,
+      image: pickImage(seed),
+      flipped: randomFromSeed(seed + 33) > 0.5,
+      rotate: (randomFromSeed(seed + 44) - 0.5) * 4,
+      opacity: 0.94 + randomFromSeed(seed + 55) * 0.06,
+      anchorCol,
+      anchorRow,
+      depthBias,
+      zIndex: 50 + anchorRow + anchorCol + depthBias + layer,
+    };
   };
 
-  /* 상단 */
-  for (let col = -1; col <= GRID_COLS; col += 1) {
-    pushTree(col, -2, 0, -10, 2);
-    if (col % 2 === 0) pushTree(col, -3, 16, -28, 1);
+  const pushCluster = ({
+    col,
+    row,
+    count,
+    spreadX = 40,
+    spreadY = 24,
+    depthBias = 0,
+    sizeBias = 0,
+    layer = 0,
+  }) => {
+    for (let i = 0; i < count; i += 1) {
+      const seed = col * 1000 + row * 100 + i * 19 + depthBias * 7 + layer * 29;
+      const offsetX = (randomFromSeed(seed + 1) - 0.5) * spreadX;
+      const offsetY = (randomFromSeed(seed + 2) - 0.5) * spreadY;
+
+      result.push(
+        buildTree({
+          anchorCol: col,
+          anchorRow: row,
+          offsetX,
+          offsetY,
+          depthBias: depthBias + i,
+          sizeBias: sizeBias + (randomFromSeed(seed + 3) - 0.5) * 24,
+          layer,
+        })
+      );
+    }
+  };
+
+  for (let col = -2; col <= GRID_COLS + 1; col += 1) {
+    pushCluster({
+      col,
+      row: -2,
+      count: col % 2 === 0 ? 2 : 1,
+      spreadX: 46,
+      spreadY: 22,
+      depthBias: 2,
+      sizeBias: 8,
+      layer: 0,
+    });
+
+    if (col % 2 === 0) {
+      pushCluster({
+        col,
+        row: -3,
+        count: 1,
+        spreadX: 34,
+        spreadY: 18,
+        depthBias: 0,
+        sizeBias: -8,
+        layer: 1,
+      });
+    }
   }
 
-  /* 하단 */
-  for (let col = -1; col <= GRID_COLS; col += 1) {
-    pushTree(col, GRID_ROWS + 1, 0, 26, 3);
-    if (col % 2 === 1) pushTree(col, GRID_ROWS + 2, -18, 46, 1);
+  for (let col = -2; col <= GRID_COLS + 1; col += 1) {
+    pushCluster({
+      col,
+      row: GRID_ROWS + 1,
+      count: col % 2 === 0 ? 2 : 1,
+      spreadX: 50,
+      spreadY: 28,
+      depthBias: 4,
+      sizeBias: 18,
+      layer: 2,
+    });
+
+    if (col % 2 === 1) {
+      pushCluster({
+        col,
+        row: GRID_ROWS + 2,
+        count: 1,
+        spreadX: 38,
+        spreadY: 22,
+        depthBias: 2,
+        sizeBias: -6,
+        layer: 3,
+      });
+    }
   }
 
-  /* 좌측 */
-  for (let row = -1; row <= GRID_ROWS; row += 1) {
-    pushTree(-2, row, -26, 6, 2);
-    if (row % 2 === 0) pushTree(-3, row, -54, -6, 1);
+  for (let row = -2; row <= GRID_ROWS + 1; row += 1) {
+    pushCluster({
+      col: -2,
+      row,
+      count: row % 2 === 0 ? 2 : 1,
+      spreadX: 34,
+      spreadY: 36,
+      depthBias: 2,
+      sizeBias: 4,
+      layer: 1,
+    });
+
+    if (row % 2 === 0) {
+      pushCluster({
+        col: -3,
+        row,
+        count: 1,
+        spreadX: 26,
+        spreadY: 30,
+        depthBias: 0,
+        sizeBias: -10,
+        layer: 0,
+      });
+    }
   }
 
-  /* 우측 */
-  for (let row = -1; row <= GRID_ROWS; row += 1) {
-    pushTree(GRID_COLS + 1, row, 26, 6, 2);
-    if (row % 2 === 1) pushTree(GRID_COLS + 2, row, 58, -4, 1);
+  for (let row = -2; row <= GRID_ROWS + 1; row += 1) {
+    pushCluster({
+      col: GRID_COLS + 1,
+      row,
+      count: row % 2 === 1 ? 2 : 1,
+      spreadX: 34,
+      spreadY: 36,
+      depthBias: 2,
+      sizeBias: 6,
+      layer: 1,
+    });
+
+    if (row % 2 === 1) {
+      pushCluster({
+        col: GRID_COLS + 2,
+        row,
+        count: 1,
+        spreadX: 26,
+        spreadY: 30,
+        depthBias: 0,
+        sizeBias: -10,
+        layer: 0,
+      });
+    }
   }
 
-  return result;
+  const cornerSeeds = [
+    { col: -3, row: -3, layer: 0 },
+    { col: GRID_COLS + 2, row: -3, layer: 0 },
+    { col: -3, row: GRID_ROWS + 2, layer: 2 },
+    { col: GRID_COLS + 2, row: GRID_ROWS + 2, layer: 2 },
+  ];
+
+  cornerSeeds.forEach((corner, index) => {
+    pushCluster({
+      col: corner.col,
+      row: corner.row,
+      count: 3 + (index % 2),
+      spreadX: 42,
+      spreadY: 26,
+      depthBias: 3,
+      sizeBias: 12,
+      layer: corner.layer,
+    });
+  });
+
+  result.sort((a, b) => a.zIndex - b.zIndex);
+
+  return result.map((tree, index) => ({
+    ...tree,
+    zIndex: 120 + index,
+  }));
 }
 
 function Section({ title, count, emptyText, children }) {
