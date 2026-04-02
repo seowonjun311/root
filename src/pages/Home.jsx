@@ -20,13 +20,8 @@ import { getBuilding } from '@/assets/root/buildings';
 import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
 import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
 
-import baseGrassTileImg from '@/assets/root/tiles/baseGrassTile.png';
-import variantGrassTileImg from '@/assets/root/tiles/variantGrassTile.png';
-import pathTileImg from '@/assets/root/tiles/pathTile.png';
-
-import borderTree1Img from '@/assets/root/borderTrees/borderTree1.png';
-import borderTree2Img from '@/assets/root/borderTrees/borderTree2.png';
-import borderTree3Img from '@/assets/root/borderTrees/borderTree3.png';
+import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
+import { borderTree1Img, borderTree2Img, borderTree3Img } from '@/assets/root/borderTrees/index.js';
 
 const CATEGORY_ROUTE_MAP = {
   exercise: '/CreateGoalExercise',
