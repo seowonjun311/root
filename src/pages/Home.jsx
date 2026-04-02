@@ -1102,7 +1102,7 @@ function buildBorderTrees() {
   }
 
   for (let row = -OUTER_TILE_PADDING - 2; row <= GRID_ROWS + OUTER_TILE_PADDING + 1; row += 1) {
-    const isBottomRightZone = row >= GRID_ROWS - 7;
+    const isBottomRightZone = row >= GRID_ROWS - 10;
 
     if (isBottomRightZone) {
       pushBush(GRID_COLS + 1, row, {
@@ -1209,14 +1209,25 @@ function buildBorderTrees() {
     });
   }
 
-const cleaned = result.filter((item) => {
-  if (item.kind !== 'tree') return true;
+  const bottomRightStart = gridToScreen(GRID_COLS - 3, GRID_ROWS - 9);
+  const bottomRightHardStart = gridToScreen(GRID_COLS - 1, GRID_ROWS - 7);
 
-  const isRightSide = item.col >= GRID_COLS - 2;
-  const isBottom = item.row >= GRID_ROWS - 10;
+  const cleaned = result.filter((item) => {
+    if (item.kind !== 'tree') return true;
 
-  return !(isRightSide && isBottom);
-});
+    const isRightVisualZone =
+      item.x >= bottomRightStart.x + 40 &&
+      item.y >= bottomRightStart.y - 120;
+
+    const isHardBottomRight =
+      item.x >= bottomRightHardStart.x - 40 &&
+      item.y >= bottomRightHardStart.y - 180;
+
+    if (isRightVisualZone) return false;
+    if (isHardBottomRight) return false;
+
+    return true;
+  });
 
   return cleaned.sort((a, b) => a.zIndex - b.zIndex);
 }
