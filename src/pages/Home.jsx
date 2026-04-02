@@ -22,6 +22,7 @@ import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
 
 import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
 import { borderTree1Img, borderTree2Img, borderTree3Img } from '@/assets/root/borderTrees/index.js';
+import borderBush1Img from '@/assets/root/borderBushes/borderBush1.png';
 
 const CATEGORY_ROUTE_MAP = {
   exercise: '/CreateGoalExercise',
@@ -106,7 +107,7 @@ const WORLD_EDGE_MARGIN_RIGHT = 110;
 const WORLD_EDGE_MARGIN_TOP = 40;
 const WORLD_EDGE_MARGIN_BOTTOM = -300;
 
-const VIEW_DIAMOND_CORNER_LIMIT_X = 600;
+const VIEW_DIAMOND_CORNER_LIMIT_X = 500;
 const VIEW_DIAMOND_CORNER_LIMIT_Y = 500;
 
 const TILE_KIND = {
@@ -116,6 +117,7 @@ const TILE_KIND = {
 };
 
 const BORDER_TREE_IMAGES = [borderTree1Img, borderTree2Img, borderTree3Img];
+const BORDER_BUSH_IMAGES = [borderBush1Img];
 
 const DEFAULT_BUILDINGS = [
   { id: 'exercise_building', category: 'exercise', col: 6, row: 10, flipped: false },
@@ -940,14 +942,24 @@ function buildBorderTrees() {
     return Math.round(228 + r * 108 - depth * 6);
   };
 
-  const imageFromSeed = (seed) => {
+  const bushWidthFromSeed = (seed, depth = 0) => {
+    const r = pseudoRandom(seed + depth * 23);
+    return Math.round(92 + r * 42 - depth * 3);
+  };
+
+  const treeImageFromSeed = (seed) => {
     const idx = Math.floor(pseudoRandom(seed + 11) * BORDER_TREE_IMAGES.length) % BORDER_TREE_IMAGES.length;
     return BORDER_TREE_IMAGES[idx];
   };
 
+  const bushImageFromSeed = (seed) => {
+    const idx = Math.floor(pseudoRandom(seed + 13) * BORDER_BUSH_IMAGES.length) % BORDER_BUSH_IMAGES.length;
+    return BORDER_BUSH_IMAGES[idx];
+  };
+
   const flipFromSeed = (seed) => pseudoRandom(seed + 33) > 0.5;
   const opacityFromSeed = (seed) => 0.9 + pseudoRandom(seed + 57) * 0.1;
-  const rotationFromSeed = (seed) => (pseudoRandom(seed + 71) - 0.5) * 5;
+  const rotationFromSeed = (seed, amount = 5) => (pseudoRandom(seed + 71) - 0.5) * amount;
 
   const pushTree = (col, row, options = {}) => {
     const {
@@ -966,15 +978,40 @@ function buildBorderTrees() {
       x: pos.x + offsetX + (pseudoRandom(seed + 5) - 0.5) * 34,
       y: pos.y + offsetY + (pseudoRandom(seed + 9) - 0.5) * 26,
       width: treeSizeFromSeed(seed, depth) + extraWidth,
-      image: imageFromSeed(seed),
+      image: treeImageFromSeed(seed),
       flipped: flipFromSeed(seed),
       opacity: opacityFromSeed(seed),
-      rotation: rotationFromSeed(seed),
+      rotation: rotationFromSeed(seed, 5),
       zIndex: 60 + (row + OUTER_TILE_PADDING + 10) * 10 + depth * 4 + col + zBoost,
     });
   };
 
-  const pushCluster = (centerCol, centerRow, radius = 3, depthBase = 0, spreadX = 18, spreadY = 12) => {
+  const pushBush = (col, row, options = {}) => {
+    const {
+      offsetX = 0,
+      offsetY = 0,
+      depth = 0,
+      extraWidth = 0,
+      zBoost = 0,
+    } = options;
+
+    const seed = col * 1200 + row * 140 + depth * 19 + extraWidth + zBoost;
+    const pos = gridToScreen(col, row);
+
+    result.push({
+      id: `border-bush-${idCounter++}`,
+      x: pos.x + offsetX + (pseudoRandom(seed + 3) - 0.5) * 18,
+      y: pos.y + offsetY + (pseudoRandom(seed + 7) - 0.5) * 10,
+      width: bushWidthFromSeed(seed, depth) + extraWidth,
+      image: bushImageFromSeed(seed),
+      flipped: flipFromSeed(seed),
+      opacity: 0.92 + pseudoRandom(seed + 29) * 0.08,
+      rotation: rotationFromSeed(seed, 2.2),
+      zIndex: 120 + (row + OUTER_TILE_PADDING + 10) * 10 + depth * 4 + col + zBoost,
+    });
+  };
+
+  const pushTreeCluster = (centerCol, centerRow, radius = 3, depthBase = 0, spreadX = 18, spreadY = 12) => {
     for (let row = centerRow - radius; row <= centerRow + radius; row += 1) {
       for (let col = centerCol - radius; col <= centerCol + radius; col += 1) {
         const distance = Math.abs(col - centerCol) + Math.abs(row - centerRow);
@@ -990,21 +1027,28 @@ function buildBorderTrees() {
     }
   };
 
+  const pushBushCluster = (centerCol, centerRow, radius = 3, depthBase = 0, spreadX = 14, spreadY = 8) => {
+    for (let row = centerRow - radius; row <= centerRow + radius; row += 1) {
+      for (let col = centerCol - radius; col <= centerCol + radius; col += 1) {
+        const distance = Math.abs(col - centerCol) + Math.abs(row - centerRow);
+        if (distance > radius + 1) continue;
+        pushBush(col, row, {
+          offsetX: (col - centerCol) * spreadX,
+          offsetY: (row - centerRow) * spreadY,
+          depth: depthBase + distance,
+          extraWidth: Math.max(0, 18 - distance * 4),
+          zBoost: radius - distance,
+        });
+      }
+    }
+  };
+
   for (let col = -OUTER_TILE_PADDING - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 1; col += 1) {
     pushTree(col, -4, { offsetY: -96, depth: 0, extraWidth: 58 });
     pushTree(col, -3, { offsetY: -56, depth: 1, extraWidth: 36 });
     pushTree(col, -2, { offsetY: -16, depth: 2, extraWidth: 16 });
     if (col % 2 === 0) {
       pushTree(col, -5, { offsetX: 24, offsetY: -132, depth: 3, extraWidth: 18 });
-    }
-  }
-
-  for (let col = -OUTER_TILE_PADDING - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 1; col += 1) {
-    pushTree(col, GRID_ROWS + 1, { offsetY: 38, depth: 0, extraWidth: 62 });
-    pushTree(col, GRID_ROWS + 2, { offsetY: 84, depth: 1, extraWidth: 38 });
-    pushTree(col, GRID_ROWS + 3, { offsetY: 126, depth: 2, extraWidth: 14 });
-    if (col % 2 !== 0) {
-      pushTree(col, GRID_ROWS + 4, { offsetX: -18, offsetY: 168, depth: 3, extraWidth: 10 });
     }
   }
 
@@ -1022,15 +1066,30 @@ function buildBorderTrees() {
     pushTree(GRID_COLS + 4, row, { offsetX: 172, offsetY: -10, depth: 3, extraWidth: 62 });
   }
 
-  pushCluster(-6, -6, 5, 0, 24, 16);
-  pushCluster(GRID_COLS + 5, -6, 5, 0, 24, 16);
-  pushCluster(-6, GRID_ROWS + 5, 5, 0, 24, 16);
-  pushCluster(GRID_COLS + 5, GRID_ROWS + 5, 5, 0, 24, 16);
+  for (let col = -OUTER_TILE_PADDING - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 1; col += 1) {
+    pushBush(col, GRID_ROWS + 1, { offsetY: 26, depth: 0, extraWidth: 24 });
+    pushBush(col, GRID_ROWS + 2, { offsetY: 54, depth: 1, extraWidth: 16 });
+    if (col % 2 === 0) {
+      pushBush(col, GRID_ROWS + 3, { offsetX: 12, offsetY: 80, depth: 2, extraWidth: 8 });
+    }
+  }
 
-  pushCluster(-7, -1, 4, 1, 20, 14);
-  pushCluster(GRID_COLS + 6, -1, 4, 1, 20, 14);
-  pushCluster(-7, GRID_ROWS + 1, 4, 1, 20, 14);
-  pushCluster(GRID_COLS + 6, GRID_ROWS + 1, 4, 1, 20, 14);
+  pushTreeCluster(-6, -6, 5, 0, 24, 16);
+  pushTreeCluster(GRID_COLS + 5, -6, 5, 0, 24, 16);
+  pushBushCluster(-6, GRID_ROWS + 5, 5, 0, 20, 12);
+  pushBushCluster(GRID_COLS + 5, GRID_ROWS + 5, 5, 0, 20, 12);
+
+  pushTreeCluster(-7, -1, 4, 1, 20, 14);
+  pushTreeCluster(GRID_COLS + 6, -1, 4, 1, 20, 14);
+  pushBushCluster(-7, GRID_ROWS + 1, 4, 1, 18, 10);
+  pushBushCluster(GRID_COLS + 6, GRID_ROWS + 1, 4, 1, 18, 10);
+
+  for (let col = -OUTER_TILE_PADDING - 4; col <= 2; col += 1) {
+    pushBush(col, GRID_ROWS + 4, { offsetX: -8, offsetY: 98, depth: 2, extraWidth: 12 });
+  }
+  for (let col = GRID_COLS - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 4; col += 1) {
+    pushBush(col, GRID_ROWS + 4, { offsetX: 8, offsetY: 98, depth: 2, extraWidth: 12 });
+  }
 
   return result.sort((a, b) => a.zIndex - b.zIndex);
 }
