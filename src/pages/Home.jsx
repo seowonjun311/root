@@ -1277,21 +1277,15 @@ function buildBorderTrees() {
   }
 
   // 오른쪽 아래 큰 나무는 실제 화면 기준으로 강제 제거
-  const bottomRightStart = gridToScreen(GRID_COLS - 6, GRID_ROWS - 12);
-  const bottomRightHardStart = gridToScreen(GRID_COLS - 3, GRID_ROWS - 9);
+  const bottomRightHardStart = gridToScreen(GRID_COLS + 1, GRID_ROWS - 4);
 
   const cleaned = result.filter((item) => {
     if (item.kind !== 'tree') return true;
 
-    const isVisualBottomRight =
-      item.x >= bottomRightStart.x - 40 &&
-      item.y >= bottomRightStart.y - 180;
-
     const isHardBottomRight =
-      item.x >= bottomRightHardStart.x - 100 &&
-      item.y >= bottomRightHardStart.y - 260;
+      item.x >= bottomRightHardStart.x - 60 &&
+      item.y >= bottomRightHardStart.y - 160;
 
-    if (isVisualBottomRight) return false;
     if (isHardBottomRight) return false;
 
     return true;
@@ -2005,7 +1999,7 @@ function VillageWorldLayer({
   const dragRef = useRef(null);
   const viewportRef = useRef(null);
   const [viewportSize, setViewportSize] = useState({ width: 0, height: WORLD_VIEWPORT_HEIGHT });
-  const [offset, setOffset] = useState({ x: -980, y: -120 });
+  const [offset, setOffset] = useState({ x: -780, y: -220 });
 
   const scale = isOverview ? 0.56 : 0.92;
 
