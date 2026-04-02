@@ -16,10 +16,16 @@ import GoalProgress from '@/components/home/GoalProgress';
 import ActionGoalCard from '@/components/home/ActionGoalCard';
 import EmptyGoalState from '@/components/home/EmptyGoalState';
 
-import { getBackground } from '@/assets/root/backgrounds';
 import { getBuilding } from '@/assets/root/buildings';
 import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
 import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
+
+/* =========================
+   타일맵 이미지 추가
+========================= */
+import baseGrassTileImg from '@/assets/root/tiles/baseGrassTile.png';
+import variantGrassTileImg from '@/assets/root/tiles/variantGrassTile.png';
+import pathTileImg from '@/assets/root/tiles/pathTile.png';
 
 const CATEGORY_ROUTE_MAP = {
   exercise: '/CreateGoalExercise',
@@ -85,26 +91,41 @@ const SHOP_ITEMS = [
 
 /* =========================
    마름모 타일(아이소메트릭) 설정
+   기존보다 넓은 진짜 타일맵
 ========================= */
-const TILE_W = 96;
-const TILE_H = 48;
-const GRID_COLS = 12;
-const GRID_ROWS = 12;
-const GRID_ORIGIN_X = 700;
-const GRID_ORIGIN_Y = 210;
+const TILE_W = 128;
+const TILE_H = 64;
+
+const GRID_COLS = 20;
+const GRID_ROWS = 20;
+
+/* 월드 중심에 맵이 오도록 조정 */
+const GRID_ORIGIN_X = 1280;
+const GRID_ORIGIN_Y = 220;
+
+/* 월드 전체 크기 */
+const WORLD_WIDTH = 2560;
+const WORLD_HEIGHT = 1700;
+
+/* 배경 타일 종류 */
+const TILE_KIND = {
+  BASE_GRASS: 'base_grass',
+  VARIANT_GRASS: 'variant_grass',
+  PATH: 'path',
+};
 
 const DEFAULT_BUILDINGS = [
-  { id: 'exercise_building', category: 'exercise', col: 2, row: 5, flipped: false },
-  { id: 'study_building', category: 'study', col: 4, row: 6, flipped: false },
-  { id: 'mental_building', category: 'mental', col: 7, row: 5, flipped: false },
-  { id: 'daily_building', category: 'daily', col: 9, row: 4, flipped: false },
+  { id: 'exercise_building', category: 'exercise', col: 6, row: 10, flipped: false },
+  { id: 'study_building', category: 'study', col: 9, row: 11, flipped: false },
+  { id: 'mental_building', category: 'mental', col: 12, row: 9, flipped: false },
+  { id: 'daily_building', category: 'daily', col: 15, row: 8, flipped: false },
 ];
 
 const DEFAULT_VILLAGE_DATA = {
   village_points: 0,
   village_decorations: [],
   village_characters: [
-    { id: 'starter_fox', name: '루', type: 'fox', col: 5, row: 5, size: 52, flipped: false },
+    { id: 'starter_fox', name: '루', type: 'fox', col: 10, row: 10, size: 52, flipped: false },
   ],
   village_buildings: DEFAULT_BUILDINGS,
 };
@@ -319,9 +340,9 @@ function canPlaceObject({
 function getObjectScreenPosition(item, kind) {
   const { x, y } = gridToScreen(item.col, item.row);
 
-  if (kind === 'building') return { x, y: y + 18 };
-  if (kind === 'character') return { x, y: y + 8 };
-  return { x, y: y + 10 };
+  if (kind === 'building') return { x, y: y + 22 };
+  if (kind === 'character') return { x, y: y + 10 };
+  return { x, y: y + 14 };
 }
 
 function getPreviewTiles(item, kind, col, row) {
@@ -648,13 +669,6 @@ function buildDerivedStats(logs = [], actionGoals = []) {
   return stats;
 }
 
-function getUnlockedTitles(stats, ownedTitleIds = []) {
-  const ownedSet = new Set(ownedTitleIds);
-  return TITLES.filter(
-    (title) => ownedSet.has(title.id) || Number(stats?.[title.metric] || 0) >= title.value
-  );
-}
-
 function getNewlyUnlockedTitle(stats, ownedTitleIds = []) {
   const ownedSet = new Set(ownedTitleIds);
   return TITLES.find(
@@ -772,8 +786,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'exercise',
       label: `체육관 Lv.${getStage(exerciseLevel)}`,
       image: getBuilding('exercise', getStage(exerciseLevel)),
-      col: layoutMap.exercise?.col ?? 2,
-      row: layoutMap.exercise?.row ?? 5,
+      col: layoutMap.exercise?.col ?? 6,
+      row: layoutMap.exercise?.row ?? 10,
       flipped: !!layoutMap.exercise?.flipped,
       w: 112,
       h: 90,
@@ -783,8 +797,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'study',
       label: `도서관 Lv.${getStage(studyLevel)}`,
       image: getBuilding('study', getStage(studyLevel)),
-      col: layoutMap.study?.col ?? 4,
-      row: layoutMap.study?.row ?? 6,
+      col: layoutMap.study?.col ?? 9,
+      row: layoutMap.study?.row ?? 11,
       flipped: !!layoutMap.study?.flipped,
       w: 112,
       h: 90,
@@ -794,8 +808,8 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'mental',
       label: `명상숲 Lv.${getStage(mentalLevel)}`,
       image: getBuilding('mental', getStage(mentalLevel)),
-      col: layoutMap.mental?.col ?? 7,
-      row: layoutMap.mental?.row ?? 5,
+      col: layoutMap.mental?.col ?? 12,
+      row: layoutMap.mental?.row ?? 9,
       flipped: !!layoutMap.mental?.flipped,
       w: 112,
       h: 90,
@@ -805,13 +819,54 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'daily',
       label: `생활공방 Lv.${getStage(dailyLevel)}`,
       image: getBuilding('daily', getStage(dailyLevel)),
-      col: layoutMap.daily?.col ?? 9,
-      row: layoutMap.daily?.row ?? 4,
+      col: layoutMap.daily?.col ?? 15,
+      row: layoutMap.daily?.row ?? 8,
       flipped: !!layoutMap.daily?.flipped,
       w: 112,
       h: 90,
     },
   ];
+}
+
+/* =========================
+   타일맵 생성 유틸
+========================= */
+function getTileImageByKind(kind) {
+  if (kind === TILE_KIND.PATH) return pathTileImg;
+  if (kind === TILE_KIND.VARIANT_GRASS) return variantGrassTileImg;
+  return baseGrassTileImg;
+}
+
+function isPathTile(col, row) {
+  /* 아래쪽 중앙 -> 중간 한번 꺾기 -> 오른쪽 위 방향 */
+  const pathA = Math.abs((col - row) - 1) <= 0; // 대각선 중심 길
+  const pathB = row >= 9 && row <= 12 && col >= 8 && col <= 11; // 중앙 연결부
+  const pathC = row >= 4 && row <= 8 && col - row === 3; // 살짝 옆으로 난 길
+
+  return pathA || pathB || pathC;
+}
+
+function getGrassVariant(col, row) {
+  const seed = (col * 17 + row * 29) % 7;
+  return seed === 0 || seed === 3 ? TILE_KIND.VARIANT_GRASS : TILE_KIND.BASE_GRASS;
+}
+
+function buildTileMap(cols, rows) {
+  const tiles = [];
+
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      const kind = isPathTile(col, row) ? TILE_KIND.PATH : getGrassVariant(col, row);
+      tiles.push({
+        id: `tile-${col}-${row}`,
+        col,
+        row,
+        kind,
+      });
+    }
+  }
+
+  return tiles;
 }
 
 function Section({ title, count, emptyText, children }) {
@@ -1382,7 +1437,6 @@ function DecorationSprite({ item }) {
 }
 
 function VillageWorldLayer({
-  activeCategory,
   nickname,
   totalLevel,
   points,
@@ -1409,11 +1463,10 @@ function VillageWorldLayer({
   setPlacementPreview,
 }) {
   const dragRef = useRef(null);
-  const [offset, setOffset] = useState({ x: -180, y: -140 });
 
-  const worldWidth = 1400;
-  const worldHeight = 900;
-  const scale = isOverview ? 0.78 : 1;
+  const [offset, setOffset] = useState({ x: -860, y: -80 });
+
+  const scale = isOverview ? 0.56 : 0.92;
 
   const buildings = useMemo(
     () => buildWorldBuildings({ userLevels, buildingLayout }),
@@ -1427,7 +1480,7 @@ function VillageWorldLayer({
     }));
   }, [userLevels, buildingLayout]);
 
-  const backgroundImage = getBackground(activeCategory, 'day');
+  const tileMap = useMemo(() => buildTileMap(GRID_COLS, GRID_ROWS), []);
 
   const handleWorldPointerDown = (e) => {
     if (isEditMode) return;
@@ -1644,9 +1697,24 @@ function VillageWorldLayer({
   }, [isEditMode, setCharacters, decorations, currentCollisionBuildings]);
 
   return (
-    <div className="sticky top-0 z-40 overflow-hidden" style={{ background: 'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 100%)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
+    <div
+      className="sticky top-0 z-40 overflow-hidden"
+      style={{
+        background: 'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 100%)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+      }}
+    >
       <div className="px-4 pt-3 pb-2">
-        <div className="relative overflow-hidden rounded-[28px]" style={{ height: 300, border: '1px solid rgba(160,120,64,0.18)', boxShadow: '0 12px 24px rgba(80,50,10,0.08)' }}>
+        <div
+          className="relative overflow-hidden rounded-[28px]"
+          style={{
+            height: 300,
+            border: '1px solid rgba(160,120,64,0.18)',
+            boxShadow: '0 12px 24px rgba(80,50,10,0.08)',
+            background: 'linear-gradient(180deg, #cfe8ff 0%, #eef8ff 26%, #dfeec5 60%, #cfe1a6 100%)',
+          }}
+        >
           <VillageOverlayBar
             nickname={nickname}
             level={totalLevel}
@@ -1672,40 +1740,49 @@ function VillageWorldLayer({
             <div
               className="absolute left-0 top-0"
               style={{
-                width: worldWidth,
-                height: worldHeight,
+                width: WORLD_WIDTH,
+                height: WORLD_HEIGHT,
                 transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
                 transformOrigin: 'top left',
                 transition: dragRef.current ? 'none' : 'transform 300ms ease',
               }}
             >
-              {backgroundImage ? (
-                <img src={backgroundImage} alt="village background" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
-              ) : (
-                <div className="absolute inset-0 bg-[#d8e8b0]" />
-              )}
+              {/* 하늘/잔디 바탕 */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    'radial-gradient(circle at 50% 12%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 28%), linear-gradient(180deg, #cfe8ff 0%, #eef8ff 24%, #d9ecbd 56%, #c4dd92 100%)',
+                }}
+              />
 
-              {Array.from({ length: GRID_ROWS }).map((_, row) =>
-                Array.from({ length: GRID_COLS }).map((__, col) => {
-                  const pos = gridToScreen(col, row);
-                  return (
-                    <div
-                      key={`tile-${col}-${row}`}
-                      className="absolute pointer-events-none"
-                      style={{
-                        left: pos.x - TILE_W / 2,
-                        top: pos.y - TILE_H / 2,
-                        width: TILE_W,
-                        height: TILE_H,
-                        transform: 'rotate(45deg)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        background: 'rgba(255,255,255,0.02)',
-                      }}
-                    />
-                  );
-                })
-              )}
+              {/* 타일맵 렌더링 */}
+              {tileMap.map((tile) => {
+                const pos = gridToScreen(tile.col, tile.row);
+                const tileImg = getTileImageByKind(tile.kind);
 
+                return (
+                  <img
+                    key={tile.id}
+                    src={tileImg}
+                    alt=""
+                    draggable={false}
+                    className="pointer-events-none absolute select-none"
+                    style={{
+                      left: pos.x - TILE_W / 2,
+                      top: pos.y - TILE_H / 2,
+                      width: TILE_W,
+                      height: TILE_H,
+                      objectFit: 'contain',
+                      imageRendering: 'auto',
+                      userSelect: 'none',
+                      WebkitUserDrag: 'none',
+                    }}
+                  />
+                );
+              })}
+
+              {/* 편집모드 미리보기 칸 */}
               {isEditMode && placementPreview
                 ? getPreviewTiles(
                     placementPreview.item,
@@ -1725,7 +1802,7 @@ function VillageWorldLayer({
                           top: pos.y - TILE_H / 2,
                           width: TILE_W,
                           height: TILE_H,
-                          transform: 'rotate(45deg)',
+                          clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
                           border: color.border,
                           background: color.background,
                           boxSizing: 'border-box',
@@ -1735,6 +1812,7 @@ function VillageWorldLayer({
                   })
                 : null}
 
+              {/* 장식 */}
               {decorations.map((item) => {
                 const isSelected = selectedObject?.type === 'decoration' && selectedObject?.id === item.id;
                 const pos = getObjectScreenPosition(item, 'decoration');
@@ -1759,6 +1837,7 @@ function VillageWorldLayer({
                 );
               })}
 
+              {/* 건물 */}
               {buildings.map((building) => {
                 const isSelected = selectedObject?.type === 'building' && selectedObject?.id === building.category;
                 const pos = getObjectScreenPosition(building, 'building');
@@ -1785,6 +1864,7 @@ function VillageWorldLayer({
                 );
               })}
 
+              {/* 캐릭터 */}
               {characters.map((npc) => {
                 const isSelected = selectedObject?.type === 'character' && selectedObject?.id === npc.id;
                 const pos = getObjectScreenPosition(npc, 'character');
@@ -2735,7 +2815,6 @@ export default function Home() {
       />
 
       <VillageWorldLayer
-        activeCategory={activeCategory}
         isOverview={isOverview}
         nickname={nickname}
         totalLevel={totalLevel}
