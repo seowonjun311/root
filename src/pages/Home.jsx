@@ -1102,47 +1102,55 @@ function buildBorderTrees() {
   }
 
   for (let row = -OUTER_TILE_PADDING - 2; row <= GRID_ROWS + OUTER_TILE_PADDING + 1; row += 1) {
-    const isBottomRightZone = row >= GRID_ROWS - 10;
+    const isBottomRightZone = row >= GRID_ROWS - 12;
 
     if (isBottomRightZone) {
       pushBush(GRID_COLS + 1, row, {
-        offsetX: 24,
-        offsetY: 20,
+        offsetX: 18,
+        offsetY: 18,
         depth: 0,
-        extraWidth: 22,
-        zBoost: 2,
+        extraWidth: 28,
+        zBoost: 3,
         region: 'right-bottom',
       });
       pushBush(GRID_COLS + 2, row, {
-        offsetX: 72,
-        offsetY: 38,
+        offsetX: 64,
+        offsetY: 34,
         depth: 1,
-        extraWidth: 20,
-        zBoost: 2,
+        extraWidth: 26,
+        zBoost: 3,
         region: 'right-bottom',
       });
       pushBush(GRID_COLS + 3, row, {
-        offsetX: 124,
-        offsetY: 58,
+        offsetX: 112,
+        offsetY: 54,
         depth: 2,
-        extraWidth: 18,
-        zBoost: 2,
+        extraWidth: 24,
+        zBoost: 3,
         region: 'right-bottom',
       });
       pushBush(GRID_COLS + 4, row, {
-        offsetX: 178,
-        offsetY: 82,
+        offsetX: 164,
+        offsetY: 78,
         depth: 3,
-        extraWidth: 14,
-        zBoost: 2,
+        extraWidth: 20,
+        zBoost: 3,
         region: 'right-bottom',
       });
       pushBush(GRID_COLS + 5, row, {
-        offsetX: 226,
-        offsetY: 106,
+        offsetX: 214,
+        offsetY: 102,
         depth: 4,
-        extraWidth: 10,
-        zBoost: 2,
+        extraWidth: 16,
+        zBoost: 3,
+        region: 'right-bottom',
+      });
+      pushBush(GRID_COLS + 6, row, {
+        offsetX: 262,
+        offsetY: 126,
+        depth: 5,
+        extraWidth: 12,
+        zBoost: 3,
         region: 'right-bottom',
       });
     } else {
@@ -1188,6 +1196,10 @@ function buildBorderTrees() {
   pushBushCluster(-7, GRID_ROWS + 1, 4, 1, 18, 10, 'bottom-left-side');
   pushBushCluster(GRID_COLS + 6, GRID_ROWS + 1, 4, 1, 18, 10, 'bottom-right-side');
   pushBushCluster(GRID_COLS + 8, GRID_ROWS + 2, 5, 1, 20, 12, 'bottom-right-side');
+  pushBushCluster(GRID_COLS + 11, GRID_ROWS + 1, 6, 0, 22, 12, 'bottom-right-side');
+  pushBushCluster(GRID_COLS + 12, GRID_ROWS + 4, 5, 1, 22, 12, 'bottom-right-side');
+  pushBushCluster(GRID_COLS + 13, GRID_ROWS - 1, 4, 1, 20, 10, 'bottom-right-side');
+  pushBushCluster(GRID_COLS + 9, GRID_ROWS - 2, 4, 1, 18, 10, 'bottom-right-side');
 
   for (let col = -OUTER_TILE_PADDING - 4; col <= 2; col += 1) {
     pushBush(col, GRID_ROWS + 4, {
@@ -1209,22 +1221,28 @@ function buildBorderTrees() {
     });
   }
 
-  const bottomRightStart = gridToScreen(GRID_COLS - 3, GRID_ROWS - 9);
-  const bottomRightHardStart = gridToScreen(GRID_COLS - 1, GRID_ROWS - 7);
+  const bottomRightStart = gridToScreen(GRID_COLS - 5, GRID_ROWS - 11);
+  const bottomRightHardStart = gridToScreen(GRID_COLS - 2, GRID_ROWS - 8);
+  const bottomRightDeepStart = gridToScreen(GRID_COLS + 1, GRID_ROWS - 5);
 
   const cleaned = result.filter((item) => {
     if (item.kind !== 'tree') return true;
 
     const isRightVisualZone =
-      item.x >= bottomRightStart.x + 40 &&
-      item.y >= bottomRightStart.y - 120;
+      item.x >= bottomRightStart.x - 10 &&
+      item.y >= bottomRightStart.y - 150;
 
     const isHardBottomRight =
-      item.x >= bottomRightHardStart.x - 40 &&
-      item.y >= bottomRightHardStart.y - 180;
+      item.x >= bottomRightHardStart.x - 60 &&
+      item.y >= bottomRightHardStart.y - 220;
+
+    const isDeepBottomRight =
+      item.x >= bottomRightDeepStart.x - 120 &&
+      item.y >= bottomRightDeepStart.y - 260;
 
     if (isRightVisualZone) return false;
     if (isHardBottomRight) return false;
+    if (isDeepBottomRight) return false;
 
     return true;
   });
