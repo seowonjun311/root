@@ -101,10 +101,10 @@ const WORLD_WIDTH = 2560;
 const WORLD_HEIGHT = 1700;
 const OUTER_TILE_PADDING = 5;
 const WORLD_VIEWPORT_HEIGHT = 300;
-const WORLD_EDGE_MARGIN_LEFT = 560;
-const WORLD_EDGE_MARGIN_RIGHT = 560;
-const WORLD_EDGE_MARGIN_TOP = 440;
-const WORLD_EDGE_MARGIN_BOTTOM = 520;
+const WORLD_EDGE_MARGIN_LEFT = 110;
+const WORLD_EDGE_MARGIN_RIGHT = 110;
+const WORLD_EDGE_MARGIN_TOP = 140;
+const WORLD_EDGE_MARGIN_BOTTOM = 0;
 
 const TILE_KIND = {
   BASE_GRASS: 'base_grass',
@@ -125,7 +125,7 @@ const DEFAULT_VILLAGE_DATA = {
   village_points: 0,
   village_decorations: [],
   village_characters: [
-    { id: 'starter_fox', name: '루', type: 'fox', col: 10, row: 10, size: 52, flipped: false },
+    { id: 'starter_fox', name: '루', type: 'fox', col: 10, row: 12, size: 52, flipped: false },
   ],
   village_buildings: DEFAULT_BUILDINGS,
 };
@@ -732,10 +732,11 @@ function getVillageState(source) {
     village_decorations: Array.isArray(source?.village_decorations)
       ? source.village_decorations
       : DEFAULT_VILLAGE_DATA.village_decorations,
-    village_characters:
+    village_characters: relocateCharactersToVillageCore(
       Array.isArray(source?.village_characters) && source.village_characters.length > 0
         ? source.village_characters
-        : DEFAULT_VILLAGE_DATA.village_characters,
+        : DEFAULT_VILLAGE_DATA.village_characters
+    ),
     village_buildings:
       Array.isArray(source?.village_buildings) && source.village_buildings.length > 0
         ? source.village_buildings
@@ -747,6 +748,56 @@ function getVillageState(source) {
       ? source.village_inventory_decorations
       : DEFAULT_VILLAGE_INVENTORY.village_inventory_decorations,
   };
+}
+
+function getCharacterSpawnSlots() {
+  return [
+    { col: 10, row: 12 },
+    { col: 11, row: 12 },
+    { col: 9, row: 12 },
+    { col: 10, row: 11 },
+    { col: 11, row: 11 },
+    { col: 9, row: 11 },
+    { col: 12, row: 12 },
+    { col: 8, row: 12 },
+  ];
+}
+
+function isCharacterTooFarFromVillageCore(character) {
+  const col = Number(character?.col ?? 0);
+  const row = Number(character?.row ?? 0);
+  return col < 6 || col > 14 || row < 8 || row > 14;
+}
+
+function relocateCharactersToVillageCore(rawCharacters = []) {
+  const slots = getCharacterSpawnSlots();
+  const used = new Set();
+
+  return (Array.isArray(rawCharacters) ? rawCharacters : []).map((character, index) => {
+    const next = { ...character };
+    const currentKey = `${next.col},${next.row}`;
+
+    if (!isCharacterTooFarFromVillageCore(next) && !used.has(currentKey)) {
+      used.add(currentKey);
+      return next;
+    }
+
+    const fallback = slots[index % slots.length];
+    let chosen = fallback;
+
+    for (const slot of slots) {
+      const key = `${slot.col},${slot.row}`;
+      if (!used.has(key)) {
+        chosen = slot;
+        break;
+      }
+    }
+
+    next.col = chosen.col;
+    next.row = chosen.row;
+    used.add(`${chosen.col},${chosen.row}`);
+    return next;
+  });
 }
 
 function createDecoration(subtype) {
@@ -764,13 +815,16 @@ function createDecoration(subtype) {
 }
 
 function createCharacter(type) {
+  const spawnSlots = getCharacterSpawnSlots();
+  const spawn = spawnSlots[Math.floor(randomBetween(0, spawnSlots.length))] || { col: 10, row: 12 };
+
   return {
     id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
     type,
     image: getCharacterImage(type),
-    col: Math.floor(randomBetween(2, GRID_COLS - 2)),
-    row: Math.floor(randomBetween(2, GRID_ROWS - 2)),
+    col: spawn.col,
+    row: spawn.row,
     size: type === 'alpaca' ? 56 : 52,
     flipped: false,
   };
@@ -879,8 +933,8 @@ function buildBorderTrees() {
   let idCounter = 0;
 
   const treeSizeFromSeed = (seed, depth = 0) => {
-    const r = pseudoRandom(seed + depth * 13);
-    return Math.round(220 + r * 92 - depth * 8);
+    const r = pseudoRandom(seed + depth * 17);
+    return Math.round(228 + r * 108 - depth * 6);
   };
 
   const imageFromSeed = (seed) => {
@@ -889,8 +943,8 @@ function buildBorderTrees() {
   };
 
   const flipFromSeed = (seed) => pseudoRandom(seed + 33) > 0.5;
-  const opacityFromSeed = (seed) => 0.92 + pseudoRandom(seed + 57) * 0.08;
-  const rotationFromSeed = (seed) => (pseudoRandom(seed + 71) - 0.5) * 4;
+  const opacityFromSeed = (seed) => 0.9 + pseudoRandom(seed + 57) * 0.1;
+  const rotationFromSeed = (seed) => (pseudoRandom(seed + 71) - 0.5) * 5;
 
   const pushTree = (col, row, options = {}) => {
     const {
@@ -898,75 +952,82 @@ function buildBorderTrees() {
       offsetY = 0,
       depth = 0,
       extraWidth = 0,
+      zBoost = 0,
     } = options;
 
-    const seed = col * 1000 + row * 100 + depth * 17 + extraWidth;
+    const seed = col * 1000 + row * 100 + depth * 17 + extraWidth + zBoost;
     const pos = gridToScreen(col, row);
 
     result.push({
       id: `border-tree-${idCounter++}`,
-      x: pos.x + offsetX + (pseudoRandom(seed + 5) - 0.5) * 26,
-      y: pos.y + offsetY + (pseudoRandom(seed + 9) - 0.5) * 20,
+      x: pos.x + offsetX + (pseudoRandom(seed + 5) - 0.5) * 34,
+      y: pos.y + offsetY + (pseudoRandom(seed + 9) - 0.5) * 26,
       width: treeSizeFromSeed(seed, depth) + extraWidth,
       image: imageFromSeed(seed),
       flipped: flipFromSeed(seed),
       opacity: opacityFromSeed(seed),
       rotation: rotationFromSeed(seed),
-      zIndex: 60 + (row + OUTER_TILE_PADDING) * 8 + depth * 3 + col,
+      zIndex: 60 + (row + OUTER_TILE_PADDING + 10) * 10 + depth * 4 + col + zBoost,
     });
   };
 
-  const pushCluster = (centerCol, centerRow, radius = 2, depthBase = 0) => {
+  const pushCluster = (centerCol, centerRow, radius = 3, depthBase = 0, spreadX = 18, spreadY = 12) => {
     for (let row = centerRow - radius; row <= centerRow + radius; row += 1) {
       for (let col = centerCol - radius; col <= centerCol + radius; col += 1) {
         const distance = Math.abs(col - centerCol) + Math.abs(row - centerRow);
         if (distance > radius + 1) continue;
         pushTree(col, row, {
-          offsetX: (col - centerCol) * 18,
-          offsetY: (row - centerRow) * 10,
+          offsetX: (col - centerCol) * spreadX,
+          offsetY: (row - centerRow) * spreadY,
           depth: depthBase + distance,
-          extraWidth: Math.max(0, 24 - distance * 8),
+          extraWidth: Math.max(0, 34 - distance * 7),
+          zBoost: radius - distance,
         });
       }
     }
   };
 
-  for (let col = -OUTER_TILE_PADDING; col <= GRID_COLS + OUTER_TILE_PADDING - 1; col += 1) {
-    pushTree(col, -3, { offsetY: -58, depth: 0, extraWidth: 42 });
-    pushTree(col, -2, { offsetY: -20, depth: 1, extraWidth: 18 });
+  for (let col = -OUTER_TILE_PADDING - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 1; col += 1) {
+    pushTree(col, -4, { offsetY: -96, depth: 0, extraWidth: 58 });
+    pushTree(col, -3, { offsetY: -56, depth: 1, extraWidth: 36 });
+    pushTree(col, -2, { offsetY: -16, depth: 2, extraWidth: 16 });
     if (col % 2 === 0) {
-      pushTree(col, -4, { offsetX: 18, offsetY: -88, depth: 2, extraWidth: 12 });
+      pushTree(col, -5, { offsetX: 24, offsetY: -132, depth: 3, extraWidth: 18 });
     }
   }
 
-  for (let col = -OUTER_TILE_PADDING; col <= GRID_COLS + OUTER_TILE_PADDING - 1; col += 1) {
-    pushTree(col, GRID_ROWS + 1, { offsetY: 42, depth: 0, extraWidth: 48 });
-    pushTree(col, GRID_ROWS + 2, { offsetY: 82, depth: 1, extraWidth: 24 });
+  for (let col = -OUTER_TILE_PADDING - 2; col <= GRID_COLS + OUTER_TILE_PADDING + 1; col += 1) {
+    pushTree(col, GRID_ROWS + 1, { offsetY: 38, depth: 0, extraWidth: 62 });
+    pushTree(col, GRID_ROWS + 2, { offsetY: 84, depth: 1, extraWidth: 38 });
+    pushTree(col, GRID_ROWS + 3, { offsetY: 126, depth: 2, extraWidth: 14 });
     if (col % 2 !== 0) {
-      pushTree(col, GRID_ROWS + 3, { offsetX: -14, offsetY: 124, depth: 2, extraWidth: 10 });
+      pushTree(col, GRID_ROWS + 4, { offsetX: -18, offsetY: 168, depth: 3, extraWidth: 10 });
     }
   }
 
-  for (let row = -OUTER_TILE_PADDING; row <= GRID_ROWS + OUTER_TILE_PADDING - 1; row += 1) {
-    pushTree(-3, row, { offsetX: -82, depth: 0, extraWidth: 44 });
-    pushTree(-2, row, { offsetX: -38, depth: 1, extraWidth: 18 });
-    if (row % 2 === 0) {
-      pushTree(-4, row, { offsetX: -124, offsetY: -8, depth: 2, extraWidth: 8 });
-    }
+  for (let row = -OUTER_TILE_PADDING - 2; row <= GRID_ROWS + OUTER_TILE_PADDING + 1; row += 1) {
+    pushTree(-5, row, { offsetX: -164, offsetY: -12, depth: 0, extraWidth: 64 });
+    pushTree(-4, row, { offsetX: -118, offsetY: -6, depth: 1, extraWidth: 42 });
+    pushTree(-3, row, { offsetX: -72, depth: 2, extraWidth: 20 });
+    pushTree(-2, row, { offsetX: -26, depth: 3, extraWidth: 8 });
   }
 
-  for (let row = -OUTER_TILE_PADDING; row <= GRID_ROWS + OUTER_TILE_PADDING - 1; row += 1) {
-    pushTree(GRID_COLS + 1, row, { offsetX: 38, depth: 0, extraWidth: 44 });
-    pushTree(GRID_COLS + 2, row, { offsetX: 84, depth: 1, extraWidth: 20 });
-    if (row % 2 !== 0) {
-      pushTree(GRID_COLS + 3, row, { offsetX: 126, offsetY: -4, depth: 2, extraWidth: 10 });
-    }
+  for (let row = -OUTER_TILE_PADDING - 2; row <= GRID_ROWS + OUTER_TILE_PADDING + 1; row += 1) {
+    pushTree(GRID_COLS + 1, row, { offsetX: 30, depth: 0, extraWidth: 12 });
+    pushTree(GRID_COLS + 2, row, { offsetX: 78, depth: 1, extraWidth: 26 });
+    pushTree(GRID_COLS + 3, row, { offsetX: 126, depth: 2, extraWidth: 42 });
+    pushTree(GRID_COLS + 4, row, { offsetX: 172, offsetY: -10, depth: 3, extraWidth: 62 });
   }
 
-  pushCluster(-4, -4, 3, 0);
-  pushCluster(GRID_COLS + 3, -4, 3, 0);
-  pushCluster(-4, GRID_ROWS + 3, 3, 0);
-  pushCluster(GRID_COLS + 3, GRID_ROWS + 3, 3, 0);
+  pushCluster(-6, -6, 5, 0, 24, 16);
+  pushCluster(GRID_COLS + 5, -6, 5, 0, 24, 16);
+  pushCluster(-6, GRID_ROWS + 5, 5, 0, 24, 16);
+  pushCluster(GRID_COLS + 5, GRID_ROWS + 5, 5, 0, 24, 16);
+
+  pushCluster(-7, -1, 4, 1, 20, 14);
+  pushCluster(GRID_COLS + 6, -1, 4, 1, 20, 14);
+  pushCluster(-7, GRID_ROWS + 1, 4, 1, 20, 14);
+  pushCluster(GRID_COLS + 6, GRID_ROWS + 1, 4, 1, 20, 14);
 
   return result.sort((a, b) => a.zIndex - b.zIndex);
 }
@@ -1594,7 +1655,7 @@ function VillageWorldLayer({
   const dragRef = useRef(null);
   const viewportRef = useRef(null);
   const [viewportSize, setViewportSize] = useState({ width: 0, height: WORLD_VIEWPORT_HEIGHT });
-  const [offset, setOffset] = useState({ x: -860, y: -80 });
+  const [offset, setOffset] = useState({ x: -980, y: -120 });
 
   const scale = isOverview ? 0.56 : 0.92;
 
