@@ -933,7 +933,6 @@ function buildTileMap(cols, rows, padding = OUTER_TILE_PADDING) {
   return tiles;
 }
 
-
 function buildBorderTrees() {
   const result = [];
   let idCounter = 0;
@@ -1104,7 +1103,7 @@ function buildBorderTrees() {
     pushTree(-2, row, { offsetX: -26, depth: 3, extraWidth: 8, region: 'left' });
   }
 
-  // 오른쪽: 아래쪽은 수풀로 더 넓게 교체
+  // 오른쪽: 아래쪽은 수풀로 교체
   for (let row = -OUTER_TILE_PADDING - 2; row <= GRID_ROWS + OUTER_TILE_PADDING + 1; row += 1) {
     const isBottomRightZone = row >= GRID_ROWS - 15;
 
@@ -1249,7 +1248,7 @@ function buildBorderTrees() {
     });
   }
 
-    // 오른쪽 아래변의 오른쪽 절반을 수풀로 더 강하게 채움
+  // 오른쪽 아래변의 오른쪽 절반을 수풀로 더 강하게 채움
   for (let row = GRID_ROWS - 10; row <= GRID_ROWS + OUTER_TILE_PADDING + 10; row += 1) {
     pushBush(GRID_COLS + 9, row, {
       offsetX: 430,
@@ -1293,7 +1292,7 @@ function buildBorderTrees() {
     });
   }
 
-  // 화면에 보이는 오른쪽 아래 빈 삼각형을 수풀로 채우는 추가 대각선
+  // 화면에 보이는 오른쪽 아래 빈 삼각형 채우기
   for (let step = 0; step <= 12; step += 1) {
     pushBush(GRID_COLS + 2 + step, GRID_ROWS - 5 + step, {
       offsetX: 80 + step * 22,
@@ -1324,7 +1323,7 @@ function buildBorderTrees() {
     });
   }
 
-  // 오른쪽 아래 빈 바닥 띠도 직접 메움
+  // 오른쪽 아래 바닥 띠 메우기
   for (let col = GRID_COLS + 6; col <= GRID_COLS + OUTER_TILE_PADDING + 14; col += 1) {
     pushBush(col, GRID_ROWS + 7, {
       offsetX: 40,
@@ -1344,6 +1343,84 @@ function buildBorderTrees() {
     });
   }
 
+  // === 추가 보강 1: 오른쪽 아래 시야 경계선 바로 안쪽 채우기 ===
+  for (let step = 0; step <= 16; step += 1) {
+    pushBush(GRID_COLS - 1 + step, GRID_ROWS - 8 + step, {
+      offsetX: 36 + step * 16,
+      offsetY: 34 + step * 18,
+      depth: 1 + Math.floor(step / 3),
+      extraWidth: Math.max(10, 26 - step),
+      zBoost: 5,
+      region: 'bottom-right-inner-edge-fill',
+    });
+
+    pushBush(GRID_COLS - 2 + step, GRID_ROWS - 6 + step, {
+      offsetX: 12 + step * 15,
+      offsetY: 54 + step * 18,
+      depth: 2 + Math.floor(step / 3),
+      extraWidth: Math.max(8, 22 - step),
+      zBoost: 5,
+      region: 'bottom-right-inner-edge-fill',
+    });
+  }
+
+  // === 추가 보강 2: 오른쪽 아래 잔디 띠가 보이던 구간을 수평으로 메움 ===
+  for (let col = GRID_COLS + 2; col <= GRID_COLS + OUTER_TILE_PADDING + 18; col += 1) {
+    pushBush(col, GRID_ROWS + 3, {
+      offsetX: 18,
+      offsetY: 96,
+      depth: 2,
+      extraWidth: 22,
+      zBoost: 5,
+      region: 'bottom-right-horizontal-fill',
+    });
+    pushBush(col, GRID_ROWS + 4, {
+      offsetX: 28,
+      offsetY: 122,
+      depth: 3,
+      extraWidth: 18,
+      zBoost: 5,
+      region: 'bottom-right-horizontal-fill',
+    });
+    pushBush(col, GRID_ROWS + 5, {
+      offsetX: 38,
+      offsetY: 148,
+      depth: 4,
+      extraWidth: 14,
+      zBoost: 5,
+      region: 'bottom-right-horizontal-fill',
+    });
+  }
+
+  // === 추가 보강 3: 오른쪽 아래 삼각형 중앙 빈칸 채움 ===
+  for (let step = 0; step <= 14; step += 1) {
+    pushBush(GRID_COLS + 4 + step, GRID_ROWS - 4 + step, {
+      offsetX: 122 + step * 20,
+      offsetY: 46 + step * 22,
+      depth: 2 + Math.floor(step / 2),
+      extraWidth: Math.max(8, 22 - step),
+      zBoost: 6,
+      region: 'bottom-right-center-gap-fill',
+    });
+
+    if (step <= 12) {
+      pushBush(GRID_COLS + 6 + step, GRID_ROWS - 5 + step, {
+        offsetX: 168 + step * 18,
+        offsetY: 28 + step * 22,
+        depth: 3 + Math.floor(step / 2),
+        extraWidth: Math.max(6, 18 - step),
+        zBoost: 6,
+        region: 'bottom-right-center-gap-fill',
+      });
+    }
+  }
+
+  // === 추가 보강 4: 맨 오른쪽 아래 코너를 더 조밀하게 채움 ===
+  pushBushCluster(GRID_COLS + 14, GRID_ROWS + 6, 6, 1, 24, 14, 'bottom-right-heavy-corner');
+  pushBushCluster(GRID_COLS + 16, GRID_ROWS + 8, 6, 1, 24, 14, 'bottom-right-heavy-corner');
+  pushBushCluster(GRID_COLS + 18, GRID_ROWS + 9, 5, 2, 22, 13, 'bottom-right-heavy-corner');
+  pushBushCluster(GRID_COLS + 20, GRID_ROWS + 11, 5, 2, 22, 13, 'bottom-right-heavy-corner');
+
   // 오른쪽 끝 상단 쪽까지 수풀 보강
   pushBushCluster(GRID_COLS + 15, GRID_ROWS - 4, 5, 1, 22, 12, 'right-far-bush');
   pushBushCluster(GRID_COLS + 17, GRID_ROWS - 1, 4, 2, 20, 11, 'right-far-bush');
@@ -1361,14 +1438,14 @@ function buildBorderTrees() {
     });
   }
 
-   // 오른쪽 아래 큰 나무는 실제 화면 기준으로 더 넓게 제거
-  const bottomRightHardStart = gridToScreen(GRID_COLS - 1, GRID_ROWS - 8);
+  // 오른쪽 아래 큰 나무는 더 강하게 제거
+  const bottomRightHardStart = gridToScreen(GRID_COLS - 2, GRID_ROWS - 9);
 
   const cleaned = result.filter((item) => {
     if (item.kind !== 'tree') return true;
 
-    const isRightCut = item.x >= bottomRightHardStart.x - 140;
-    const isBottomCut = item.y >= bottomRightHardStart.y - 260;
+    const isRightCut = item.x >= bottomRightHardStart.x - 190;
+    const isBottomCut = item.y >= bottomRightHardStart.y - 310;
 
     if (isRightCut && isBottomCut) return false;
 
