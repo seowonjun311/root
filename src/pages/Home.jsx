@@ -1325,19 +1325,23 @@ function buildBorderTrees() {
   }
 
   // 오른쪽 아래 큰 나무는 실제 화면 기준으로 강제 제거
-  const bottomRightHardStart = gridToScreen(GRID_COLS + 1, GRID_ROWS - 6);
+const bottomRightHardStart = gridToScreen(GRID_COLS - 1, GRID_ROWS - 8);
 
-  const cleaned = result.filter((item) => {
-    if (item.kind !== 'tree') return true;
+const cleaned = result.filter((item) => {
+  if (item.kind !== 'tree') return true;
 
-    const isHardBottomRight =
-      item.x >= bottomRightHardStart.x - 80 &&
-      item.y >= bottomRightHardStart.y - 220;
+  // 🔥 기존보다 더 안쪽까지 잘라냄 (4타일 정도 확장)
+  const isRightCut =
+    item.x >= bottomRightHardStart.x - 140;
 
-    if (isHardBottomRight) return false;
+  const isBottomCut =
+    item.y >= bottomRightHardStart.y - 260;
 
-    return true;
-  });
+  // 👉 둘 다 만족하면 제거 (오른쪽 아래 영역)
+  if (isRightCut && isBottomCut) return false;
+
+  return true;
+});
 
   return cleaned.sort((a, b) => a.zIndex - b.zIndex);
 }
