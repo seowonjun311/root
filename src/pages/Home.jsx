@@ -1438,6 +1438,92 @@ function buildBorderTrees() {
     });
   }
 
+  // === 추가 보강 5: 오른쪽 아래 경계 안쪽의 빈 띠를 더 촘촘하게 메움 ===
+  for (let step = 0; step <= 18; step += 1) {
+    pushBush(GRID_COLS + 1 + step, GRID_ROWS - 9 + step, {
+      offsetX: 22 + step * 14,
+      offsetY: 18 + step * 18,
+      depth: 2 + Math.floor(step / 3),
+      extraWidth: Math.max(10, 28 - step),
+      zBoost: 6,
+      region: 'bottom-right-deep-diagonal-fill',
+    });
+
+    pushBush(GRID_COLS + step, GRID_ROWS - 7 + step, {
+      offsetX: 4 + step * 13,
+      offsetY: 42 + step * 18,
+      depth: 3 + Math.floor(step / 3),
+      extraWidth: Math.max(8, 24 - step),
+      zBoost: 6,
+      region: 'bottom-right-deep-diagonal-fill',
+    });
+  }
+
+  // === 추가 보강 6: 오른쪽 아래 바닥 쪽 빈 잔디 띠를 한 번 더 채움 ===
+  for (let col = GRID_COLS + 3; col <= GRID_COLS + OUTER_TILE_PADDING + 22; col += 1) {
+    pushBush(col, GRID_ROWS + 2, {
+      offsetX: 14,
+      offsetY: 78,
+      depth: 2,
+      extraWidth: 22,
+      zBoost: 6,
+      region: 'bottom-right-deep-floor-fill',
+    });
+
+    pushBush(col, GRID_ROWS + 3, {
+      offsetX: 24,
+      offsetY: 104,
+      depth: 3,
+      extraWidth: 18,
+      zBoost: 6,
+      region: 'bottom-right-deep-floor-fill',
+    });
+
+    pushBush(col, GRID_ROWS + 4, {
+      offsetX: 34,
+      offsetY: 130,
+      depth: 4,
+      extraWidth: 14,
+      zBoost: 6,
+      region: 'bottom-right-deep-floor-fill',
+    });
+
+    pushBush(col, GRID_ROWS + 5, {
+      offsetX: 44,
+      offsetY: 156,
+      depth: 5,
+      extraWidth: 10,
+      zBoost: 6,
+      region: 'bottom-right-deep-floor-fill',
+    });
+  }
+
+  // === 추가 보강 7: 화면상 오른쪽 아래 변을 따라 수풀 벽처럼 한 겹 더 채움 ===
+  for (let step = 0; step <= 16; step += 1) {
+    pushBush(GRID_COLS + 8 + step, GRID_ROWS - 6 + step, {
+      offsetX: 210 + step * 16,
+      offsetY: 30 + step * 21,
+      depth: 3 + Math.floor(step / 2),
+      extraWidth: Math.max(8, 20 - step),
+      zBoost: 7,
+      region: 'bottom-right-wall-fill',
+    });
+
+    pushBush(GRID_COLS + 10 + step, GRID_ROWS - 8 + step, {
+      offsetX: 260 + step * 16,
+      offsetY: 4 + step * 21,
+      depth: 4 + Math.floor(step / 2),
+      extraWidth: Math.max(6, 18 - step),
+      zBoost: 7,
+      region: 'bottom-right-wall-fill',
+    });
+  }
+
+  // === 추가 보강 8: 오른쪽 아래 최외곽 코너를 더 두껍게 채움 ===
+  pushBushCluster(GRID_COLS + 19, GRID_ROWS + 10, 6, 2, 24, 14, 'bottom-right-final-corner');
+  pushBushCluster(GRID_COLS + 22, GRID_ROWS + 12, 6, 2, 24, 14, 'bottom-right-final-corner');
+  pushBushCluster(GRID_COLS + 24, GRID_ROWS + 14, 5, 3, 22, 13, 'bottom-right-final-corner');
+  
   // 오른쪽 아래 큰 나무는 더 강하게 제거
   const bottomRightHardStart = gridToScreen(GRID_COLS - 2, GRID_ROWS - 9);
 
@@ -2160,9 +2246,9 @@ function VillageWorldLayer({
   const dragRef = useRef(null);
   const viewportRef = useRef(null);
   const [viewportSize, setViewportSize] = useState({ width: 0, height: WORLD_VIEWPORT_HEIGHT });
-  const [offset, setOffset] = useState({ x: -860, y: -260 });
+  const [offset, setOffset] = useState({ x: -360, y: -120 });
 
-  const scale = isOverview ? 0.21 : 0.92;
+  const scale = isOverview ? 0.21 : 0.46;
 
   const buildings = useMemo(
     () => buildWorldBuildings({ userLevels, buildingLayout }),
