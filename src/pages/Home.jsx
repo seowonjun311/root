@@ -1342,7 +1342,13 @@ function buildBorderTrees() {
       region: 'bottom-right-floor-fill',
     });
   }
-
+   //비어 보이는 상단 쪽
+  pushBush(GRID_COLS + 6, GRID_ROWS + 1, { offsetX: 120, offsetY: 54, depth: 2, extraWidth: 20, zBoost: 7, region: 'bottom-right-micro-fill' });
+  // 중간 연결
+  pushBush(GRID_COLS + 7, GRID_ROWS + 2, { offsetX: 154, offsetY: 78, depth: 3, extraWidth: 18, zBoost: 7, region: 'bottom-right-micro-fill' });
+  //아래 수풀 덩어리와 자연스럽게 이어주
+  pushBush(GRID_COLS + 8, GRID_ROWS + 3, { offsetX: 188, offsetY: 102, depth: 4, extraWidth: 16, zBoost: 7, region: 'bottom-right-micro-fill' });
+  
   // 오른쪽 아래 시야 경계선 바로 안쪽 채우기
   for (let step = 0; step <= 16; step += 1) {
     pushBush(GRID_COLS - 1 + step, GRID_ROWS - 8 + step, {
