@@ -571,15 +571,16 @@ function getDefaultUserLevels(logs = []) {
   return result;
 }
 
+//“행동목표들을 오늘 / 예정 / 지난 목표로 자동 분류하는 함수”
 function groupActionGoals(actionGoals, today) {
-  const todayItems = [];
-  const scheduledItems = [];
-  const overdueItems = [];
+  const todayItems = []; // 오늘 해야 할 것
+  const scheduledItems = []; // 예정된 목표
+  const overdueItems = []; // 기한 지난 목표
 
   (actionGoals || []).forEach((actionGoal) => {
-    const isOneTime = actionGoal?.action_type === 'one_time';
+    const isOneTime = actionGoal?.action_type === 'one_time'; //1회성 목표와 일반목표 2가지로 나눔
 
-    if (isOneTime) {
+    if (isOneTime) {//1회성 목표
       const scheduledDate = normalizeDateOnly(
         actionGoal?.scheduled_date ||
           actionGoal?.scheduledDate ||
@@ -591,9 +592,9 @@ function groupActionGoals(actionGoals, today) {
       const isCompleted =
         actionGoal?.status === 'completed' || actionGoal?.completed === true;
 
-      if (isCompleted) return;
+      if (isCompleted) return; //완료된 목표는 홈에서 안 보여줌
 
-      if (!scheduledDate) {
+      if (!scheduledDate) {// 예정된 목표인 경우
         scheduledItems.push(actionGoal);
         return;
       }
@@ -660,12 +661,14 @@ function groupActionGoals(actionGoals, today) {
   return { todayItems, scheduledItems, overdueItems };
 }
 
+//행동 하나 완료했을 때 EXP 얼마나 줄지 결정
 function calculateExp(actionGoal, minutes = 0) {
-  if (actionGoal?.action_type === 'one_time') return 20;
-  if (actionGoal?.action_type === 'timer' || Number(minutes || 0) > 0) return 15;
-  return 10;
+  if (actionGoal?.action_type === 'one_time') return 20; //1회성 목표는 20
+  if (actionGoal?.action_type === 'timer' || Number(minutes || 0) > 0) return 15; //시간기록형은 15
+  return 10; //나머지는 10
 }
 
+//마을 성장용 포인트 지급 함수
 function calculateVillagePointReward(actionGoal, minutes = 0) {
   if (actionGoal?.action_type === 'one_time') return 5;
   if (actionGoal?.action_type === 'timer' || Number(minutes || 0) > 0) return 3;
