@@ -441,7 +441,7 @@ function getWeeklyLogsForAction(logs, actionGoalId) {
   });
 }
 
-//
+//특정 행동목표(actionGoal)의 모든 기록(지금까지 몇변했는지) 가져오기, 누적 횟수/ 총 경험치 계산용
 function getAllLogsForAction(logs, actionGoalId) {
   return (logs || []).filter((log) => log?.action_goal_id === actionGoalId);
 }
