@@ -144,11 +144,13 @@ const DEFAULT_VILLAGE_DATA = {
   village_buildings: DEFAULT_BUILDINGS,
 };
 
+//가방 안 기본 데이터
 const DEFAULT_VILLAGE_INVENTORY = {
   village_inventory_characters: [],
   village_inventory_decorations: [],
 };
 
+//게스트 모드일 때 저장된 데이터 읽기, 캐릭터, 건물, 꾸미기 현재 위치
 function readGuestData() {
   try {
     if (typeof guestDataPersistence?.getData === 'function') {
@@ -164,6 +166,7 @@ function readGuestData() {
   }
 }
 
+//이 함수는 오브젝트를 옮겼을 때, 바뀐 col, row를 저장하는 데 쓰
 function writeGuestDataPatch(patchOrUpdater) {
   try {
     if (typeof guestDataPersistence?.updateData === 'function') {
@@ -204,10 +207,12 @@ function writeGuestDataPatch(patchOrUpdater) {
   }
 }
 
+//오늘 날짜를 YYYY-MM-DD 형식으로 반환
 function getTodayString() {
   return new Date().toISOString().split('T')[0];
 }
 
+//날짜를 YYYY-MM-DD로 통일
 function normalizeDateOnly(value) {
   if (!value) return '';
   const d = new Date(value);
@@ -217,22 +222,26 @@ function normalizeDateOnly(value) {
   ).padStart(2, '0')}`;
 }
 
+//카테고리 이름을 표준값으로 맞춤, 건물/오브젝트가 카테고리별 구역에 놓일 때 간접 관련은 있음.
 function normalizeCategoryValue(category, fallback = 'exercise') {
   const normalized = CATEGORY_ALIASES[category];
   if (normalized && VALID_CATEGORIES.includes(normalized)) return normalized;
   return fallback;
 }
 
+//카테고리 이름을 실제 키 값으로 변환, 카테고리 구역별 배치 로직과 연결될 수 있음.
 function resolveCategoryKey(category, fallback = '') {
   const rawCategory = typeof category === 'string' ? category.trim() : '';
   if (!rawCategory) return fallback;
   return CATEGORY_ALIASES[rawCategory] || rawCategory;
 }
 
+//값을 최소~최대 범위 안으로 강제 제한, 오브젝트가 맵 밖으로 안 나가게 막는 핵심 함수
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+//뜻 최소~최대 사이 랜덤 숫자 생성, 좌표와 관련해서 랜덤 위치 배치에 쓰임
 function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
 }
