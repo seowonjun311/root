@@ -396,7 +396,7 @@ function getPreviewColor(valid) {
       };
 }
 
-//
+// 목표의 “끝나는 날짜” 계산 함수, 시작일 + 기간 → 종료일, 이 목표 언제 끝나냐? 계산하는 함수
 function getGoalEndDate(goal) {
   if (!goal?.start_date || !goal?.duration_days) return null;
   const start = new Date(goal.start_date);
@@ -408,6 +408,7 @@ function getGoalEndDate(goal) {
   return end;
 }
 
+//현재 날짜 기준 “이번 주 월요일” 구하기, 이번 주 시작일 (월요일) 계산
 function getMonday(date = new Date()) {
   const copy = new Date(date);
   const day = copy.getDay();
@@ -417,6 +418,7 @@ function getMonday(date = new Date()) {
   return copy;
 }
 
+//
 function getSunday(date = new Date()) {
   const monday = getMonday(date);
   const sunday = new Date(monday);
