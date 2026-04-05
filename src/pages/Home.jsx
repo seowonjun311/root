@@ -675,8 +675,9 @@ function calculateVillagePointReward(actionGoal, minutes = 0) {
   return 2;
 }
 
-function buildDerivedStats(logs = [], actionGoals = []) {
-  const stats = {
+//logs(행동 기록들)를 분석해서 운동 횟수, 공부 시간, 금연 일수 같은 통계를 만들어서 반환함
+function buildDerivedStats(logs = [], actionGoals = []) { // logs 실제 행동 기록 (ActionLog), actionGoals 행동 목표 정보
+  const stats = {//stats 결과 저장할 통계판” 만드는 단계
     total_actions: 0,
     total_exercise_count: 0,
     total_study_minutes: 0,
@@ -686,10 +687,10 @@ function buildDerivedStats(logs = [], actionGoals = []) {
     total_no_smoking_days: 0,
   };
 
-  (logs || []).forEach((log) => {
+  (logs || []).forEach((log) => {//logs 하나씩 분석하여 완료된것만 인정, 미완료는 통계에서 제외 
     if (!log?.completed) return;
 
-    stats.total_actions += 1;
+    stats.total_actions += 1; //총 행동 횟수 +1
 
     if (log.category === 'exercise') {
       stats.total_exercise_count += 1;
@@ -718,6 +719,7 @@ function buildDerivedStats(logs = [], actionGoals = []) {
   return stats;
 }
 
+//
 function getNewlyUnlockedTitle(stats, ownedTitleIds = []) {
   const ownedSet = new Set(ownedTitleIds);
   return TITLES.find(
