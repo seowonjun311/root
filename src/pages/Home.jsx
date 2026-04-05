@@ -446,6 +446,7 @@ function getAllLogsForAction(logs, actionGoalId) {
   return (logs || []).filter((log) => log?.action_goal_id === actionGoalId);
 }
 
+// ActionGoal이 어떤 Goal에 속하는지 강제로 찾아주는 함수로 이 행동목표 어디 소속인지 모르겠으면 알아서 연결해
 function resolveGoalIdForActionGoal(actionGoal, goals = [], fallbackCategory = 'exercise') {
   if (actionGoal?.goal_id) return actionGoal.goal_id;
 
@@ -462,6 +463,7 @@ function resolveGoalIdForActionGoal(actionGoal, goals = [], fallbackCategory = '
   return safeGoals[0]?.id || null;
 }
 
+//ActionGoal 전체를 Goal에 강제로 연결하는 함수
 function connectActionGoalsToGoals(goals = [], actionGoals = []) {
   const safeGoals = Array.isArray(goals) ? goals.filter(Boolean) : [];
   const safeActionGoals = Array.isArray(actionGoals) ? actionGoals.filter(Boolean) : [];
