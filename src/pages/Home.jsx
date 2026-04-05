@@ -104,7 +104,7 @@ const WORLD_HEIGHT = 1700; //마을 전체 배경의 높이
 
 const OUTER_TILE_PADDING = 20; //맵 바깥쪽에 여유 타일을 몇 칸 더 둘지 정하는 값,즉, 맵 가장자리에서 갑자기 잘리지 않고 자연스럽게 보이게 하는 좌표용 여유값이야
 
-const WORLD_VIEWPORT_HEIGHT = 300; //스크롤 없는 고정된 월드 영역 높이
+const WORLD_VIEWPORT_HEIGHT = 600; //스크롤 없는 고정된 월드 영역 높이
 
 //오브젝트나 카메라가 어디까지 갈 수 있는지 조정하는 보정값
 const WORLD_EDGE_MARGIN_LEFT = 150;
