@@ -86,39 +86,47 @@ const SHOP_ITEMS = [
   { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, image: flowerImg },
 ];
 
-/* =========================
-   타일맵 기본 설정
-========================= */
-const TILE_W = 128;
-const TILE_H = 64;
+/* ===================타일맵 기본 설정================== */
+const TILE_W = 128; //타일 한 칸의 가로 길이 = 128
+const TILE_H = 64; //타일 한 칸의 세로 길이 = 64
 
-const GRID_COLS = 20;
-const GRID_ROWS = 20;
+//이건 마을 맵의 칸 수를 정하는 거
+const GRID_COLS = 20; //가로 20칸
+const GRID_ROWS = 20; //세로 20칸
 
-const GRID_ORIGIN_X = 1280;
-const GRID_ORIGIN_Y = 220;
+//이건 격자 전체를 화면 어디에 놓을지 정하는 시작 좌표
+const GRID_ORIGIN_X = 1280; //가 커지면 맵이 오른쪽으로 감
+const GRID_ORIGIN_Y = 220; //가 커지면 맵이 아래로 감
 
-const WORLD_WIDTH = 2560;
-const WORLD_HEIGHT = 1700;
-const OUTER_TILE_PADDING = 5;
-const WORLD_VIEWPORT_HEIGHT = 300;
-const WORLD_EDGE_MARGIN_LEFT = 110;
-const WORLD_EDGE_MARGIN_RIGHT = 110;
-const WORLD_EDGE_MARGIN_TOP = 40;
-const WORLD_EDGE_MARGIN_BOTTOM = -300;
+//전체 좌표 공간의 한계
+const WORLD_WIDTH = 2560; //마을 전체 배경의 너비
+const WORLD_HEIGHT = 1700; //마을 전체 배경의 높이
 
-const VIEW_DIAMOND_CORNER_LIMIT_X = 500;
-const VIEW_DIAMOND_CORNER_LIMIT_Y = 500;
+const OUTER_TILE_PADDING = 5; //맵 바깥쪽에 여유 타일을 몇 칸 더 둘지 정하는 값,즉, 맵 가장자리에서 갑자기 잘리지 않고 자연스럽게 보이게 하는 좌표용 여유값이야
 
+const WORLD_VIEWPORT_HEIGHT = 300; //스크롤 없는 고정된 월드 영역 높이
+
+//오브젝트나 카메라가 어디까지 갈 수 있는지 조정하는 보정값
+const WORLD_EDGE_MARGIN_LEFT = 150;
+const WORLD_EDGE_MARGIN_RIGHT = 150;
+const WORLD_EDGE_MARGIN_TOP = 100;
+const WORLD_EDGE_MARGIN_BOTTOM = -100;
+
+//마름모(아이소메트릭) 모양의 모서리 제한값
+const VIEW_DIAMOND_CORNER_LIMIT_X = 600;
+const VIEW_DIAMOND_CORNER_LIMIT_Y = 600;
+
+//타일 종류 이름을 모아둔 목록, 종류 정의, 랜덤배치와는 상관이 없다. 
 const TILE_KIND = {
   BASE_GRASS: 'base_grass',
   VARIANT_GRASS: 'variant_grass',
-  PATH: 'path',
-};
+ };
 
+//테두리에 배치할 나무/수풀 이미지 목록
 const BORDER_TREE_IMAGES = [borderTree1Img, borderTree2Img, borderTree3Img];
 const BORDER_BUSH_IMAGES = [borderBush1Img];
 
+//기본 건물 4개의 시작 위치, flipped는 좌우반전 여부 , id는 건물의 이름,  
 const DEFAULT_BUILDINGS = [
   { id: 'exercise_building', category: 'exercise', col: 6, row: 10, flipped: false },
   { id: 'study_building', category: 'study', col: 9, row: 11, flipped: false },
@@ -126,6 +134,7 @@ const DEFAULT_BUILDINGS = [
   { id: 'daily_building', category: 'daily', col: 15, row: 8, flipped: false },
 ];
 
+//처음 시작할 때 마을 상태 
 const DEFAULT_VILLAGE_DATA = {
   village_points: 0,
   village_decorations: [],
