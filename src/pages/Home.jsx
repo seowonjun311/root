@@ -95,7 +95,7 @@ const GRID_COLS = 20; //가로 20칸
 const GRID_ROWS = 20; //세로 20칸
 
 //이건 격자 전체를 화면 어디에 놓을지 정하는 시작 좌표
-const GRID_ORIGIN_X = 1280; //가 커지면 맵이 오른쪽으로 감
+const GRID_ORIGIN_X = 2280; //가 커지면 맵이 오른쪽으로 감
 const GRID_ORIGIN_Y = 220; //가 커지면 맵이 아래로 감
 
 //전체 좌표 공간의 한계
