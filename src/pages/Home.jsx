@@ -369,13 +369,13 @@ function canPlaceObject({
   return true;
 }
 
-//마을이 자연스럽게 보이게 만드는 핵심 디테일
+//마을이 자연스럽게 보이게 만드는 핵심 디테일(그대로 쓰면 공중에 떠보임  그래서 y를 아래로 밀어서 발 기준/ 바닦기준을 맞춤
 function getObjectScreenPosition(item, kind) {
-  const { x, y } = gridToScreen(item.col, item.row);
+  const { x, y } = gridToScreen(item.col, item.row); // 타일 좌표 → 화면 위치 변환
 
-  if (kind === 'building') return { x, y: y + 22 };
-  if (kind === 'character') return { x, y: y + 10 };
-  return { x, y: y + 14 };
+  if (kind === 'building') return { x, y: y + 22 }; //건물은 더 아래로 이동
+  if (kind === 'character') return { x, y: y + 10 }; // 캐릭터는 조금만 아래로 이동
+  return { x, y: y + 14 }; // 꾸미기(기본)은 중간정도 이동
 }
 
 function getPreviewTiles(item, kind, col, row) {
