@@ -719,14 +719,16 @@ function buildDerivedStats(logs = [], actionGoals = []) { // logs 실제 행동 
   return stats;
 }
 
-//
-function getNewlyUnlockedTitle(stats, ownedTitleIds = []) {
-  const ownedSet = new Set(ownedTitleIds);
-  return TITLES.find(
-    (title) => !ownedSet.has(title.id) && Number(stats?.[title.metric] || 0) >= title.value
+//현재 통계(stats)를 보고 조건을 만족했지만 아직 안 가진 칭호를 찾아주는 로직
+function getNewlyUnlockedTitle(stats, ownedTitleIds = []) {//입렵 stats 방금 만든 통계 (운동 횟수, 공부 시간 등), ownedTitleIds  이미 가진 칭호 목록
+  const ownedSet = new Set(ownedTitleIds); // 이미 가진 칭호를 빠르게 체크 배열 → Set으로 변환 
+  return TITLES.find(// TITLES 목록을 돌면서 조건 맞는 첫 번째 칭호만 반환
+    (title) => !ownedSet.has(title.id) &&  //이미 가진 건 제외 
+      Number(stats?.[title.metric] || 0) >= title.value
   );
 }
 
+//
 function validateGoalActionLogChain(goals = [], actionGoals = [], logs = []) {
   const goalIds = new Set((goals || []).map((goal) => goal?.id).filter(Boolean));
   const actionGoalIds = new Set((actionGoals || []).map((goal) => goal?.id).filter(Boolean));
