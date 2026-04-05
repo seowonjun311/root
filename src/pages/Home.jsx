@@ -480,6 +480,7 @@ function connectActionGoalsToGoals(goals = [], actionGoals = []) {
   });
 }
 
+//게스트(비로그인) 목표 데이터를 “정상 형태”로 정리하는 함수, id 자동생성, category이상 표준값으로 교정, status 없음 active로 
 function normalizeGuestGoals(rawGoals, fallbackCategory = 'exercise') {
   return (Array.isArray(rawGoals) ? rawGoals : [])
     .filter(Boolean)
@@ -491,6 +492,7 @@ function normalizeGuestGoals(rawGoals, fallbackCategory = 'exercise') {
     }));
 }
 
+//게스트 행동목표를 정상 상태로 만들고 goal에 연결까지 해주는 함수
 function normalizeGuestActionGoals(rawActionGoals, goals = [], fallbackCategory = 'exercise') {
   const safeActionGoals = Array.isArray(rawActionGoals) ? rawActionGoals : [];
 
@@ -514,6 +516,7 @@ function normalizeGuestActionGoals(rawActionGoals, goals = [], fallbackCategory 
     });
 }
 
+//연속으로 며칠 했는지 계산하는 함수 (스트릭)
 function getStreakForAction(logs, actionGoalId) {
   const completedDates = (logs || [])
     .filter((log) => log?.action_goal_id === actionGoalId && log?.completed && log?.date)
