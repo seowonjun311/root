@@ -113,8 +113,8 @@ const WORLD_EDGE_MARGIN_TOP = 700;
 const WORLD_EDGE_MARGIN_BOTTOM = 700;
 
 //마름모(아이소메트릭) 모양의 모서리 제한값
-const VIEW_DIAMOND_CORNER_LIMIT_X = 600;
-const VIEW_DIAMOND_CORNER_LIMIT_Y = 600; 
+const VIEW_DIAMOND_CORNER_LIMIT_X = 1000;
+const VIEW_DIAMOND_CORNER_LIMIT_Y = 1000; 
 
 //타일 종류 이름을 모아둔 목록, 종류 정의, 랜덤배치와는 상관이 없다. 
 const TILE_KIND = {
