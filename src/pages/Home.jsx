@@ -280,9 +280,10 @@ function getObjectTileSize(item, kind) {
   return { cols: 1, rows: 1 };
 }
 
-function getOccupiedTiles(item, kind, nextCol = item?.col, nextRow = item?.row) {
-  const { cols, rows } = getObjectTileSize(item, kind);
-  const tiles = [];
+
+function getOccupiedTiles(item, kind, nextCol = item?.col, nextRow = item?.row) { //오브젝트가 실제로 차지하는 모든 타일 좌표 계산
+  const { cols, rows } = getObjectTileSize(item, kind); // 크기 가져오기 
+  const tiles = []; // 타일 좌표들을 담을 공간 
 
   for (let c = 0; c < cols; c += 1) {
     for (let r = 0; r < rows; r += 1) {
@@ -300,6 +301,7 @@ function isInsideGrid(col, row) {
   return col >= 0 && row >= 0 && col < GRID_COLS && row < GRID_ROWS;
 }
 
+//여기에 놓을 수 있냐?”를 결정하는 최종 판정 함수
 function canPlaceObject({
   movingType,
   movingItem,
