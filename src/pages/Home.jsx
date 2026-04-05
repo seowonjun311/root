@@ -246,14 +246,13 @@ function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
 }
 
+//뜻 seed 기준으로 항상 같은 랜덤값처럼 보이는 숫자 생성, 좌표와 관련되서 맵 생성에 자주 쓰임
 function pseudoRandom(seed) {
   const x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
 }
 
-/* =========================
-   마름모 좌표 유틸
-========================= */
+//마름모 이동을 정의하는 방법 즉,타일 좌표(col, row) -> 화면 좌표(x, y)로 바꿔주는 함
 function gridToScreen(col, row) {
   return {
     x: GRID_ORIGIN_X + (col - row) * (TILE_W / 2),
@@ -261,6 +260,7 @@ function gridToScreen(col, row) {
   };
 }
 
+//화면 좌표(x, y) → 타일 좌표(col, row)로 바꾸는 함수
 function screenToGrid(x, y) {
   const localX = x - GRID_ORIGIN_X;
   const localY = y - GRID_ORIGIN_Y;
@@ -274,6 +274,7 @@ function screenToGrid(x, y) {
   };
 }
 
+//오브젝트 크기 정의 건물 2x2, 나머지 1x1
 function getObjectTileSize(item, kind) {
   if (kind === 'building') return { cols: 2, rows: 2 };
   return { cols: 1, rows: 1 };
