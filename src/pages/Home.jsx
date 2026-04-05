@@ -418,7 +418,7 @@ function getMonday(date = new Date()) {
   return copy;
 }
 
-//
+//이번 주 일요일 구하기, 월요일 기준으로 +6일 → 일요일, 이번 주 마지막 날
 function getSunday(date = new Date()) {
   const monday = getMonday(date);
   const sunday = new Date(monday);
@@ -427,6 +427,7 @@ function getSunday(date = new Date()) {
   return sunday;
 }
 
+//이번 주에 해당 행동목표를 얼마나 했는지 가져오기, "이번 주 몇 번 했는지 계산용 데이터 필터"
 function getWeeklyLogsForAction(logs, actionGoalId) {
   const monday = getMonday();
   const sunday = getSunday();
@@ -440,6 +441,7 @@ function getWeeklyLogsForAction(logs, actionGoalId) {
   });
 }
 
+//
 function getAllLogsForAction(logs, actionGoalId) {
   return (logs || []).filter((log) => log?.action_goal_id === actionGoalId);
 }
