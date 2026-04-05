@@ -369,6 +369,7 @@ function canPlaceObject({
   return true;
 }
 
+//마을이 자연스럽게 보이게 만드는 핵심 디테일
 function getObjectScreenPosition(item, kind) {
   const { x, y } = gridToScreen(item.col, item.row);
 
