@@ -538,8 +538,9 @@ function getStreakForAction(logs, actionGoalId) {
   return streak;
 }
 
+//행동 로그를 돌면서 XP를 쌓고 → 카테고리별 레벨을 계산하는 함수
 function getDefaultUserLevels(logs = []) {
-  const result = {
+  const result = { // 기본상태 만들기, 레벨1 경험치 0부터 시작
     exercise_level: 1,
     exercise_xp: 0,
     study_level: 1,
@@ -550,21 +551,21 @@ function getDefaultUserLevels(logs = []) {
     daily_xp: 0,
   };
 
-  (logs || []).forEach((log) => {
+  (logs || []).forEach((log) => {//모든 행동 기록을 하나씩 검사(로그를 돌면서)  xp 누적
     const category = log?.category;
     if (!category) return;
 
-    let addXp = 10;
-    if (log?.duration_minutes && Number(log.duration_minutes) > 0) addXp = 15;
-    if (log?.meta_action_type === 'one_time') addXp = 20;
+    let addXp = 10;(//1회 10xp,
+    if (log?.duration_minutes && Number(log.duration_minutes) > 0) addXp = 15; //타이머형 15xp
+    if (log?.meta_action_type === 'one_time') addXp = 20; //1회성 목표면 20xp
 
-    if (!Object.prototype.hasOwnProperty.call(result, `${category}_xp`)) return;
+    if (!Object.prototype.hasOwnProperty.call(result, `${category}_xp`)) return; //이상한 카테고리 들어오면 무시하여 버그방지
     result[`${category}_xp`] += addXp;
   });
 
   ['exercise', 'study', 'mental', 'daily'].forEach((category) => {
     const xp = result[`${category}_xp`] || 0;
-    result[`${category}_level`] = Math.max(1, Math.floor(xp / 30) + 1);
+    result[`${category}_level`] = Math.max(1, Math.floor(xp / 30) + 1); //레벨계산 레벨 (xp/30)+1
   });
 
   return result;
