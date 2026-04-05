@@ -378,10 +378,12 @@ function getObjectScreenPosition(item, kind) {
   return { x, y: y + 14 }; // 꾸미기(기본)은 중간정도 이동
 }
 
+//프리뷰용 타일 계산 함수인데, 현재는 실제 계산 함수 그대로 쓰고 있는 상태 -> 추후 더 발전시켜야
 function getPreviewTiles(item, kind, col, row) {
   return getOccupiedTiles(item, kind, col, row);
 }
 
+//"배치 가능하면 초록색, 불가능하면 빨간색 스타일을 반환하는 함수"어떤 타일이 충돌인지 구분은 안
 function getPreviewColor(valid) {
   return valid
     ? {
@@ -394,6 +396,7 @@ function getPreviewColor(valid) {
       };
 }
 
+//
 function getGoalEndDate(goal) {
   if (!goal?.start_date || !goal?.duration_days) return null;
   const start = new Date(goal.start_date);
