@@ -95,8 +95,8 @@ const GRID_COLS = 20; //가로 20칸
 const GRID_ROWS = 20; //세로 20칸
 
 //이건 격자 전체를 화면 어디에 놓을지 정하는 시작 좌표
-const GRID_ORIGIN_X = 2280; //가 커지면 맵이 오른쪽으로 감
-const GRID_ORIGIN_Y = 220; //가 커지면 맵이 아래로 감
+const GRID_ORIGIN_X = 1280; //커지면 지금 보는 사용자의 시야화면에서 맵이 오른쪽으로 감
+const GRID_ORIGIN_Y = 220; //커지면 지금 보는 사용자의 시야화면에서 맵이 아래로 감
 
 //전체 좌표 공간의 한계
 const WORLD_WIDTH = 2560; //마을 전체 배경의 너비
