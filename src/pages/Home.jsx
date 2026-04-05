@@ -285,9 +285,9 @@ function getOccupiedTiles(item, kind, nextCol = item?.col, nextRow = item?.row) 
   const { cols, rows } = getObjectTileSize(item, kind); // 크기 가져오기 
   const tiles = []; // 타일 좌표들을 담을 공간 
 
-  for (let c = 0; c < cols; c += 1) {
+  for (let c = 0; c < cols; c += 1) {  //크기만큼 반복
     for (let r = 0; r < rows; r += 1) {
-      tiles.push({
+      tiles.push({ //기준 위치에서 확장
         col: nextCol + c,
         row: nextRow + r,
       });
@@ -297,7 +297,8 @@ function getOccupiedTiles(item, kind, nextCol = item?.col, nextRow = item?.row) 
   return tiles;
 }
 
-function isInsideGrid(col, row) {
+// 맵 안에 있도록 점검
+function isInsideGrid(col, row) {  
   return col >= 0 && row >= 0 && col < GRID_COLS && row < GRID_ROWS;
 }
 
