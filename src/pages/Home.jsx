@@ -728,10 +728,10 @@ function getNewlyUnlockedTitle(stats, ownedTitleIds = []) {//입렵 stats 방금
   );
 }
 
-//
+//데이터 연결이 정상인지 검사해서 “문제 개수”를 알려주는 함수
 function validateGoalActionLogChain(goals = [], actionGoals = [], logs = []) {
-  const goalIds = new Set((goals || []).map((goal) => goal?.id).filter(Boolean));
-  const actionGoalIds = new Set((actionGoals || []).map((goal) => goal?.id).filter(Boolean));
+  const goalIds = new Set((goals || []).map((goal) => goal?.id).filter(Boolean));// 모든 goal의 id 모아서 Set 생성
+  const actionGoalIds = new Set((actionGoals || []).map((goal) => goal?.id).filter(Boolean));//모든 actionGoal의 id 모아서 Set 생성
 
   return {
     actionGoalsWithoutGoalId: (actionGoals || []).filter((goal) => !goal?.goal_id).length,
@@ -745,6 +745,7 @@ function validateGoalActionLogChain(goals = [], actionGoals = [], logs = []) {
   };
 }
 
+//캐릭터 타입에 맞는 이미지를 선택해서 반환하는 함수
 function getCharacterImage(type) {
   if (type === 'alpaca') return alpacaImg;
   if (type === 'platypus') return platypusImg;
