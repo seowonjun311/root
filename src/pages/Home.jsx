@@ -752,12 +752,14 @@ function getCharacterImage(type) {
   return foxImg;
 }
 
+
 function getDecorationImage(type) {
   if (type === 'tree') return treeImg;
   if (type === 'flower') return flowerImg;
   return grassImg;
 }
 
+//상점 → 가방(인벤토리)로 아이템을 “실제 소유 데이터”로 변환하는 함수
 function createInventoryItem(item) {
   return {
     id: `${item.type}_${item.subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
@@ -768,6 +770,7 @@ function createInventoryItem(item) {
   };
 }
 
+//인벤토리 아이템을 “마을에 놓을 수 있는 실제 오브젝트”로 변환하는 함수
 function createPlacedObjectFromInventory(inventoryItem) {
   if (inventoryItem?.type === 'character') {
     return createCharacter(inventoryItem.subtype);
@@ -775,6 +778,7 @@ function createPlacedObjectFromInventory(inventoryItem) {
   return createDecoration(inventoryItem?.subtype || 'grass');
 }
 
+//
 function getVillageState(source) {
   return {
     village_points: Number(source?.village_points ?? DEFAULT_VILLAGE_DATA.village_points),
