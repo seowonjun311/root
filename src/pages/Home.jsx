@@ -778,26 +778,26 @@ function createPlacedObjectFromInventory(inventoryItem) {
   return createDecoration(inventoryItem?.subtype || 'grass');
 }
 
-//
+//저장소(source) 안에 있는 마을 데이터를 꺼내서, 비어 있거나 이상한 값은 기본값으로 보정한 뒤, 화면에서 바로 쓸 수 있는 “정리된 마을 상태”를 만드는 함수
 function getVillageState(source) {
   return {
-    village_points: Number(source?.village_points ?? DEFAULT_VILLAGE_DATA.village_points),
-    village_decorations: Array.isArray(source?.village_decorations)
+    village_points: Number(source?.village_points ?? DEFAULT_VILLAGE_DATA.village_points), //source에 village_points가 있으면 그 값을 사용없으면 DEFAULT_VILLAGE_DATA.village_points 사용 마지막에 Number(...)로 숫자로 강제 변환
+    village_decorations: Array.isArray(source?.village_decorations) //village_decorations가 배열이면 그대로 사용 배열이 아니면 기본 장식 배열 사용
       ? source.village_decorations
       : DEFAULT_VILLAGE_DATA.village_decorations,
-    village_characters: relocateCharactersToVillageCore(
+    village_characters: relocateCharactersToVillageCore( //source.village_characters가 배열이고 길이도 1개 이상이면 그걸 사용 아니면 기본 캐릭터 배열 사용 그리고 마지막에 relocateCharactersToVillageCore(...)를 무조건 한 번 거침
       Array.isArray(source?.village_characters) && source.village_characters.length > 0
         ? source.village_characters
         : DEFAULT_VILLAGE_DATA.village_characters
     ),
-    village_buildings:
+    village_buildings: //건물 배열이 있고, 비어 있지 않으면 그대로 사용 아니면 기본 건물 배열 사용
       Array.isArray(source?.village_buildings) && source.village_buildings.length > 0
         ? source.village_buildings
         : DEFAULT_VILLAGE_DATA.village_buildings,
-    village_inventory_characters: Array.isArray(source?.village_inventory_characters)
+    village_inventory_characters: Array.isArray(source?.village_inventory_characters) //캐릭터 인벤토리가 배열이면 그걸 사용 아니면 기본 인벤토리 사용
       ? source.village_inventory_characters
       : DEFAULT_VILLAGE_INVENTORY.village_inventory_characters,
-    village_inventory_decorations: Array.isArray(source?.village_inventory_decorations)
+    village_inventory_decorations: Array.isArray(source?.village_inventory_decorations) //장식 인벤토리가 배열이면 그걸 사용 아니면 기본 인벤토리 사용
       ? source.village_inventory_decorations
       : DEFAULT_VILLAGE_INVENTORY.village_inventory_decorations,
   };
