@@ -803,6 +803,7 @@ function getVillageState(source) {
   };
 }
 
+//캐릭터가 처음 나타날 수 있는 “좌표 후보 리스트”
 function getCharacterSpawnSlots() {
   return [
     { col: 10, row: 12 },
