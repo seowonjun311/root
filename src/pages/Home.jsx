@@ -817,10 +817,11 @@ function getCharacterSpawnSlots() {
   ];
 }
 
+//캐릭터가 마을 중심 영역에서 너무 벗어났는지 검사하는 함수
 function isCharacterTooFarFromVillageCore(character) {
-  const col = Number(character?.col ?? 0);
+  const col = Number(character?.col ?? 0); //character.col, row 값을 가져옴, 없으면 0으로 대체, 문자열이어도 숫자로 변환
   const row = Number(character?.row ?? 0);
-  return col < 6 || col > 14 || row < 8 || row > 14;
+  return col < 6 || col > 14 || row < 8 || row > 14; // 범위 체크 
 }
 
 function relocateCharactersToVillageCore(rawCharacters = []) {
