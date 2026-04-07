@@ -856,21 +856,22 @@ function relocateCharactersToVillageCore(rawCharacters = []) {
   });
 }
 
-//
+//장식 오브젝트(풀/나무/꽃)를 “랜덤 위치 + 고유 ID + 이미지 + 크기”로 생성하는 함수
 function createDecoration(subtype) {
-  const sizeMap = { grass: 34, tree: 62, flower: 30 };
+  const sizeMap = { grass: 34, tree: 62, flower: 30 }; //장식 종류별 화면 크기(px), 없으면 기본값 32
 
   return {
-    id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-    type: subtype,
-    image: getDecorationImage(subtype),
-    col: Math.floor(randomBetween(1, GRID_COLS - 2)),
+    id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`, //고유 ID 생성, subtype: 종류, 시간: 중복 방지, 랜덤: 추가 안전
+    type: subtype, //장식 종류 표시
+    image: getDecorationImage(subtype), //subtype → 실제 이미지로 변환, 이 함수가 이미지 매핑 담당
+    col: Math.floor(randomBetween(1, GRID_COLS - 2)), //랜덤 위치 생성, 0이나 끝값 피함, 경계 밖 나가는 것 방지, UI 잘림 방지
     row: Math.floor(randomBetween(1, GRID_ROWS - 2)),
-    flipped: false,
-    size: sizeMap[subtype] || 32,
+    flipped: false, //좌우 반전 여부
+    size: sizeMap[subtype] || 32, //크기 결정
   };
 }
 
+//
 function createCharacter(type) {
   const spawnSlots = getCharacterSpawnSlots();
   const spawn = spawnSlots[Math.floor(randomBetween(0, spawnSlots.length))] || { col: 10, row: 12 };
