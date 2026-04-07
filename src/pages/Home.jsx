@@ -824,37 +824,39 @@ function isCharacterTooFarFromVillageCore(character) {
   return col < 6 || col > 14 || row < 8 || row > 14; // 범위 체크 
 }
 
+//캐릭터 위치를 자동으로 “정상화 + 겹침 방지 + 중앙 재배치” 해주는 함수
 function relocateCharactersToVillageCore(rawCharacters = []) {
-  const slots = getCharacterSpawnSlots();
-  const used = new Set();
+  const slots = getCharacterSpawnSlots(); //스폰 위치 가저오기 '바로 위에 있음'
+  const used = new Set(); //캐릭터끼리 겹치지 않게 하기
 
-  return (Array.isArray(rawCharacters) ? rawCharacters : []).map((character, index) => {
-    const next = { ...character };
-    const currentKey = `${next.col},${next.row}`;
+  return (Array.isArray(rawCharacters) ? rawCharacters : []).map((character, index) => {//배열 아니면 빈 배열 처리
+    const next = { ...character }; //원본 안 건드리고 복사본 수정
+    const currentKey = `${next.col},${next.row}`; //Set에서 위치 비교하려고 문자열로 만듦 
 
-    if (!isCharacterTooFarFromVillageCore(next) && !used.has(currentKey)) {
+    if (!isCharacterTooFarFromVillageCore(next) && !used.has(currentKey)) {//범위 안에 있고, 아직 아무도 안 쓰는 자리면 -> 그대로 유지
       used.add(currentKey);
       return next;
     }
 
-    const fallback = slots[index % slots.length];
+    const fallback = slots[index % slots.length]; //일단 index 기반으로 하나 정해둠
     let chosen = fallback;
 
     for (const slot of slots) {
-      const key = `${slot.col},${slot.row}`;
+      const key = `${slot.col},${slot.row}`; 슬롯 하나씩 돌면서 아직 안 쓰인 자리 찾음 -> 발견하면 바로 사용
       if (!used.has(key)) {
         chosen = slot;
         break;
       }
     }
 
-    next.col = chosen.col;
+    next.col = chosen.col; //캐릭터를 새 위치로 이동
     next.row = chosen.row;
-    used.add(`${chosen.col},${chosen.row}`);
-    return next;
+    used.add(`${chosen.col},${chosen.row}`); //이제 이 자리도 사용됨
+    return next; //수정된 캐릭터 반환
   });
 }
 
+//
 function createDecoration(subtype) {
   const sizeMap = { grass: 34, tree: 62, flower: 30 };
 
