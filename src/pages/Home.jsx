@@ -871,23 +871,24 @@ function createDecoration(subtype) {
   };
 }
 
-//
+// 캐릭터를 하나를 랜덤 위치(스폰 슬롯)에 생성해서 바로 배치 가능한 형태로 만드는 함수
 function createCharacter(type) {
-  const spawnSlots = getCharacterSpawnSlots();
-  const spawn = spawnSlots[Math.floor(randomBetween(0, spawnSlots.length))] || { col: 10, row: 12 };
+  const spawnSlots = getCharacterSpawnSlots(); //스폰 위치 후보 가져오기
+  const spawn = spawnSlots[Math.floor(randomBetween(0, spawnSlots.length))] || { col: 10, row: 12 }; //랜덤 위치 선택 슬롯 중 하나 랜덤 선택 혹시 오류 나면 기본값 (10,12)
 
-  return {
-    id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-    name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
-    type,
-    image: getCharacterImage(type),
-    col: spawn.col,
+  return { 
+    id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`, //고유 ID 생성
+    name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루', //이름설정
+    type, //캐릭터 종
+    image: getCharacterImage(type), //type → 이미지 변환
+    col: spawn.col, //위치설정, 랜덤 슬롯 위치로 배치
     row: spawn.row,
-    size: type === 'alpaca' ? 56 : 52,
-    flipped: false,
+    size: type === 'alpaca' ? 56 : 52, //사이즈 설정 alpaca → 더 큼 (56), 나머지 → 52
+    flipped: false, //좌우반점
   };
 }
 
+//
 function buildWorldBuildings({ userLevels, buildingLayout }) {
   const exerciseLevel = Number(userLevels?.exercise_level || 1);
   const studyLevel = Number(userLevels?.study_level || 1);
