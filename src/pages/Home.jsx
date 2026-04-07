@@ -947,10 +947,10 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
 }
 
 /* =========================   타일 / 경계숲 생성========================= */
-function getTileImageByKind(kind) {
-  if (kind === TILE_KIND.PATH) return pathTileImg;
-  if (kind === TILE_KIND.VARIANT_GRASS) return variantGrassTileImg;
-  return baseGrassTileImg;
+//타일의 종류(kind)에 따라 어떤 이미지를 쓸지 결정하는 함수
+function getTileImageByKind(kind) {//"타일 종류를 보고 이미지 가져오는 함수"
+  if (kind === TILE_KIND.VARIANT_GRASS) return variantGrassTileImg; //만약 타일이 변형된 잔디(조금 다른 잔디) 라면 variantGrassTileImg 반환
+  return baseGrassTileImg; //위 조건에 아무것도 안 걸리면 기본 잔디 이미지 사용
 }
 
 function isPathTile(col, row) {
