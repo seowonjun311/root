@@ -888,26 +888,26 @@ function createCharacter(type) {
   };
 }
 
-//
+//“유저 레벨 → 마을 건물 상태로 변환
 function buildWorldBuildings({ userLevels, buildingLayout }) {
-  const exerciseLevel = Number(userLevels?.exercise_level || 1);
+  const exerciseLevel = Number(userLevels?.exercise_level || 1); //각 카테고리 레벨 가져오,기 없으면 기본 1
   const studyLevel = Number(userLevels?.study_level || 1);
   const mentalLevel = Number(userLevels?.mental_level || 1);
   const dailyLevel = Number(userLevels?.daily_level || 1);
 
-  const getStage = (level) => (level >= 7 ? 3 : level >= 3 ? 2 : 1);
-  const layoutMap = Object.fromEntries((buildingLayout || []).map((b) => [b.category, b]));
+  const getStage = (level) => (level >= 7 ? 3 : level >= 3 ? 2 : 1); //레벨을 3단계로 압축
+  const layoutMap = Object.fromEntries((buildingLayout || []).map((b) => [b.category, b])); //layoutMap 생성, 의미 : 배열 -> 객체로 변환
 
-  return [
+  return [// 4개의 건물이 생성됨
     {
       id: 'exercise_building',
-      category: 'exercise',
-      label: `체육관 Lv.${getStage(exerciseLevel)}`,
-      image: getBuilding('exercise', getStage(exerciseLevel)),
-      col: layoutMap.exercise?.col ?? 6,
+      category: 'exercise',//카테고리 구분
+      label: `체육관 Lv.${getStage(exerciseLevel)}`, // UI표시용
+      image: getBuilding('exercise', getStage(exerciseLevel)), //단계별 이미지 선택
+      col: layoutMap.exercise?.col ?? 6, //저장된 위치 있으면 그걸 사용, 없으면 기본 위
       row: layoutMap.exercise?.row ?? 10,
-      flipped: !!layoutMap.exercise?.flipped,
-      w: 112,
+      flipped: !!layoutMap.exercise?.flipped,/.좌우반전
+      w: 112,//건물의 크기
       h: 90,
     },
     {
@@ -946,9 +946,7 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
   ];
 }
 
-/* =========================
-   타일 / 경계숲 생성
-========================= */
+/* =========================   타일 / 경계숲 생성========================= */
 function getTileImageByKind(kind) {
   if (kind === TILE_KIND.PATH) return pathTileImg;
   if (kind === TILE_KIND.VARIANT_GRASS) return variantGrassTileImg;
