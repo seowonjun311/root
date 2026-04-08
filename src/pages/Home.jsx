@@ -1607,21 +1607,24 @@ function buildBorderTrees() {//맵 경계가 허전해 보이지 않게 하고, 
   return cleaned.sort((a, b) => a.zIndex - b.zIndex);
 }
 
- //
-function getWorldPanBounds(viewportWidth, viewportHeight, scale) {
-  const minVisibleX = -WORLD_EDGE_MARGIN_LEFT;
-  const maxVisibleX = WORLD_WIDTH + WORLD_EDGE_MARGIN_RIGHT;
-  const minVisibleY = -WORLD_EDGE_MARGIN_TOP;
-  const maxVisibleY = WORLD_HEIGHT + WORLD_EDGE_MARGIN_BOTTOM;
+ //“화면을 드래그(패닝)할 때, 맵이 어디까지 움직일 수 있는지 최소값/최대값을 계산하는 함수
+function getWorldPanBounds(viewportWidth, viewportHeight, scale) {//viewportWidth → 지금 사용자가 보는 화면 가로 크기, viewportHeight → 지금 사용자가 보는 화면 세로 크기, scale → 현재 확대/축소 비율
+  //맵의 실제 경계 + 여유 영역을 계산하는 부분 
+  const minVisibleX = -WORLD_EDGE_MARGIN_LEFT; // 월드 왼쪽 끝보다 조금 더 왼쪽까지 허용할 수 있게 함
+  const maxVisibleX = WORLD_WIDTH + WORLD_EDGE_MARGIN_RIGHT; //월드 오른쪽 끝보다 조금 더 오른쪽까지 허용
+  const minVisibleY = -WORLD_EDGE_MARGIN_TOP; //위쪽 여유
+  const maxVisibleY = WORLD_HEIGHT + WORLD_EDGE_MARGIN_BOTTOM; //아래쪽 여
 
-  const minOffsetX = viewportWidth - maxVisibleX * scale;
-  const maxOffsetX = -minVisibleX * scale;
-  const minOffsetY = viewportHeight - maxVisibleY * scale;
+  //offsetX, offsetY는 보통: 월드 전체를 화면에서 얼마나 옮겨서 보여줄지 뜻 
+  const minOffsetX = viewportWidth - maxVisibleX * //scale; 월드를 왼쪽으로 가장 많이 밀었을 때의 한계
+  const maxOffsetX = -minVisibleX * scale; //월드를 오른쪽으로 가장 많이 밀었을 때의 한계
+  const minOffsetY = viewportHeight - maxVisibleY * scale; //y도 똑같음
   const maxOffsetY = -minVisibleY * scale;
 
   return { minOffsetX, maxOffsetX, minOffsetY, maxOffsetY };
 }
 
+//
 function getPlayableDiamondBounds() {
   const top = gridToScreen(0, 0);
   const right = gridToScreen(GRID_COLS - 1, 0);
