@@ -1624,21 +1624,23 @@ function getWorldPanBounds(viewportWidth, viewportHeight, scale) {//viewportWidt
   return { minOffsetX, maxOffsetX, minOffsetY, maxOffsetY };
 }
 
-//
+//플레이 가능한 영역(마름모 형태)의 중심과 크기(반지름)를 계산하는 함수 즉, 카메라가 움직일 수 있는 ‘다이아몬드 영역’을 정의하는 코드
 function getPlayableDiamondBounds() {
+  // 네 꼭짓점 구하기로 gridToScreen은 타일 좌표 → 실제 화면 좌표로 바꾸는 함수
   const top = gridToScreen(0, 0);
   const right = gridToScreen(GRID_COLS - 1, 0);
   const left = gridToScreen(0, GRID_ROWS - 1);
   const bottom = gridToScreen(GRID_COLS - 1, GRID_ROWS - 1);
 
   return {
-    centerX: GRID_ORIGIN_X,
+    centerX: GRID_ORIGIN_X, //의미: 마름모의 중심 X 위치 ->  왜 origin 쓰냐? 아이소메트릭 맵은 중심 기준으로 만들어짐
     centerY: (top.y + bottom.y) / 2,
-    radiusX: GRID_ORIGIN_X - left.x + VIEW_DIAMOND_CORNER_LIMIT_X,
-    radiusY: ((bottom.y - top.y) / 2) + VIEW_DIAMOND_CORNER_LIMIT_Y,
+    radiusX: GRID_ORIGIN_X - left.x + VIEW_DIAMOND_CORNER_LIMIT_X, //가로 반지름 
+    radiusY: ((bottom.y - top.y) / 2) + VIEW_DIAMOND_CORNER_LIMIT_Y, //세로 반지름
   };
 }
 
+//
 function projectPointIntoDiamond(point, diamond) {
   const dx = point.x - diamond.centerX;
   const dy = point.y - diamond.centerY;
