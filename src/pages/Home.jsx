@@ -1673,15 +1673,16 @@ function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, sc
   let corrected = { ...nextOffset }; //corrected = 수정할 offset
   const diamond = getPlayableDiamondBounds(); //diamond = 마름모 영역 정보
 
-  for (let i = 0; i < 10; i += 1) {
+  for (let i = 0; i < 10; i += 1) //반복문 이유 : 한번 보정으로 부족할 수 있음, 여러번 조금씨 맞춰서 안정화
+  {
     const corners = getViewportWorldCorners(corrected, viewportWidth, viewportHeight, scale);
     const corrections = [];
 
     corners.forEach((corner) => {
-      const projected = projectPointIntoDiamond(corner, diamond);
-      if (!projected) return;
+      const projected = projectPointIntoDiamond(corner, diamond); //corner = 화면의 한 꼭짓점, projected = 마름모 안쪽으로 밀어넣은 위치
+      if (!projected) return; // 경우1 - 안쪽이면 아무것도 안함
 
-      corrections.push({
+      corrections.push({// 경우2 - 밖이면 보정값 계싼
         x: -(projected.x - corner.x) * scale,
         y: -(projected.y - corner.y) * scale,
       });
