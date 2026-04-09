@@ -555,7 +555,7 @@ function getDefaultUserLevels(logs = []) {
     const category = log?.category;
     if (!category) return;
 
-    let addXp = 10;(//1회 10xp,
+    let addXp = 10;//1회 10xp,
     if (log?.duration_minutes && Number(log.duration_minutes) > 0) addXp = 15; //타이머형 15xp
     if (log?.meta_action_type === 'one_time') addXp = 20; //1회성 목표면 20xp
 
