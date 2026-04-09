@@ -1690,7 +1690,7 @@ function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, sc
 
     if (!corrections.length) break; //"고칠 게 없으면 끝내라
 
-    const avgCorrection = corrections.reduce(
+    const avgCorrection = corrections.reduce(//의미: 꼭짓점이 여러 개 밖으로 나갔을 수 있음, 각각 보정하면 충돌 생김 그래서 평균값으로 부드럽게 이동
       (acc, item) => ({
         x: acc.x + item.x / corrections.length,
         y: acc.y + item.y / corrections.length,
@@ -1698,11 +1698,13 @@ function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, sc
       { x: 0, y: 0 }
     );
 
-    corrected = {
+    //실제로 카메라 위치 이동
+    corrected = { 
       x: corrected.x + avgCorrection.x,
       y: corrected.y + avgCorrection.y,
     };
 
+    //사각형 제한도 적용, 의미 : 마름모 제한 + 사각형 제한 둘 다 적
     const rectBounds = getWorldPanBounds(viewportWidth, viewportHeight, scale);
     corrected = {
       x: clamp(corrected.x, rectBounds.minOffsetX, rectBounds.maxOffsetX),
@@ -1710,26 +1712,22 @@ function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, sc
     };
   }
 
-  return corrected;
+  return corrected; //최종반환
 }
 
+//카메라(offset)가 사각형 범위 + 마름모 범위를 모두 넘지 않도록 최종적으로 보정하는 함수
 function clampWorldOffset(nextOffset, viewportWidth, viewportHeight, scale) {
-  const { minOffsetX, maxOffsetX, minOffsetY, maxOffsetY } = getWorldPanBounds(
-    viewportWidth,
-    viewportHeight,
-    scale
-  );
-
-  const rectClamped = {
-    x: clamp(nextOffset.x, minOffsetX, maxOffsetX),
-    y: clamp(nextOffset.y, minOffsetY, maxOffsetY),
-  };
-
+   // 1. 이동 가능한 범위 가져오기, 의미 : 카메라가 어디까지 움직일 수 있는지 범위 계산
+  const { minOffsetX, maxOffsetX, minOffsetY, maxOffsetY } = getWorldPanBounds( viewportWidth, viewportHeight, scale );
+ // 2. 사각형 기준으로 제한
+  const rectClamped = {x: clamp(nextOffset.x, minOffsetX, maxOffsetX), y: clamp(nextOffset.y, minOffsetY, maxOffsetY),};
+ // 3. 마름모 기준으로 최종 보정
   return clampWorldOffsetToDiamond(rectClamped, viewportWidth, viewportHeight, scale);
 }
 
-function Section({ title, count, emptyText, children }) {
-  const hasItems = React.Children.count(children) > 0;
+//
+function Section({ title, count, emptyText, children }) 
+{const hasItems = React.Children.count(children) > 0;
 
   return (
     <section>
