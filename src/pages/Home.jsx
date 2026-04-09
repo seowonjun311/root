@@ -1725,7 +1725,7 @@ function clampWorldOffset(nextOffset, viewportWidth, viewportHeight, scale) {
   return clampWorldOffsetToDiamond(rectClamped, viewportWidth, viewportHeight, scale);
 }
 
-//
+//제목 + 개수 + 내용 리스트를 보여주는 UI 박스 컴포넌트(이해못함)
 function Section({ title, count, emptyText, children }) 
 {const hasItems = React.Children.count(children) > 0;
 
@@ -1765,17 +1765,20 @@ function Section({ title, count, emptyText, children })
   );
 }
 
-function ExpPopup({ exp }) {
-  return (
+//경험치(EXP 얻었을 때 잠깐 뜨는 팝업 UI로 +EXP를 화면 위에 잠깐 띄우고 사라지는 애니메이션 팝업
+function ExpPopup({ exp }) //ExpPopup = 이름, exp = 얼마의 경험치인지 (숫자), 실
+ {  return (
     <div
-      className="animate-[fadeInOut_1.4s_ease-in-out_forwards] fixed left-1/2 top-24 z-[80] -translate-x-1/2 rounded-full px-4 py-2 text-sm font-extrabold shadow-lg"
+      className="animate-[fadeInOut_1.4s_ease-in-out_forwards] //의미: fadeInOut → 나타났다 사라짐, 1.4초 동안, 부드럽게 (ease-in-out) -> 툭 뜨고 → 잠깐 있다가 → 사라짐
+      fixed left-1/2 top-24 z-[80] -translate-x-1/2 //의미: fixed → 화면 기준 고정, left-1/2 → 가로 중앙,-translate-x-1/2 → 정확히 가운데 정렬, top-24 → 위에서 조금 아래 -> 화면 상단 중앙에 뜸
+      rounded-full px-4 py-2 text-sm font-extrabold shadow-lg"
       style={{
         background: 'linear-gradient(180deg, #f6d98c 0%, #d9a83e 100%)',
         color: '#4a2c08',
         border: '2px solid #8a6520',
       }}
     >
-      +{exp} EXP
+      +{exp} EXP //실제 출력되는 내용 +{exp} EXP
     </div>
   );
 }
