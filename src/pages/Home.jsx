@@ -906,7 +906,7 @@ function buildWorldBuildings({ userLevels, buildingLayout }) {
       image: getBuilding('exercise', getStage(exerciseLevel)), //단계별 이미지 선택
       col: layoutMap.exercise?.col ?? 6, //저장된 위치 있으면 그걸 사용, 없으면 기본 위
       row: layoutMap.exercise?.row ?? 10,
-      flipped: !!layoutMap.exercise?.flipped,/.좌우반전
+      flipped: !!layoutMap.exercise?.flipped,//.좌우반전
       w: 112,//건물의 크기
       h: 90,
     },
