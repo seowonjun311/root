@@ -1640,33 +1640,38 @@ function getPlayableDiamondBounds() {
   };
 }
 
-//
+//마름모(플레이 영역) 밖으로 나간 점을, 가장 가까운 경계 안쪽으로 다시 밀어 넣는 함수
 function projectPointIntoDiamond(point, diamond) {
+  // 중심에서 얼마나 떨어졌는지 
   const dx = point.x - diamond.centerX;
   const dy = point.y - diamond.centerY;
+  //마름모 팔별 공식
   const normalized = Math.abs(dx) / diamond.radiusX + Math.abs(dy) / diamond.radiusY;
 
-  if (normalized <= 1) return null;
+  if (normalized <= 1) return null; // ≤ 1 → 안쪽, > 1 → 바깥, 의미 : 이미 마름모 안 → 수정 필요 없음, 그래서 null 반환
 
-  const scaleDown = 1 / normalized;
+  const scaleDown = 1 / normalized; //의미: 현재 얼마나 넘쳤는지 비율 계산
   return {
     x: diamond.centerX + dx * scaleDown,
     y: diamond.centerY + dy * scaleDown,
   };
-}
+}//의미: 중심 → 현재 점 방향은 그대로 유지, 거리만 줄임
 
+//지금 화면(뷰포트)의 4개 꼭짓점이, 월드 좌표 기준으로 어디인지 계산하는 함수
 function getViewportWorldCorners(offset, viewportWidth, viewportHeight, scale) {
   return [
-    { x: (0 - offset.x) / scale, y: (0 - offset.y) / scale },
-    { x: (viewportWidth - offset.x) / scale, y: (0 - offset.y) / scale },
-    { x: (viewportWidth - offset.x) / scale, y: (viewportHeight - offset.y) / scale },
-    { x: (0 - offset.x) / scale, y: (viewportHeight - offset.y) / scale },
+    { x: (0 - offset.x) / scale, y: (0 - offset.y) / scale }, //좌상단
+    { x: (viewportWidth - offset.x) / scale, y: (0 - offset.y) / scale },//우상단
+    { x: (viewportWidth - offset.x) / scale, y: (viewportHeight - offset.y) / scale },//우하단
+    { x: (0 - offset.x) / scale, y: (viewportHeight - offset.y) / scale },/좌하단
   ];
 }
 
-function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, scale) {
-  let corrected = { ...nextOffset };
-  const diamond = getPlayableDiamondBounds();
+//카메라(offset)가 마름모 영역 밖으로 나가지 않도록 자동으로 보정하는 함수
+function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, scale) // 사용자가 드래그한 카메라 위치(nextOffset)를 마름모 영역 안에 맞게 자동으로 수정(corrected) 
+{
+  let corrected = { ...nextOffset }; //corrected = 수정할 offset
+  const diamond = getPlayableDiamondBounds(); //diamond = 마름모 영역 정보
 
   for (let i = 0; i < 10; i += 1) {
     const corners = getViewportWorldCorners(corrected, viewportWidth, viewportHeight, scale);
