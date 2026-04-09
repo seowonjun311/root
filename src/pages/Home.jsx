@@ -1766,16 +1766,16 @@ function Section({ title, count, emptyText, children })
 }
 
 //경험치(EXP 얻었을 때 잠깐 뜨는 팝업 UI로 +EXP를 화면 위에 잠깐 띄우고 사라지는 애니메이션 팝업
-function ExpPopup({ exp }) //ExpPopup = 이름, exp = 얼마의 경험치인지 (숫자), 실
+function ExpPopup({ exp }) //ExpPopup = 이름, exp = 얼마의 경험치인지 (숫자), 
  {  return (
     <div
-      className="animate-[fadeInOut_1.4s_ease-in-out_forwards] //의미: fadeInOut → 나타났다 사라짐, 1.4초 동안, 부드럽게 (ease-in-out) -> 툭 뜨고 → 잠깐 있다가 → 사라짐
-      fixed left-1/2 top-24 z-[80] -translate-x-1/2 //의미: fixed → 화면 기준 고정, left-1/2 → 가로 중앙,-translate-x-1/2 → 정확히 가운데 정렬, top-24 → 위에서 조금 아래 -> 화면 상단 중앙에 뜸
-      rounded-full px-4 py-2 text-sm font-extrabold shadow-lg"
+      className="animate-[fadeInOut_1.4s_ease-in-out_forwards]   //의미: fadeInOut → 나타났다 사라짐, 1.4초 동안, 부드럽게 (ease-in-out) -> 툭 뜨고 → 잠깐 있다가 → 사라짐
+      fixed left-1/2 top-24 z-[80] -translate-x-1/2              //의미: fixed → 화면 기준 고정, left-1/2 → 가로 중앙, z-[80] -> 다른 UI보다 위에 뜸 (가려지지 않게),-translate-x-1/2 → 정확히 가운데 정렬, top-24 → 위에서 조금 */아래 -> 화면 상단 중앙에 뜸
+      rounded-full px-4 py-2 text-sm font-extrabold shadow-lg" //완전 둥근 pill 형태,그림자 → 떠있는 느낌
       style={{
-        background: 'linear-gradient(180deg, #f6d98c 0%, #d9a83e 100%)',
+        background: 'linear-gradient(180deg, #f6d98c 0%, #d9a83e 100%)', //금색 그라데이션 
         color: '#4a2c08',
-        border: '2px solid #8a6520',
+        border: '2px solid #8a6520', //테두리 있음
       }}
     >
       +{exp} EXP //실제 출력되는 내용 +{exp} EXP
