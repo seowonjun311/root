@@ -842,7 +842,7 @@ function relocateCharactersToVillageCore(rawCharacters = []) {
     let chosen = fallback;
 
     for (const slot of slots) {
-      const key = `${slot.col},${slot.row}`; 슬롯 하나씩 돌면서 아직 안 쓰인 자리 찾음 -> 발견하면 바로 사용
+      const key = `${slot.col},${slot.row}`; /*슬롯 하나씩 돌면서 아직 안 쓰인 자리 찾음 -> 발견하면 바로 사용*/
       if (!used.has(key)) {
         chosen = slot;
         break;
@@ -1682,7 +1682,7 @@ function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, sc
       const projected = projectPointIntoDiamond(corner, diamond); //corner = 화면의 한 꼭짓점, projected = 마름모 안쪽으로 밀어넣은 위치
       if (!projected) return; // 경우1 - 안쪽이면 아무것도 안함
 
-      corrections.push({// 경우2 - 밖이면 보정값 계싼
+      corrections.push({// 경우2 - 밖이면 보정값 계
         x: -(projected.x - corner.x) * scale,
         y: -(projected.y - corner.y) * scale,
       });
