@@ -1682,13 +1682,13 @@ function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, sc
       const projected = projectPointIntoDiamond(corner, diamond); //corner = 화면의 한 꼭짓점, projected = 마름모 안쪽으로 밀어넣은 위치
       if (!projected) return; // 경우1 - 안쪽이면 아무것도 안함
 
-      corrections.push({// 경우2 - 밖이면 보정값 계
+      corrections.push({// 경우2 - 밖이면 보정값 계산
         x: -(projected.x - corner.x) * scale,
         y: -(projected.y - corner.y) * scale,
       });
     });
 
-    if (!corrections.length) break;
+    if (!corrections.length) break; //"고칠 게 없으면 끝내라
 
     const avgCorrection = corrections.reduce(
       (acc, item) => ({
