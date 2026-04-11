@@ -2383,9 +2383,11 @@ function VillageWorldLayer({
   const tileMap = useMemo(() => buildTileMap(GRID_COLS, GRID_ROWS, OUTER_TILE_PADDING), []); //마을 바닥 타일 전체를 만듦. 즉: 어느 칸에 잔디, 어느 칸에 길, 바깥 패딩은 어떻게 둘지 를 미리 계산해둠.
   const borderTrees = useMemo(() => buildBorderTrees(), []); //마을 바깥 경계에 있는 나무들 목록이야.
 
+  //편집모드 아닐 때만 동작함. 즉: 일반 모드에서는 마을 배경을 잡고 움직일 수 있음, 편집모드에서는 배경 이동보다 오브젝트 이동이 우선
   const handleWorldPointerDown = (e) => {
     if (isEditMode) return;
 
+    //이건 “지금부터 월드를 끌 거다”라고 기억하는 거야. 저장하는 것: 드래그 시작 마우스 위치, 시작 당시 월드 위치
     dragRef.current = {
       mode: 'pan',
       startX: e.clientX,
@@ -2395,11 +2397,12 @@ function VillageWorldLayer({
     };
   };
 
+  //
   const startObjectDrag = (e, objType, objId) => {
-    if (!isEditMode) return;
+    if (!isEditMode) return; //편집모드일 때만 가
     e.stopPropagation();
 
-    setSelectedObject({ type: objType, id: objId });
+    setSelectedObject({ type: objType, id: objId }); //드래그 시작한 오브젝트를 선택 상태로 만듦.
 
     let sourceItem = null;
 
@@ -2411,6 +2414,7 @@ function VillageWorldLayer({
       sourceItem = buildingLayout.find((item) => item.category === objId) || null;
     }
 
+    //지금 장식/캐릭터/건물 드래그 중이다”를 기억
     dragRef.current = {
       mode: 'object',
       objectType: objType,
@@ -2426,7 +2430,7 @@ function VillageWorldLayer({
     const drag = dragRef.current;
     if (!drag) return;
 
-    if (drag.mode === 'pan') {
+    if (drag.mode === 'pan') {//월드를 끌고 있는 중이면: 현재 마우스가 얼마나 이동했는지 계산, 그만큼 offset 변경, clampWorldOffset(...)로 화면 밖으로 너무 안 나가게 제한
       const dx = e.clientX - drag.startX;
       const dy = e.clientY - drag.startY;
 
@@ -2444,7 +2448,7 @@ function VillageWorldLayer({
       return;
     }
 
-    if (drag.mode === 'object') {
+    if (drag.mode === 'object') { //이건 편집모드에서 오브젝트 이동. 먼저 하는 일 : 마우스가 얼마나 이동했는지 계산, 현재 scale을 반영해서 실제 월드 좌표로 바꿈, gridToScreen, screenToGrid로 화면 좌표 ↔ 타일 좌표를 변환함
       const dx = (e.clientX - drag.startX) / scale;
       const dy = (e.clientY - drag.startY) / scale;
 
@@ -2476,6 +2480,7 @@ function VillageWorldLayer({
           buildings: drag.objectType === 'building' ? buildingLayout : currentCollisionBuildings,
         });
 
+        //지금 놓으려는 위치가 어디인지, 놓을 수 있는지 없는지 저장해둠 
         setPlacementPreview({
           type: drag.objectType,
           col,
@@ -2485,6 +2490,7 @@ function VillageWorldLayer({
         });
       }
 
+      //decoration 이동 : 장식 배열 안에서 드래그한 장식만 찾아서 col, row 바꿈. 단, canPlaceObject(...)로 겹치면 이동 안 함.
       if (drag.objectType === 'decoration') {
         setDecorations((prev) =>
           prev.map((item) => {
@@ -2505,7 +2511,7 @@ function VillageWorldLayer({
           })
         );
       }
-
+     //캐릭터이동
       if (drag.objectType === 'character') {
         setCharacters((prev) =>
           prev.map((item) => {
@@ -2526,7 +2532,7 @@ function VillageWorldLayer({
           })
         );
       }
-
+      /빌딩이동
       if (drag.objectType === 'building') {
         setBuildingLayout((prev) =>
           prev.map((item) => {
@@ -2547,7 +2553,7 @@ function VillageWorldLayer({
           })
         );
       }
-
+     //이건 드래그 기준점을 새 위치로 갱신하는 것 그래서 계속 자연스럽게 이어서 끌 수 있음.
       dragRef.current = {
         ...drag,
         startX: e.clientX,
@@ -2558,11 +2564,13 @@ function VillageWorldLayer({
     }
   }, [scale, viewportSize.width, viewportSize.height, decorations, characters, currentCollisionBuildings, setDecorations, setCharacters, setBuildingLayout, buildingLayout, setPlacementPreview]);
 
+  // 드래그 끝나면 : 드래그 상태 제거, 미리보기 제거
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
     setPlacementPreview(null);
   }, [setPlacementPreview]);
 
+  //창 크기 바뀌면 viewportSize 다시 계산한다. 즉:모바일/PC 크기 바뀌어도 대응
   useEffect(() => {
     const updateViewportSize = () => {
       const rect = viewportRef.current?.getBoundingClientRect();
@@ -2578,6 +2586,7 @@ function VillageWorldLayer({
     return () => window.removeEventListener('resize', updateViewportSize);
   }, []);
 
+  //왜 window에 다냐면 마우스를 오브젝트 밖으로 빼도 드래그가 계속 자연스럽게 되게 하려고.
   useEffect(() => {
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup', handlePointerUp);
@@ -2587,6 +2596,7 @@ function VillageWorldLayer({
     };
   }, [handlePointerMove, handlePointerUp]);
 
+  //확대/축소하거나 화면 크기 바뀌면 기존 위치가 너무 튀어나가지 않게 재조정.
   useEffect(() => {
     if (!viewportSize.width) return;
     setOffset((prev) => clampWorldOffset(prev, viewportSize.width, viewportSize.height, scale));
@@ -2595,6 +2605,8 @@ function VillageWorldLayer({
   useEffect(() => {
     if (isEditMode) return;
 
+    //편집모드가 아닐 때만 2.4초마다 실행.
+    //캐릭터가 조금씩 랜덤하게 돌아다니게 만듦. 동시에:겹치면 안 움직이게 검사, 가끔 좌우반전도 바뀜 -> 마을이 살아 있는 느낌을 줌.
     const timer = setInterval(() => {
       setCharacters((prev) =>
         prev.map((npc) => {
@@ -2621,19 +2633,22 @@ function VillageWorldLayer({
       );
     }, 2400);
 
+    //실제 화면을 그리는 부분
     return () => clearInterval(timer);
   }, [isEditMode, setCharacters, decorations, currentCollisionBuildings]);
 
+  //이건 마을 월드 영역 전체를 감싸는 바깥 박스.
   return (
     <div
-      className="sticky top-0 z-40 overflow-hidden"
+      className="sticky top-0 z-40 overflow-hidden" //sticky top-0 → 위에 붙는 느낌, overflow-hidden → 삐져나온 거 숨김
       style={{
         background: 'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 100%)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
       }}
     >
-      <div className="px-4 pt-3 pb-2">
+      <div className="px-4 pt-3 pb-2">// 마을 창문 주변에 여백 주는 박스(바깥 테두리에 딱 붙어 있으면 답답해 보여서,마을 창문이 조금 안쪽에 들어오게 만드는 것)
+        //실제료 사용자가 마을을 보는 창문 
         <div
           ref={viewportRef}
           className="relative overflow-hidden rounded-[28px]"
@@ -2644,6 +2659,7 @@ function VillageWorldLayer({
             background: 'linear-gradient(180deg, #cfe8ff 0%, #eef8ff 26%, #dfeec5 60%, #cfe1a6 100%)',
           }}
         >
+          //상단 UI 바
           <VillageOverlayBar
             nickname={nickname}
             level={totalLevel}
@@ -2653,7 +2669,7 @@ function VillageWorldLayer({
             onToggleOverview={onToggleOverview}
             isOverview={isOverview}
           />
-
+          //편집모드 관련 버튼들
           <EditToolbar
             isEditMode={isEditMode}
             selectedObject={selectedObject}
@@ -2662,20 +2678,22 @@ function VillageWorldLayer({
             onSave={onSaveEdit}
             onCancel={onCancelEdit}
             onStoreSelected={onStoreSelected}
-            canSave={!placementPreview || placementPreview.valid}
+            canSave={!placementPreview || placementPreview.valid}//미리보기가 없으면 저장 가능 미리보기가 있는데 valid가 true면 저장 가능 valid가 false면 저장 막힘 즉, 잘못 놓인 상태면 저장 못 하게 하는 안전장치야.
           />
 
-          <div className="absolute inset-0 touch-none overflow-hidden" onPointerDown={handleWorldPointerDown}>
+          <div className="absolute inset-0 touch-none overflow-hidden" onPointerDown={handleWorldPointerDown}> //마을 조작 영역
+            ////마을 조작 영역
             <div
               className="absolute left-0 top-0"
               style={{
-                width: WORLD_WIDTH,
-                height: WORLD_HEIGHT,
-                transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-                transformOrigin: 'top left',
-                transition: dragRef.current ? 'none' : 'transform 300ms ease',
+                width: WORLD_WIDTH, height: WORLD_HEIGHT, //월드 전체 크기
+                transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,//이 월드를 어디로 이동할지 (translate), 얼마나 확대/축소할지 (scale) 정한다`
+                transformOrigin: 'top left', //변형의 기준점을 왼쪽 위로 잡음
+                transition: dragRef.current ? 'none' : 'transform 300ms ease', //드래그 중이면 즉시 움직이고, 드래그 안 할 때는 부드럽게 이동
               }}
             >
+              //월드 맨 뒤에 깔리는 배경빛 효과로 하늘빛, 햇빛 느낌, 초원 느낌을 만드는 바탕 레이어야.
+              //즉 타일보다 더 아래에 깔리는 배경 그림자/빛 효과라고 보면 돼.
               <div
                 className="absolute inset-0"
                 style={{
@@ -2684,6 +2702,7 @@ function VillageWorldLayer({
                 }}
               />
 
+              //이건 타일 목록을 하나씩 돌면서 바닥 타일 이미지를 전부 깔아주는 부분
               {tileMap.map((tile) => {
                 const pos = gridToScreen(tile.col, tile.row);
                 const tileImg = getTileImageByKind(tile.kind);
