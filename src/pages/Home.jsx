@@ -2239,32 +2239,54 @@ function EditToolbar({
   );
 }
 
-
+//루트 앱 마을 화면 위쪽에 떠 있는 상단 상태바 UI
 function VillageOverlayBar({
-  nickname,
-  level,
-  points,
-  onOpenShop,
-  onOpenBag,
-  onToggleOverview,
-  isOverview,
+  nickname, //유저 이름
+  level, // 전체레벨
+  points, // 마을 포인트 
+  onOpenShop, // 상점 버튼 눌렀을 때 실행
+  onOpenBag, // 가방 버튼 눌렀을 때 실행
+  onToggleOverview, // 전체보기/확대 토글
+  isOverview, // 현재 전체보기 상태인지 
 }) {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3">
-      <div className="flex items-start justify-between gap-2">
+    <div className="pointer-events-none //pointer-events-none → 전체는 클릭 막고 여기만 클릭가능 
+      absolute //absolute → 화면 위에 떠있음 (고정 UI)
+      inset-x-0 //inset-x-0 → 좌우 꽉 채움
+      top-0 //top-0 → 맨 위에 붙음
+      z-20 //z-20 → 다른 요소 위에 올라옴
+      p-3"> //
+
+      <div className=
+        "flex // 기본 div는 세로로 쌓이는데, flex 쓰면 가로로 나열됨
+        items-start //위쪽 정렬 
+        justify-between //가운데는 비우고 왼쪽 오른쪽에 채움
+        gap-2"> // 아이템 사이 간격
+        
         <div
-          className="pointer-events-auto rounded-2xl px-3 py-2"
+          className=
+          "pointer-events-auto //클릭 가능하게 만드는 옵션, 너 코드에서 위 부모가 pointer-events-none이라서, 이거 없으면 버튼/박스 클릭 안됨
+          rounded-2xl //모서리 둥글게 
+          px-3 py-2" //좌우 여백, 위아래 여백
           style={{
-            background: 'rgba(255,248,232,0.82)',
+            background: 'rgba(255,248,232,0.82)', //의미: 밝은 베이지 색, 투명도 82%
             border: '1px solid rgba(107,78,21,0.14)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
             boxShadow: '0 8px 16px rgba(50,30,0,0.08)',
           }}
         >
-          <div className="flex items-center gap-2">
-            <div className="text-[11px] font-bold" style={{ color: '#8a5a17' }}>{nickname}</div>
-            <div className="rounded-full px-2 py-0.5 text-[11px] font-extrabold" style={{ background: 'rgba(196,154,74,0.16)', color: '#6f4a12', border: '1px solid rgba(196,154,74,0.2)' }}>Lv.{level}</div>
+          <div className=
+            "flex //요소를 가로로 배열
+            items-center //각 요소의 높이가 달라도 가운데 기준으로 맞춰줌 
+            gap-2"> // 요소 사이에 적당한 여백 추가
+            <div className="text-[11px] font-bold" style={{ color: '#8a5a17' }}>{nickname}</div> // 닉네임을작고 진하게, 갈색으로 표시하는 텍스트 박스 
+            <div className="rounded-full px-2 py-0.5 text-[11px] font-extrabold" 
+                  style={{ background: 'rgba(196,154,74,0.16)', 
+                           color: '#6f4a12', 
+                           border: '1px solid rgba(196,154,74,0.2)' }}>
+              Lv.{level}
+            </div>
           </div>
         </div>
 
@@ -2283,6 +2305,7 @@ function VillageOverlayBar({
   );
 }
 
+//
 function DecorationSprite({ item }) {
   return (
     <img
