@@ -2704,9 +2704,10 @@ function VillageWorldLayer({
 
               //이건 타일 목록을 하나씩 돌면서 바닥 타일 이미지를 전부 깔아주는 부분
               {tileMap.map((tile) => {
-                const pos = gridToScreen(tile.col, tile.row);
-                const tileImg = getTileImageByKind(tile.kind);
+                const pos = gridToScreen(tile.col, tile.row); //타일 좌표(col, row)를 실제 화면 x, y 위치로 바꿈
+                const tileImg = getTileImageByKind(tile.kind); //이 타일이 길인지, 잔디인지에 따라 이미지 선택
 
+              //이미지로 그림
                 return (
                   <img
                     key={tile.id}
@@ -2727,6 +2728,7 @@ function VillageWorldLayer({
                 );
               })}
 
+              //마을 바깥 가장자리에 놓이는 나무들을 그림.
               {borderTrees.map((tree) => (
                 <img
                   key={tree.id}
@@ -2749,7 +2751,9 @@ function VillageWorldLayer({
                 />
               ))}
 
+              //편집모드이고 placementPreview가 있을 때만 미리보기를 그림
               {isEditMode && placementPreview
+                //지금 끌고 있는 오브젝트가 차지할 타일들 계산
                 ? getPreviewTiles(
                     placementPreview.item,
                     placementPreview.type,
@@ -2757,7 +2761,7 @@ function VillageWorldLayer({
                     placementPreview.row
                   ).map((tile) => {
                     const pos = gridToScreen(tile.col, tile.row);
-                    const color = getPreviewColor(placementPreview.valid);
+                    const color = getPreviewColor(placementPreview.valid); //놓을 수 있으면 초록, 안 되면 빨강 같은 색 결정 그리고 각 타일 위에 마름모 모양의 박스를 그림
 
                     return (
                       <div
@@ -2768,7 +2772,7 @@ function VillageWorldLayer({
                           top: pos.y - TILE_H / 2,
                           width: TILE_W,
                           height: TILE_H,
-                          clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+                          clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)', //div를 마름모 모양으로 자름
                           border: color.border,
                           background: color.background,
                           boxSizing: 'border-box',
@@ -2779,9 +2783,10 @@ function VillageWorldLayer({
                   })
                 : null}
 
+              //수풀, 꽃, 나무 같은 장식들을 그리는 부분
               {decorations.map((item) => {
-                const isSelected = selectedObject?.type === 'decoration' && selectedObject?.id === item.id;
-                const pos = getObjectScreenPosition(item, 'decoration');
+                const isSelected = selectedObject?.type === 'decoration' && selectedObject?.id === item.id;//지금 선택된 장식인지 확인
+                const pos = getObjectScreenPosition(item, 'decoration');//이 장식의 실제 화면 위치 계산
 
                 return (
                   <div
@@ -2799,11 +2804,13 @@ function VillageWorldLayer({
                       zIndex: 3000 + item.row,
                     }}
                   >
+                    //그리고 바깥 div를 만들고 안에 아래를 넣어서 실제 이미지 표시
                     <DecorationSprite item={item} />
                   </div>
                 );
               })}
 
+              //이건 운동/공부/정신/일상 건물을 그리는 부분
               {buildings.map((building) => {
                 const isSelected = selectedObject?.type === 'building' && selectedObject?.id === building.category;
                 const pos = getObjectScreenPosition(building, 'building');
