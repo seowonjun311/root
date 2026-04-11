@@ -2305,7 +2305,7 @@ function VillageOverlayBar({
   );
 }
 
-//
+//이미지 하나를 깔끔하게, 드래그/선택 안 되게 표시하는 코드
 function DecorationSprite({ item }) {
   return (
     <img
@@ -2328,20 +2328,27 @@ function DecorationSprite({ item }) {
   );
 }
 
+//마을 월드 전체를 보여주고, 드래그로 이동하고, 편집모드에서 오브젝트를 옮기고, 건물/캐릭터/꾸미기/타일/UI를 전부 렌더링하는 메인 컴포넌트
 function VillageWorldLayer({
+  //표시용 데이터 
   nickname,
   totalLevel,
   points,
   userLevels,
   decorations,
-  setDecorations,
   characters,
+  buildingLayout, 
+  //상태 바꾸는 함수
   setCharacters,
-  buildingLayout,
+  setDecorations,
   setBuildingLayout,
+  setPlacementPreview,
+  setSelectedObject,
+  //편집관련
   isEditMode,
   selectedObject,
-  setSelectedObject,
+  placementPreview,
+  //버튼연결함수 
   onOpenShop,
   onOpenBag,
   onToggleEditMode,
@@ -2351,8 +2358,8 @@ function VillageWorldLayer({
   onStoreSelected,
   isOverview,
   onToggleOverview,
-  placementPreview,
-  setPlacementPreview,
+  
+  
 }) {
   const dragRef = useRef(null);
   const viewportRef = useRef(null);
