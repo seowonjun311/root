@@ -2148,28 +2148,29 @@ function VillageBagModal({
   );
 }
 
-
+//마을에서 오브젝트를 편집(이동/회전/저장/취소/가방넣기)할 때 쓰는 하단 툴바”
 function EditToolbar({
-  isEditMode,
-  selectedObject,
-  onToggleEditMode,
-  onFlip,
-  onSave,
-  onCancel,
-  onStoreSelected,
-  canSave = true,
+  isEditMode, //편집 모드인지
+  selectedObject, //선택된 오브젝트
+  onToggleEditMode, //편집모드 on
+  onFlip, // 좌우반전
+  onSave, // 저장
+  onCancel, //취소
+  onStoreSelected,  //가방에 넣기
+  canSave = true, // 현재 위치가 유효한지 
 }) {
+  //의미 : 선택된 것이 캐릭터 또는 꾸미기면 가방에 넣기 가능
   const canStore =
     selectedObject &&
     (selectedObject.type === 'character' || selectedObject.type === 'decoration');
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-3">
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-3"> //absolute bottom-0 -> 화면아래고정,하단 컨트롤 바
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
           disabled={isEditMode && !canSave}
-          onClick={isEditMode ? onSave : onToggleEditMode}
+          onClick={isEditMode ? onSave : onToggleEditMode} //편집모드 OFF	-> 편집모드, 편집모드 ON	->저장
           className="pointer-events-auto rounded-full px-3 py-2 text-[12px] font-extrabold"
           style={{
             background: isEditMode
@@ -2183,7 +2184,7 @@ function EditToolbar({
             opacity: isEditMode && !canSave ? 0.65 : 1,
           }}
         >
-          {isEditMode ? (canSave ? '저장' : '배치 불가') : '편집모드'}
+          {isEditMode ? (canSave ? '저장' : '배치 불가') : '편집모드'} //일반 -> 편집모드, 편집+가능 -> 저장, 편집 + 불가능 -> 배치불가 
         </button>
 
         {isEditMode ? (
@@ -2237,6 +2238,7 @@ function EditToolbar({
     </div>
   );
 }
+
 
 function VillageOverlayBar({
   nickname,
