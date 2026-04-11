@@ -1861,12 +1861,12 @@ function TitleUnlockModal({ title, onClose, onEquip }) { //title	칭호 정보, 
   );
 }
 
-//
-function AddActionGoalButton({ onClick, categoryLabel }) {
+//“행동목표를 새로 추가하는 버튼 UI”
+function AddActionGoalButton({ onClick, categoryLabel }) {//onClick	버튼 눌렀을 때 실행할 함수, categoryLabel	카테고리 이름 (운동, 공부 등)
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={onClick} //의미 : 버튼 누르면 👉 onClick 실행됨
       className="w-full rounded-2xl px-4 py-3 text-left"
       style={{
         background: 'linear-gradient(180deg, #fff7e8 0%, #f6e4bd 100%)',
@@ -1900,17 +1900,21 @@ function AddActionGoalButton({ onClick, categoryLabel }) {
   );
 }
 
-function VillageShopModal({ open, activeTab, onTabChange, points, onClose, onBuy }) {
-  if (!open) return null;
+//포인트로 캐릭터/꾸미기 아이템을 구매하는 상점 팝업(모달)
+function VillageShopModal({ open, activeTab, onTabChange, points, onClose, onBuy }) {//open	상점 열려있는지 여부, activeTab	현재 탭 (character / decoration), onTabChange	탭 바꿀 때 실행, points	내가 가진 포인트 ,onClose	닫기 버튼 ,onBuy	구매 버튼
+  if (!open) return null; //의미:open이 false면 아무것도 안 보여줌, 즉:true → 상점 보임, false → 상점 숨김
 
+  //의미: 현재 탭에 따라 아이템 분리, character	캐릭터만, decoration	꾸미기만
   const items = SHOP_ITEMS.filter((item) =>
-    activeTab === 'character' ? item.type === 'character' : item.type === 'decoration'
+    activeTab === 'character' 
+      ? item.type === 'character' 
+      : item.type === 'decoration'
   );
 
   return (
-    <div className="fixed inset-0 z-[95] bg-black/45 px-4 py-8">
+    <div className="fixed inset-0 z-[95] bg-black/45 px-4 py-8"> //의미: 화면 전체 덮기, 어둡게 만들기, 다른 UI 위에 뜸 → “모달 느낌”
       <div
-        className="mx-auto w-full max-w-md rounded-[28px] p-4"
+        className="mx-auto w-full max-w-md rounded-[28px] p-4" //의미: 가운데 카드, 둥글고, 여백 있고, 그림자 있음 → “게임 상점 UI 느낌”
         style={{
           background: 'linear-gradient(180deg, #fff7e8 0%, #f7e9cb 100%)',
           border: '1px solid rgba(160,120,64,0.18)',
@@ -1929,7 +1933,7 @@ function VillageShopModal({ open, activeTab, onTabChange, points, onClose, onBuy
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={onClose} //상점 닫기 
             className="rounded-full px-3 py-1.5 text-[12px] font-extrabold"
             style={{
               background: '#fff',
@@ -2043,18 +2047,19 @@ function VillageShopModal({ open, activeTab, onTabChange, points, onClose, onBuy
   );
 }
 
+//구매한 캐릭터/꾸미기를 보관하고, 마을에 꺼내는 가방(인벤토리) 팝업
 function VillageBagModal({
-  open,
-  activeTab,
-  onTabChange,
-  inventoryCharacters,
-  inventoryDecorations,
-  onClose,
-  onPlaceItem,
+  open, //가방 열림 여부
+  activeTab, //현재 탭
+  onTabChange, 
+  inventoryCharacters, //캐릭터 목록
+  inventoryDecorations, //꾸미기 목록
+  onClose, //닫기
+  onPlaceItem, //아이템 꺼내기
 }) {
-  if (!open) return null;
+  if (!open) return null; //의미: 가방 안 열려있으면, 아예 화면에 안 보임
 
-  const items = activeTab === 'character' ? inventoryCharacters : inventoryDecorations;
+  const items = activeTab === 'character' ? inventoryCharacters : inventoryDecorations; //현재 보여줄 아이템 선택
 
   return (
     <div className="fixed inset-0 z-[96] bg-black/45 px-4 py-8">
@@ -2113,12 +2118,12 @@ function VillageBagModal({
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          {items.length === 0 ? (
+          {items.length === 0 ? (//아이템이 없으면 
             <div className="col-span-2 rounded-2xl px-4 py-6 text-center text-sm" style={{ background: '#fffdf8', border: '1px solid rgba(160,120,64,0.14)', color: '#8a5a17' }}>
               가방에 보관된 아이템이 없어요.
             </div>
-          ) : items.map((item) => {
-            const itemImage = item.type === 'character' ? getCharacterImage(item.subtype) : getDecorationImage(item.subtype);
+          ) : items.map((item) => {//아이템 하나씩 화면에 그림
+            const itemImage = item.type === 'character' ? getCharacterImage(item.subtype) : getDecorationImage(item.subtype); // 타입에 따라 이미지 다르게 가져옴
             return (
               <div key={item.id} className="rounded-2xl p-3" style={{ background: '#fffdf8', border: '1px solid rgba(160,120,64,0.14)' }}>
                 <div className="flex h-[68px] items-center justify-center">
@@ -2128,7 +2133,7 @@ function VillageBagModal({
                 <div className="text-[12px]" style={{ color: '#8a5a17' }}>{item.type === 'character' ? '캐릭터' : '꾸미기'}</div>
                 <button
                   type="button"
-                  onClick={() => onPlaceItem(item)}
+                  onClick={() => onPlaceItem(item)} //이 아이템을 마을에 배치하자 
                   className="mt-3 h-10 w-full rounded-2xl text-sm font-extrabold"
                   style={{ background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)', color: '#fff8e8', border: '2px solid #6b4e15' }}
                 >
@@ -2142,6 +2147,7 @@ function VillageBagModal({
     </div>
   );
 }
+
 
 function EditToolbar({
   isEditMode,
