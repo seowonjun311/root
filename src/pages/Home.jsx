@@ -2889,16 +2889,19 @@ function VillageWorldLayer({
   );
 }
 
-export default function Home() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+//Home 컴포넌트가 시작될 때 필요한 값들을 준비하는 코드로 
+//Home 화면에서 쓸 변수들을 만들고, 특히 현재 선택된 카테고리를 저장된 데이터에서 꺼내와서 시작값으로 넣는 부분
+export default function Home() {//Home이라는 함수를 만든다, 이 함수가 Home 화면 컴포넌트다, export default는 “이 파일에서 가장 대표로 내보내는 기본 컴포넌트가 Home이다”라는 뜻, 즉 이 파일을 다른 곳에서 import하면 보통 이 Home을 가져오게 돼.
+  const navigate = useNavigate(); //페이지 이동용 함수 준비 즉 ,navigate는 화면 이동 버튼 같은 걸 만들 때 쓰는 도구
+  const queryClient = useQueryClient(); //ueryClient는 불러온 데이터들을 관리하는 컨트롤러로 ( 저장 후 다시 데이터 새로고침,캐시 지우기, 특정 쿼리 다시 불러오기)
 
-  const [guestVersion, setGuestVersion] = useState(0);
-  const [isOverview, setIsOverview] = useState(false);
+  const [guestVersion, setGuestVersion] = useState(0); //뜻: 숫자 상태를 하나 만듦, 처음 값은 0으로 게스트 데이터가 바뀌었음을 강제로 다시 반영시키는 용도
+  const [isOverview, setIsOverview] = useState(false); //뜻: 현재 마을이 전체보기 상태인지 저장으로 처음에는 false 즉, 시작할 때는:,전체보기 아님, 일반 확대 상태
 
-  const [activeCategory, setActiveCategory] = useState(() => {
-    try {
-      const raw = guestDataPersistence.getData();
+    const [activeCategory, setActiveCategory] = useState(() => { //뜻: 현재 선택된 카테고리를 저장하는 상태를 만든다, 시작값을 그냥 바로 쓰는 게 아니라, 함수를 실행해서 계산한 값으로 시작한다
+    //뜻: 먼저 안전하게 데이터를 읽어보자, 만약 읽다가 에러 나면 기본값 'exercise'를 쓰자
+      try {
+      const raw = guestDataPersistence.getData(); //뜻: 게스트 저장소에 들어 있는 데이터를 가져옴
       const cat =
         raw?.activeCategory ||
         raw?.guest_active_category ||
@@ -2910,14 +2913,17 @@ export default function Home() {
     }
   });
 
-  const [expPopup, setExpPopup] = useState(null);
-  const [pointPopup, setPointPopup] = useState(null);
-  const [newTitle, setNewTitle] = useState(null);
+  //보상/알림 UI 상태
+  const [expPopup, setExpPopup] = useState(null); //expPopup → 경험치 팝업 (예: +15 XP)
+  const [pointPopup, setPointPopup] = useState(null);//pointPopup → 포인트 팝업 (예: +3)
+  const [newTitle, setNewTitle] = useState(null);//newTitle → 새로 얻은 칭호
 
-  const [isShopOpen, setIsShopOpen] = useState(false);
-  const [shopTab, setShopTab] = useState('character');
-  const [isBagOpen, setIsBagOpen] = useState(false);
-  const [bagTab, setBagTab] = useState('character');
+  // 상점 UI상태 
+  const [isShopOpen, setIsShopOpen] = useState(false);//isShopOpen → 상점 열렸는지
+  const [shopTab, setShopTab] = useState('character');//shopTab → 어떤 탭인지 (캐릭터 / 꾸미기 등)
+  //가방 UI 상태
+  const [isBagOpen, setIsBagOpen] = useState(false);//isBagOpen → 가방 열렸는지
+  const [bagTab, setBagTab] = useState('character');//bagTab → 어떤 탭인지
 
   const [inventoryCharacters, setInventoryCharacters] = useState([]);
   const [inventoryDecorations, setInventoryDecorations] = useState([]);
