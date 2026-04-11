@@ -2331,42 +2331,40 @@ function DecorationSprite({ item }) {
 //마을 월드 전체를 보여주고, 드래그로 이동하고, 편집모드에서 오브젝트를 옮기고, 건물/캐릭터/꾸미기/타일/UI를 전부 렌더링하는 메인 컴포넌트
 function VillageWorldLayer({
   //표시용 데이터 
-  nickname,
-  totalLevel,
-  points,
-  userLevels,
-  decorations,
-  characters,
-  buildingLayout, 
-  //상태 바꾸는 함수
-  setCharacters,
-  setDecorations,
-  setBuildingLayout,
-  setPlacementPreview,
-  setSelectedObject,
+  nickname, //유저 이름
+  totalLevel, // 전체 레벨
+  points, // 마을 포인트
+  userLevels, // 운동/공부/정신/일상 등 카테고리 베벨 정도
+  decorations, //수풀, 꽃, 나무 같은 꾸미기 목록
+  characters, // 마을 안 캐릭터 목록
+  buildingLayout, //  건물 위치 정보
+  //상태 바꾸는 함수로 화면에 보이는 것뿐 아니라 실제로 위치를 바꾸는 권한을 가지고 있음 
+  setCharacters, //
+  setDecorations,//
+  setBuildingLayout,//
+  setPlacementPreview,//
+  setSelectedObject,//
   //편집관련
-  isEditMode,
-  selectedObject,
-  placementPreview,
+  isEditMode,//지금 편집모드인지
+  selectedObject,//현재 선택된 오브젝트
+  placementPreview,//지금 놓으려는 위치 미리보기
   //버튼연결함수 
-  onOpenShop,
-  onOpenBag,
-  onToggleEditMode,
-  onFlipSelected,
-  onSaveEdit,
-  onCancelEdit,
-  onStoreSelected,
-  isOverview,
-  onToggleOverview,
-  
-  
-}) {
+  onOpenShop,//상점 열기
+  onOpenBag,//가방 열기
+  onToggleEditMode,//편집모드 켜기/끄기
+  onFlipSelected,//선택한 오브젝트 좌우 반전
+  onSaveEdit,//편집 저장
+  onCancelEdit,//편직 취소
+  onStoreSelected,//선택한 오브젝트 가방 넣기
+  isOverview,//
+  onToggleOverview,//전체보기/확대 전환 
+    }) {
   const dragRef = useRef(null);
-  const viewportRef = useRef(null);
-  const [viewportSize, setViewportSize] = useState({ width: 0, height: WORLD_VIEWPORT_HEIGHT });
-  const [offset, setOffset] = useState({ x: -360, y: -120 });
+  const viewportRef = useRef(null); //마을이 보이는 화면 영역 DOM
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: WORLD_VIEWPORT_HEIGHT }); //현재 마을 화면 박스의 크기 저장.
+  const [offset, setOffset] = useState({ x: -360, y: -120 }); //이건 월드를 어디로 이동시켜서 보여줄지를 뜻(x가 커지면 좌우 위치 이동, y가 커지면 위아래 위치 이동) 마을 드래그하면 이 값이 바뀜
 
-  const scale = isOverview ? 0.21 : 0.46;
+  const scale = isOverview ? 0.21 : 0.46; //확대/축소 비율, 전체보기면 0.21, 일반 보기면 0.46, 즉: 전체보기 → 더 작게 보여서 많은 범위가 보임, 확대 → 더 크게 보여서 가까이 보임
 
   const buildings = useMemo(
     () => buildWorldBuildings({ userLevels, buildingLayout }),
