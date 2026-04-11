@@ -1783,7 +1783,7 @@ function ExpPopup({ exp }) //ExpPopup = 이름, exp = 얼마의 경험치인지 
   );
 }
 
-
+//포인트를 얻었을 때 화면 위에 잠깐 뜨는 알림 팝업”
 function PointPopup({ points }) {
   return (
     <div
@@ -1799,14 +1799,13 @@ function PointPopup({ points }) {
   );
 }
 
-function TitleUnlockModal({ title, onClose, onEquip }) {
+//새로운 칭호를 얻었을 때 뜨는 팝업창(모달)
+function TitleUnlockModal({ title, onClose, onEquip }) { //title	칭호 정보, onClose	닫기 버튼 눌렀을 때 실행, onEquip	장착 버튼 눌렀을 때 실행
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 px-5">
-      <div
-        className="w-full max-w-sm rounded-3xl p-5 shadow-2xl"
-        style={{
-          background: 'linear-gradient(180deg, #fff6df 0%, #f5e3b8 100%)',
-          border: '2px solid #c89b45',
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 px-5"> //fixed inset-0 → 화면 전체 덮기, bg-black/40 → 반투명 검정 배경 (어둡게), flex items-center justify-center → 가운데 정렬, z-[90] → 제일 위에 뜸 --> 결과: 뒤 화면 어두워지고 가운데 팝업 뜸
+      <div   className="w-full max-w-sm rounded-3xl p-5 shadow-2xl" //의미:max-w-sm → 카드 크기 제한, rounded-3xl → 둥글게, p-5 → 안쪽 여백, shadow-2xl → 큰 그림자  👉 결과:   고급스러운 카드 느낌
+        style={{ background: 'linear-gradient(180deg, #fff6df 0%, #f5e3b8 100%)', 
+                border: '2px solid #c89b45',
         }}
       >
         <div className="text-center">
@@ -1829,7 +1828,7 @@ function TitleUnlockModal({ title, onClose, onEquip }) {
             {title.description}
           </p>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2"> //버튼 2개 가로 배치
             <button
               type="button"
               onClick={onClose}
@@ -1862,6 +1861,7 @@ function TitleUnlockModal({ title, onClose, onEquip }) {
   );
 }
 
+//
 function AddActionGoalButton({ onClick, categoryLabel }) {
   return (
     <button
