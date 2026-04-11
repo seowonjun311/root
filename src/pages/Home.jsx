@@ -2925,17 +2925,21 @@ export default function Home() {//Home이라는 함수를 만든다, 이 함수�
   const [isBagOpen, setIsBagOpen] = useState(false);//isBagOpen → 가방 열렸는지
   const [bagTab, setBagTab] = useState('character');//bagTab → 어떤 탭인지
 
-  const [inventoryCharacters, setInventoryCharacters] = useState([]);
-  const [inventoryDecorations, setInventoryDecorations] = useState([]);
+  //인벤토리 데이터
+  const [inventoryCharacters, setInventoryCharacters] = useState([]); //inventoryCharacters → 가방 안 캐릭터 목록
+  const [inventoryDecorations, setInventoryDecorations] = useState([]); //inventoryDecorations → 가방 안 꾸미기 목록
 
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [selectedObject, setSelectedObject] = useState(null);
-  const [placementPreview, setPlacementPreview] = useState(null);
+  //편집 모드 상태
+  const [isEditMode, setIsEditMode] = useState(false); //isEditMode → 편집모드 켜졌는지
+  const [selectedObject, setSelectedObject] = useState(null);//selectedObject → 현재 선택된 오브젝트
+  const [placementPreview, setPlacementPreview] = useState(null);//placementPreview → 놓을 위치 미리보기
 
+  //마을 실제 데이터
   const [decorations, setDecorations] = useState([]);
   const [characters, setCharacters] = useState(DEFAULT_VILLAGE_DATA.village_characters);
   const [buildingLayout, setBuildingLayout] = useState(DEFAULT_BUILDINGS);
 
+  //ef는 state랑 다르게:👉 값이 바뀌어도 렌더링 안 일어남, 그냥 내부 기억용
   const originalVillageRef = useRef(null);
   const hasCategoryInteractionRef = useRef(false);
   const chainRepairOnceRef = useRef(false);
