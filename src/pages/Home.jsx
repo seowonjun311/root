@@ -1743,7 +1743,7 @@ function Section({ title, count, emptyText, children })
             border: '1px solid rgba(196,154,74,0.18)',
           }}
         >
-          {count}개
+          {count}
         </div>
       </div>
 
@@ -1770,8 +1770,8 @@ function ExpPopup({ exp }) //ExpPopup = 이름, exp = 얼마의 경험치인지 
  {  return (
     <div
       className="animate-[fadeInOut_1.4s_ease-in-out_forwards]   //의미: fadeInOut → 나타났다 사라짐, 1.4초 동안, 부드럽게 (ease-in-out) -> 툭 뜨고 → 잠깐 있다가 → 사라짐
-      fixed left-1/2 top-24 z-[80] -translate-x-1/2              //의미: fixed → 화면 기준 고정, left-1/2 → 가로 중앙, z-[80] -> 다른 UI보다 위에 뜸 (가려지지 않게),-translate-x-1/2 → 정확히 가운데 정렬, top-24 → 위에서 조금 */아래 -> 화면 상단 중앙에 뜸
-      rounded-full px-4 py-2 text-sm font-extrabold shadow-lg" //완전 둥근 pill 형태,그림자 → 떠있는 느낌
+      fixed left-1/2 top-24 z-[80] -translate-x-1/2              //의미: fixed → 화면 기준 고정, left-1/2 → 가로 중앙,top-24 → 위에서 조금 */아래, z-[80] -> 다른 UI보다 위에 뜸 (가려지지 않게),-translate-x-1/2 → 정확히 가운데 정렬,  -> 화면 상단 중앙에 뜸
+      rounded-full px-4 py-2 text-sm font-extrabold shadow-lg" //의미 : rounded-full → 완전 둥근 pill(알약) 형태, px-4 → 좌우 여백 (padding x), py-2 → 위아래 여백 (padding y), text-sm →  글자 크기 작게 sm = small, font-extrabold  → 글씨 엄청 두껍게, shadow-lg 큰 그림자 lg = large 떠있는 느낌
       style={{
         background: 'linear-gradient(180deg, #f6d98c 0%, #d9a83e 100%)', //금색 그라데이션 
         color: '#4a2c08',
@@ -1782,6 +1782,7 @@ function ExpPopup({ exp }) //ExpPopup = 이름, exp = 얼마의 경험치인지 
     </div>
   );
 }
+
 
 function PointPopup({ points }) {
   return (
