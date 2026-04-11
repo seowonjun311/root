@@ -2366,11 +2366,13 @@ function VillageWorldLayer({
 
   const scale = isOverview ? 0.21 : 0.46; //확대/축소 비율, 전체보기면 0.21, 일반 보기면 0.46, 즉: 전체보기 → 더 작게 보여서 많은 범위가 보임, 확대 → 더 크게 보여서 가까이 보임
 
+  //이건 현재 유저 레벨과 건물 위치를 바탕으로 실제로 화면에 그릴 건물 목록을 만듦.
   const buildings = useMemo(
     () => buildWorldBuildings({ userLevels, buildingLayout }),
     [userLevels, buildingLayout]
   );
 
+  //이건 충돌 검사할 때 쓰는 건물 목록, 즉: 장식이나 캐릭터가 건물과 겹치는지, 건물이 다른 건물과 겹치는지, 확인할 때 사용됨.
   const currentCollisionBuildings = useMemo(() => {
     return buildWorldBuildings({ userLevels, buildingLayout }).map((item) => ({
       ...item,
@@ -2378,8 +2380,8 @@ function VillageWorldLayer({
     }));
   }, [userLevels, buildingLayout]);
 
-  const tileMap = useMemo(() => buildTileMap(GRID_COLS, GRID_ROWS, OUTER_TILE_PADDING), []);
-  const borderTrees = useMemo(() => buildBorderTrees(), []);
+  const tileMap = useMemo(() => buildTileMap(GRID_COLS, GRID_ROWS, OUTER_TILE_PADDING), []); //마을 바닥 타일 전체를 만듦. 즉: 어느 칸에 잔디, 어느 칸에 길, 바깥 패딩은 어떻게 둘지 를 미리 계산해둠.
+  const borderTrees = useMemo(() => buildBorderTrees(), []); //마을 바깥 경계에 있는 나무들 목록이야.
 
   const handleWorldPointerDown = (e) => {
     if (isEditMode) return;
