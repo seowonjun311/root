@@ -130,7 +130,7 @@ function VillageWorldLayer({
   
 const stars = useMemo(
   () =>
-    Array.from({ length: 500 }).map((_, i) => ({
+    Array.from({ length: 900 }).map((_, i) => ({
       id: `star_${i}`,
       x: Math.random() * WORLD_WIDTH,
       y: Math.random() * WORLD_HEIGHT,
