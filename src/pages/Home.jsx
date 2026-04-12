@@ -127,7 +127,7 @@ function VillageWorldLayer({
   }, [userLevels, buildingLayout]);
 
   const tileMap = useMemo(() => buildTileMap(GRID_COLS, GRID_ROWS, OUTER_TILE_PADDING), []); //마을 바닥 타일 전체를 만듦. 즉: 어느 칸에 잔디, 어느 칸에 길, 바깥 패딩은 어떻게 둘지 를 미리 계산해둠.
-  const borderTrees = useMemo(() => buildBorderTrees(), []); //마을 바깥 경계에 있는 나무들 목록이야.
+  
 
   //편집모드 아닐 때만 동작함. 즉: 일반 모드에서는 마을 배경을 잡고 움직일 수 있음, 편집모드에서는 배경 이동보다 오브젝트 이동이 우선
   const handleWorldPointerDown = (e) => {
@@ -386,7 +386,7 @@ function VillageWorldLayer({
     <div
       className="sticky top-0 z-40 overflow-hidden"
       style={{
-        background: 'linear-gradient(180deg, rgba(248,241,223,0.98) 0%, rgba(245,232,201,0.95) 100%)',
+        background: 'radial-gradient(circle at 50% 35%, #2a315f 0%, #161a35 45%, #0a0d1f 75%, #05070f 100%)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
       }}
@@ -433,15 +433,43 @@ function VillageWorldLayer({
               }}
             >
 
-              <div
+                            <div
                 className="absolute inset-0"
                 style={{
                   background:
-                    'radial-gradient(circle at 50% 12%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 28%), linear-gradient(180deg, #cfe8ff 0%, #eef8ff 24%, #d9ecbd 56%, #c4dd92 100%)',
+                    'radial-gradient(circle at 50% 18%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 18%), radial-gradient(circle at 50% 45%, rgba(98,120,255,0.12) 0%, rgba(98,120,255,0.04) 22%, rgba(0,0,0,0) 52%), linear-gradient(180deg, #1c2248 0%, #121631 38%, #0a0d1f 70%, #05070f 100%)',
                 }}
               />
 
+                            {stars.map((star) => (
+                <div
+                  key={star.id}
+                  className="pointer-events-none absolute rounded-full"
+                  style={{
+                    left: star.x,
+                    top: star.y,
+                    width: star.size,
+                    height: star.size,
+                    background: 'rgba(255,255,255,0.95)',
+                    opacity: star.opacity,
+                    boxShadow: '0 0 6px rgba(255,255,255,0.45)',
+                  }}
+                />
+              ))}
 
+                            <div
+                className="pointer-events-none absolute"
+                style={{
+                  left: GRID_COLS * (TILE_W / 2),
+                  top: GRID_ROWS * (TILE_H / 2) + 260,
+                  width: 980,
+                  height: 300,
+                  transform: 'translate(-50%, -50%)',
+                  background: 'radial-gradient(ellipse, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.18) 38%, rgba(0,0,0,0) 72%)',
+                  filter: 'blur(18px)',
+                }}
+              />
+              
               {tileMap.map((tile) => {
                 const pos = gridToScreen(tile.col, tile.row); //타일 좌표(col, row)를 실제 화면 x, y 위치로 바꿈
                 const tileImg = getTileImageByKind(tile.kind); //이 타일이 길인지, 잔디인지에 따라 이미지 선택
@@ -465,29 +493,19 @@ function VillageWorldLayer({
                   />
                 );
               })}
+const stars = useMemo(
+    () =>
+      Array.from({ length: 48 }).map((_, i) => ({
+        id: `star_${i}`,
+        x: Math.random() * WORLD_WIDTH,
+        y: Math.random() * WORLD_HEIGHT,
+        size: Math.random() * 2.2 + 0.8,
+        opacity: Math.random() * 0.5 + 0.35,
+      })),
+    []
+  );
 
-
-              {borderTrees.map((tree) => (
-                <img
-                  key={tree.id}
-                  src={tree.image}
-                  alt=""
-                  draggable={false}
-                  className="pointer-events-none absolute select-none"
-                  style={{
-                    left: tree.x,
-                    top: tree.y,
-                    width: tree.width,
-                    height: 'auto',
-                    transform: `translate(-50%, -100%) scaleX(${tree.flipped ? -1 : 1}) rotate(${tree.rotation ?? 0}deg)`,
-                    transformOrigin: 'bottom center',
-                    zIndex: tree.zIndex,
-                    opacity: tree.opacity ?? 1,
-                    userSelect: 'none',
-                    WebkitUserDrag: 'none',
-                  }}
-                />
-              ))}
+            
 
 
               {isEditMode && placementPreview
