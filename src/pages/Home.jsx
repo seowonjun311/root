@@ -2532,7 +2532,7 @@ function VillageWorldLayer({
           })
         );
       }
-      /빌딩이동
+      //빌딩이동
       if (drag.objectType === 'building') {
         setBuildingLayout((prev) =>
           prev.map((item) => {
