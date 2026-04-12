@@ -130,12 +130,13 @@ function VillageWorldLayer({
   
 const stars = useMemo(
   () =>
-    Array.from({ length: 48 }).map((_, i) => ({
+    Array.from({ length: 90 }).map((_, i) => ({
       id: `star_${i}`,
       x: Math.random() * WORLD_WIDTH,
       y: Math.random() * WORLD_HEIGHT,
-      size: Math.random() * 2.2 + 0.8,
-      opacity: Math.random() * 0.5 + 0.35,
+      size: Math.random() < 0.75 ? Math.random() * 1.8 + 0.6 : Math.random() * 2.8 + 1.2,
+      opacity: Math.random() * 0.45 + 0.35,
+      blur: Math.random() < 0.2 ? 10 : 5,
     })),
   []
 );
@@ -410,7 +411,8 @@ const stars = useMemo(
             height: WORLD_VIEWPORT_HEIGHT,
             border: '1px solid rgba(160,120,64,0.18)',
             boxShadow: '0 12px 24px rgba(80,50,10,0.08)',
-            background: 'radial-gradient(circle at 50% 35%, #2a315f 0%, #161a35 45%, #0a0d1f 75%, #05070f 100%)',
+            background:
+  'radial-gradient(circle at 50% 20%, rgba(120,150,255,0.22) 0%, rgba(120,150,255,0.08) 16%, rgba(0,0,0,0) 34%), radial-gradient(circle at 18% 28%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 10%, rgba(0,0,0,0) 24%), radial-gradient(circle at 82% 18%, rgba(180,120,255,0.16) 0%, rgba(180,120,255,0.05) 12%, rgba(0,0,0,0) 24%), linear-gradient(180deg, #1d2550 0%, #131938 38%, #0a0f24 68%, #05070f 100%)',
           }}
         >
           <VillageOverlayBar
@@ -445,28 +447,31 @@ const stars = useMemo(
             >
 
                             <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    'radial-gradient(circle at 50% 18%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 18%), radial-gradient(circle at 50% 45%, rgba(98,120,255,0.12) 0%, rgba(98,120,255,0.04) 22%, rgba(0,0,0,0) 52%), linear-gradient(180deg, #1c2248 0%, #121631 38%, #0a0d1f 70%, #05070f 100%)',
-                }}
-              />
+  className="absolute inset-0"
+  style={{
+    background:
+      'radial-gradient(circle at 50% 14%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 12%), radial-gradient(circle at 28% 24%, rgba(109,140,255,0.16) 0%, rgba(109,140,255,0.06) 14%, rgba(0,0,0,0) 28%), radial-gradient(circle at 74% 18%, rgba(199,132,255,0.14) 0%, rgba(199,132,255,0.05) 12%, rgba(0,0,0,0) 25%), radial-gradient(circle at 52% 52%, rgba(90,120,255,0.08) 0%, rgba(90,120,255,0.03) 18%, rgba(0,0,0,0) 42%), linear-gradient(180deg, #1a2148 0%, #111733 34%, #0a0f24 68%, #04060d 100%)',
+  }}
+/>
 
                             {stars.map((star) => (
-                <div
-                  key={star.id}
-                  className="pointer-events-none absolute rounded-full"
-                  style={{
-                    left: star.x,
-                    top: star.y,
-                    width: star.size,
-                    height: star.size,
-                    background: 'rgba(255,255,255,0.95)',
-                    opacity: star.opacity,
-                    boxShadow: '0 0 6px rgba(255,255,255,0.45)',
-                  }}
-                />
-              ))}
+  <div
+    key={star.id}
+    className="pointer-events-none absolute rounded-full"
+    style={{
+      left: star.x,
+      top: star.y,
+      width: star.size,
+      height: star.size,
+      background:
+        star.size > 2
+          ? 'rgba(255,255,255,0.98)'
+          : 'rgba(230,235,255,0.92)',
+      opacity: star.opacity,
+      boxShadow: `0 0 ${star.blur}px rgba(255,255,255,0.45)`,
+    }}
+  />
+))}
 
                             <div
                 className="pointer-events-none absolute"
