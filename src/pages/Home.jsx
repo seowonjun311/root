@@ -466,9 +466,12 @@ const stars = useMemo(
       background:
         star.size > 2
           ? 'rgba(255,255,255,0.98)'
-          : 'rgba(230,235,255,0.92)',
-      opacity: star.opacity,
-      boxShadow: `0 0 ${star.blur}px rgba(255,255,255,0.45)`,
+          : 'rgba(255,255,255,1)',
+      opacity: Math.random() * 0.5 + 0.5,
+      boxShadow: `
+  0 0 ${star.blur}px rgba(255,255,255,0.9),
+  0 0 ${star.blur * 2}px rgba(255,255,255,0.6)
+`,
     }}
   />
 ))}
