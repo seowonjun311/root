@@ -128,7 +128,18 @@ function VillageWorldLayer({
 
   const tileMap = useMemo(() => buildTileMap(GRID_COLS, GRID_ROWS, OUTER_TILE_PADDING), []); //마을 바닥 타일 전체를 만듦. 즉: 어느 칸에 잔디, 어느 칸에 길, 바깥 패딩은 어떻게 둘지 를 미리 계산해둠.
   
-
+const stars = useMemo(
+  () =>
+    Array.from({ length: 48 }).map((_, i) => ({
+      id: `star_${i}`,
+      x: Math.random() * WORLD_WIDTH,
+      y: Math.random() * WORLD_HEIGHT,
+      size: Math.random() * 2.2 + 0.8,
+      opacity: Math.random() * 0.5 + 0.35,
+    })),
+  []
+);
+  
   //편집모드 아닐 때만 동작함. 즉: 일반 모드에서는 마을 배경을 잡고 움직일 수 있음, 편집모드에서는 배경 이동보다 오브젝트 이동이 우선
   const handleWorldPointerDown = (e) => {
     if (isEditMode) return;
@@ -399,7 +410,7 @@ function VillageWorldLayer({
             height: WORLD_VIEWPORT_HEIGHT,
             border: '1px solid rgba(160,120,64,0.18)',
             boxShadow: '0 12px 24px rgba(80,50,10,0.08)',
-            background: 'linear-gradient(180deg, #cfe8ff 0%, #eef8ff 26%, #dfeec5 60%, #cfe1a6 100%)',
+            background: 'radial-gradient(circle at 50% 35%, #2a315f 0%, #161a35 45%, #0a0d1f 75%, #05070f 100%)',
           }}
         >
           <VillageOverlayBar
@@ -493,20 +504,7 @@ function VillageWorldLayer({
                   />
                 );
               })}
-const stars = useMemo(
-    () =>
-      Array.from({ length: 48 }).map((_, i) => ({
-        id: `star_${i}`,
-        x: Math.random() * WORLD_WIDTH,
-        y: Math.random() * WORLD_HEIGHT,
-        size: Math.random() * 2.2 + 0.8,
-        opacity: Math.random() * 0.5 + 0.35,
-      })),
-    []
-  );
-
-            
-
+          
 
               {isEditMode && placementPreview
 
