@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const currentUser = await Promise.race([
           base44.auth.me(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('auth timeout')), 2000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('auth timeout')), 500))
         ]);
         console.log('[AuthContext] User authenticated, redirecting to home');
         setUser(currentUser);
