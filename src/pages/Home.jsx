@@ -31,8 +31,6 @@ import {
   clampWorldOffset, randomBetween, clamp,
 } from '@/lib/villageUtils';
 
-import { buildBorderTrees } from '@/lib/buildBorderTrees';
-
 import {
   addOwnedTitle, ensureValidEquippedTitle, getOwnedTitleIds, setEquippedTitle,
 } from '@/lib/titleStorage';
