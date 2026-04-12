@@ -1231,7 +1231,7 @@ function buildBorderTrees() {//맵 경계가 허전해 보이지 않게 하고, 
         zBoost: 3,
         region: 'right-bottom',
       });
-    } else {아래쪽이 아니면 나무 유지 즉, 
+    } else {//아래쪽이 아니면 나무 유지 즉, 
       pushTree(GRID_COLS + 1, row, { offsetX: 30, depth: 0, extraWidth: 12, region: 'right' });
       pushTree(GRID_COLS + 2, row, { offsetX: 78, depth: 1, extraWidth: 26, region: 'right' });
       pushTree(GRID_COLS + 3, row, { offsetX: 126, depth: 2, extraWidth: 42, region: 'right' });
