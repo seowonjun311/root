@@ -1663,7 +1663,7 @@ function getViewportWorldCorners(offset, viewportWidth, viewportHeight, scale) {
     { x: (0 - offset.x) / scale, y: (0 - offset.y) / scale }, //좌상단
     { x: (viewportWidth - offset.x) / scale, y: (0 - offset.y) / scale },//우상단
     { x: (viewportWidth - offset.x) / scale, y: (viewportHeight - offset.y) / scale },//우하단
-    { x: (0 - offset.x) / scale, y: (viewportHeight - offset.y) / scale },/좌하단
+    { x: (0 - offset.x) / scale, y: (viewportHeight - offset.y) / scale },//좌하단
   ];
 }
 
