@@ -1616,7 +1616,7 @@ function getWorldPanBounds(viewportWidth, viewportHeight, scale) {//viewportWidt
   const maxVisibleY = WORLD_HEIGHT + WORLD_EDGE_MARGIN_BOTTOM; //아래쪽 여
 
   //offsetX, offsetY는 보통: 월드 전체를 화면에서 얼마나 옮겨서 보여줄지 뜻 
-  const minOffsetX = viewportWidth - maxVisibleX * //scale; 월드를 왼쪽으로 가장 많이 밀었을 때의 한계
+  const minOffsetX = viewportWidth - maxVisibleX * scale; //월드를 왼쪽으로 가장 많이 밀었을 때의 한계
   const maxOffsetX = -minVisibleX * scale; //월드를 오른쪽으로 가장 많이 밀었을 때의 한계
   const minOffsetY = viewportHeight - maxVisibleY * scale; //y도 똑같음
   const maxOffsetY = -minVisibleY * scale;

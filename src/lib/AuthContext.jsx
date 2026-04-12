@@ -31,11 +31,11 @@ export const AuthProvider = ({ children }) => {
       if (!silent) setIsLoadingPublicSettings(true);
       setAuthError(null);
       
-      // Try to authenticate the user with base44 SDK (5s timeout)
+      // Try to authenticate the user with base44 SDK (2s timeout)
       try {
         const currentUser = await Promise.race([
           base44.auth.me(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('auth timeout')), 5000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('auth timeout')), 2000))
         ]);
         console.log('[AuthContext] User authenticated, redirecting to home');
         setUser(currentUser);
