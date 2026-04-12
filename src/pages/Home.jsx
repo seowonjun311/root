@@ -44,6 +44,16 @@ import GoalProgress from '@/components/home/GoalProgress';
 import ActionGoalCard from '@/components/home/ActionGoalCard';
 import EmptyGoalState from '@/components/home/EmptyGoalState';
 
+import VillageShopModal from '@/components/home/VillageShopModal';
+import VillageBagModal from '@/components/home/VillageBagModal';
+import ExpPopup from '@/components/home/ExpPopup';
+import PointPopup from '@/components/home/PointPopup';
+import TitleUnlockModal from '@/components/home/TitleUnlockModal';
+import Section from '@/components/home/Section';
+import AddActionGoalButton from '@/components/home/AddActionGoalButton';
+import VillageOverlayBar from '@/components/home/VillageOverlayBar';
+import EditToolbar from '@/components/home/EditToolbar';
+
 function DecorationSprite({ item }) {
   return (
     <img
