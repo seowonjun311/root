@@ -577,6 +577,20 @@ export function readGuestData() {
   }
 }
 
+export const DAILY_BUILDING_LEVEL_KEYS = [
+  120,110,100,90,80,70,60,50,40,30,20,10,9,7,5,3,1
+];
+
+export function getDailyBuildingKey(level) {
+  const safe = Number(level || 1);
+
+  for (const t of DAILY_BUILDING_LEVEL_KEYS) {
+    if (safe >= t) return `daily_lv${t}`;
+  }
+
+  return 'daily_lv1';
+}
+
 export function writeGuestDataPatch(patchOrUpdater) {
   try {
     if (typeof guestDataPersistence?.updateData === 'function') {
