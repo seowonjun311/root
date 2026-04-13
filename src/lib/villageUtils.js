@@ -12,6 +12,8 @@ import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
 import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
 import { getBuilding } from '@/assets/root/buildings';
 import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
+import { DAILY_BUILDINGS } from '@/assets/root/buildings';
+
 
 // --- 기본 유틸 ---
 export function clamp(value, min, max) {
@@ -615,4 +617,9 @@ export function writeGuestDataPatch(patchOrUpdater) {
     console.error('writeGuestDataPatch error:', error);
     return readGuestData();
   }
+}
+
+export function getDailyBuildingImage(level) {
+  const key = getDailyBuildingKey(level);
+  return DAILY_BUILDINGS[key];
 }
