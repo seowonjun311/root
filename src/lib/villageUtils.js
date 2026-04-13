@@ -10,9 +10,8 @@ import {
 } from './villageConstants';
 import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
 import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
-import { getBuilding } from '@/assets/root/buildings';
+import { getBuilding, getDailyBuildingByLevel } from '@/assets/root/buildings';
 import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
-import { DAILY_BUILDINGS } from '@/assets/root/buildings';
 
 
 // --- 기본 유틸 ---
@@ -456,9 +455,7 @@ export function buildWorldBuildings({ userLevels, buildingLayout }) {
   const mentalLevel = Number(userLevels?.mental_level || 1);
   const dailyLevel = Number(userLevels?.daily_level || 1);
   
-  console.log('dailyLevel:', dailyLevel);
-console.log('dailyKey:', getDailyBuildingKey(dailyLevel));
-console.log('dailyImage:', getDailyBuildingImage(dailyLevel));
+
   
   const getStage = (level) => (level >= 7 ? 3 : level >= 3 ? 2 : 1);
   const layoutMap = Object.fromEntries((buildingLayout || []).map((b) => [b.category, b]));
@@ -584,47 +581,6 @@ export function readGuestData() {
   }
 }
 
-export const DAILY_BUILDING_LEVEL_KEYS = [
-  120,110,100,90,80,70,60,50,40,30,20,10,9,7,5,3,1
-];
-
-export function getDailyBuildingKey(level) {
-  const safe = Number(level || 1);
-
-  for (const t of DAILY_BUILDING_LEVEL_KEYS) {
-    if (safe >= t) return `daily_lv${t}`;
-  }
-
-  return 'daily_lv1';
-}
-
-export function writeGuestDataPatch(patchOrUpdater) {
-  try {
-    if (typeof guestDataPersistence?.updateData === 'function') {
-      return guestDataPersistence.updateData((prev) => {
-        const draft = typeof patchOrUpdater === 'function' ? patchOrUpdater(prev) : { ...prev, ...(patchOrUpdater || {}) };
-        const normalizedDraft = { ...(draft || {}) };
-        if (Object.prototype.hasOwnProperty.call(normalizedDraft, 'local_action_logs')) {
-          normalizedDraft.actionLogs = normalizedDraft.local_action_logs;
-          delete normalizedDraft.local_action_logs;
-        }
-        return normalizedDraft;
-      });
-    }
-    const prev = readGuestData();
-    const next = typeof patchOrUpdater === 'function' ? patchOrUpdater(prev) : { ...prev, ...(patchOrUpdater || {}) };
-    Object.entries(next || {}).forEach(([key, value]) => {
-      const normalizedKey = key === 'local_action_logs' ? 'actionLogs' : key;
-      if (typeof guestDataPersistence?.saveData === 'function') guestDataPersistence.saveData(normalizedKey, value);
-    });
-    return next;
-  } catch (error) {
-    console.error('writeGuestDataPatch error:', error);
-    return readGuestData();
-  }
-}
-
 export function getDailyBuildingImage(level) {
-  const key = getDailyBuildingKey(level);
-  return DAILY_BUILDINGS[key];
+  return getDailyBuildingByLevel(Number(level || 1));
 }
