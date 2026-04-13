@@ -462,7 +462,7 @@ export function buildWorldBuildings({ userLevels, buildingLayout }) {
   const layoutMap = Object.fromEntries((buildingLayout || []).map((b) => [b.category, b]));
   return [
     { id: 'exercise_building', category: 'exercise', label: `체육관 Lv.${getStage(exerciseLevel)}`, image: getBuilding('exercise', getStage(exerciseLevel)), col: layoutMap.exercise?.col ?? 6, row: layoutMap.exercise?.row ?? 10, flipped: !!layoutMap.exercise?.flipped, w: 112, h: 90 },
-    { id: 'study_building', category: 'study', label: `도서관 Lv.${getStage(studyLevel)}`, image: getBuilding('study', getStage(studyLevel)), col: layoutMap.study?.col ?? 9, row: layoutMap.study?.row ?? 11, flipped: !!layoutMap.study?.flipped, w: 112, h: 90 },
+    { id: 'study_building', category: 'study', label: `도서관 Lv.${studyLevel}`, image: getBuilding('study', studyLevel), col: layoutMap.study?.col ?? 9, row: layoutMap.study?.row ?? 11, flipped: !!layoutMap.study?.flipped, w: 112, h: 90 },
     { id: 'mental_building', category: 'mental', label: `명상숲 Lv.${getStage(mentalLevel)}`, image: getBuilding('mental', getStage(mentalLevel)), col: layoutMap.mental?.col ?? 12, row: layoutMap.mental?.row ?? 9, flipped: !!layoutMap.mental?.flipped, w: 112, h: 90 },
     { id: 'daily_building', category: 'daily', label: `생활공방 Lv.${dailyLevel}`, image: getDailyBuildingImage(dailyLevel), col: layoutMap.daily?.col ?? 15, row: layoutMap.daily?.row ?? 8, flipped: !!layoutMap.daily?.flipped, w: 112, h: 90 },
   ];
