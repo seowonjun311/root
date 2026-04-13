@@ -2,6 +2,44 @@
  * 건물 이미지 에셋
  */
 
+import daily_lv1 from './daily_lv1.png';
+import daily_lv3 from './daily_lv3.png';
+import daily_lv5 from './daily_lv5.png';
+import daily_lv7 from './daily_lv7.png';
+import daily_lv9 from './daily_lv9.png';
+import daily_lv10 from './daily_lv10.png';
+import daily_lv20 from './daily_lv20.png';
+import daily_lv30 from './daily_lv30.png';
+import daily_lv40 from './daily_lv40.png';
+import daily_lv50 from './daily_lv50.png';
+import daily_lv60 from './daily_lv60.png';
+import daily_lv70 from './daily_lv70.png';
+import daily_lv80 from './daily_lv80.png';
+import daily_lv90 from './daily_lv90.png';
+import daily_lv100 from './daily_lv100.png';
+import daily_lv110 from './daily_lv110.png';
+import daily_lv120 from './daily_lv120.png';
+
+export const DAILY_BUILDINGS = {
+  daily_lv1,
+  daily_lv3,
+  daily_lv5,
+  daily_lv7,
+  daily_lv9,
+  daily_lv10,
+  daily_lv20,
+  daily_lv30,
+  daily_lv40,
+  daily_lv50,
+  daily_lv60,
+  daily_lv70,
+  daily_lv80,
+  daily_lv90,
+  daily_lv100,
+  daily_lv110,
+  daily_lv120,
+};
+
 export const castleImg = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/25e57f60f_castlepng.png';
 
 export const gymLv1Img        = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3a2f2cf84_gym_lv1png.png';
