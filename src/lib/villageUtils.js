@@ -12,6 +12,7 @@ import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
 import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
 import { getBuilding, getDailyBuildingByLevel } from '@/assets/root/buildings';
 import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
+import guestDataPersistence from '@/lib/GuestDataPersistence';
 
 
 // --- 기본 유틸 ---
@@ -568,7 +569,6 @@ export function clampWorldOffset(nextOffset, viewportWidth, viewportHeight, scal
 }
 
 // --- 게스트 데이터 ---
-import guestDataPersistence from '@/lib/GuestDataPersistence';
 
 export function readGuestData() {
   try {
@@ -578,6 +578,32 @@ export function readGuestData() {
   } catch (error) {
     console.error('readGuestData error:', error);
     return {};
+  }
+}
+
+export function writeGuestDataPatch(patchOrUpdater) {
+  try {
+    if (typeof guestDataPersistence?.updateData === 'function') {
+      return guestDataPersistence.updateData((prev) => {
+        const draft = typeof patchOrUpdater === 'function' ? patchOrUpdater(prev) : { ...prev, ...(patchOrUpdater || {}) };
+        const normalizedDraft = { ...(draft || {}) };
+        if (Object.prototype.hasOwnProperty.call(normalizedDraft, 'local_action_logs')) {
+          normalizedDraft.actionLogs = normalizedDraft.local_action_logs;
+          delete normalizedDraft.local_action_logs;
+        }
+        return normalizedDraft;
+      });
+    }
+    const prev = readGuestData();
+    const next = typeof patchOrUpdater === 'function' ? patchOrUpdater(prev) : { ...prev, ...(patchOrUpdater || {}) };
+    Object.entries(next || {}).forEach(([key, value]) => {
+      const normalizedKey = key === 'local_action_logs' ? 'actionLogs' : key;
+      if (typeof guestDataPersistence?.saveData === 'function') guestDataPersistence.saveData(normalizedKey, value);
+    });
+    return next;
+  } catch (error) {
+    console.error('writeGuestDataPatch error:', error);
+    return readGuestData();
   }
 }
 
