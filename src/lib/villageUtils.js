@@ -455,6 +455,11 @@ export function buildWorldBuildings({ userLevels, buildingLayout }) {
   const studyLevel = Number(userLevels?.study_level || 1);
   const mentalLevel = Number(userLevels?.mental_level || 1);
   const dailyLevel = Number(userLevels?.daily_level || 1);
+  
+  console.log('dailyLevel:', dailyLevel);
+console.log('dailyKey:', getDailyBuildingKey(dailyLevel));
+console.log('dailyImage:', getDailyBuildingImage(dailyLevel));
+  
   const getStage = (level) => (level >= 7 ? 3 : level >= 3 ? 2 : 1);
   const layoutMap = Object.fromEntries((buildingLayout || []).map((b) => [b.category, b]));
   return [
