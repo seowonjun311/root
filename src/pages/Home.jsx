@@ -1758,15 +1758,15 @@ export default function Home() {
     }
   };
 
-  const totalLevel = 10; // TODO: 테스트용 고정값, 원래 코드로 복원 필요
-  // const totalLevel = useMemo(() => {
-  //   const sum =
-  //     Number(userLevels.exercise_level || 1) +
-  //     Number(userLevels.study_level || 1) +
-  //     Number(userLevels.mental_level || 1) +
-  //     Number(userLevels.daily_level || 1);
-  //   return Math.max(1, Math.floor(sum / 4));
-  // }, [userLevels]);
+  const totalLevel = useMemo(() => {
+    const sum =
+      Number(userLevels.exercise_level || 1) +
+      Number(userLevels.study_level || 1) +
+      Number(userLevels.mental_level || 1) +
+      Number(userLevels.daily_level || 1);
+
+    return Math.max(1, Math.floor(sum / 4));
+  }, [userLevels]);
 
   const points = Number(getVillageState(isGuest ? guestData : user).village_points || 0);
 
