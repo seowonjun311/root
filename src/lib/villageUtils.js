@@ -423,9 +423,26 @@ export function validateGoalActionLogChain(goals = [], actionGoals = [], logs = 
 }
 
 // --- 캐릭터/장식 ---
-export function getCharacterImage(type) {
+import { 
+  foxImg, 
+  foxWalkFrames, 
+  getFoxWalkFrame,
+  alpacaImg, 
+  platypusImg 
+} from '@/assets/root/characters';
+
+export function getCharacterImage(type, isMoving = false, time = Date.now()) {
   if (type === 'alpaca') return alpacaImg;
   if (type === 'platypus') return platypusImg;
+
+  // 🔥 여우 애니메이션
+  if (type === 'fox') {
+    if (isMoving) {
+      return getFoxWalkFrame(time);
+    }
+    return foxImg; // 가만히 있을 때
+  }
+
   return foxImg;
 }
 
