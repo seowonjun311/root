@@ -596,38 +596,59 @@ function VillageWorldLayer({
   }, [viewportSize, scale]);
 
   useEffect(() => {
-    if (isEditMode) return;
+  if (isEditMode) return;
 
-    const timer = setInterval(() => {
-      setCharacters((prev) =>
-        prev.map((npc) => {
-          const nextCol = clamp(npc.col + Math.round(randomBetween(-1, 1)), 0, GRID_COLS - 1);
-          const nextRow = clamp(npc.row + Math.round(randomBetween(-1, 1)), 0, GRID_ROWS - 1);
+  const timer = setInterval(() => {
+    const now = Date.now();
 
-          const canPlace = canPlaceObject({
-            movingType: 'character',
-            movingItem: npc,
-            nextCol,
-            nextRow,
-            decorations,
-            characters: prev,
-            buildings: currentCollisionBuildings,
-            totalLevel,
-          });
+    setCharacters((prev) =>
+      prev.map((npc) => {
+        const moveCol = Math.round(randomBetween(-1, 1));
+        const moveRow = Math.round(randomBetween(-1, 1));
 
-          return {
-            ...npc,
-            col: canPlace ? nextCol : npc.col,
-            row: canPlace ? nextRow : npc.row,
-            flipped: randomBetween(0, 1) > 0.5 ? !npc.flipped : npc.flipped,
-          };
-        })
-      );
-    }, 2400);
+        const nextCol = clamp(npc.col + moveCol, 0, GRID_COLS - 1);
+        const nextRow = clamp(npc.row + moveRow, 0, GRID_ROWS - 1);
 
-    return () => clearInterval(timer);
-  }, [isEditMode, setCharacters, decorations, currentCollisionBuildings, totalLevel]);
+        const canPlace = canPlaceObject({
+          movingType: 'character',
+          movingItem: npc,
+          nextCol,
+          nextRow,
+          decorations,
+          characters: prev,
+          buildings: currentCollisionBuildings,
+          totalLevel,
+        });
 
+        const finalCol = canPlace ? nextCol : npc.col;
+        const finalRow = canPlace ? nextRow : npc.row;
+
+        const isActuallyMoving = canPlace && (finalCol !== npc.col || finalRow !== npc.row);
+
+        let nextFlipped = npc.flipped;
+
+        if (isActuallyMoving) {
+          if (finalCol > npc.col) {
+            nextFlipped = false; // 오른쪽 이동
+          } else if (finalCol < npc.col) {
+            nextFlipped = true; // 왼쪽 이동
+          }
+        }
+
+        return {
+          ...npc,
+          col: finalCol,
+          row: finalRow,
+          flipped: nextFlipped,
+          isMoving: isActuallyMoving,
+          image: getCharacterImage(npc.type, isActuallyMoving, now),
+        };
+      })
+    );
+  }, 240);
+
+  return () => clearInterval(timer);
+}, [isEditMode, setCharacters, decorations, currentCollisionBuildings, totalLevel]);
   return (
     <div
       className="sticky top-0 z-40 overflow-hidden"
@@ -1177,12 +1198,13 @@ export default function Home() {
       }))
     );
 
-    setCharacters(
-      (village.village_characters || []).map((item) => ({
-        ...item,
-        image: getCharacterImage(item.type),
-      }))
-    );
+   setCharacters(
+  (village.village_characters || []).map((item) => ({
+    ...item,
+    isMoving: false,
+    image: getCharacterImage(item.type, false),
+  }))
+);
 
     setBuildingLayout(village.village_buildings || DEFAULT_BUILDINGS);
     setInventoryCharacters(village.village_inventory_characters || []);
