@@ -1847,6 +1847,24 @@ export default function Home() {
           'linear-gradient(180deg, #f8f1df 0%, #f5e8c9 38%, #f2e1bc 68%, #ebd6a9 100%)',
       }}
     >
+
+      <style>{`
+      @keyframes tileReveal {
+        0% {
+          opacity: 0;
+          transform: translateY(10px) scale(0.88);
+        }
+        60% {
+          opacity: 1;
+          transform: translateY(-2px) scale(1.04);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0px) scale(1);
+        }
+      }
+    `}</style>
+      
       {expPopup ? <ExpPopup exp={expPopup} /> : null}
       {pointPopup ? <PointPopup points={pointPopup} /> : null}
 
