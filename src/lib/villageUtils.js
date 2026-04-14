@@ -116,12 +116,13 @@ export function getWorldExpansionByLevel(totalLevel = 1) {
 
 export function getExpandedGridBounds(totalLevel = 1) {
   const expansion = getWorldExpansionByLevel(totalLevel);
+  const visiblePadding = OUTER_TILE_PADDING + expansion;
 
   return {
-    minCol: -expansion,
-    minRow: -expansion,
-    maxCol: GRID_COLS - 1 + expansion,
-    maxRow: GRID_ROWS - 1 + expansion,
+    minCol: -visiblePadding,
+    minRow: -visiblePadding,
+    maxCol: GRID_COLS - 1 + visiblePadding,
+    maxRow: GRID_ROWS - 1 + visiblePadding,
   };
 }
 
