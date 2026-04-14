@@ -4,7 +4,25 @@
 
 export const castleImg = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/25e57f60f_castlepng.png';
 
-export const gymLv1Img        = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3a2f2cf84_gym_lv1png.png';
+// 운동(exercise) 건물 레벨별 이미지
+export const gymLv1Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c7fcd0a74_gymlv1.png';
+export const gymLv3Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/4defa2752_gymlv3.png';
+export const gymLv5Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a2c9b6f45_gymlv5.png';
+export const gymLv7Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5c2b00a4e_gymlv7.png';
+export const gymLv10Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/592be63e1_gymlv10.png';
+export const gymLv20Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7ed46b21a_gymlv20.png';
+export const gymLv30Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/9f1e1a3c6_gymlv30.png';
+
+export function getExerciseBuildingByLevel(level) {
+  if (level >= 30) return gymLv30Img;
+  if (level >= 20) return gymLv20Img;
+  if (level >= 10) return gymLv10Img;
+  if (level >= 7)  return gymLv7Img;
+  if (level >= 5)  return gymLv5Img;
+  if (level >= 3)  return gymLv3Img;
+  return gymLv1Img;
+}
+
 export const libraryLv1Img    = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/01981e605_library_lv1png.png';
 
 // 공부(study) 건물 레벨별 이미지
@@ -136,9 +154,9 @@ export const buildings = {
 };
 
 export function getBuilding(category, level = 1) {
+  if (category === 'exercise') return getExerciseBuildingByLevel(level);
   if (category === 'daily') return getDailyBuildingByLevel(level);
   if (category === 'study') return getStudyBuildingByLevel(level);
   if (category === 'mental') return getMentalBuildingByLevel(level);
-  const lvKey = level >= 3 ? 'lv3' : level >= 2 ? 'lv2' : 'lv1';
-  return buildings[category]?.[lvKey] ?? buildings[category]?.lv1 ?? castleImg;
+  return buildings[category]?.lv1 ?? castleImg;
 }
