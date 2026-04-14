@@ -380,25 +380,43 @@ function VillageWorldLayer({
       }
 
       if (drag.objectType === 'character') {
-        setCharacters((prev) =>
-          prev.map((item) => {
-            if (item.id !== drag.objectId) return item;
+        ssetCharacters((prev) =>
+  prev.map((npc) => {
+    const nextCol = clamp(npc.col + Math.round(randomBetween(-1, 1)), 0, GRID_COLS - 1);
+    const nextRow = clamp(npc.row + Math.round(randomBetween(-1, 1)), 0, GRID_ROWS - 1);
 
-            const canPlace = canPlaceObject({
-              movingType: 'character',
-              movingItem: item,
-              nextCol: col,
-              nextRow: row,
-              decorations,
-              characters: prev,
-              buildings: currentCollisionBuildings,
-              totalLevel,
-            });
+    const canPlace = canPlaceObject({
+      movingType: 'character',
+      movingItem: npc,
+      nextCol,
+      nextRow,
+      decorations,
+      characters: prev,
+      buildings: currentCollisionBuildings,
+      totalLevel,
+    });
 
-            if (!canPlace) return item;
-            return { ...item, col, row };
-          })
-        );
+    const finalCol = canPlace ? nextCol : npc.col;
+    const finalRow = canPlace ? nextRow : npc.row;
+
+    let nextFlipped = npc.flipped;
+
+    if (canPlace) {
+      if (finalCol > npc.col) {
+        nextFlipped = false; // 오른쪽 이동
+      } else if (finalCol < npc.col) {
+        nextFlipped = true; // 왼쪽 이동
+      }
+    }
+
+    return {
+      ...npc,
+      col: finalCol,
+      row: finalRow,
+      flipped: nextFlipped,
+    };
+  })
+);
       }
 
       if (drag.objectType === 'building') {
