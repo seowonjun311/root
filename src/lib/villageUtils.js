@@ -116,6 +116,8 @@ export function getWorldExpansionByLevel(totalLevel = 1) {
 
 export function getExpandedGridBounds(totalLevel = 1) {
   const expansion = getWorldExpansionByLevel(totalLevel);
+
+  // ⭐ 보이는 타일 범위와 동일하게 맞추기
   const visiblePadding = OUTER_TILE_PADDING + expansion;
 
   return {
