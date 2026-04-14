@@ -91,29 +91,103 @@ export function isInsideGrid(col, row) {
   return col >= 0 && row >= 0 && col < GRID_COLS && row < GRID_ROWS;
 }
 
-export function canPlaceObject({ movingType, movingItem, nextCol, nextRow, decorations = [], characters = [], buildings = [] }) {
+export function getWorldExpansionByLevel(totalLevel = 1) {
+  const level = Number(totalLevel || 1);
+
+  if (level >= 11) return 5;
+  if (level >= 9) return 4;
+  if (level >= 7) return 3;
+  if (level >= 5) return 2;
+  if (level >= 3) return 1;
+  return 0;
+}
+
+export function getExpandedGridBounds(totalLevel = 1) {
+  const expansion = getWorldExpansionByLevel(totalLevel);
+
+  return {
+    minCol: -expansion,
+    minRow: -expansion,
+    maxCol: GRID_COLS - 1 + expansion,
+    maxRow: GRID_ROWS - 1 + expansion,
+  };
+}
+
+export function isInsideExpandedGrid(col, row, totalLevel = 1) {
+  const bounds = getExpandedGridBounds(totalLevel);
+
+  return (
+    col >= bounds.minCol &&
+    row >= bounds.minRow &&
+    col <= bounds.maxCol &&
+    row <= bounds.maxRow
+  );
+}
+
+export function canPlaceObject({
+  movingType,
+  movingItem,
+  nextCol,
+  nextRow,
+  decorations = [],
+  characters = [],
+  buildings = [],
+  totalLevel = 1,
+}) {
   const nextTiles = getOccupiedTiles(movingItem, movingType, nextCol, nextRow);
+
   for (const tile of nextTiles) {
-    if (!isInsideGrid(tile.col, tile.row)) return false;
+    if (!isInsideExpandedGrid(tile.col, tile.row, totalLevel)) return false;
   }
+
   const taken = new Map();
+
   const registerTiles = (items, kind) => {
     items.forEach((item) => {
       let isSame = false;
-      if (kind === 'building') isSame = movingType === 'building' && ((movingItem?.id && item?.id && movingItem.id === item.id) || (movingItem?.category && item?.category && movingItem.category === item.category));
-      if (kind === 'decoration') isSame = movingType === 'decoration' && movingItem?.id && item?.id && movingItem.id === item.id;
-      if (kind === 'character') isSame = movingType === 'character' && movingItem?.id && item?.id && movingItem.id === item.id;
+
+      if (kind === 'building') {
+        isSame =
+          movingType === 'building' &&
+          (
+            (movingItem?.id && item?.id && movingItem.id === item.id) ||
+            (movingItem?.category && item?.category && movingItem.category === item.category)
+          );
+      }
+
+      if (kind === 'decoration') {
+        isSame =
+          movingType === 'decoration' &&
+          movingItem?.id &&
+          item?.id &&
+          movingItem.id === item.id;
+      }
+
+      if (kind === 'character') {
+        isSame =
+          movingType === 'character' &&
+          movingItem?.id &&
+          item?.id &&
+          movingItem.id === item.id;
+      }
+
       if (isSame) return;
+
       const occupied = getOccupiedTiles(item, kind);
-      occupied.forEach((tile) => taken.set(`${tile.col},${tile.row}`, item.id));
+      occupied.forEach((tile) => {
+        taken.set(`${tile.col},${tile.row}`, item.id);
+      });
     });
   };
+
   registerTiles(buildings, 'building');
   registerTiles(decorations, 'decoration');
   registerTiles(characters, 'character');
+
   for (const tile of nextTiles) {
     if (taken.has(`${tile.col},${tile.row}`)) return false;
   }
+
   return true;
 }
 
