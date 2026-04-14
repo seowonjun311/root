@@ -79,13 +79,14 @@ function CharacterSprite({ npc }) {
   const [frame, setFrame] = React.useState(0);
 
   React.useEffect(() => {
+    if (!npc.isMoving) return undefined;
     const timer = setInterval(() => {
       setFrame((f) => (f + 1) % 3);
     }, 220);
     return () => clearInterval(timer);
-  }, []);
+  }, [npc.isMoving]);
 
-  const src = getCharacterImage(npc.type, true, frame * 220);
+  const src = getCharacterImage(npc.type, npc.isMoving, frame * 220);
 
   return (
     <img
@@ -103,6 +104,7 @@ function CharacterSprite({ npc }) {
         boxShadow: 'none',
         userSelect: 'none',
         WebkitUserDrag: 'none',
+        transform: `scaleX(${npc.flipped ? -1 : 1})`,
       }}
     />
   );
@@ -380,7 +382,7 @@ function VillageWorldLayer({
       }
 
       if (drag.objectType === 'character') {
-        ssetCharacters((prev) =>
+        setCharacters((prev) =>
   prev.map((npc) => {
     const nextCol = clamp(npc.col + Math.round(randomBetween(-1, 1)), 0, GRID_COLS - 1);
     const nextRow = clamp(npc.row + Math.round(randomBetween(-1, 1)), 0, GRID_ROWS - 1);
@@ -886,7 +888,7 @@ function VillageWorldLayer({
                       top: pos.y,
                       width: npc.size,
                       height: npc.size,
-                      transform: `translate(-50%, -100%) scaleX(${npc.flipped ? -1 : 1})`,
+                      transform: 'translate(-50%, -100%)',
                       transition: isEditMode ? 'none' : 'left 2200ms ease-in-out, top 2200ms ease-in-out',
                       outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
                       outlineOffset: '3px',
