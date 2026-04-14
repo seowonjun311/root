@@ -134,7 +134,7 @@ export default function VillageWorldLayer({
         const wasVisible = col >= -prevPadding && row >= -prevPadding && col < GRID_COLS + prevPadding && row < GRID_ROWS + prevPadding;
         const isNowVisible = col >= -nextPadding && row >= -nextPadding && col < GRID_COLS + nextPadding && row < GRID_ROWS + nextPadding;
         if (!wasVisible && isNowVisible) {
-          newlyUnlocked.push({ id: `unlock-${col}-${row}`, col, row, delay: newlyUnlocked.length * 35 });
+          newlyUnlocked.push({ id: `unlock-${col}-${row}`, col, row, delay: newlyUnlocked.length * 80 });
         }
       }
     }
@@ -149,7 +149,7 @@ export default function VillageWorldLayer({
     if (nextExpansion > prevExpansion) {
       const unlocked = getNewlyUnlockedTiles(prevExpansion, nextExpansion);
       setRevealedTiles(unlocked);
-      const clearTimer = setTimeout(() => setRevealedTiles([]), 2200);
+      const clearTimer = setTimeout(() => setRevealedTiles([]), 5000);
       prevExpansionRef.current = nextExpansion;
       return () => clearTimeout(clearTimer);
     }
@@ -436,7 +436,7 @@ export default function VillageWorldLayer({
                       opacity: revealed ? 0 : 1,
                       transform: revealed ? 'translateY(10px) scale(0.88)' : 'translateY(0px) scale(1)',
                       filter: revealed ? 'brightness(1.5) drop-shadow(0 0 10px rgba(255,255,180,0.7))' : 'none',
-                      animation: revealed ? `tileReveal 520ms ease-out ${revealed.delay}ms forwards` : 'none',
+                      animation: revealed ? `tileReveal 1100ms ease-out ${revealed.delay}ms forwards` : 'none',
                     }}
                   />
                 );
