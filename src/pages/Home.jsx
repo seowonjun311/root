@@ -80,21 +80,18 @@ function CharacterSprite({ npc }) {
 
   React.useEffect(() => {
     setFrame(0);
-    if (!npc.isMoving && !npc.isThinking) return undefined;
-    const speed = npc.isThinking ? 800 : 220;
-    const maxFrame = npc.isThinking ? 6 : 3;
+
+    const speed = npc.isMoving ? 220 : 800;
+    const maxFrame = npc.isMoving ? 3 : 6;
+
     const timer = setInterval(() => {
       setFrame((f) => (f + 1) % maxFrame);
     }, speed);
-    return () => clearInterval(timer);
-  }, [npc.isMoving, npc.isThinking]);
 
-  // isMoving: 걷기 프레임, isThinking: 생각 프레임, 둘 다 아님: 정지 이미지
-  const src = npc.isMoving
-    ? getCharacterImage(npc.type, true, frame, false)
-    : npc.isThinking
-      ? getCharacterImage(npc.type, false, frame, true)
-      : getCharacterImage(npc.type, false, 0, false);
+    return () => clearInterval(timer);
+  }, [npc.isMoving]);
+
+  const src = getCharacterImage(npc.type, npc.isMoving, frame);
 
   return (
     <img
@@ -389,22 +386,38 @@ function VillageWorldLayer({
         );
       }
 
-      if (drag.objectType === 'character') {
-        setCharacters((prev) =>
-  prev.map((npc) => {
-    const nextCol = clamp(npc.col + Math.round(randomBetween(-1, 1)), 0, GRID_COLS - 1);
-    const nextRow = clamp(npc.row + Math.round(randomBetween(-1, 1)), 0, GRID_ROWS - 1);
+      iif (drag.objectType === 'character') {
+  setCharacters((prev) =>
+    prev.map((npc) => {
+      if (npc.id !== drag.objectId) return npc;
 
-    const canPlace = canPlaceObject({
-      movingType: 'character',
-      movingItem: npc,
-      nextCol,
-      nextRow,
-      decorations,
-      characters: prev,
-      buildings: currentCollisionBuildings,
-      totalLevel,
-    });
+      const canPlace = canPlaceObject({
+        movingType: 'character',
+        movingItem: npc,
+        nextCol: col,
+        nextRow: row,
+        decorations,
+        characters: prev,
+        buildings: currentCollisionBuildings,
+        totalLevel,
+      });
+
+      if (!canPlace) return npc;
+
+      let nextFlipped = npc.flipped;
+
+      if (col > npc.col) nextFlipped = false;
+      else if (col < npc.col) nextFlipped = true;
+
+      return {
+        ...npc,
+        col,
+        row,
+        flipped: nextFlipped,
+      };
+    })
+  );
+}
 
     const finalCol = canPlace ? nextCol : npc.col;
     const finalRow = canPlace ? nextRow : npc.row;
@@ -605,35 +618,12 @@ function VillageWorldLayer({
     );
   }, [viewportSize, scale]);
 
-  useEffect(() => {
+useEffect(() => {
   if (isEditMode) return;
 
   const timer = setInterval(() => {
-    const now = Date.now();
-
     setCharacters((prev) =>
       prev.map((npc) => {
-        // thinking 상태이면 남은 틱을 소모하고 멈춤
-        if (npc.thinkTicks > 0) {
-          return {
-            ...npc,
-            thinkTicks: npc.thinkTicks - 1,
-            isMoving: false,
-            isThinking: true,
-          };
-        }
-
-        // 15% 확률로 생각하기 상태 진입 (8~16틱 = 약 2~4초)
-        if (!npc.isMoving && Math.random() < 0.15) {
-          const ticks = Math.floor(randomBetween(8, 16));
-          return {
-            ...npc,
-            thinkTicks: ticks,
-            isMoving: false,
-            isThinking: true,
-          };
-        }
-
         const moveCol = Math.round(randomBetween(-1, 1));
         const moveRow = Math.round(randomBetween(-1, 1));
 
@@ -654,16 +644,14 @@ function VillageWorldLayer({
         const finalCol = canPlace ? nextCol : npc.col;
         const finalRow = canPlace ? nextRow : npc.row;
 
-        const isActuallyMoving = canPlace && (finalCol !== npc.col || finalRow !== npc.row);
+        const isActuallyMoving =
+          canPlace && (finalCol !== npc.col || finalRow !== npc.row);
 
         let nextFlipped = npc.flipped;
 
         if (isActuallyMoving) {
-          if (finalCol > npc.col) {
-            nextFlipped = false;
-          } else if (finalCol < npc.col) {
-            nextFlipped = true;
-          }
+          if (finalCol > npc.col) nextFlipped = false;
+          else if (finalCol < npc.col) nextFlipped = true;
         }
 
         return {
@@ -672,8 +660,6 @@ function VillageWorldLayer({
           row: finalRow,
           flipped: nextFlipped,
           isMoving: isActuallyMoving,
-          isThinking: false,
-          thinkTicks: 0,
         };
       })
     );
@@ -681,6 +667,7 @@ function VillageWorldLayer({
 
   return () => clearInterval(timer);
 }, [isEditMode, setCharacters, decorations, currentCollisionBuildings, totalLevel]);
+  
   return (
     <div
       className="sticky top-0 z-40 overflow-hidden"
@@ -1234,7 +1221,7 @@ export default function Home() {
   (village.village_characters || []).map((item) => ({
     ...item,
     isMoving: false,
-    image: getCharacterImage(item.type, false),
+    image: getCharacterImage(item.type, false, 0),
   }))
 );
 
@@ -1605,12 +1592,13 @@ export default function Home() {
         image: getDecorationImage(item.type),
       }))
     );
-    setCharacters(
-      (village.village_characters || []).map((item) => ({
-        ...item,
-        image: getCharacterImage(item.type),
-      }))
-    );
+   setCharacters(
+  (village.village_characters || []).map((item) => ({
+    ...item,
+    isMoving: false,
+    image: getCharacterImage(item.type, false, 0),
+  }))
+);
     setBuildingLayout(village.village_buildings || DEFAULT_BUILDINGS);
     setInventoryCharacters(village.village_inventory_characters || []);
     setInventoryDecorations(village.village_inventory_decorations || []);
