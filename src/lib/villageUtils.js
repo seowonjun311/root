@@ -8,7 +8,14 @@ import {
   DEFAULT_VILLAGE_DATA, DEFAULT_VILLAGE_INVENTORY, DEFAULT_BUILDINGS,
   TITLES,
 } from './villageConstants';
-import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
+import {
+  foxImg,
+  foxWalk1Img,
+  foxWalk2Img,
+  foxWalk3Img,
+  alpacaImg,
+  platypusImg,
+} from '@/assets/root/characters';
 import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
 import { getBuilding } from '@/assets/root/buildings';
 import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
