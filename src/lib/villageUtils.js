@@ -494,7 +494,7 @@ export function createCharacter(type) {
   image: getCharacterImage(type, false),
   col: spawn.col,
   row: spawn.row,
-  size: type === 'alpaca' ? 56 : 52,
+  size: type === 'alpaca' ? 56 : type === 'fox' ? 72 : 52,
   flipped: false,
   isMoving: false,
 };

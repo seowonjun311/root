@@ -97,7 +97,7 @@ export const DEFAULT_VILLAGE_DATA = {
   village_points: 0,
   village_decorations: [],
   village_characters: [
-    { id: 'starter_fox', name: '루', type: 'fox', col: 5, row: 6, size: 52, flipped: false },
+    { id: 'starter_fox', name: '루', type: 'fox', col: 5, row: 6, size: 72, flipped: false },
   ],
   village_buildings: DEFAULT_BUILDINGS,
 };
