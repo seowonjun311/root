@@ -29,6 +29,7 @@ import {
   getVillageState, buildWorldBuildings,
   getTileImageByKind, buildTileMap,
   clampWorldOffset, randomBetween, clamp,
+  getWorldExpansionByLevel,
 } from '@/lib/villageUtils';
 
 import {
@@ -126,7 +127,12 @@ function VillageWorldLayer({
     }));
   }, [userLevels, buildingLayout]);
 
-  const tileMap = useMemo(() => buildTileMap(GRID_COLS, GRID_ROWS, OUTER_TILE_PADDING), []); //마을 바닥 타일 전체를 만듦. 즉: 어느 칸에 잔디, 어느 칸에 길, 바깥 패딩은 어떻게 둘지 를 미리 계산해둠.
+  const expansion = useMemo(() => getWorldExpansionByLevel(totalLevel), [totalLevel]);
+
+const tileMap = useMemo(
+  () => buildTileMap(GRID_COLS, GRID_ROWS, OUTER_TILE_PADDING + expansion),
+  [expansion]
+); //마을 바닥 타일 전체를 만듦. 즉: 어느 칸에 잔디, 어느 칸에 길, 바깥 패딩은 어떻게 둘지 를 미리 계산해둠.
   
 const stars = useMemo(
   () =>
@@ -229,14 +235,15 @@ const stars = useMemo(
 
       if (previewItem) {
         const previewValid = canPlaceObject({
-          movingType: drag.objectType,
-          movingItem: previewItem,
-          nextCol: col,
-          nextRow: row,
-          decorations,
-          characters,
-          buildings: drag.objectType === 'building' ? buildingLayout : currentCollisionBuildings,
-        });
+  movingType: drag.objectType,
+  movingItem: previewItem,
+  nextCol: col,
+  nextRow: row,
+  decorations,
+  characters,
+  buildings: drag.objectType === 'building' ? buildingLayout : currentCollisionBuildings,
+  totalLevel,
+});
 
         //지금 놓으려는 위치가 어디인지, 놓을 수 있는지 없는지 저장해둠 
         setPlacementPreview({
@@ -255,14 +262,15 @@ const stars = useMemo(
             if (item.id !== drag.objectId) return item;
 
             const canPlace = canPlaceObject({
-              movingType: 'decoration',
-              movingItem: item,
-              nextCol: col,
-              nextRow: row,
-              decorations: prev,
-              characters,
-              buildings: currentCollisionBuildings,
-            });
+  movingType: 'decoration',
+  movingItem: item,
+  nextCol: col,
+  nextRow: row,
+  decorations: prev,
+  characters,
+  buildings: currentCollisionBuildings,
+  totalLevel,
+});
 
             if (!canPlace) return item;
             return { ...item, col, row };
@@ -276,14 +284,15 @@ const stars = useMemo(
             if (item.id !== drag.objectId) return item;
 
             const canPlace = canPlaceObject({
-              movingType: 'character',
-              movingItem: item,
-              nextCol: col,
-              nextRow: row,
-              decorations,
-              characters: prev,
-              buildings: currentCollisionBuildings,
-            });
+  movingType: 'character',
+  movingItem: item,
+  nextCol: col,
+  nextRow: row,
+  decorations,
+  characters: prev,
+  buildings: currentCollisionBuildings,
+  totalLevel,
+});
 
             if (!canPlace) return item;
             return { ...item, col, row };
@@ -297,14 +306,15 @@ const stars = useMemo(
             if (item.category !== drag.objectId) return item;
 
             const canPlace = canPlaceObject({
-              movingType: 'building',
-              movingItem: item,
-              nextCol: col,
-              nextRow: row,
-              decorations,
-              characters,
-              buildings: prev,
-            });
+  movingType: 'building',
+  movingItem: item,
+  nextCol: col,
+  nextRow: row,
+  decorations,
+  characters,
+  buildings: prev,
+  totalLevel,
+});
 
             if (!canPlace) return item;
             return { ...item, col, row };
@@ -371,15 +381,16 @@ const stars = useMemo(
           const nextCol = clamp(npc.col + Math.round(randomBetween(-1, 1)), 0, GRID_COLS - 1);
           const nextRow = clamp(npc.row + Math.round(randomBetween(-1, 1)), 0, GRID_ROWS - 1);
 
-          const canPlace = canPlaceObject({
-            movingType: 'character',
-            movingItem: npc,
-            nextCol,
-            nextRow,
-            decorations,
-            characters: prev,
-            buildings: currentCollisionBuildings,
-          });
+         const canPlace = canPlaceObject({
+  movingType: 'character',
+  movingItem: npc,
+  nextCol,
+  nextRow,
+  decorations,
+  characters: prev,
+  buildings: currentCollisionBuildings,
+  totalLevel,
+});
 
           return {
             ...npc,
