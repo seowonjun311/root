@@ -79,6 +79,7 @@ function CharacterSprite({ npc }) {
   const [frame, setFrame] = React.useState(0);
 
   React.useEffect(() => {
+    setFrame(0);
     if (!npc.isMoving && !npc.isThinking) return undefined;
     const speed = npc.isThinking ? 800 : 220;
     const maxFrame = npc.isThinking ? 6 : 3;
@@ -88,7 +89,12 @@ function CharacterSprite({ npc }) {
     return () => clearInterval(timer);
   }, [npc.isMoving, npc.isThinking]);
 
-  const src = getCharacterImage(npc.type, npc.isMoving, frame * (npc.isThinking ? 800 : 220), npc.isThinking);
+  // isMoving: 걷기 프레임, isThinking: 생각 프레임, 둘 다 아님: 정지 이미지
+  const src = npc.isMoving
+    ? getCharacterImage(npc.type, true, frame, false)
+    : npc.isThinking
+      ? getCharacterImage(npc.type, false, frame, true)
+      : getCharacterImage(npc.type, false, 0, false);
 
   return (
     <img
@@ -614,7 +620,6 @@ function VillageWorldLayer({
             thinkTicks: npc.thinkTicks - 1,
             isMoving: false,
             isThinking: true,
-            image: getCharacterImage(npc.type, false, now, true),
           };
         }
 
@@ -626,7 +631,6 @@ function VillageWorldLayer({
             thinkTicks: ticks,
             isMoving: false,
             isThinking: true,
-            image: getCharacterImage(npc.type, false, now, true),
           };
         }
 
@@ -670,7 +674,6 @@ function VillageWorldLayer({
           isMoving: isActuallyMoving,
           isThinking: false,
           thinkTicks: 0,
-          image: getCharacterImage(npc.type, isActuallyMoving, now, false),
         };
       })
     );
