@@ -53,16 +53,30 @@ export const mentalLv20Img  = 'https://media.base44.com/images/public/69b63292a6
 export const mentalLv30Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/bc076e5b9_mental_lv30.png';
 export const mentalLv40Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/081c02f75_mental_lv40.png';
 export const mentalLv50Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/08bbf9267_mental_lv50.png';
+export const mentalLv60Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/615c61303_mental_lv60.png';
+export const mentalLv70Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/bae62ea52_mental_lv70.png';
+export const mentalLv80Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/debeda7ce_mental_lv80.png';
+export const mentalLv90Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/195f8d0e7_mental_lv90.png';
+export const mentalLv100Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/df174cc7e_mental_lv100.png';
+export const mentalLv110Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5daddf406_mental_lv110.png';
+export const mentalLv120Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a031d4a57_mental_lv120.png';
 
 export function getMentalBuildingByLevel(level) {
-  if (level >= 50) return mentalLv50Img;
-  if (level >= 40) return mentalLv40Img;
-  if (level >= 30) return mentalLv30Img;
-  if (level >= 20) return mentalLv20Img;
-  if (level >= 10) return mentalLv10Img;
-  if (level >= 7)  return mentalLv7Img;
-  if (level >= 5)  return mentalLv5Img;
-  if (level >= 3)  return mentalLv3Img;
+  if (level >= 120) return mentalLv120Img;
+  if (level >= 110) return mentalLv110Img;
+  if (level >= 100) return mentalLv100Img;
+  if (level >= 90)  return mentalLv90Img;
+  if (level >= 80)  return mentalLv80Img;
+  if (level >= 70)  return mentalLv70Img;
+  if (level >= 60)  return mentalLv60Img;
+  if (level >= 50)  return mentalLv50Img;
+  if (level >= 40)  return mentalLv40Img;
+  if (level >= 30)  return mentalLv30Img;
+  if (level >= 20)  return mentalLv20Img;
+  if (level >= 10)  return mentalLv10Img;
+  if (level >= 7)   return mentalLv7Img;
+  if (level >= 5)   return mentalLv5Img;
+  if (level >= 3)   return mentalLv3Img;
   return mentalLv1Img;
 }
 
