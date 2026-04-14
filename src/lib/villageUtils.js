@@ -15,6 +15,7 @@ import {
   foxWalk3Img,
   foxWalkFrames,
   getFoxWalkFrame,
+  foxThinkFrames,
   alpacaImg,
   platypusImg,
 } from '@/assets/root/characters';
@@ -427,14 +428,18 @@ export function validateGoalActionLogChain(goals = [], actionGoals = [], logs = 
 }
 
 // --- 캐릭터/장식 ---
-export function getCharacterImage(type, isMoving = false, time = Date.now()) {
+export function getFoxThinkFrame(time, speed = 800) {
+  const index = Math.floor(time / speed) % foxThinkFrames.length;
+  return foxThinkFrames[index];
+}
+
+export function getCharacterImage(type, isMoving = false, time = Date.now(), isThinking = false) {
   if (type === 'alpaca') return alpacaImg;
   if (type === 'platypus') return platypusImg;
 
   if (type === 'fox') {
-    if (isMoving) {
-      return getFoxWalkFrame(time);
-    }
+    if (isMoving) return getFoxWalkFrame(time);
+    if (isThinking) return getFoxThinkFrame(time);
     return foxImg;
   }
 

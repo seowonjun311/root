@@ -79,14 +79,16 @@ function CharacterSprite({ npc }) {
   const [frame, setFrame] = React.useState(0);
 
   React.useEffect(() => {
-    if (!npc.isMoving) return undefined;
+    if (!npc.isMoving && !npc.isThinking) return undefined;
+    const speed = npc.isThinking ? 800 : 220;
+    const maxFrame = npc.isThinking ? 6 : 3;
     const timer = setInterval(() => {
-      setFrame((f) => (f + 1) % 3);
-    }, 220);
+      setFrame((f) => (f + 1) % maxFrame);
+    }, speed);
     return () => clearInterval(timer);
-  }, [npc.isMoving]);
+  }, [npc.isMoving, npc.isThinking]);
 
-  const src = getCharacterImage(npc.type, npc.isMoving, frame * 220);
+  const src = getCharacterImage(npc.type, npc.isMoving, frame * (npc.isThinking ? 800 : 220), npc.isThinking);
 
   return (
     <img
@@ -605,6 +607,29 @@ function VillageWorldLayer({
 
     setCharacters((prev) =>
       prev.map((npc) => {
+        // thinking 상태이면 남은 틱을 소모하고 멈춤
+        if (npc.thinkTicks > 0) {
+          return {
+            ...npc,
+            thinkTicks: npc.thinkTicks - 1,
+            isMoving: false,
+            isThinking: true,
+            image: getCharacterImage(npc.type, false, now, true),
+          };
+        }
+
+        // 15% 확률로 생각하기 상태 진입 (8~16틱 = 약 2~4초)
+        if (!npc.isMoving && Math.random() < 0.15) {
+          const ticks = Math.floor(randomBetween(8, 16));
+          return {
+            ...npc,
+            thinkTicks: ticks,
+            isMoving: false,
+            isThinking: true,
+            image: getCharacterImage(npc.type, false, now, true),
+          };
+        }
+
         const moveCol = Math.round(randomBetween(-1, 1));
         const moveRow = Math.round(randomBetween(-1, 1));
 
@@ -631,9 +656,9 @@ function VillageWorldLayer({
 
         if (isActuallyMoving) {
           if (finalCol > npc.col) {
-            nextFlipped = false; // 오른쪽 이동
+            nextFlipped = false;
           } else if (finalCol < npc.col) {
-            nextFlipped = true; // 왼쪽 이동
+            nextFlipped = true;
           }
         }
 
@@ -643,7 +668,9 @@ function VillageWorldLayer({
           row: finalRow,
           flipped: nextFlipped,
           isMoving: isActuallyMoving,
-          image: getCharacterImage(npc.type, isActuallyMoving, now),
+          isThinking: false,
+          thinkTicks: 0,
+          image: getCharacterImage(npc.type, isActuallyMoving, now, false),
         };
       })
     );
