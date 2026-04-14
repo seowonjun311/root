@@ -566,8 +566,8 @@ export function buildWorldBuildings({ userLevels, buildingLayout }) {
       col: layoutMap.exercise?.col ?? 1,
       row: layoutMap.exercise?.row ?? 4,
       flipped: !!layoutMap.exercise?.flipped,
-      w: 112,
-      h: 90,
+      w: 168,
+  h: 135,
     },
     {
       id: 'study_building',
@@ -577,8 +577,8 @@ export function buildWorldBuildings({ userLevels, buildingLayout }) {
       col: layoutMap.study?.col ?? 4,
       row: layoutMap.study?.row ?? 5,
       flipped: !!layoutMap.study?.flipped,
-      w: 112,
-      h: 90,
+      w: 168,
+  h: 135,
     },
     {
       id: 'mental_building',
@@ -588,8 +588,8 @@ export function buildWorldBuildings({ userLevels, buildingLayout }) {
       col: layoutMap.mental?.col ?? 6,
       row: layoutMap.mental?.row ?? 3,
       flipped: !!layoutMap.mental?.flipped,
-      w: 112,
-      h: 90,
+      w: 168,
+  h: 135,
     },
     {
       id: 'daily_building',
@@ -599,8 +599,8 @@ export function buildWorldBuildings({ userLevels, buildingLayout }) {
       col: layoutMap.daily?.col ?? 8,
       row: layoutMap.daily?.row ?? 2,
       flipped: !!layoutMap.daily?.flipped,
-      w: 112,
-      h: 90,
+      w: 168,
+  h: 135,
     },
   ];
 }
