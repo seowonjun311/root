@@ -75,6 +75,39 @@ function DecorationSprite({ item }) {
   );
 }
 
+function CharacterSprite({ npc }) {
+  const [frame, setFrame] = React.useState(0);
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setFrame((f) => (f + 1) % 3);
+    }, 220);
+    return () => clearInterval(timer);
+  }, []);
+
+  const src = getCharacterImage(npc.type, true, frame * 220);
+
+  return (
+    <img
+      src={src}
+      alt={npc.name}
+      draggable={false}
+      style={{
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain',
+        display: 'block',
+        background: 'transparent',
+        backgroundColor: 'transparent',
+        border: 'none',
+        boxShadow: 'none',
+        userSelect: 'none',
+        WebkitUserDrag: 'none',
+      }}
+    />
+  );
+}
+
 function VillageWorldLayer({
   nickname,
   totalLevel,
@@ -823,23 +856,7 @@ function VillageWorldLayer({
                       zIndex: 5000 + npc.row,
                     }}
                   >
-                    <img
-                      src={npc.image || getCharacterImage(npc.type)}
-                      alt={npc.name}
-                      draggable={false}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                        display: 'block',
-                        background: 'transparent',
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        boxShadow: 'none',
-                        userSelect: 'none',
-                        WebkitUserDrag: 'none',
-                      }}
-                    />
+                    <CharacterSprite npc={npc} />
                   </div>
                 );
               })}
