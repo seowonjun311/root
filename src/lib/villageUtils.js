@@ -193,7 +193,7 @@ export function canPlaceObject({
 
 export function getObjectScreenPosition(item, kind) {
   const { x, y } = gridToScreen(item.col, item.row);
-  if (kind === 'building') return { x, y: y + 22 };
+  if (kind === 'building') return { x, y: y + 46 };
   if (kind === 'character') return { x, y: y + 10 };
   return { x, y: y + 14 };
 }
