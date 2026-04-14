@@ -62,8 +62,8 @@ export const SHOP_ITEMS = [
 
 export const TILE_W = 128;
 export const TILE_H = 64;
-export const GRID_COLS = 20;
-export const GRID_ROWS = 20;
+export const GRID_COLS = 10;
+export const GRID_ROWS = 10;
 export const GRID_ORIGIN_X = 1280;
 export const GRID_ORIGIN_Y = 220;
 export const WORLD_WIDTH = 2560;
@@ -87,17 +87,17 @@ export const BORDER_TREE_IMAGES = [borderTree1Img, borderTree2Img, borderTree3Im
 export const BORDER_BUSH_IMAGES = [borderBush1Img];
 
 export const DEFAULT_BUILDINGS = [
-  { id: 'exercise_building', category: 'exercise', col: 6, row: 10, flipped: false },
-  { id: 'study_building', category: 'study', col: 9, row: 11, flipped: false },
-  { id: 'mental_building', category: 'mental', col: 12, row: 9, flipped: false },
-  { id: 'daily_building', category: 'daily', col: 15, row: 8, flipped: false },
+  { id: 'exercise_building', category: 'exercise', col: 1, row: 4, flipped: false },
+  { id: 'study_building', category: 'study', col: 4, row: 5, flipped: false },
+  { id: 'mental_building', category: 'mental', col: 6, row: 3, flipped: false },
+  { id: 'daily_building', category: 'daily', col: 8, row: 2, flipped: false },
 ];
 
 export const DEFAULT_VILLAGE_DATA = {
   village_points: 0,
   village_decorations: [],
   village_characters: [
-    { id: 'starter_fox', name: '루', type: 'fox', col: 10, row: 12, size: 52, flipped: false },
+    { id: 'starter_fox', name: '루', type: 'fox', col: 5, row: 6, size: 52, flipped: false },
   ],
   village_buildings: DEFAULT_BUILDINGS,
 };

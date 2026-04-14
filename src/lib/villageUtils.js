@@ -103,11 +103,13 @@ export function isInsideGrid(col, row) {
 export function getWorldExpansionByLevel(totalLevel = 1) {
   const level = Number(totalLevel || 1);
 
-  if (level >= 11) return 5;
-  if (level >= 9) return 4;
-  if (level >= 7) return 3;
-  if (level >= 5) return 2;
-  if (level >= 3) return 1;
+  if (level >= 20) return 10;
+  if (level >= 15) return 8;
+  if (level >= 11) return 6;
+  if (level >= 9) return 5;
+  if (level >= 7) return 4;
+  if (level >= 5) return 3;
+  if (level >= 3) return 2;
   return 0;
 }
 
@@ -475,9 +477,9 @@ export function createDecoration(subtype) {
 
 export function getCharacterSpawnSlots() {
   return [
-    { col: 10, row: 12 }, { col: 11, row: 12 }, { col: 9, row: 12 },
-    { col: 10, row: 11 }, { col: 11, row: 11 }, { col: 9, row: 11 },
-    { col: 12, row: 12 }, { col: 8, row: 12 },
+    { col: 5, row: 6 }, { col: 6, row: 6 }, { col: 4, row: 6 },
+    { col: 5, row: 5 }, { col: 6, row: 5 }, { col: 4, row: 5 },
+    { col: 7, row: 6 }, { col: 3, row: 6 },
   ];
 }
 
@@ -500,7 +502,7 @@ export function createCharacter(type) {
 export function isCharacterTooFarFromVillageCore(character) {
   const col = Number(character?.col ?? 0);
   const row = Number(character?.row ?? 0);
-  return col < 6 || col > 14 || row < 8 || row > 14;
+  return col < 2 || col > 8 || row < 3 || row > 8;
 }
 
 export function relocateCharactersToVillageCore(rawCharacters = []) {
@@ -556,8 +558,8 @@ export function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'exercise',
       label: `체육관 Lv.${exerciseLevel}`,
       image: getBuilding('exercise', exerciseLevel),
-      col: layoutMap.exercise?.col ?? 6,
-      row: layoutMap.exercise?.row ?? 10,
+      col: layoutMap.exercise?.col ?? 1,
+      row: layoutMap.exercise?.row ?? 4,
       flipped: !!layoutMap.exercise?.flipped,
       w: 112,
       h: 90,
@@ -567,8 +569,8 @@ export function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'study',
       label: `도서관 Lv.${studyLevel}`,
       image: getBuilding('study', studyLevel),
-      col: layoutMap.study?.col ?? 9,
-      row: layoutMap.study?.row ?? 11,
+      col: layoutMap.study?.col ?? 4,
+      row: layoutMap.study?.row ?? 5,
       flipped: !!layoutMap.study?.flipped,
       w: 112,
       h: 90,
@@ -578,8 +580,8 @@ export function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'mental',
       label: `명상숲 Lv.${mentalLevel}`,
       image: getBuilding('mental', mentalLevel),
-      col: layoutMap.mental?.col ?? 12,
-      row: layoutMap.mental?.row ?? 9,
+      col: layoutMap.mental?.col ?? 6,
+      row: layoutMap.mental?.row ?? 3,
       flipped: !!layoutMap.mental?.flipped,
       w: 112,
       h: 90,
@@ -589,8 +591,8 @@ export function buildWorldBuildings({ userLevels, buildingLayout }) {
       category: 'daily',
       label: `생활공방 Lv.${dailyLevel}`,
       image: getBuilding('daily', dailyLevel),
-      col: layoutMap.daily?.col ?? 15,
-      row: layoutMap.daily?.row ?? 8,
+      col: layoutMap.daily?.col ?? 8,
+      row: layoutMap.daily?.row ?? 2,
       flipped: !!layoutMap.daily?.flipped,
       w: 112,
       h: 90,
