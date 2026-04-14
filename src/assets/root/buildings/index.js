@@ -1,6 +1,6 @@
 /**
  * 건물 이미지 에셋 (안전 최종본)
- * - 기존 export 이름 유지 (절대 안 깨짐)
+ * - 기존 export 이름 유지
  * - 내부 로직만 통합
  */
 
@@ -45,6 +45,8 @@ const gymImages = [
 /* =========================
    공부 (study)
 ========================= */
+export const libraryLv1Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/01981e605_library_lv1png.png';
+
 export const studyLv1Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/54943f45c_study_lv1.png';
 export const studyLv3Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/1122bd6e4_study_lv3.png';
 export const studyLv5Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/36e470c0b_study_lv5.png';
@@ -82,6 +84,105 @@ const studyImages = [
 ];
 
 /* =========================
+   정신 (mental)
+========================= */
+export const mentalLv1Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ea6fe78b6_mental_lv1.png';
+export const mentalLv3Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6068d5bf1_mental_lv3.png';
+export const mentalLv5Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/8d5cd5ff7_mental_lv5.png';
+export const mentalLv7Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/73af21efc_mental_lv7.png';
+export const mentalLv10Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/4218f9244_mental_lv10.png';
+export const mentalLv20Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/f22ebcd1a_mental_lv20.png';
+export const mentalLv30Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/bc076e5b9_mental_lv30.png';
+export const mentalLv40Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/081c02f75_mental_lv40.png';
+export const mentalLv50Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/08bbf9267_mental_lv50.png';
+export const mentalLv60Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/615c61303_mental_lv60.png';
+export const mentalLv70Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/bae62ea52_mental_lv70.png';
+export const mentalLv80Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/debeda7ce_mental_lv80.png';
+export const mentalLv90Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/195f8d0e7_mental_lv90.png';
+export const mentalLv100Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/df174cc7e_mental_lv100.png';
+export const mentalLv110Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5daddf406_mental_lv110.png';
+export const mentalLv120Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a031d4a57_mental_lv120.png';
+
+const mentalImages = [
+  { level: 120, src: mentalLv120Img },
+  { level: 110, src: mentalLv110Img },
+  { level: 100, src: mentalLv100Img },
+  { level: 90,  src: mentalLv90Img },
+  { level: 80,  src: mentalLv80Img },
+  { level: 70,  src: mentalLv70Img },
+  { level: 60,  src: mentalLv60Img },
+  { level: 50,  src: mentalLv50Img },
+  { level: 40,  src: mentalLv40Img },
+  { level: 30,  src: mentalLv30Img },
+  { level: 20,  src: mentalLv20Img },
+  { level: 10,  src: mentalLv10Img },
+  { level: 7,   src: mentalLv7Img },
+  { level: 5,   src: mentalLv5Img },
+  { level: 3,   src: mentalLv3Img },
+  { level: 1,   src: mentalLv1Img },
+];
+
+export const meditationLv1Img = mentalLv1Img;
+
+/* =========================
+   일상 (daily)
+========================= */
+export const workshopLv1Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/1e96fc004_workshop_lv1png.png';
+
+export const dailyLv1Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/865b110cb_daily_lv1.png';
+export const dailyLv3Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/607c443c8_daily_lv3.png';
+export const dailyLv5Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/531ad3f23_daily_lv5.png';
+export const dailyLv7Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/f9d1eb495_daily_lv7.png';
+export const dailyLv9Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/009bbc132_daily_lv9.png';
+export const dailyLv10Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2d29c99ea_daily_lv10.png';
+export const dailyLv20Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ccef2f7cd_daily_lv20.png';
+export const dailyLv30Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/fd7cd5f5d_daily_lv30.png';
+export const dailyLv40Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5763a6e05_daily_lv40.png';
+export const dailyLv50Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/16a84aa95_daily_lv50.png';
+export const dailyLv60Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/824975782_daily_lv60.png';
+export const dailyLv70Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/9c3d934a8_daily_lv70.png';
+export const dailyLv80Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/31c5369b7_daily_lv80.png';
+export const dailyLv90Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/f575f4f2d_daily_lv90.png';
+export const dailyLv100Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/cf45950f7_daily_lv100.png';
+export const dailyLv110Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/56e4c30f2_daily_lv110.png';
+export const dailyLv120Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2c61ae373_daily_lv120.png';
+
+const dailyImages = [
+  { level: 120, src: dailyLv120Img },
+  { level: 110, src: dailyLv110Img },
+  { level: 100, src: dailyLv100Img },
+  { level: 90,  src: dailyLv90Img },
+  { level: 80,  src: dailyLv80Img },
+  { level: 70,  src: dailyLv70Img },
+  { level: 60,  src: dailyLv60Img },
+  { level: 50,  src: dailyLv50Img },
+  { level: 40,  src: dailyLv40Img },
+  { level: 30,  src: dailyLv30Img },
+  { level: 20,  src: dailyLv20Img },
+  { level: 10,  src: dailyLv10Img },
+  { level: 9,   src: dailyLv9Img },
+  { level: 7,   src: dailyLv7Img },
+  { level: 5,   src: dailyLv5Img },
+  { level: 3,   src: dailyLv3Img },
+  { level: 1,   src: dailyLv1Img },
+];
+
+/* =========================
+   기존 호환용 export
+========================= */
+export const gymLv1 = gymLv1Img;
+export const libraryLv1 = libraryLv1Img;
+export const meditationLv1 = meditationLv1Img;
+export const workshopLv1 = workshopLv1Img;
+
+export const buildings = {
+  exercise: { lv1: gymLv1Img, lv2: null, lv3: null },
+  study: { lv1: studyLv1Img, lv2: null, lv3: null },
+  mental: { lv1: mentalLv1Img, lv2: null, lv3: null },
+  daily: { lv1: dailyLv1Img, lv2: null, lv3: null },
+};
+
+/* =========================
    공통 함수
 ========================= */
 function getImageByLevel(level, table) {
@@ -92,11 +193,26 @@ function getImageByLevel(level, table) {
   return table[table.length - 1]?.src || castleImg;
 }
 
-/* =========================
-   외부에서 사용하는 함수 (핵심)
-========================= */
+export function getExerciseBuildingByLevel(level) {
+  return getImageByLevel(level, gymImages);
+}
+
+export function getStudyBuildingByLevel(level) {
+  return getImageByLevel(level, studyImages);
+}
+
+export function getMentalBuildingByLevel(level) {
+  return getImageByLevel(level, mentalImages);
+}
+
+export function getDailyBuildingByLevel(level) {
+  return getImageByLevel(level, dailyImages);
+}
+
 export function getBuilding(category, level = 1) {
-  if (category === 'exercise') return getImageByLevel(level, gymImages);
-  if (category === 'study') return getImageByLevel(level, studyImages);
-  return castleImg;
+  if (category === 'exercise') return getExerciseBuildingByLevel(level);
+  if (category === 'study') return getStudyBuildingByLevel(level);
+  if (category === 'mental') return getMentalBuildingByLevel(level);
+  if (category === 'daily') return getDailyBuildingByLevel(level);
+  return buildings[category]?.lv1 ?? castleImg;
 }
