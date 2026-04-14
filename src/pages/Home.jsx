@@ -406,8 +406,11 @@ function VillageWorldLayer({
 
       let nextFlipped = npc.flipped;
 
-      if (col > npc.col) nextFlipped = false;
-      else if (col < npc.col) nextFlipped = true;
+      if (col > npc.col) {
+        nextFlipped = false;
+      } else if (col < npc.col) {
+        nextFlipped = true;
+      }
 
       return {
         ...npc,
@@ -418,30 +421,6 @@ function VillageWorldLayer({
     })
   );
 }
-
-    const finalCol = canPlace ? nextCol : npc.col;
-    const finalRow = canPlace ? nextRow : npc.row;
-
-    let nextFlipped = npc.flipped;
-
-    if (canPlace) {
-      if (finalCol > npc.col) {
-        nextFlipped = false; // 오른쪽 이동
-      } else if (finalCol < npc.col) {
-        nextFlipped = true; // 왼쪽 이동
-      }
-    }
-
-    return {
-      ...npc,
-      col: finalCol,
-      row: finalRow,
-      flipped: nextFlipped,
-    };
-  })
-);
-      }
-
       if (drag.objectType === 'building') {
         setBuildingLayout((prev) =>
           prev.map((item) => {
