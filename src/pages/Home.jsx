@@ -152,6 +152,9 @@ function VillageWorldLayer({
   const [offset, setOffset] = useState({ x: -360, y: -120 });
   const [scale, setScale] = useState(isOverview ? 0.21 : 0.46);
 
+  const [revealedTiles, setRevealedTiles] = useState([]);
+const prevExpansionRef = useRef(getWorldExpansionByLevel(totalLevel));
+  
   const scaleRef = useRef(scale);
   const offsetRef = useRef(offset);
 
@@ -182,11 +185,84 @@ function VillageWorldLayer({
 
   const expansion = useMemo(() => getWorldExpansionByLevel(totalLevel), [totalLevel]);
 
+  function getNewlyUnlockedTiles(prevExpansion, nextExpansion) {
+  const prevPadding = OUTER_TILE_PADDING + prevExpansion;
+  const nextPadding = OUTER_TILE_PADDING + nextExpansion;
+
+  const newlyUnlocked = [];
+
+  for (let row = -nextPadding; row < GRID_ROWS + nextPadding; row += 1) {
+    for (let col = -nextPadding; col < GRID_COLS + nextPadding; col += 1) {
+      const wasVisible =
+        col >= -prevPadding &&
+        row >= -prevPadding &&
+        col < GRID_COLS + prevPadding &&
+        row < GRID_ROWS + prevPadding;
+
+      const isNowVisible =
+        col >= -nextPadding &&
+        row >= -nextPadding &&
+        col < GRID_COLS + nextPadding &&
+        row < GRID_ROWS + nextPadding;
+
+      if (!wasVisible && isNowVisible) {
+        newlyUnlocked.push({
+          id: `unlock-${col}-${row}`,
+          col,
+          row,
+          delay: newlyUnlocked.length * 35,
+        });
+      }
+    }
+  }
+
+  return newlyUnlocked;
+}
+  
   const tileMap = useMemo(
     () => buildTileMap(GRID_COLS, GRID_ROWS, OUTER_TILE_PADDING + expansion),
     [expansion]
   );
 
+useEffect(() => {
+  const nextExpansion = getWorldExpansionByLevel(totalLevel);
+  const prevExpansion = prevExpansionRef.current;
+
+  if (nextExpansion > prevExpansion) {
+    const unlocked = getNewlyUnlockedTiles(prevExpansion, nextExpansion);
+    setRevealedTiles(unlocked);
+
+    const clearTimer = setTimeout(() => {
+      setRevealedTiles([]);
+    }, 2200);
+
+    prevExpansionRef.current = nextExpansion;
+
+    return (<style>{`
+  @keyframes tileReveal {
+    0% {
+      opacity: 0;
+      transform: translateY(10px) scale(0.88);
+      filter: brightness(1.8) drop-shadow(0 0 14px rgba(255,255,180,0.9));
+    }
+    60% {
+      opacity: 1;
+      transform: translateY(-2px) scale(1.04);
+      filter: brightness(1.25) drop-shadow(0 0 10px rgba(255,255,180,0.65));
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0px) scale(1);
+      filter: none;
+    }
+  }
+`}</style>) => clearTimeout(clearTimer);
+  }
+
+  prevExpansionRef.current = nextExpansion;
+}, [totalLevel]);
+  
+  
   const stars = useMemo(
     () =>
       Array.from({ length: 900 }).map((_, i) => ({
@@ -756,28 +832,42 @@ useEffect(() => {
               />
 
               {tileMap.map((tile) => {
-                const pos = gridToScreen(tile.col, tile.row);
-                const tileImg = getTileImageByKind(tile.kind);
+  const pos = gridToScreen(tile.col, tile.row);
+  const tileImg = getTileImageByKind(tile.kind);
 
-                return (
-                  <img
-                    key={tile.id}
-                    src={tileImg}
-                    alt=""
-                    draggable={false}
-                    className="pointer-events-none absolute select-none"
-                    style={{
-                      left: pos.x - TILE_W / 2,
-                      top: pos.y - TILE_H / 2,
-                      width: TILE_W,
-                      height: TILE_H,
-                      objectFit: 'contain',
-                      userSelect: 'none',
-                      WebkitUserDrag: 'none',
-                    }}
-                  />
-                );
-              })}
+  const revealed = revealedTiles.find(
+    (item) => item.col === tile.col && item.row === tile.row
+  );
+
+  return (
+    <img
+      key={tile.id}
+      src={tileImg}
+      alt=""
+      draggable={false}
+      className="pointer-events-none absolute select-none"
+      style={{
+        left: pos.x - TILE_W / 2,
+        top: pos.y - TILE_H / 2,
+        width: TILE_W,
+        height: TILE_H,
+        objectFit: 'contain',
+        userSelect: 'none',
+        WebkitUserDrag: 'none',
+        opacity: revealed ? 0 : 1,
+        transform: revealed
+          ? 'translateY(10px) scale(0.88)'
+          : 'translateY(0px) scale(1)',
+        filter: revealed
+          ? 'brightness(1.5) drop-shadow(0 0 10px rgba(255,255,180,0.7))'
+          : 'none',
+        animation: revealed
+          ? `tileReveal 520ms ease-out ${revealed.delay}ms forwards`
+          : 'none',
+      }}
+    />
+  );
+})}
 
               {isEditMode && placementPreview
                 ? getPreviewTiles(
