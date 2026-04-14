@@ -103,15 +103,8 @@ export function isInsideGrid(col, row) {
 
 export function getWorldExpansionByLevel(totalLevel = 1) {
   const level = Number(totalLevel || 1);
-
-  if (level >= 20) return 10;
-  if (level >= 15) return 8;
-  if (level >= 11) return 6;
-  if (level >= 9) return 5;
-  if (level >= 7) return 4;
-  if (level >= 5) return 3;
-  if (level >= 3) return 2;
-  return 0;
+  // 레벨 1마다 1칸씩 확장 (레벨1=0, 레벨2=1, 레벨3=2, ...)
+  return Math.max(0, level - 1);
 }
 
 export function getExpandedGridBounds(totalLevel = 1) {
