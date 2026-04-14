@@ -31,3 +31,13 @@ export const characters = {
 export function getCharacterImg(type) {
   return characters[type] ?? foxImg;
 }
+
+/**
+ * 걷기 애니메이션 프레임 반환
+ * @param {number} time - Date.now() 같은 시간값
+ * @param {number} speed - 프레임 속도 (작을수록 빠름)
+ */
+export function getFoxWalkFrame(time, speed = 200) {
+  const index = Math.floor(time / speed) % foxWalkFrames.length;
+  return foxWalkFrames[index];
+}
