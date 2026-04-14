@@ -436,7 +436,7 @@ export default function VillageWorldLayer({
                       opacity: revealed ? 0 : 1,
                       transform: revealed ? 'translateY(10px) scale(0.88)' : 'translateY(0px) scale(1)',
                       filter: revealed ? 'brightness(1.5) drop-shadow(0 0 10px rgba(255,255,180,0.7))' : 'none',
-                      animation: revealed ? `tileReveal 1100ms ease-out ${revealed.delay}ms forwards` : 'none',
+                      animation: revealed ? `tileReveal 600ms ease-out ${revealed.delay}ms forwards` : 'none',
                     }}
                   />
                 );
