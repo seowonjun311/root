@@ -429,17 +429,21 @@ export function validateGoalActionLogChain(goals = [], actionGoals = [], logs = 
 
 // --- 캐릭터/장식 ---
 // frameIndex: 0-based 프레임 인덱스를 직접 전달
-export function getCharacterImage(type, isMoving = false, frameIndex = 0, isThinking = false) {
+export function getCharacterImage(type, isMoving = false, frameIndex = 0) {
   if (type === 'alpaca') return alpacaImg;
   if (type === 'platypus') return platypusImg;
 
   if (type === 'fox') {
-    if (isMoving) return foxWalkFrames[frameIndex % foxWalkFrames.length];
-    if (isThinking) return foxThinkFrames[frameIndex % foxThinkFrames.length];
-    return foxImg;
+    // 이동 중 → 걷기 애니메이션
+    if (isMoving) {
+      return foxWalkFrames[frameIndex % foxWalkFrames.length];
+    }
+
+    // 멈춤 → 생각 애니메이션
+    return foxThinkFrames[frameIndex % foxThinkFrames.length];
   }
 
-  return foxImg;
+  return foxThinkFrames[frameIndex % foxThinkFrames.length];
 }
 
 export function getDecorationImage(type) {
