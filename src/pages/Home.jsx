@@ -849,8 +849,8 @@ useEffect(() => {
                     style={{
                       left: pos.x,
                       top: pos.y,
-                      width: 225,
-                      height: 180,
+                      width: 337,   // 225 × 1.5
+height: 270,  // 180 × 1.5
                       transform: `translate(-50%, -100%) scaleX(${building.flipped ? -1 : 1})`,
                       outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
                       outlineOffset: '4px',
