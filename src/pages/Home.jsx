@@ -238,25 +238,7 @@ useEffect(() => {
 
     prevExpansionRef.current = nextExpansion;
 
-    return (<style>{`
-  @keyframes tileReveal {
-    0% {
-      opacity: 0;
-      transform: translateY(10px) scale(0.88);
-      filter: brightness(1.8) drop-shadow(0 0 14px rgba(255,255,180,0.9));
-    }
-    60% {
-      opacity: 1;
-      transform: translateY(-2px) scale(1.04);
-      filter: brightness(1.25) drop-shadow(0 0 10px rgba(255,255,180,0.65));
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0px) scale(1);
-      filter: none;
-    }
-  }
-`}</style>) => clearTimeout(clearTimer);
+    return () => clearTimeout(clearTimer);
   }
 
   prevExpansionRef.current = nextExpansion;
