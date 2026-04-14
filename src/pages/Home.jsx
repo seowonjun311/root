@@ -386,7 +386,7 @@ function VillageWorldLayer({
         );
       }
 
-      iif (drag.objectType === 'character') {
+      if (drag.objectType === 'character') {
   setCharacters((prev) =>
     prev.map((npc) => {
       if (npc.id !== drag.objectId) return npc;
