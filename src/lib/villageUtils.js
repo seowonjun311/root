@@ -485,15 +485,16 @@ export function createCharacter(type) {
   const spawnSlots = getCharacterSpawnSlots();
   const spawn = spawnSlots[Math.floor(randomBetween(0, spawnSlots.length))] || { col: 10, row: 12 };
   return {
-    id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-    name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
-    type,
-    image: getCharacterImage(type),
-    col: spawn.col,
-    row: spawn.row,
-    size: type === 'alpaca' ? 56 : 52,
-    flipped: false,
-  };
+  id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+  name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
+  type,
+  image: getCharacterImage(type, false),
+  col: spawn.col,
+  row: spawn.row,
+  size: type === 'alpaca' ? 56 : 52,
+  flipped: false,
+  isMoving: false,
+};
 }
 
 export function isCharacterTooFarFromVillageCore(character) {
