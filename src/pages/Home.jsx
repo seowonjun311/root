@@ -699,7 +699,7 @@ export default function Home() {
             실제 Lv.{realTotalLevel}로 복귀
           </button>
         )}
-        {[1, 3, 5, 7, 9].map((lv) => (
+        {[1, 2, 3, 5, 7, 9].map((lv) => (
           <button
             key={lv}
             onClick={() => setDebugLevel(lv)}
