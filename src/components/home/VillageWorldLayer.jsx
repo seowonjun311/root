@@ -134,7 +134,7 @@ export default function VillageWorldLayer({
         const wasVisible = col >= -prevPadding && row >= -prevPadding && col < GRID_COLS + prevPadding && row < GRID_ROWS + prevPadding;
         const isNowVisible = col >= -nextPadding && row >= -nextPadding && col < GRID_COLS + nextPadding && row < GRID_ROWS + nextPadding;
         if (!wasVisible && isNowVisible) {
-          newlyUnlocked.push({ id: `unlock-${col}-${row}`, col, row, delay: newlyUnlocked.length * 80 });
+          newlyUnlocked.push({ id: `unlock-${col}-${row}`, col, row, delay: newlyUnlocked.length * 45 });
         }
       }
     }
