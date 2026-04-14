@@ -43,7 +43,30 @@ export function getStudyBuildingByLevel(level) {
   if (level >= 3)   return studyLv3Img;
   return studyLv1Img;
 }
-export const meditationLv1Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/f6271ac32_meditation_lv1png.png';
+// 정신(mental) 건물 레벨별 이미지
+export const mentalLv1Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ea6fe78b6_mental_lv1.png';
+export const mentalLv3Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6068d5bf1_mental_lv3.png';
+export const mentalLv5Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/8d5cd5ff7_mental_lv5.png';
+export const mentalLv7Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/73af21efc_mental_lv7.png';
+export const mentalLv10Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/4218f9244_mental_lv10.png';
+export const mentalLv20Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/f22ebcd1a_mental_lv20.png';
+export const mentalLv30Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/bc076e5b9_mental_lv30.png';
+export const mentalLv40Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/081c02f75_mental_lv40.png';
+export const mentalLv50Img  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/08bbf9267_mental_lv50.png';
+
+export function getMentalBuildingByLevel(level) {
+  if (level >= 50) return mentalLv50Img;
+  if (level >= 40) return mentalLv40Img;
+  if (level >= 30) return mentalLv30Img;
+  if (level >= 20) return mentalLv20Img;
+  if (level >= 10) return mentalLv10Img;
+  if (level >= 7)  return mentalLv7Img;
+  if (level >= 5)  return mentalLv5Img;
+  if (level >= 3)  return mentalLv3Img;
+  return mentalLv1Img;
+}
+
+export const meditationLv1Img = mentalLv1Img;
 export const workshopLv1Img   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/1e96fc004_workshop_lv1png.png';
 
 export const gymLv1        = gymLv1Img;
@@ -101,6 +124,7 @@ export const buildings = {
 export function getBuilding(category, level = 1) {
   if (category === 'daily') return getDailyBuildingByLevel(level);
   if (category === 'study') return getStudyBuildingByLevel(level);
+  if (category === 'mental') return getMentalBuildingByLevel(level);
   const lvKey = level >= 3 ? 'lv3' : level >= 2 ? 'lv2' : 'lv1';
   return buildings[category]?.[lvKey] ?? buildings[category]?.lv1 ?? castleImg;
 }
