@@ -13,6 +13,8 @@ import {
   foxWalk1Img,
   foxWalk2Img,
   foxWalk3Img,
+  foxWalkFrames,
+  getFoxWalkFrame,
   alpacaImg,
   platypusImg,
 } from '@/assets/root/characters';
@@ -423,14 +425,6 @@ export function validateGoalActionLogChain(goals = [], actionGoals = [], logs = 
 }
 
 // --- 캐릭터/장식 ---
-import { 
-  foxImg, 
-  foxWalkFrames, 
-  getFoxWalkFrame,
-  alpacaImg, 
-  platypusImg 
-} from '@/assets/root/characters';
-
 export function getCharacterImage(type, isMoving = false, time = Date.now()) {
   if (type === 'alpaca') return alpacaImg;
   if (type === 'platypus') return platypusImg;
@@ -742,4 +736,3 @@ export function writeGuestDataPatch(patchOrUpdater) {
     return readGuestData();
   }
 }
-
