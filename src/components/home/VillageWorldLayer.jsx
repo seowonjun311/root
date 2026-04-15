@@ -113,10 +113,15 @@ export default function VillageWorldLayer({
   const scaleRef = useRef(scale);
   const offsetRef = useRef(offset);
 
-  const MIN_SCALE = 0.16;
-  const MAX_SCALE = 0.92;
-  const OVERVIEW_SCALE = 0.21;
-  const DETAIL_SCALE = 0.46;
+ const MIN_SCALE = 0.10;
+const MAX_SCALE = 0.92;
+const OVERVIEW_SCALE = 0.21;
+const DETAIL_SCALE = 0.46;
+
+const getLevelZoomOut = (level) => {
+  const safeLevel = Number(level || 1);
+  return Math.min((safeLevel - 1) * 0.025, 0.20);
+};
 
   useEffect(() => { scaleRef.current = scale; }, [scale]);
   useEffect(() => { offsetRef.current = offset; }, [offset]);
@@ -196,11 +201,16 @@ export default function VillageWorldLayer({
   }, []);
 
   useEffect(() => {
-    const rect = viewportRef.current?.getBoundingClientRect();
-    const centerX = rect ? rect.left + rect.width / 2 : undefined;
-    const centerY = rect ? rect.top + rect.height / 2 : undefined;
-    zoomTo(isOverview ? OVERVIEW_SCALE : DETAIL_SCALE, centerX, centerY);
-  }, [isOverview, zoomTo]);
+  const rect = viewportRef.current?.getBoundingClientRect();
+  const centerX = rect ? rect.left + rect.width / 2 : undefined;
+  const centerY = rect ? rect.top + rect.height / 2 : undefined;
+
+  const zoomOutByLevel = getLevelZoomOut(totalLevel);
+  const baseScale = isOverview ? OVERVIEW_SCALE : DETAIL_SCALE;
+  const nextScale = Math.max(MIN_SCALE, baseScale - zoomOutByLevel);
+
+  zoomTo(nextScale, centerX, centerY);
+}, [isOverview, zoomTo, totalLevel]);
 
   const handleWorldPointerDown = (e) => {
     if (e.pointerType === 'touch') return;
