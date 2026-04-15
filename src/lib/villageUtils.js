@@ -632,20 +632,22 @@ export function buildTileMap(cols, rows, padding = OUTER_TILE_PADDING) {
 }
 
 // --- 카메라/뷰포트 ---
-export function getWorldPanBounds(viewportWidth, viewportHeight, scale) {
-  const margin = 600; // ⭐ 시야 확장 핵심
+export function getWorldPanBounds(viewportWidth, viewportHeight, scale, totalLevel = 1) {
+  const expansion = getWorldExpansionByLevel(totalLevel);
 
-  const minOffsetX = viewportWidth - WORLD_WIDTH * scale - margin;
-  const maxOffsetX = margin;
+  const levelMarginX = 300 + expansion * 140;
+  const levelMarginY = 220 + expansion * 120;
 
-  const minOffsetY = viewportHeight - WORLD_HEIGHT * scale - margin;
-  const maxOffsetY = margin;
+  const minVisibleX = -WORLD_EDGE_MARGIN_LEFT - levelMarginX;
+  const maxVisibleX = WORLD_WIDTH + WORLD_EDGE_MARGIN_RIGHT + levelMarginX;
+  const minVisibleY = -WORLD_EDGE_MARGIN_TOP - levelMarginY;
+  const maxVisibleY = WORLD_HEIGHT + WORLD_EDGE_MARGIN_BOTTOM + levelMarginY;
 
   return {
-    minOffsetX,
-    maxOffsetX,
-    minOffsetY,
-    maxOffsetY,
+    minOffsetX: viewportWidth - maxVisibleX * scale,
+    maxOffsetX: -minVisibleX * scale,
+    minOffsetY: viewportHeight - maxVisibleY * scale,
+    maxOffsetY: -minVisibleY * scale,
   };
 }
 
@@ -679,7 +681,7 @@ export function getViewportWorldCorners(offset, viewportWidth, viewportHeight, s
   ];
 }
 
-export function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, scale) {
+export function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, scale, totalLevel = 1) { {
   let corrected = { ...nextOffset };
   const diamond = getPlayableDiamondBounds();
   for (let i = 0; i < 10; i += 1) {
@@ -693,7 +695,7 @@ export function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHei
     if (!corrections.length) break;
     const avgCorrection = corrections.reduce((acc, item) => ({ x: acc.x + item.x / corrections.length, y: acc.y + item.y / corrections.length }), { x: 0, y: 0 });
     corrected = { x: corrected.x + avgCorrection.x, y: corrected.y + avgCorrection.y };
-    const rectBounds = getWorldPanBounds(viewportWidth, viewportHeight, scale);
+    const rectBounds = getWorldPanBounds(viewportWidth, viewportHeight, scale, totalLevel);
     corrected = { x: clamp(corrected.x, rectBounds.minOffsetX, rectBounds.maxOffsetX), y: clamp(corrected.y, rectBounds.minOffsetY, rectBounds.maxOffsetY) };
   }
   return corrected;
