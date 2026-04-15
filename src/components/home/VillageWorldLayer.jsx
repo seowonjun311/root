@@ -118,10 +118,7 @@ const MAX_SCALE = 0.92;
 const OVERVIEW_SCALE = 0.21;
 const DETAIL_SCALE = 0.46;
 
-const getLevelZoomOut = (level) => {
-  const safeLevel = Number(level || 1);
-  return Math.min((safeLevel - 1) * 0.025, 0.20);
-};
+
 
   useEffect(() => { scaleRef.current = scale; }, [scale]);
   useEffect(() => { offsetRef.current = offset; }, [offset]);
@@ -211,12 +208,12 @@ const getLevelZoomOut = (level) => {
   const centerX = rect ? rect.left + rect.width / 2 : undefined;
   const centerY = rect ? rect.top + rect.height / 2 : undefined;
 
-  const zoomOutByLevel = getLevelZoomOut(totalLevel);
-  const baseScale = isOverview ? OVERVIEW_SCALE : DETAIL_SCALE;
-  const nextScale = Math.max(MIN_SCALE, baseScale - zoomOutByLevel);
-
-  zoomTo(nextScale, centerX, centerY);
-}, [isOverview, zoomTo, totalLevel]);
+ 
+   const nextScale = isOverview ? OVERVIEW_SCALE : DETAIL_SCALE;
+  
+zoomTo(nextScale, centerX, centerY);
+}, [isOverview, zoomTo]);
+  
 
   const handleWorldPointerDown = (e) => {
     if (e.pointerType === 'touch') return;
