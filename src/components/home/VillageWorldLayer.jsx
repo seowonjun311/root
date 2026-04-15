@@ -433,16 +433,18 @@ setOffset((prev) =>
 
           <div className="absolute inset-0 touch-none overflow-hidden" onPointerDown={handleWorldPointerDown} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}>
             <div
-              className="absolute left-0 top-0"
-              style={{
-                width: WORLD_WIDTH,
-                height: WORLD_HEIGHT,
-                transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-                transformOrigin: 'top left',
-                transition: dragRef.current || touchGestureRef.current ? 'none' : 'transform 260ms ease',
-                willChange: 'transform',
-              }}
-            >
+  className="absolute"
+  style={{
+    left: -SPACE_BG_MARGIN_X,
+    top: -SPACE_BG_MARGIN_TOP,
+    width: WORLD_WIDTH + SPACE_BG_MARGIN_X * 2,
+    height: WORLD_HEIGHT + SPACE_BG_MARGIN_TOP + SPACE_BG_MARGIN_BOTTOM,
+    transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+    transformOrigin: 'top left',
+    transition: dragRef.current || touchGestureRef.current ? 'none' : 'transform 260ms ease',
+    willChange: 'transform',
+  }}
+>
               <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 14%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 12%), radial-gradient(circle at 28% 24%, rgba(109,140,255,0.16) 0%, rgba(109,140,255,0.06) 14%, rgba(0,0,0,0) 28%), radial-gradient(circle at 74% 18%, rgba(199,132,255,0.14) 0%, rgba(199,132,255,0.05) 12%, rgba(0,0,0,0) 25%), radial-gradient(circle at 52% 52%, rgba(90,120,255,0.08) 0%, rgba(90,120,255,0.03) 18%, rgba(0,0,0,0) 42%), linear-gradient(180deg, #1a2148 0%, #111733 34%, #0a0f24 68%, #04060d 100%)' }} />
 
               {stars.map((star) => (
