@@ -732,20 +732,11 @@ export function clampWorldOffset(nextOffset, viewportWidth, viewportHeight, scal
     totalLevel
   );
 
-  const rectClamped = {
+  return {
     x: clamp(nextOffset.x, minOffsetX, maxOffsetX),
     y: clamp(nextOffset.y, minOffsetY, maxOffsetY),
   };
-
-  return clampWorldOffsetToDiamond(
-    rectClamped,
-    viewportWidth,
-    viewportHeight,
-    scale,
-    totalLevel
-  );
 }
-
 // --- 게스트 데이터 ---
 
 export function readGuestData() {
