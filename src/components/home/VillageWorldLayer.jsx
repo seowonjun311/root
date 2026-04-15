@@ -118,7 +118,9 @@ const MAX_SCALE = 0.92;
 const OVERVIEW_SCALE = 0.21;
 const DETAIL_SCALE = 0.46;
 
-
+const SPACE_BG_MARGIN_X = 900;
+const SPACE_BG_MARGIN_TOP = 700;
+const SPACE_BG_MARGIN_BOTTOM = 300;
 
   useEffect(() => { scaleRef.current = scale; }, [scale]);
   useEffect(() => { offsetRef.current = offset; }, [offset]);
@@ -158,15 +160,18 @@ const DETAIL_SCALE = 0.46;
     prevExpansionRef.current = nextExpansion;
   }, [totalLevel]);
 
-  const stars = useMemo(() =>
-    Array.from({ length: 900 }).map((_, i) => ({
+  const stars = useMemo(
+  () =>
+    Array.from({ length: 1400 }).map((_, i) => ({
       id: `star_${i}`,
-      x: Math.random() * WORLD_WIDTH,
-      y: Math.random() * WORLD_HEIGHT,
+      x: Math.random() * (WORLD_WIDTH + SPACE_BG_MARGIN_X * 2) - SPACE_BG_MARGIN_X,
+      y: Math.random() * (WORLD_HEIGHT + SPACE_BG_MARGIN_TOP + SPACE_BG_MARGIN_BOTTOM) - SPACE_BG_MARGIN_TOP,
       size: Math.random() < 0.75 ? Math.random() * 1.8 + 0.6 : Math.random() * 2.8 + 1.2,
       opacity: Math.random() * 0.35 + 0.25,
       blur: Math.random() < 0.2 ? 10 : 5,
-    })), []);
+    })),
+  []
+);
 
   const getTouchDistance = (touches) => {
     if (!touches || touches.length < 2) return 0;
