@@ -667,15 +667,22 @@ export function getWorldPanBounds(viewportWidth, viewportHeight, scale, totalLev
 }
 
 
-export function getPlayableDiamondBounds() {
-  const top = gridToScreen(0, 0);
-  const bottom = gridToScreen(GRID_COLS - 1, GRID_ROWS - 1);
-  const left = gridToScreen(0, GRID_ROWS - 1);
+export function getPlayableDiamondBounds(totalLevel = 1) {
+  const base = OUTER_TILE_PADDING;
+
+  let extra = 0;
+
+  if (totalLevel >= 9) extra = 15;
+  else if (totalLevel >= 7) extra = 7;
+  else if (totalLevel >= 5) extra = 2;
+
+  const padding = base + extra;
+
   return {
-    centerX: GRID_ORIGIN_X,
-    centerY: (top.y + bottom.y) / 2,
-    radiusX: GRID_ORIGIN_X - left.x + VIEW_DIAMOND_CORNER_LIMIT_X,
-    radiusY: ((bottom.y - top.y) / 2) + VIEW_DIAMOND_CORNER_LIMIT_Y,
+    minCol: -padding,
+    maxCol: GRID_COLS + padding,
+    minRow: -padding,
+    maxRow: GRID_ROWS + padding,
   };
 }
 
@@ -699,7 +706,7 @@ export function getViewportWorldCorners(offset, viewportWidth, viewportHeight, s
 
 export function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, scale, totalLevel = 1) {
   let corrected = { ...nextOffset };
-  const diamond = getPlayableDiamondBounds();
+const diamond = getPlayableDiamondBounds(totalLevel);
   for (let i = 0; i < 10; i += 1) {
     const corners = getViewportWorldCorners(corrected, viewportWidth, viewportHeight, scale);
     const corrections = [];
