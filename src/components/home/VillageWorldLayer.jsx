@@ -329,7 +329,15 @@ zoomTo(nextScale, centerX, centerY);
       e.preventDefault();
       const dx = e.touches[0].clientX - gesture.startX;
       const dy = e.touches[0].clientY - gesture.startY;
-      setOffset(clampWorldOffset({ x: gesture.originX + dx, y: gesture.originY + dy }, viewportSize.width, viewportSize.height, scaleRef.current));
+setOffset(
+  clampWorldOffset(
+    { x: gesture.originX + dx, y: gesture.originY + dy },
+    viewportSize.width,
+    viewportSize.height,
+    scaleRef.current,
+    totalLevel
+  )
+);
     }
   }, [viewportSize.width, viewportSize.height, zoomTo, isEditMode]);
 
