@@ -633,15 +633,30 @@ export function buildTileMap(cols, rows, padding = OUTER_TILE_PADDING) {
 
 // --- 카메라/뷰포트 ---
 export function getWorldPanBounds(viewportWidth, viewportHeight, scale, totalLevel = 1) {
-  const expansion = getWorldExpansionByLevel(totalLevel);
+  // ⭐ 레벨별 부족한 타일 수 정의
+  let extraCols = 0;
+  let extraRows = 0;
 
-  const levelMarginX = 300 + expansion * 140;
-  const levelMarginY = 220 + expansion * 120;
+  if (totalLevel >= 9) {
+    extraCols = 15;
+    extraRows = 6;
+  } else if (totalLevel >= 7) {
+    extraCols = 7;
+    extraRows = 2;
+  } else if (totalLevel >= 5) {
+    extraCols = 2;
+    extraRows = 0;
+  }
 
-  const minVisibleX = -WORLD_EDGE_MARGIN_LEFT - levelMarginX;
-  const maxVisibleX = WORLD_WIDTH + WORLD_EDGE_MARGIN_RIGHT + levelMarginX;
-  const minVisibleY = -WORLD_EDGE_MARGIN_TOP - levelMarginY;
-  const maxVisibleY = WORLD_HEIGHT + WORLD_EDGE_MARGIN_BOTTOM + levelMarginY;
+  // ⭐ 타일 → 픽셀 변환 (아이소메트릭 기준)
+  const extraX = extraCols * (TILE_W / 2);
+  const extraY = extraRows * (TILE_H / 2);
+
+  const minVisibleX = -WORLD_EDGE_MARGIN_LEFT - extraX;
+  const maxVisibleX = WORLD_WIDTH + WORLD_EDGE_MARGIN_RIGHT + extraX;
+
+  const minVisibleY = -WORLD_EDGE_MARGIN_TOP - extraY;
+  const maxVisibleY = WORLD_HEIGHT + WORLD_EDGE_MARGIN_BOTTOM + extraY;
 
   return {
     minOffsetX: viewportWidth - maxVisibleX * scale,
@@ -650,6 +665,7 @@ export function getWorldPanBounds(viewportWidth, viewportHeight, scale, totalLev
     maxOffsetY: -minVisibleY * scale,
   };
 }
+
 
 export function getPlayableDiamondBounds() {
   const top = gridToScreen(0, 0);
