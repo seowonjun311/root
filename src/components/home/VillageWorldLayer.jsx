@@ -195,7 +195,13 @@ const getLevelZoomOut = (level) => {
     const worldX = (localX - currentOffset.x) / currentScale;
     const worldY = (localY - currentOffset.y) / currentScale;
     const nextOffset = { x: localX - worldX * clampedScale, y: localY - worldY * clampedScale };
-    const safeOffset = clampWorldOffset(nextOffset, rect.width, rect.height || WORLD_VIEWPORT_HEIGHT, clampedScale);
+    const safeOffset = clampWorldOffset(
+  nextOffset,
+  rect.width,
+  rect.height || WORLD_VIEWPORT_HEIGHT,
+  clampedScale,
+  totalLevel
+);
     setScale(clampedScale);
     setOffset(safeOffset);
   }, []);
@@ -236,7 +242,13 @@ const getLevelZoomOut = (level) => {
     if (drag.mode === 'pan') {
       const dx = e.clientX - drag.startX;
       const dy = e.clientY - drag.startY;
-      setOffset(clampWorldOffset({ x: drag.originX + dx, y: drag.originY + dy }, viewportSize.width, viewportSize.height, scaleRef.current));
+      setOffset(clampWorldOffset(
+  { x: drag.originX + dx, y: drag.originY + dy },
+  viewportSize.width,
+  viewportSize.height,
+  scaleRef.current,
+  totalLevel
+));
       return;
     }
     if (drag.mode === 'object') {
@@ -357,7 +369,9 @@ const getLevelZoomOut = (level) => {
 
   useEffect(() => {
     if (!viewportSize.width) return;
-    setOffset((prev) => clampWorldOffset(prev, viewportSize.width, viewportSize.height, scale));
+setOffset((prev) =>
+  clampWorldOffset(prev, viewportSize.width, viewportSize.height, scale, totalLevel)
+);
   }, [viewportSize, scale]);
 
   useEffect(() => {
