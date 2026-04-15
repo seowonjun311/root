@@ -633,15 +633,19 @@ export function buildTileMap(cols, rows, padding = OUTER_TILE_PADDING) {
 
 // --- 카메라/뷰포트 ---
 export function getWorldPanBounds(viewportWidth, viewportHeight, scale) {
-  const minVisibleX = -WORLD_EDGE_MARGIN_LEFT;
-  const maxVisibleX = WORLD_WIDTH + WORLD_EDGE_MARGIN_RIGHT;
-  const minVisibleY = -WORLD_EDGE_MARGIN_TOP;
-  const maxVisibleY = WORLD_HEIGHT + WORLD_EDGE_MARGIN_BOTTOM;
+  const margin = 600; // ⭐ 시야 확장 핵심
+
+  const minOffsetX = viewportWidth - WORLD_WIDTH * scale - margin;
+  const maxOffsetX = margin;
+
+  const minOffsetY = viewportHeight - WORLD_HEIGHT * scale - margin;
+  const maxOffsetY = margin;
+
   return {
-    minOffsetX: viewportWidth - maxVisibleX * scale,
-    maxOffsetX: -minVisibleX * scale,
-    minOffsetY: viewportHeight - maxVisibleY * scale,
-    maxOffsetY: -minVisibleY * scale,
+    minOffsetX,
+    maxOffsetX,
+    minOffsetY,
+    maxOffsetY,
   };
 }
 
