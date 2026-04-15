@@ -701,10 +701,26 @@ export function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHei
   return corrected;
 }
 
-export function clampWorldOffset(nextOffset, viewportWidth, viewportHeight, scale) {
-  const { minOffsetX, maxOffsetX, minOffsetY, maxOffsetY } = getWorldPanBounds(viewportWidth, viewportHeight, scale);
-  const rectClamped = { x: clamp(nextOffset.x, minOffsetX, maxOffsetX), y: clamp(nextOffset.y, minOffsetY, maxOffsetY) };
-  return clampWorldOffsetToDiamond(rectClamped, viewportWidth, viewportHeight, scale);
+export function clampWorldOffset(nextOffset, viewportWidth, viewportHeight, scale, totalLevel = 1) {
+  const { minOffsetX, maxOffsetX, minOffsetY, maxOffsetY } = getWorldPanBounds(
+    viewportWidth,
+    viewportHeight,
+    scale,
+    totalLevel
+  );
+
+  const rectClamped = {
+    x: clamp(nextOffset.x, minOffsetX, maxOffsetX),
+    y: clamp(nextOffset.y, minOffsetY, maxOffsetY),
+  };
+
+  return clampWorldOffsetToDiamond(
+    rectClamped,
+    viewportWidth,
+    viewportHeight,
+    scale,
+    totalLevel
+  );
 }
 
 // --- 게스트 데이터 ---
