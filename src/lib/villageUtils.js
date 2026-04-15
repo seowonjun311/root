@@ -681,7 +681,7 @@ export function getViewportWorldCorners(offset, viewportWidth, viewportHeight, s
   ];
 }
 
-export function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, scale, totalLevel = 1) { {
+export function clampWorldOffsetToDiamond(nextOffset, viewportWidth, viewportHeight, scale, totalLevel = 1) {
   let corrected = { ...nextOffset };
   const diamond = getPlayableDiamondBounds();
   for (let i = 0; i < 10; i += 1) {
