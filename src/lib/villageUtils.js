@@ -638,14 +638,14 @@ export function getWorldPanBounds(viewportWidth, viewportHeight, scale, totalLev
   let extraRows = 0;
 
   if (totalLevel >= 9) {
-    extraCols = 50;
-    extraRows = 30;
+    extraCols = 60;
+    extraRows = 40;
   } else if (totalLevel >= 7) {
-    extraCols = 18;
-    extraRows = 10;
+    extraCols = 28;
+    extraRows = 20;
   } else if (totalLevel >= 5) {
-    extraCols = 2;
-    extraRows = 0;
+    extraCols = 7;
+    extraRows = 5;
   }
 
   // ⭐ 타일 → 픽셀 변환 (아이소메트릭 기준)
