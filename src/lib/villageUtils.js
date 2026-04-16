@@ -70,14 +70,18 @@ export function gridToScreen(col, row) {
   };
 }
 
-export function screenToGrid(x, y) {
+export function screenToGrid(x, y, totalLevel = 1) {
   const localX = x - GRID_ORIGIN_X;
   const localY = y - GRID_ORIGIN_Y;
-  const col = Math.round(localY / TILE_H + localX / TILE_W);
-  const row = Math.round(localY / TILE_H - localX / TILE_W);
+
+  const rawCol = Math.round(localY / TILE_H + localX / TILE_W);
+  const rawRow = Math.round(localY / TILE_H - localX / TILE_W);
+
+  const bounds = getExpandedGridBounds(totalLevel);
+
   return {
-    col: clamp(col, 0, GRID_COLS - 1),
-    row: clamp(row, 0, GRID_ROWS - 1),
+    col: clamp(rawCol, bounds.minCol, bounds.maxCol),
+    row: clamp(rawRow, bounds.minRow, bounds.maxRow),
   };
 }
 
