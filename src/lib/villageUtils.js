@@ -638,11 +638,11 @@ export function getWorldPanBounds(viewportWidth, viewportHeight, scale, totalLev
   let extraRows = 0;
 
   if (totalLevel >= 9) {
-    extraCols = 28;
-    extraRows = 30;
+    extraCols = 9;
+    extraRows = 7;
   } else if (totalLevel >= 7) {
-    extraCols = 28;
-    extraRows = 20;
+    extraCols = 8;
+    extraRows = 6;
   } else if (totalLevel >= 5) {
     extraCols = 7;
     extraRows = 5;
