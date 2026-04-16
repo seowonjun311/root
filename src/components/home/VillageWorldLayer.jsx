@@ -10,7 +10,7 @@ import {
   buildWorldBuildings,
   getTileImageByKind, buildTileMap,
   clampWorldOffset, randomBetween, clamp,
-  getWorldExpansionByLevel,
+  getWorldExpansionByLevel, getExpandedGridBounds,
 } from '@/lib/villageUtils';
 import VillageOverlayBar from '@/components/home/VillageOverlayBar';
 import EditToolbar from '@/components/home/EditToolbar';
