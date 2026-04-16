@@ -257,7 +257,7 @@ zoomTo(nextScale, centerX, centerY);
       const dx = (e.clientX - drag.startX) / scaleRef.current;
       const dy = (e.clientY - drag.startY) / scaleRef.current;
       const startScreen = gridToScreen(drag.startCol, drag.startRow);
-      const { col, row } = screenToGrid(startScreen.x + dx, startScreen.y + dy);
+      const { col, row } = screenToGrid(startScreen.x + dx, startScreen.y + dy, totalLevel);
       let previewItem = null;
       if (drag.objectType === 'decoration') previewItem = decorations.find((item) => item.id === drag.objectId) || null;
       if (drag.objectType === 'character') previewItem = characters.find((item) => item.id === drag.objectId) || null;
@@ -390,8 +390,10 @@ setOffset((prev) =>
       setCharacters((prev) => prev.map((npc) => {
         const moveCol = Math.round(randomBetween(-1, 1));
         const moveRow = Math.round(randomBetween(-1, 1));
-        const nextCol = clamp(npc.col + moveCol, 0, GRID_COLS - 1);
-        const nextRow = clamp(npc.row + moveRow, 0, GRID_ROWS - 1);
+        const bounds = getExpandedGridBounds(totalLevel);
+
+const nextCol = clamp(npc.col + moveCol, bounds.minCol, bounds.maxCol);
+const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
         const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol, nextRow, decorations, characters: prev, buildings: currentCollisionBuildings, totalLevel });
         const finalCol = canPlace ? nextCol : npc.col;
         const finalRow = canPlace ? nextRow : npc.row;
