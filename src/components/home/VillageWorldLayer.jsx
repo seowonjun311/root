@@ -500,38 +500,97 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
                   })
                 : null}
 
-              {decorations.map((item) => {
-                const isSelected = selectedObject?.type === 'decoration' && selectedObject?.id === item.id;
-                const pos = getObjectScreenPosition(item, 'decoration');
-                return (
-                  <div key={item.id} className="absolute" onPointerDown={(e) => startObjectDrag(e, 'decoration', item.id)}
-                    style={{ left: pos.x, top: pos.y, transform: `translate(-50%, -100%) scaleX(${item.flipped ? -1 : 1})`, outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none', outlineOffset: '3px', borderRadius: '999px', cursor: isEditMode ? 'grab' : 'default', zIndex: 3000 + item.row }}>
-                    <DecorationSprite item={item} />
-                  </div>
-                );
-              })}
+            {decorations.map((item) => {
+  const isSelected =
+    selectedObject?.type === 'decoration' && selectedObject?.id === item.id;
+  const pos = getObjectScreenPosition(item, 'decoration');
 
+  return (
+    <div
+      key={item.id}
+      className="absolute"
+      onPointerDown={(e) => startObjectDrag(e, 'decoration', item.id)}
+      style={{
+        left: pos.x,
+        top: pos.y,
+        transform: `translate(-50%, -100%) scaleX(${item.flipped ? -1 : 1})`,
+        outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
+        outlineOffset: '3px',
+        borderRadius: '999px',
+        cursor: isEditMode ? 'grab' : 'default',
+        zIndex: Math.round(pos.y),
+      }}
+    >
+      <DecorationSprite item={item} />
+    </div>
+  );
+})}
               {buildings.map((building) => {
-                const isSelected = selectedObject?.type === 'building' && selectedObject?.id === building.category;
-                const pos = getObjectScreenPosition(building, 'building');
-                return (
-                  <div key={building.id} className="absolute" onPointerDown={(e) => startObjectDrag(e, 'building', building.category)}
-                    style={{ left: pos.x, top: pos.y, width: 338, height: 270, transform: `translate(-50%, -100%) scaleX(${building.flipped ? -1 : 1})`, outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none', outlineOffset: '4px', borderRadius: '20px', cursor: isEditMode ? 'grab' : 'default', zIndex: 4000 + building.row }}>
-                    <img src={building.image} alt={building.label} className="h-full w-full object-contain" draggable={false} />
-                  </div>
-                );
-              })}
+  const isSelected =
+    selectedObject?.type === 'building' &&
+    selectedObject?.id === building.category;
+
+  const pos = getObjectScreenPosition(building, 'building');
+  const buildingDepthPos = gridToScreen(building.col + 1, building.row + 1);
+
+  return (
+    <div
+      key={building.id}
+      className="absolute"
+      onPointerDown={(e) => startObjectDrag(e, 'building', building.category)}
+      style={{
+        left: pos.x,
+        top: pos.y,
+        width: 338,
+        height: 270,
+        transform: `translate(-50%, -100%) scaleX(${building.flipped ? -1 : 1})`,
+        outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
+        outlineOffset: '4px',
+        borderRadius: '20px',
+        cursor: isEditMode ? 'grab' : 'default',
+        zIndex: Math.round(buildingDepthPos.y),
+      }}
+    >
+      <img
+        src={building.image}
+        alt={building.label}
+        className="h-full w-full object-contain"
+        draggable={false}
+      />
+    </div>
+  );
+})}
 
               {characters.map((npc) => {
-                const isSelected = selectedObject?.type === 'character' && selectedObject?.id === npc.id;
-                const pos = getObjectScreenPosition(npc, 'character');
-                return (
-                  <div key={npc.id} className="absolute" onPointerDown={(e) => startObjectDrag(e, 'character', npc.id)}
-                    style={{ left: pos.x, top: pos.y, width: npc.size, height: npc.size, transform: 'translate(-50%, -100%)', transition: isEditMode ? 'none' : 'left 2200ms ease-in-out, top 2200ms ease-in-out', outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none', outlineOffset: '3px', borderRadius: '999px', cursor: isEditMode ? 'grab' : 'default', zIndex: 5000 + npc.row }}>
-                    <CharacterSprite npc={npc} />
-                  </div>
-                );
-              })}
+  const isSelected =
+    selectedObject?.type === 'character' && selectedObject?.id === npc.id;
+  const pos = getObjectScreenPosition(npc, 'character');
+
+  return (
+    <div
+      key={npc.id}
+      className="absolute"
+      onPointerDown={(e) => startObjectDrag(e, 'character', npc.id)}
+      style={{
+        left: pos.x,
+        top: pos.y,
+        width: npc.size,
+        height: npc.size,
+        transform: 'translate(-50%, -100%)',
+        transition: isEditMode
+          ? 'none'
+          : 'left 2200ms ease-in-out, top 2200ms ease-in-out',
+        outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
+        outlineOffset: '3px',
+        borderRadius: '999px',
+        cursor: isEditMode ? 'grab' : 'default',
+        zIndex: Math.round(pos.y),
+      }}
+    >
+      <CharacterSprite npc={npc} />
+    </div>
+  );
+})}
             </div>
           </div>
         </div>
