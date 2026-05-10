@@ -91,7 +91,6 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'volcano_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'wooden_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'stone_hut') return { cols: 2, rows: 2 };
-  if (kind === 'decoration' && item?.type === 'wooden_watchtower') return { cols: 2, rows: 2 };
   return { cols: 1, rows: 1 };
 }
 
