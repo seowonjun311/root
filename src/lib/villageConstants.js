@@ -79,6 +79,7 @@ export const SHOP_THEMES = [
       { id: 'thatched_hut_dino_1', label: '움집', type: 'decoration', subtype: 'thatched_hut_dino', price: 35, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/217aafe7d_ChatGPTImage202642810_33_49-Photoroom.png' },
       { id: 'volcano_hut_1', label: '화산집', type: 'decoration', subtype: 'volcano_hut', price: 40, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a2166f6a5_ChatGPTImage202642810_33_51-Photoroom.png' },
       { id: 'wooden_hut_1', label: '나무 오두막', type: 'decoration', subtype: 'wooden_hut', price: 35, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0e3b3552d_ChatGPTImage202642810_33_54-Photoroom.png' },
+      { id: 'stone_hut_1', label: '돌 오두막', type: 'decoration', subtype: 'stone_hut', price: 40, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/759808ec1_ChatGPTImage202642810_33_57-Photoroom.png' },
       ],
       },
       ];

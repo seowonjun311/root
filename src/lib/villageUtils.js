@@ -90,6 +90,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'mammoth_hut') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'volcano_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'wooden_hut') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'stone_hut') return { cols: 2, rows: 2 };
   return { cols: 1, rows: 1 };
 }
 
@@ -214,6 +215,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'thatched_hut_dino') return { x, y: y + 31 };
   if (kind === 'decoration' && item?.type === 'volcano_hut') return { x, y: y + 100 };
   if (kind === 'decoration' && item?.type === 'wooden_hut') return { x, y: y + TILE_H + 14 };
+  if (kind === 'decoration' && item?.type === 'stone_hut') return { x, y: y + TILE_H + 14 };
   return { x, y: y + 14 };
 }
 
@@ -477,6 +479,7 @@ export function getDecorationImage(type) {
   if (type === 'thatched_hut_dino') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/217aafe7d_ChatGPTImage202642810_33_49-Photoroom.png';
   if (type === 'volcano_hut') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a2166f6a5_ChatGPTImage202642810_33_51-Photoroom.png';
   if (type === 'wooden_hut') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0e3b3552d_ChatGPTImage202642810_33_54-Photoroom.png';
+  if (type === 'stone_hut') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/759808ec1_ChatGPTImage202642810_33_57-Photoroom.png';
   return grassImg;
 }
 
@@ -508,6 +511,7 @@ export function getDecorationLabel(type) {
     thatched_hut_dino: '움집',
     volcano_hut: '화산집',
     wooden_hut: '나무 오두막',
+    stone_hut: '돌 오두막',
   };
   return labelMap[type] || '잔디';
 }
@@ -538,6 +542,7 @@ export function createDecoration(subtype) {
     thatched_hut_dino: 160,
     volcano_hut: 320,
     wooden_hut: 213,
+    stone_hut: 240,
     trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,
   };
   return {
