@@ -490,25 +490,40 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
   const isSelected =
     selectedObject?.type === 'decoration' && selectedObject?.id === item.id;
   const pos = getObjectScreenPosition(item, 'decoration');
+  const tilePos = gridToScreen(item.col, item.row);
 
   return (
-    <div
-      key={item.id}
-      className="absolute"
-      onPointerDown={(e) => startObjectDrag(e, 'decoration', item.id)}
-      style={{
-        left: pos.x,
-        top: pos.y,
-        transform: `translate(-50%, -100%) scaleX(${item.flipped ? -1 : 1})`,
-        outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
-        outlineOffset: '3px',
-        borderRadius: '999px',
-        cursor: isEditMode ? 'grab' : 'default',
-        zIndex: Math.round(pos.y),
-      }}
-    >
-      <DecorationSprite item={item} />
-    </div>
+    <React.Fragment key={item.id}>
+      {/* 바닥 타일 표시 */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          left: tilePos.x - TILE_W / 2,
+          top: tilePos.y - TILE_H / 2,
+          width: TILE_W,
+          height: TILE_H,
+          clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+          background: 'rgba(80,40,0,0.18)',
+          zIndex: Math.round(pos.y) - 1,
+        }}
+      />
+      <div
+        className="absolute"
+        onPointerDown={(e) => startObjectDrag(e, 'decoration', item.id)}
+        style={{
+          left: pos.x,
+          top: pos.y,
+          transform: `translate(-50%, -100%) scaleX(${item.flipped ? -1 : 1})`,
+          outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
+          outlineOffset: '3px',
+          borderRadius: '999px',
+          cursor: isEditMode ? 'grab' : 'default',
+          zIndex: Math.round(pos.y),
+        }}
+      >
+        <DecorationSprite item={item} />
+      </div>
+    </React.Fragment>
   );
 })}
 
