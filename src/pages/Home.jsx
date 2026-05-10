@@ -20,7 +20,7 @@ import {
   resolveGoalIdForActionGoal, connectActionGoalsToGoals,
   normalizeGuestGoals, normalizeGuestActionGoals,
   validateGoalActionLogChain,
-  getCharacterImage, getDecorationImage,
+  getCharacterImage, getDecorationImage, getDecorationLabel,
   createInventoryItem, createPlacedObjectFromInventory,
   getVillageState,
 } from '@/lib/villageUtils';
@@ -537,7 +537,7 @@ export default function Home() {
       if (!target) return;
       const removeIndex = nextDecorations.findIndex((item) => item.id === selectedObject.id);
       if (removeIndex >= 0) nextDecorations.splice(removeIndex, 1);
-      nextInventoryDecorations.push({ id: `inv_${target.type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`, type: 'decoration', subtype: target.type, label: target.type === 'tree' ? '나무' : target.type === 'flower' ? '꽃' : '잔디' });
+      nextInventoryDecorations.push({ id: `inv_${target.type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`, type: 'decoration', subtype: target.type, label: getDecorationLabel(target.type) });
     }
 
     const nextState = { village_points: currentVillage.village_points, village_tile_theme: tileTheme, village_decorations: nextDecorations, village_characters: nextCharacters, village_buildings: [], village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };

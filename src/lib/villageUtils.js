@@ -473,6 +473,36 @@ export function getDecorationImage(type) {
   return grassImg;
 }
 
+export function getDecorationLabel(type) {
+  const labelMap = {
+    tree: '나무',
+    flower: '꽃',
+    stone_cave: '돌동굴',
+    wood_tower: '목재탑',
+    smithy_large: '큰 대장간',
+    tent: '텐트',
+    smithy_small: '작은 대장간',
+    bone_hut: '뼈오두막',
+    mammoth_hut: '매머드 움막',
+    thatch_hut: '초가집',
+    smoke_hut: '연기오두막',
+    wood_house: '목재집',
+    trex: 'T-렉스',
+    brachiosaurus: '브라키오사우루스',
+    triceratops: '트리케라톱스',
+    stegosaurus: '스테고사우루스',
+    dino_fossil: '공룡화석',
+    dino_egg_nest: '공룡알둥지',
+    campfire: '캠프파이어',
+    totem_pole: '토템폴',
+    tribe_banner: '부족기',
+    palm_tree: '야자나무',
+    ancient_tree: '고대나무',
+    thatched_hut_dino: '움집',
+  };
+  return labelMap[type] || '잔디';
+}
+
 export function createInventoryItem(item) {
   return {
     id: `${item.type}_${item.subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
