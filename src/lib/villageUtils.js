@@ -535,7 +535,7 @@ export function createDecoration(subtype) {
     palm_tree: 64, ancient_tree: 68,
     thatched_hut_dino: 160,
     volcano_hut: 320,
-    wooden_hut: 160,
+    wooden_hut: 3200,
     trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,
   };
   return {
