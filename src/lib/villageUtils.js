@@ -208,7 +208,7 @@ export function getObjectScreenPosition(item, kind) {
   const { x, y } = gridToScreen(item.col, item.row);
   if (kind === 'building') return { x, y: y + 100 };
   if (kind === 'character') return { x, y: y + 10 };
-  if (kind === 'decoration' && item?.type === 'mammoth_hut') return { x, y: y - TILE_H * 2 + 14 };
+  if (kind === 'decoration' && item?.type === 'mammoth_hut') return { x, y: y + TILE_H * 5 + 14 };
   return { x, y: y + 14 };
 }
 
