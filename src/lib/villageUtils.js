@@ -87,6 +87,7 @@ export function screenToGrid(x, y, totalLevel = 1) {
 
 export function getObjectTileSize(item, kind) {
   if (kind === 'building') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'mammoth_hut') return { cols: 3, rows: 3 };
   return { cols: 1, rows: 1 };
 }
 
@@ -207,6 +208,7 @@ export function getObjectScreenPosition(item, kind) {
   const { x, y } = gridToScreen(item.col, item.row);
   if (kind === 'building') return { x, y: y + 100 };
   if (kind === 'character') return { x, y: y + 10 };
+  if (kind === 'decoration' && item?.type === 'mammoth_hut') return { x, y: y - TILE_H * 2 + 14 };
   return { x, y: y + 14 };
 }
 
