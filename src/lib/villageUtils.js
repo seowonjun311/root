@@ -18,12 +18,8 @@ import {
   foxThinkFrames,
   alpacaImg,
   platypusImg,
-  trexImg,
-  brachiosaurusImg,
-  triceratopsImg,
-  stegosaurusImg,
 } from '@/assets/root/characters';
-import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, thatchHutImg, smokeHutImg, woodHouseImg, dinoFossilImg, dinoEggNestImg, campfireImg, totemPoleImg, tribeBannerImg, palmTreeImg, ancientTreeImg } from '@/assets/root/decorations';
+import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, thatchHutImg, smokeHutImg, woodHouseImg, dinoFossilImg, dinoEggNestImg, campfireImg, totemPoleImg, tribeBannerImg, palmTreeImg, ancientTreeImg, trexImg, brachiosaurusImg, triceratopsImg, stegosaurusImg } from '@/assets/root/decorations';
 import { getBuilding } from '@/assets/root/buildings';
 import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
@@ -436,10 +432,6 @@ export function validateGoalActionLogChain(goals = [], actionGoals = [], logs = 
 export function getCharacterImage(type, isMoving = false, frameIndex = 0) {
   if (type === 'alpaca') return alpacaImg;
   if (type === 'platypus') return platypusImg;
-  if (type === 'trex') return trexImg;
-  if (type === 'brachiosaurus') return brachiosaurusImg;
-  if (type === 'triceratops') return triceratopsImg;
-  if (type === 'stegosaurus') return stegosaurusImg;
 
   if (type === 'fox') {
     if (isMoving) {
@@ -463,6 +455,10 @@ export function getDecorationImage(type) {
   if (type === 'thatch_hut') return thatchHutImg;
   if (type === 'smoke_hut') return smokeHutImg;
   if (type === 'wood_house') return woodHouseImg;
+  if (type === 'trex') return trexImg;
+  if (type === 'brachiosaurus') return brachiosaurusImg;
+  if (type === 'triceratops') return triceratopsImg;
+  if (type === 'stegosaurus') return stegosaurusImg;
   if (type === 'dino_fossil') return dinoFossilImg;
   if (type === 'dino_egg_nest') return dinoEggNestImg;
   if (type === 'campfire') return campfireImg;
@@ -489,7 +485,14 @@ export function createPlacedObjectFromInventory(inventoryItem) {
 }
 
 export function createDecoration(subtype) {
-  const sizeMap = { grass: 34, tree: 62, flower: 30 };
+  const sizeMap = {
+    grass: 34, tree: 62, flower: 30,
+    stone_cave: 70, wood_tower: 65, smithy_large: 72, tent: 60, smithy_small: 58,
+    bone_hut: 68, thatch_hut: 62, smoke_hut: 64, wood_house: 66,
+    dino_fossil: 58, dino_egg_nest: 52, campfire: 44, totem_pole: 56, tribe_banner: 48,
+    palm_tree: 64, ancient_tree: 68,
+    trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,
+  };
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     type: subtype,
@@ -514,11 +517,9 @@ export function createCharacter(type) {
   const spawn = spawnSlots[Math.floor(randomBetween(0, spawnSlots.length))] || { col: 10, row: 12 };
   const nameMap = {
     alpaca: '파카', platypus: '너구', fox: '루',
-    trex: '티렉', brachiosaurus: '브라키', triceratops: '트리케', stegosaurus: '스테고',
   };
   const sizeMap = {
     alpaca: 56, fox: 72, platypus: 52,
-    trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,
   };
   return {
     id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,

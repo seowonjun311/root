@@ -1,4 +1,5 @@
-import { foxImg, alpacaImg, platypusImg, trexImg, brachiosaurusImg, triceratopsImg, stegosaurusImg } from '@/assets/root/characters';
+import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
+import { trexImg, brachiosaurusImg, triceratopsImg, stegosaurusImg } from '@/assets/root/decorations';
 import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, thatchHutImg, smokeHutImg, woodHouseImg, dinoFossilImg, dinoEggNestImg, campfireImg, totemPoleImg, tribeBannerImg, palmTreeImg, ancientTreeImg } from '@/assets/root/decorations';
 import { borderTree1Img, borderTree2Img, borderTree3Img } from '@/assets/root/borderTrees/index.js';
 import { borderBush1Img } from '@/assets/root/borderBushes/index.js';
@@ -71,10 +72,10 @@ export const SHOP_THEMES = [
     label: '공룡시대',
     emoji: '🦕',
     items: [
-      { id: 'trex_1', label: '티라노사우루스', type: 'character', subtype: 'trex', price: 35, image: trexImg },
-      { id: 'brachiosaurus_1', label: '브라키오사우루스', type: 'character', subtype: 'brachiosaurus', price: 40, image: brachiosaurusImg },
-      { id: 'triceratops_1', label: '트리케라톱스', type: 'character', subtype: 'triceratops', price: 35, image: triceratopsImg },
-      { id: 'stegosaurus_1', label: '스테고사우루스', type: 'character', subtype: 'stegosaurus', price: 30, image: stegosaurusImg },
+      { id: 'trex_1', label: '티라노사우루스', type: 'decoration', subtype: 'trex', price: 35, image: trexImg },
+      { id: 'brachiosaurus_1', label: '브라키오사우루스', type: 'decoration', subtype: 'brachiosaurus', price: 40, image: brachiosaurusImg },
+      { id: 'triceratops_1', label: '트리케라톱스', type: 'decoration', subtype: 'triceratops', price: 35, image: triceratopsImg },
+      { id: 'stegosaurus_1', label: '스테고사우루스', type: 'decoration', subtype: 'stegosaurus', price: 30, image: stegosaurusImg },
       { id: 'stone_cave_1', label: '돌동굴', type: 'decoration', subtype: 'stone_cave', price: 20, image: stoneCaveImg },
       { id: 'wood_tower_1', label: '목재 망루', type: 'decoration', subtype: 'wood_tower', price: 25, image: woodTowerImg },
       { id: 'smithy_large_1', label: '대장간', type: 'decoration', subtype: 'smithy_large', price: 30, image: smithyLargeImg },

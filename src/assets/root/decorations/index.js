@@ -20,6 +20,11 @@ export const smokeHutImg       = 'https://media.base44.com/images/public/69b6329
 export const woodHouseImg      = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/829903cbb_ChatGPTImage202642810_33_54.png';
 
 /* =========================
+   공룡 오브젝트 (decoration으로 사용)
+========================= */
+export { trexImg, brachiosaurusImg, triceratopsImg, stegosaurusImg } from '@/assets/root/characters';
+
+/* =========================
    자연 오브젝트 & 유물
 ========================= */
 export const dinoFossilImg     = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/81d37feb9_ChatGPTImage202642810_34_09.png';
