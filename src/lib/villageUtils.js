@@ -19,7 +19,7 @@ import {
   alpacaImg,
   platypusImg,
 } from '@/assets/root/characters';
-import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, thatchHutImg, smokeHutImg, woodHouseImg, dinoFossilImg, dinoEggNestImg, campfireImg, totemPoleImg, tribeBannerImg, palmTreeImg, ancientTreeImg, trexImg, brachiosaurusImg, triceratopsImg, stegosaurusImg } from '@/assets/root/decorations';
+import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, mammothHutImg, thatchHutImg, smokeHutImg, woodHouseImg, dinoFossilImg, dinoEggNestImg, campfireImg, totemPoleImg, tribeBannerImg, palmTreeImg, ancientTreeImg, trexImg, brachiosaurusImg, triceratopsImg, stegosaurusImg } from '@/assets/root/decorations';
 import { getBuilding } from '@/assets/root/buildings';
 import { baseGrassTileImg, variantGrassTileImg, pathTileImg, dinoTile1Img, dinoTile2Img, dinoTile3Img } from '@/assets/root/tiles/index.js';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
@@ -452,6 +452,7 @@ export function getDecorationImage(type) {
   if (type === 'tent') return tentImg;
   if (type === 'smithy_small') return smithySmallImg;
   if (type === 'bone_hut') return boneHutImg;
+  if (type === 'mammoth_hut') return mammothHutImg;
   if (type === 'thatch_hut') return thatchHutImg;
   if (type === 'smoke_hut') return smokeHutImg;
   if (type === 'wood_house') return woodHouseImg;
@@ -488,7 +489,8 @@ export function createDecoration(subtype) {
   const sizeMap = {
     grass: 34, tree: 62, flower: 30,
     stone_cave: 70, wood_tower: 65, smithy_large: 72, tent: 60, smithy_small: 58,
-    bone_hut: 68, thatch_hut: 62, smoke_hut: 64, wood_house: 66,
+    bone_hut: 68,
+    mammoth_hut: 80, thatch_hut: 62, smoke_hut: 64, wood_house: 66,
     dino_fossil: 58, dino_egg_nest: 52, campfire: 44, totem_pole: 56, tribe_banner: 48,
     palm_tree: 64, ancient_tree: 68,
     trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,

@@ -15,6 +15,7 @@ export const smithyLargeImg    = 'https://media.base44.com/images/public/69b6329
 export const tentImg           = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6cf547fc8_ChatGPTImage202642810_34_05.png';
 export const smithySmallImg    = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/4e17e96aa_ChatGPTImage202642810_34_07.png';
 export const boneHutImg        = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5f0433b96_ChatGPTImage202651005_55_27-Photoroom.png';
+export const mammothHutImg     = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/4ea5fd4c3_ChatGPTImage202642810_33_472.png';
 export const thatchHutImg      = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d97fc1190_ChatGPTImage202642810_33_49.png';
 export const smokeHutImg       = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/b5d713b63_ChatGPTImage202642810_33_51.png';
 export const woodHouseImg      = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/829903cbb_ChatGPTImage202642810_33_54.png';
@@ -45,6 +46,7 @@ export const decorations = {
   tent: tentImg,
   smithy_small: smithySmallImg,
   bone_hut: boneHutImg,
+  mammoth_hut: mammothHutImg,
   thatch_hut: thatchHutImg,
   smoke_hut: smokeHutImg,
   wood_house: woodHouseImg,
