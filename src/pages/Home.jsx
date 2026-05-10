@@ -88,6 +88,7 @@ export default function Home() {
   const [decorations, setDecorations] = useState([]);
   const [characters, setCharacters] = useState(DEFAULT_VILLAGE_DATA.village_characters);
   const [buildings, setBuildings] = useState(DEFAULT_VILLAGE_DATA.village_buildings);
+  const [newlyPlacedItemId, setNewlyPlacedItemId] = useState(null);
 
   const originalVillageRef = useRef(null);
   const hasCategoryInteractionRef = useRef(false);
@@ -487,12 +488,18 @@ export default function Home() {
     const nextInventoryCharacters = [...inventoryCharacters];
     const nextInventoryDecorations = [...inventoryDecorations];
 
+    let placedItemId = null;
+
     if (inventoryItem.type === 'character') {
-      nextCharacters.push(createPlacedObjectFromInventory(inventoryItem));
+      const newCharacter = createPlacedObjectFromInventory(inventoryItem);
+      placedItemId = newCharacter.id;
+      nextCharacters.push(newCharacter);
       const removeIndex = nextInventoryCharacters.findIndex((item) => item.id === inventoryItem.id);
       if (removeIndex >= 0) nextInventoryCharacters.splice(removeIndex, 1);
     } else {
-      nextDecorations.push(createPlacedObjectFromInventory(inventoryItem));
+      const newDecoration = createPlacedObjectFromInventory(inventoryItem);
+      placedItemId = newDecoration.id;
+      nextDecorations.push(newDecoration);
       const removeIndex = nextInventoryDecorations.findIndex((item) => item.id === inventoryItem.id);
       if (removeIndex >= 0) nextInventoryDecorations.splice(removeIndex, 1);
     }
@@ -505,6 +512,8 @@ export default function Home() {
       setDecorations(nextDecorations);
       setInventoryCharacters(nextInventoryCharacters);
       setInventoryDecorations(nextInventoryDecorations);
+      setNewlyPlacedItemId(placedItemId);
+      setTimeout(() => setNewlyPlacedItemId(null), 1000);
       originalVillageRef.current = { ...currentVillage, ...nextState };
       toast.success(`${inventoryItem.label}을(를) 마을에 꺼냈어요!`);
     } catch (error) {
@@ -780,6 +789,7 @@ export default function Home() {
          onSaveEdit={handleSaveEdit}
          onCancelEdit={handleCancelEdit}
          onStoreSelected={handleStoreSelected}
+         newlyPlacedItemId={newlyPlacedItemId}
 
        />
 

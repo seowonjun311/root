@@ -98,6 +98,7 @@ export default function VillageWorldLayer({
   isOverview,
   onToggleOverview,
   buildings = [],
+  newlyPlacedItemId = null,
 }) {
   const dragRef = useRef(null);
   const viewportRef = useRef(null);
@@ -494,6 +495,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
             {decorations.map((item) => {
   const isSelected =
     selectedObject?.type === 'decoration' && selectedObject?.id === item.id;
+  const isNewlyPlaced = newlyPlacedItemId === item.id;
   const pos = getObjectScreenPosition(item, 'decoration');
   const tilePos = gridToScreen(item.col, item.row);
 
@@ -508,8 +510,9 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
           width: TILE_W,
           height: TILE_H,
           clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-          background: 'rgba(80,40,0,0.18)',
+          background: isNewlyPlaced ? 'rgba(255,215,0,0.4)' : 'rgba(80,40,0,0.18)',
           zIndex: Math.round(pos.y) - 1,
+          transition: 'background 1s ease-out',
         }}
       />
       <div
@@ -519,11 +522,12 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
           left: pos.x,
           top: pos.y,
           transform: `translate(-50%, -100%) scaleX(${item.flipped ? -1 : 1})`,
-          outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
+          outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : isNewlyPlaced ? '3px solid rgba(255,215,0,0.8)' : 'none',
           outlineOffset: '3px',
           borderRadius: '999px',
           cursor: isEditMode ? 'grab' : 'default',
           zIndex: Math.round(pos.y),
+          transition: 'outline 1s ease-out',
         }}
       >
         <DecorationSprite item={item} />
