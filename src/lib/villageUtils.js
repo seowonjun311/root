@@ -21,7 +21,7 @@ import {
 } from '@/assets/root/characters';
 import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, thatchHutImg, smokeHutImg, woodHouseImg, dinoFossilImg, dinoEggNestImg, campfireImg, totemPoleImg, tribeBannerImg, palmTreeImg, ancientTreeImg, trexImg, brachiosaurusImg, triceratopsImg, stegosaurusImg } from '@/assets/root/decorations';
 import { getBuilding } from '@/assets/root/buildings';
-import { baseVolcanicTileImg, variantVolcanicTileImg, pathVolcanicTileImg } from '@/assets/root/tiles/index.js';
+import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
 
 
@@ -637,9 +637,8 @@ export function buildWorldBuildings({ userLevels, buildingLayout }) {
 
 // --- 타일맵 ---
 export function getTileImageByKind(kind) {
-  if (kind === TILE_KIND.VARIANT_GRASS) return variantVolcanicTileImg;
-  if (kind === TILE_KIND.PATH) return pathVolcanicTileImg;
-  return baseVolcanicTileImg;
+  if (kind === TILE_KIND.VARIANT_GRASS) return variantGrassTileImg;
+  return baseGrassTileImg;
 }
 
 export function isPathTile(col, row) {
