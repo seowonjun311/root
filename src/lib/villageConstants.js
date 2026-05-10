@@ -1,6 +1,6 @@
 import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
 import { dinoTile1Img, dinoTile2Img, dinoTile3Img } from '@/assets/root/tiles/index.js';
-import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
+import { grassImg, treeImg, flowerImg, boneHutImg } from '@/assets/root/decorations';
 import { borderTree1Img, borderTree2Img, borderTree3Img } from '@/assets/root/borderTrees/index.js';
 import { borderBush1Img } from '@/assets/root/borderBushes/index.js';
 
@@ -75,6 +75,7 @@ export const SHOP_THEMES = [
       { id: 'tile_dino_1', label: '공룡시대 땅 1', type: 'tile', subtype: 'dino', price: 50, image: dinoTile1Img },
       { id: 'tile_dino_2', label: '공룡시대 땅 2', type: 'tile', subtype: 'dino2', price: 50, image: dinoTile2Img },
       { id: 'tile_dino_3', label: '공룡시대 땅 3', type: 'tile', subtype: 'dino3', price: 50, image: dinoTile3Img },
+      { id: 'bone_hut_1', label: '뼈 움막', type: 'decoration', subtype: 'bone_hut', price: 35, image: boneHutImg },
     ],
   },
 ];
