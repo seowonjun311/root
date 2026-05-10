@@ -7,7 +7,6 @@ import {
   gridToScreen, screenToGrid,
   canPlaceObject, getObjectScreenPosition, getPreviewTiles, getPreviewColor,
   getCharacterImage,
-  buildWorldBuildings,
   getTileImageByKind, buildTileMap,
   clampWorldOffset, randomBetween, clamp,
   getWorldExpansionByLevel, getExpandedGridBounds,
@@ -82,10 +81,8 @@ export default function VillageWorldLayer({
   tileTheme = 'grass',
   decorations,
   characters,
-  buildingLayout,
   setCharacters,
   setDecorations,
-  setBuildingLayout,
   setPlacementPreview,
   setSelectedObject,
   isEditMode,
@@ -126,8 +123,6 @@ const SPACE_BG_MARGIN_BOTTOM = 300;
   useEffect(() => { scaleRef.current = scale; }, [scale]);
   useEffect(() => { offsetRef.current = offset; }, [offset]);
 
-  const buildings = useMemo(() => buildWorldBuildings({ userLevels, buildingLayout }), [userLevels, buildingLayout]);
-  const currentCollisionBuildings = useMemo(() => buildWorldBuildings({ userLevels, buildingLayout }), [userLevels, buildingLayout]);
   const expansion = useMemo(() => getWorldExpansionByLevel(totalLevel), [totalLevel]);
 
   function getNewlyUnlockedTiles(prevExpansion, nextExpansion) {
@@ -234,7 +229,6 @@ zoomTo(nextScale, centerX, centerY);
     let sourceItem = null;
     if (objType === 'decoration') sourceItem = decorations.find((item) => item.id === objId) || null;
     else if (objType === 'character') sourceItem = characters.find((item) => item.id === objId) || null;
-    else if (objType === 'building') sourceItem = buildingLayout.find((item) => item.category === objId) || null;
     dragRef.current = { mode: 'object', objectType: objType, objectId: objId, startX: e.clientX, startY: e.clientY, startCol: sourceItem?.col ?? 0, startRow: sourceItem?.row ?? 0 };
   };
 
@@ -262,15 +256,14 @@ zoomTo(nextScale, centerX, centerY);
       let previewItem = null;
       if (drag.objectType === 'decoration') previewItem = decorations.find((item) => item.id === drag.objectId) || null;
       if (drag.objectType === 'character') previewItem = characters.find((item) => item.id === drag.objectId) || null;
-      if (drag.objectType === 'building') previewItem = buildingLayout.find((item) => item.category === drag.objectId) || null;
       if (previewItem) {
-        const previewValid = canPlaceObject({ movingType: drag.objectType, movingItem: previewItem, nextCol: col, nextRow: row, decorations, characters, buildings: drag.objectType === 'building' ? buildingLayout : currentCollisionBuildings, totalLevel });
+        const previewValid = canPlaceObject({ movingType: drag.objectType, movingItem: previewItem, nextCol: col, nextRow: row, decorations, characters, buildings: [], totalLevel });
         setPlacementPreview({ type: drag.objectType, col, row, item: previewItem, valid: previewValid });
       }
       if (drag.objectType === 'decoration') {
         setDecorations((prev) => prev.map((item) => {
           if (item.id !== drag.objectId) return item;
-          const canPlace = canPlaceObject({ movingType: 'decoration', movingItem: item, nextCol: col, nextRow: row, decorations: prev, characters, buildings: currentCollisionBuildings, totalLevel });
+          const canPlace = canPlaceObject({ movingType: 'decoration', movingItem: item, nextCol: col, nextRow: row, decorations: prev, characters, buildings: [], totalLevel });
           if (!canPlace) return item;
           return { ...item, col, row };
         }));
@@ -278,7 +271,7 @@ zoomTo(nextScale, centerX, centerY);
       if (drag.objectType === 'character') {
         setCharacters((prev) => prev.map((npc) => {
           if (npc.id !== drag.objectId) return npc;
-          const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol: col, nextRow: row, decorations, characters: prev, buildings: currentCollisionBuildings, totalLevel });
+          const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol: col, nextRow: row, decorations, characters: prev, buildings: [], totalLevel });
           if (!canPlace) return npc;
           let nextFlipped = npc.flipped;
           if (col > npc.col) nextFlipped = false;
@@ -286,17 +279,9 @@ zoomTo(nextScale, centerX, centerY);
           return { ...npc, col, row, flipped: nextFlipped };
         }));
       }
-      if (drag.objectType === 'building') {
-        setBuildingLayout((prev) => prev.map((item) => {
-          if (item.category !== drag.objectId) return item;
-          const canPlace = canPlaceObject({ movingType: 'building', movingItem: item, nextCol: col, nextRow: row, decorations, characters, buildings: prev, totalLevel });
-          if (!canPlace) return item;
-          return { ...item, col, row };
-        }));
-      }
       dragRef.current = { ...drag, startX: e.clientX, startY: e.clientY, startCol: col, startRow: row };
     }
-  }, [viewportSize.width, viewportSize.height, decorations, characters, currentCollisionBuildings, setDecorations, setCharacters, setBuildingLayout, buildingLayout, setPlacementPreview, totalLevel]);
+  }, [viewportSize.width, viewportSize.height, decorations, characters, setDecorations, setCharacters, setPlacementPreview, totalLevel]);
 
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
@@ -395,7 +380,7 @@ setOffset((prev) =>
 
 const nextCol = clamp(npc.col + moveCol, bounds.minCol, bounds.maxCol);
 const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
-        const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol, nextRow, decorations, characters: prev, buildings: currentCollisionBuildings, totalLevel });
+        const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol, nextRow, decorations, characters: prev, buildings: [], totalLevel });
         const finalCol = canPlace ? nextCol : npc.col;
         const finalRow = canPlace ? nextRow : npc.row;
         const isActuallyMoving = canPlace && (finalCol !== npc.col || finalRow !== npc.row);
@@ -408,7 +393,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
       }));
     }, 240);
     return () => clearInterval(timer);
-  }, [isEditMode, setCharacters, decorations, currentCollisionBuildings, totalLevel]);
+  }, [isEditMode, setCharacters, decorations, totalLevel]);
 
   return (
     <>
@@ -526,41 +511,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
     </div>
   );
 })}
-              {buildings.map((building) => {
-  const isSelected =
-    selectedObject?.type === 'building' &&
-    selectedObject?.id === building.category;
 
-  const pos = getObjectScreenPosition(building, 'building');
-  const buildingDepthPos = gridToScreen(building.col + 1, building.row + 1);
-
-  return (
-    <div
-      key={building.id}
-      className="absolute"
-      onPointerDown={(e) => startObjectDrag(e, 'building', building.category)}
-      style={{
-        left: pos.x,
-        top: pos.y,
-        width: 338,
-        height: 270,
-        transform: `translate(-50%, -100%) scaleX(${building.flipped ? -1 : 1})`,
-        outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
-        outlineOffset: '4px',
-        borderRadius: '20px',
-        cursor: isEditMode ? 'grab' : 'default',
-        zIndex: Math.round(buildingDepthPos.y),
-      }}
-    >
-      <img
-        src={building.image}
-        alt={building.label}
-        className="h-full w-full object-contain"
-        draggable={false}
-      />
-    </div>
-  );
-})}
 
               {characters.map((npc) => {
   const isSelected =

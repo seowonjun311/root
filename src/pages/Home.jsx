@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 import {
   CATEGORY_ROUTE_MAP, CATEGORY_LABELS, VALID_CATEGORIES,
-  DEFAULT_BUILDINGS, DEFAULT_VILLAGE_DATA,
+  DEFAULT_VILLAGE_DATA,
 } from '@/lib/villageConstants';
 
 import {
@@ -87,7 +87,6 @@ export default function Home() {
   const [tileTheme, setTileTheme] = useState('grass');
   const [decorations, setDecorations] = useState([]);
   const [characters, setCharacters] = useState(DEFAULT_VILLAGE_DATA.village_characters);
-  const [buildingLayout, setBuildingLayout] = useState(DEFAULT_BUILDINGS);
 
   const originalVillageRef = useRef(null);
   const hasCategoryInteractionRef = useRef(false);
@@ -291,7 +290,6 @@ export default function Home() {
     setTileTheme(village.village_tile_theme || 'grass');
     setDecorations((village.village_decorations || []).map((item) => ({ ...item, image: getDecorationImage(item.type) })));
     setCharacters((village.village_characters || []).map((item) => ({ ...item, isMoving: false, image: getCharacterImage(item.type, false, 0) })));
-    setBuildingLayout(village.village_buildings || DEFAULT_BUILDINGS);
     setInventoryCharacters(village.village_inventory_characters || []);
     setInventoryDecorations(village.village_inventory_decorations || []);
     originalVillageRef.current = village;
@@ -445,7 +443,7 @@ export default function Home() {
     // 타일 타입: 즉시 적용
     if (item.type === 'tile') {
       const nextTheme = item.subtype;
-      const nextState = { village_points: nextPoints, village_tile_theme: nextTheme, village_decorations: decorations, village_characters: characters, village_buildings: buildingLayout, village_inventory_characters: inventoryCharacters, village_inventory_decorations: inventoryDecorations };
+      const nextState = { village_points: nextPoints, village_tile_theme: nextTheme, village_decorations: decorations, village_characters: characters, village_buildings: [], village_inventory_characters: inventoryCharacters, village_inventory_decorations: inventoryDecorations };
       try {
         await saveVillageState(nextState);
         setTileTheme(nextTheme);
@@ -465,7 +463,7 @@ export default function Home() {
     if (item.type === 'decoration') nextInventoryDecorations.push(newInventoryItem);
     else nextInventoryCharacters.push(newInventoryItem);
 
-    const nextState = { village_points: nextPoints, village_tile_theme: tileTheme, village_decorations: decorations, village_characters: characters, village_buildings: buildingLayout, village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
+    const nextState = { village_points: nextPoints, village_tile_theme: tileTheme, village_decorations: decorations, village_characters: characters, village_buildings: [], village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
 
     try {
       await saveVillageState(nextState);
@@ -497,7 +495,7 @@ export default function Home() {
       if (removeIndex >= 0) nextInventoryDecorations.splice(removeIndex, 1);
     }
 
-    const nextState = { village_points: currentVillage.village_points, village_decorations: nextDecorations, village_characters: nextCharacters, village_buildings: buildingLayout, village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
+    const nextState = { village_points: currentVillage.village_points, village_tile_theme: tileTheme, village_decorations: nextDecorations, village_characters: nextCharacters, village_buildings: [], village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
 
     try {
       await saveVillageState(nextState);
@@ -540,7 +538,7 @@ export default function Home() {
       nextInventoryDecorations.push({ id: `inv_${target.type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`, type: 'decoration', subtype: target.type, label: target.type === 'tree' ? '나무' : target.type === 'flower' ? '꽃' : '잔디' });
     }
 
-    const nextState = { village_points: currentVillage.village_points, village_decorations: nextDecorations, village_characters: nextCharacters, village_buildings: buildingLayout, village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
+    const nextState = { village_points: currentVillage.village_points, village_tile_theme: tileTheme, village_decorations: nextDecorations, village_characters: nextCharacters, village_buildings: [], village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
 
     try {
       await saveVillageState(nextState);
@@ -570,7 +568,7 @@ export default function Home() {
 
     const source = isGuest ? guestData : user;
     const currentVillage = getVillageState(source || {});
-    const nextState = { village_points: currentVillage.village_points, village_decorations: decorations, village_characters: characters, village_buildings: buildingLayout, village_inventory_characters: inventoryCharacters, village_inventory_decorations: inventoryDecorations };
+    const nextState = { village_points: currentVillage.village_points, village_tile_theme: tileTheme, village_decorations: decorations, village_characters: characters, village_buildings: [], village_inventory_characters: inventoryCharacters, village_inventory_decorations: inventoryDecorations };
 
     try {
       await saveVillageState(nextState);
@@ -589,7 +587,6 @@ export default function Home() {
     const village = originalVillageRef.current || getVillageState(isGuest ? guestData : user || {});
     setDecorations((village.village_decorations || []).map((item) => ({ ...item, image: getDecorationImage(item.type) })));
     setCharacters((village.village_characters || []).map((item) => ({ ...item, isMoving: false, image: getCharacterImage(item.type, false, 0) })));
-    setBuildingLayout(village.village_buildings || DEFAULT_BUILDINGS);
     setInventoryCharacters(village.village_inventory_characters || []);
     setInventoryDecorations(village.village_inventory_decorations || []);
     setSelectedObject(null);
@@ -605,10 +602,6 @@ export default function Home() {
     }
     if (selectedObject.type === 'character') {
       setCharacters((prev) => prev.map((item) => item.id === selectedObject.id ? { ...item, flipped: !item.flipped } : item));
-      return;
-    }
-    if (selectedObject.type === 'building') {
-      setBuildingLayout((prev) => prev.map((item) => item.category === selectedObject.id ? { ...item, flipped: !item.flipped } : item));
     }
   };
 
@@ -766,14 +759,11 @@ export default function Home() {
         nickname={nickname}
         totalLevel={totalLevel}
         points={points}
-        userLevels={userLevels}
         tileTheme={tileTheme}
         decorations={decorations}
         setDecorations={setDecorations}
         characters={characters}
         setCharacters={setCharacters}
-        buildingLayout={buildingLayout}
-        setBuildingLayout={setBuildingLayout}
         isEditMode={isEditMode}
         selectedObject={selectedObject}
         setSelectedObject={setSelectedObject}
@@ -787,6 +777,7 @@ export default function Home() {
         onSaveEdit={handleSaveEdit}
         onCancelEdit={handleCancelEdit}
         onStoreSelected={handleStoreSelected}
+
       />
 
       <div
