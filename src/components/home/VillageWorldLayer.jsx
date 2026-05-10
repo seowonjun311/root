@@ -493,7 +493,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
   const tilePos = gridToScreen(item.col, item.row);
 
   return (
-    <React.Fragment key={item.id}>
+    <div key={item.id} style={{ pointerEvents: 'none' }}>
       {/* 바닥 타일 표시 */}
       <div
         className="absolute pointer-events-none"
@@ -523,7 +523,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
       >
         <DecorationSprite item={item} />
       </div>
-    </React.Fragment>
+    </div>
   );
 })}
 
