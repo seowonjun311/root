@@ -1,7 +1,7 @@
 import React from 'react';
-import { ShoppingBag, Backpack, Maximize2, Minimize2 } from 'lucide-react';
+import { ShoppingBag, Backpack, Maximize2, Minimize2, Pencil, Check } from 'lucide-react';
 
-export default function VillageOverlayBar({ nickname, level, points, onOpenShop, onOpenBag, onToggleOverview, isOverview }) {
+export default function VillageOverlayBar({ nickname, level, points, onOpenShop, onOpenBag, onToggleOverview, isOverview, isEditMode, onToggleEditMode }) {
   return (
     <div className="absolute top-2 left-2 right-2 z-10 flex items-center justify-between">
       <div
@@ -39,6 +39,19 @@ export default function VillageOverlayBar({ nickname, level, points, onOpenShop,
           {isOverview
             ? <Minimize2 className="w-4 h-4" style={{ color: '#8b5a20' }} />
             : <Maximize2 className="w-4 h-4" style={{ color: '#8b5a20' }} />}
+        </button>
+        <button
+          onClick={onToggleEditMode}
+          className="w-8 h-8 rounded-xl flex items-center justify-center"
+          style={{
+            background: isEditMode ? 'rgba(139,90,32,0.9)' : 'rgba(255,248,232,0.88)',
+            backdropFilter: 'blur(4px)',
+          }}
+          aria-label={isEditMode ? '편집 완료' : '위치 수정'}
+        >
+          {isEditMode
+            ? <Check className="w-4 h-4" style={{ color: '#fff' }} />
+            : <Pencil className="w-4 h-4" style={{ color: '#8b5a20' }} />}
         </button>
       </div>
     </div>
