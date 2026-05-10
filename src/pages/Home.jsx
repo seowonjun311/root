@@ -448,7 +448,7 @@ export default function Home() {
         await saveVillageState(nextState);
         setTileTheme(nextTheme);
         originalVillageRef.current = { ...currentVillage, ...nextState };
-        toast.success(`${item.label} 구매 완료! 마을에 깔았어요. (-${item.price} 포인트)`);
+        toast.success(`${item.label} 구매 완료! 마을에 깔았어요. (-${item.price} 포인트)`, { duration: 1000 });
       } catch (error) {
         console.error('handleVillagePurchase tile error:', error);
         toast.error('구매 중 오류가 발생했어요.');
@@ -470,7 +470,7 @@ export default function Home() {
       setInventoryCharacters(nextInventoryCharacters);
       setInventoryDecorations(nextInventoryDecorations);
       originalVillageRef.current = { ...currentVillage, ...nextState };
-      toast.success(`${item.label} 구매 완료! 가방에 보관했어요. (-${item.price} 포인트)`);
+      toast.success(`${item.label} 구매 완료! 가방에 보관했어요. (-${item.price} 포인트)`, { duration: 1000 });
     } catch (error) {
       console.error('handleVillagePurchase error:', error);
       toast.error('구매 중 오류가 발생했어요.');
