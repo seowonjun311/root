@@ -75,8 +75,7 @@ export const SHOP_THEMES = [
       { id: 'tile_dino_1', label: '공룡시대 땅 1', type: 'tile', subtype: 'dino', price: 50, image: dinoTile1Img },
       { id: 'tile_dino_2', label: '공룡시대 땅 2', type: 'tile', subtype: 'dino2', price: 50, image: dinoTile2Img },
       { id: 'tile_dino_3', label: '공룡시대 땅 3', type: 'tile', subtype: 'dino3', price: 50, image: dinoTile3Img },
-      { id: 'bone_hut_1', label: '뼈 움막', type: 'decoration', subtype: 'bone_hut', price: 35, image: boneHutImg },
-      { id: 'mammoth_hut_1', label: '매머드 움막', type: 'decoration', subtype: 'mammoth_hut', price: 45, image: mammothHutImg },
+      { id: 'mammoth_hut_1', label: '매머드 움막', type: 'decoration', subtype: 'mammoth_hut', price: 45, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5fac16f07_ChatGPTImage202642810_33_47-Photoroom.png' },
     ],
   },
 ];
