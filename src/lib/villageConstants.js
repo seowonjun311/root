@@ -1,5 +1,5 @@
 import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
-import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
+import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, thatchHutImg, smokeHutImg, woodHouseImg } from '@/assets/root/decorations';
 import { borderTree1Img, borderTree2Img, borderTree3Img } from '@/assets/root/borderTrees/index.js';
 import { borderBush1Img } from '@/assets/root/borderBushes/index.js';
 
@@ -58,6 +58,16 @@ export const SHOP_ITEMS = [
   { id: 'grass_1', label: '잔디', type: 'decoration', subtype: 'grass', price: 3, image: grassImg },
   { id: 'tree_1', label: '나무', type: 'decoration', subtype: 'tree', price: 8, image: treeImg },
   { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, image: flowerImg },
+  // 선사시대 건물 오브젝트
+  { id: 'stone_cave_1', label: '돌동굴', type: 'decoration', subtype: 'stone_cave', price: 20, image: stoneCaveImg },
+  { id: 'wood_tower_1', label: '목재 망루', type: 'decoration', subtype: 'wood_tower', price: 25, image: woodTowerImg },
+  { id: 'smithy_large_1', label: '대장간', type: 'decoration', subtype: 'smithy_large', price: 30, image: smithyLargeImg },
+  { id: 'tent_1', label: '가죽 텐트', type: 'decoration', subtype: 'tent', price: 15, image: tentImg },
+  { id: 'smithy_small_1', label: '소형 대장간', type: 'decoration', subtype: 'smithy_small', price: 22, image: smithySmallImg },
+  { id: 'bone_hut_1', label: '뼈 움막', type: 'decoration', subtype: 'bone_hut', price: 35, image: boneHutImg },
+  { id: 'thatch_hut_1', label: '초가 오두막', type: 'decoration', subtype: 'thatch_hut', price: 18, image: thatchHutImg },
+  { id: 'smoke_hut_1', label: '연기 오두막', type: 'decoration', subtype: 'smoke_hut', price: 20, image: smokeHutImg },
+  { id: 'wood_house_1', label: '통나무집', type: 'decoration', subtype: 'wood_house', price: 22, image: woodHouseImg },
 ];
 
 export const TILE_W = 128;

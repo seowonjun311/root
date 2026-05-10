@@ -19,7 +19,7 @@ import {
   alpacaImg,
   platypusImg,
 } from '@/assets/root/characters';
-import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
+import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, thatchHutImg, smokeHutImg, woodHouseImg } from '@/assets/root/decorations';
 import { getBuilding } from '@/assets/root/buildings';
 import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
@@ -449,6 +449,15 @@ export function getCharacterImage(type, isMoving = false, frameIndex = 0) {
 export function getDecorationImage(type) {
   if (type === 'tree') return treeImg;
   if (type === 'flower') return flowerImg;
+  if (type === 'stone_cave') return stoneCaveImg;
+  if (type === 'wood_tower') return woodTowerImg;
+  if (type === 'smithy_large') return smithyLargeImg;
+  if (type === 'tent') return tentImg;
+  if (type === 'smithy_small') return smithySmallImg;
+  if (type === 'bone_hut') return boneHutImg;
+  if (type === 'thatch_hut') return thatchHutImg;
+  if (type === 'smoke_hut') return smokeHutImg;
+  if (type === 'wood_house') return woodHouseImg;
   return grassImg;
 }
 
