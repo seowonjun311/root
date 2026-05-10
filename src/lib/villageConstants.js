@@ -1,7 +1,6 @@
 import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
-import { dinoTile1Img } from '@/assets/root/tiles/index.js';
-import { trexImg, brachiosaurusImg, triceratopsImg, stegosaurusImg } from '@/assets/root/decorations';
-import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, thatchHutImg, smokeHutImg, woodHouseImg, dinoFossilImg, dinoEggNestImg, campfireImg, totemPoleImg, tribeBannerImg, palmTreeImg, ancientTreeImg } from '@/assets/root/decorations';
+import { dinoTile1Img, dinoTile2Img, dinoTile3Img } from '@/assets/root/tiles/index.js';
+import { grassImg, treeImg, flowerImg } from '@/assets/root/decorations';
 import { borderTree1Img, borderTree2Img, borderTree3Img } from '@/assets/root/borderTrees/index.js';
 import { borderBush1Img } from '@/assets/root/borderBushes/index.js';
 
@@ -73,27 +72,9 @@ export const SHOP_THEMES = [
     label: '공룡시대',
     emoji: '🦕',
     items: [
-      { id: 'tile_dino_1', label: '공룡시대 땅', type: 'tile', subtype: 'dino', price: 50, image: dinoTile1Img },
-      { id: 'trex_1', label: '티라노사우루스', type: 'decoration', subtype: 'trex', price: 35, image: trexImg },
-      { id: 'brachiosaurus_1', label: '브라키오사우루스', type: 'decoration', subtype: 'brachiosaurus', price: 40, image: brachiosaurusImg },
-      { id: 'triceratops_1', label: '트리케라톱스', type: 'decoration', subtype: 'triceratops', price: 35, image: triceratopsImg },
-      { id: 'stegosaurus_1', label: '스테고사우루스', type: 'decoration', subtype: 'stegosaurus', price: 30, image: stegosaurusImg },
-      { id: 'stone_cave_1', label: '돌동굴', type: 'decoration', subtype: 'stone_cave', price: 20, image: stoneCaveImg },
-      { id: 'wood_tower_1', label: '목재 망루', type: 'decoration', subtype: 'wood_tower', price: 25, image: woodTowerImg },
-      { id: 'smithy_large_1', label: '대장간', type: 'decoration', subtype: 'smithy_large', price: 30, image: smithyLargeImg },
-      { id: 'tent_1', label: '가죽 텐트', type: 'decoration', subtype: 'tent', price: 15, image: tentImg },
-      { id: 'smithy_small_1', label: '소형 대장간', type: 'decoration', subtype: 'smithy_small', price: 22, image: smithySmallImg },
-      { id: 'bone_hut_1', label: '뼈 움막', type: 'decoration', subtype: 'bone_hut', price: 35, image: boneHutImg },
-      { id: 'thatch_hut_1', label: '초가 오두막', type: 'decoration', subtype: 'thatch_hut', price: 18, image: thatchHutImg },
-      { id: 'smoke_hut_1', label: '연기 오두막', type: 'decoration', subtype: 'smoke_hut', price: 20, image: smokeHutImg },
-      { id: 'wood_house_1', label: '통나무집', type: 'decoration', subtype: 'wood_house', price: 22, image: woodHouseImg },
-      { id: 'dino_fossil_1', label: '공룡 화석', type: 'decoration', subtype: 'dino_fossil', price: 25, image: dinoFossilImg },
-      { id: 'dino_egg_nest_1', label: '공룡알 둥지', type: 'decoration', subtype: 'dino_egg_nest', price: 18, image: dinoEggNestImg },
-      { id: 'campfire_1', label: '모닥불', type: 'decoration', subtype: 'campfire', price: 10, image: campfireImg },
-      { id: 'totem_pole_1', label: '토템 기둥', type: 'decoration', subtype: 'totem_pole', price: 28, image: totemPoleImg },
-      { id: 'tribe_banner_1', label: '부족 깃발', type: 'decoration', subtype: 'tribe_banner', price: 15, image: tribeBannerImg },
-      { id: 'palm_tree_1', label: '야자나무', type: 'decoration', subtype: 'palm_tree', price: 12, image: palmTreeImg },
-      { id: 'ancient_tree_1', label: '고목나무', type: 'decoration', subtype: 'ancient_tree', price: 20, image: ancientTreeImg },
+      { id: 'tile_dino_1', label: '공룡시대 땅 1', type: 'tile', subtype: 'dino', price: 50, image: dinoTile1Img },
+      { id: 'tile_dino_2', label: '공룡시대 땅 2', type: 'tile', subtype: 'dino2', price: 50, image: dinoTile2Img },
+      { id: 'tile_dino_3', label: '공룡시대 땅 3', type: 'tile', subtype: 'dino3', price: 50, image: dinoTile3Img },
     ],
   },
 ];
