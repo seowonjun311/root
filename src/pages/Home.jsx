@@ -690,6 +690,20 @@ export default function Home() {
     >
       {/* 디버그 레벨 버튼 */}
       <div className="fixed bottom-24 right-4 z-50 flex flex-col gap-1">
+        {!isGuest && (
+          <button
+            onClick={async () => {
+              const current = getVillageState(user).village_points;
+              await base44.auth.updateMe({ village_points: current + 3000 });
+              queryClient.invalidateQueries({ queryKey: ['me'] });
+              toast.success('+3000 포인트 지급!');
+            }}
+            className="px-2 py-1 rounded text-xs font-bold"
+            style={{ background: '#2a7a20', color: '#fff' }}
+          >
+            +3000P
+          </button>
+        )}
         {debugLevel !== null && (
           <button
             onClick={() => setDebugLevel(null)}
