@@ -35,6 +35,7 @@ export const totemPoleImg      = 'https://media.base44.com/images/public/69b6329
 export const tribeBannerImg    = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0b8a2d3f2_ChatGPTImage202642810_34_13.png';
 export const palmTreeImg       = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/19d61d589_ChatGPTImage202642810_34_21.png';
 export const ancientTreeImg    = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/590b06ddb_ChatGPTImage202642810_34_20.png';
+export const thatched_hut_dino = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/217aafe7d_ChatGPTImage202642810_33_49-Photoroom.png';
 
 export const decorations = {
   grass: grassImg,

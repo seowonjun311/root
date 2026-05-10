@@ -469,6 +469,7 @@ export function getDecorationImage(type) {
   if (type === 'tribe_banner') return tribeBannerImg;
   if (type === 'palm_tree') return palmTreeImg;
   if (type === 'ancient_tree') return ancientTreeImg;
+  if (type === 'thatched_hut_dino') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/217aafe7d_ChatGPTImage202642810_33_49-Photoroom.png';
   return grassImg;
 }
 
