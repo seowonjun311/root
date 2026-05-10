@@ -551,7 +551,7 @@ export default function Home() {
       setSelectedObject(null);
       setPlacementPreview(null);
       originalVillageRef.current = { ...currentVillage, ...nextState };
-      toast.success('가방에 넣었어요!');
+      toast.success('가방에 넣었어요!', { duration: 1000 });
     } catch (error) {
       console.error('handleStoreSelected error:', error);
       toast.error('가방에 넣는 중 오류가 발생했어요.');
