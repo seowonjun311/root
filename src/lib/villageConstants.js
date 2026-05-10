@@ -77,9 +77,10 @@ export const SHOP_THEMES = [
       { id: 'tile_dino_3', label: '공룡시대 땅 3', type: 'tile', subtype: 'dino3', price: 50, image: dinoTile3Img },
       { id: 'mammoth_hut_1', label: '매머드 움막', type: 'decoration', subtype: 'mammoth_hut', price: 45, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5fac16f07_ChatGPTImage202642810_33_47-Photoroom.png' },
       { id: 'thatched_hut_dino_1', label: '움집', type: 'decoration', subtype: 'thatched_hut_dino', price: 35, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/217aafe7d_ChatGPTImage202642810_33_49-Photoroom.png' },
-    ],
-  },
-];
+      { id: 'volcano_hut_1', label: '화산집', type: 'decoration', subtype: 'volcano_hut', price: 40, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/9929aa000_ChatGPTImage202642810_33_51-Photoroom.png' },
+      ],
+      },
+      ];
 
 // 기존 호환성 유지 (SHOP_ITEMS 사용처가 있을 경우 대비)
 export const SHOP_ITEMS = SHOP_THEMES.flatMap((theme) => theme.items);
