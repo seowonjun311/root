@@ -27,21 +27,38 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
           ))}
         </div>
 
-        <div className="px-4 pb-8">
+        <div className="px-4 pb-8 overflow-y-auto max-h-96">
           {items.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground py-8">가방이 비어 있어요.</p>
           ) : (
             <div className="grid grid-cols-3 gap-3">
-              {items.map((item) => {
+              {Object.entries(
+                items.reduce((acc, item) => {
+                  const key = item.subtype;
+                  if (!acc[key]) {
+                    acc[key] = { ...item, count: 0 };
+                  }
+                  acc[key].count += 1;
+                  return acc;
+                }, {})
+              ).map(([key, item]) => {
                 const img = item.type === 'character'
                   ? getCharacterImage(item.subtype)
                   : getDecorationImage(item.subtype);
                 return (
                   <div
-                    key={item.id}
-                    className="flex flex-col items-center gap-2 p-3 rounded-2xl"
+                    key={key}
+                    className="flex flex-col items-center gap-2 p-3 rounded-2xl relative"
                     style={{ background: '#fff8ee', border: '1.5px solid #e8d5a0' }}
                   >
+                    {item.count > 1 && (
+                      <div
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                        style={{ background: '#c49a4a', color: '#fff' }}
+                      >
+                        {item.count}
+                      </div>
+                    )}
                     <img src={img} alt={item.label} className="w-14 h-14 object-contain" />
                     <div className="text-xs font-bold text-center" style={{ color: '#4a2c08' }}>{item.label}</div>
                     <button
