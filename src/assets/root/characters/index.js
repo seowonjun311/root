@@ -25,13 +25,23 @@ export const foxThink6Img = 'https://media.base44.com/images/public/69b63292a629
 
 export const foxThinkFrames = [foxThink1Img, foxThink2Img, foxThink3Img, foxThink4Img, foxThink5Img, foxThink6Img];
 
-export const platypusImg = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3852a75fa_platypuspng.png';
-export const alpacaImg   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/184a54cf4_alpacapng.png';
+export const platypusImg  = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3852a75fa_platypuspng.png';
+export const alpacaImg    = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/184a54cf4_alpacapng.png';
+
+// 공룡 캐릭터
+export const trexImg          = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/1fc55810d_ChatGPTImage202642810_34_15.png';
+export const brachiosaurusImg = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/66b39bdd8_ChatGPTImage202642810_34_19.png';
+export const triceratopsImg   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6dc22c6db_ChatGPTImage202642810_34_16.png';
+export const stegosaurusImg   = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/44e47963e_ChatGPTImage202642810_34_18.png';
 
 export const characters = {
   fox: foxImg,
   platypus: platypusImg,
   alpaca: alpacaImg,
+  trex: trexImg,
+  brachiosaurus: brachiosaurusImg,
+  triceratops: triceratopsImg,
+  stegosaurus: stegosaurusImg,
 };
 
 /**

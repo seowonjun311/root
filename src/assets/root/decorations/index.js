@@ -19,6 +19,17 @@ export const thatchHutImg      = 'https://media.base44.com/images/public/69b6329
 export const smokeHutImg       = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/b5d713b63_ChatGPTImage202642810_33_51.png';
 export const woodHouseImg      = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/829903cbb_ChatGPTImage202642810_33_54.png';
 
+/* =========================
+   자연 오브젝트 & 유물
+========================= */
+export const dinoFossilImg     = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/81d37feb9_ChatGPTImage202642810_34_09.png';
+export const dinoEggNestImg    = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/29d6cb6dc_ChatGPTImage202642810_34_10.png';
+export const campfireImg       = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2bdd5254e_ChatGPTImage202642810_34_11.png';
+export const totemPoleImg      = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/54c5a6e84_ChatGPTImage202642810_34_12.png';
+export const tribeBannerImg    = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0b8a2d3f2_ChatGPTImage202642810_34_13.png';
+export const palmTreeImg       = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/19d61d589_ChatGPTImage202642810_34_21.png';
+export const ancientTreeImg    = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/590b06ddb_ChatGPTImage202642810_34_20.png';
+
 export const decorations = {
   grass: grassImg,
   tree: treeImg,
@@ -32,6 +43,13 @@ export const decorations = {
   thatch_hut: thatchHutImg,
   smoke_hut: smokeHutImg,
   wood_house: woodHouseImg,
+  dino_fossil: dinoFossilImg,
+  dino_egg_nest: dinoEggNestImg,
+  campfire: campfireImg,
+  totem_pole: totemPoleImg,
+  tribe_banner: tribeBannerImg,
+  palm_tree: palmTreeImg,
+  ancient_tree: ancientTreeImg,
 };
 
 /**

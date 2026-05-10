@@ -18,8 +18,12 @@ import {
   foxThinkFrames,
   alpacaImg,
   platypusImg,
+  trexImg,
+  brachiosaurusImg,
+  triceratopsImg,
+  stegosaurusImg,
 } from '@/assets/root/characters';
-import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, thatchHutImg, smokeHutImg, woodHouseImg } from '@/assets/root/decorations';
+import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, thatchHutImg, smokeHutImg, woodHouseImg, dinoFossilImg, dinoEggNestImg, campfireImg, totemPoleImg, tribeBannerImg, palmTreeImg, ancientTreeImg } from '@/assets/root/decorations';
 import { getBuilding } from '@/assets/root/buildings';
 import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
@@ -432,14 +436,15 @@ export function validateGoalActionLogChain(goals = [], actionGoals = [], logs = 
 export function getCharacterImage(type, isMoving = false, frameIndex = 0) {
   if (type === 'alpaca') return alpacaImg;
   if (type === 'platypus') return platypusImg;
+  if (type === 'trex') return trexImg;
+  if (type === 'brachiosaurus') return brachiosaurusImg;
+  if (type === 'triceratops') return triceratopsImg;
+  if (type === 'stegosaurus') return stegosaurusImg;
 
   if (type === 'fox') {
-    // 이동 중 → 걷기 애니메이션
     if (isMoving) {
       return foxWalkFrames[frameIndex % foxWalkFrames.length];
     }
-
-    // 멈춤 → 생각 애니메이션
     return foxThinkFrames[frameIndex % foxThinkFrames.length];
   }
 
@@ -458,6 +463,13 @@ export function getDecorationImage(type) {
   if (type === 'thatch_hut') return thatchHutImg;
   if (type === 'smoke_hut') return smokeHutImg;
   if (type === 'wood_house') return woodHouseImg;
+  if (type === 'dino_fossil') return dinoFossilImg;
+  if (type === 'dino_egg_nest') return dinoEggNestImg;
+  if (type === 'campfire') return campfireImg;
+  if (type === 'totem_pole') return totemPoleImg;
+  if (type === 'tribe_banner') return tribeBannerImg;
+  if (type === 'palm_tree') return palmTreeImg;
+  if (type === 'ancient_tree') return ancientTreeImg;
   return grassImg;
 }
 
@@ -500,17 +512,25 @@ export function getCharacterSpawnSlots() {
 export function createCharacter(type) {
   const spawnSlots = getCharacterSpawnSlots();
   const spawn = spawnSlots[Math.floor(randomBetween(0, spawnSlots.length))] || { col: 10, row: 12 };
+  const nameMap = {
+    alpaca: '파카', platypus: '너구', fox: '루',
+    trex: '티렉', brachiosaurus: '브라키', triceratops: '트리케', stegosaurus: '스테고',
+  };
+  const sizeMap = {
+    alpaca: 56, fox: 72, platypus: 52,
+    trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,
+  };
   return {
-  id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-  name: type === 'alpaca' ? '파카' : type === 'platypus' ? '너구' : '루',
-  type,
-  image: getCharacterImage(type, false),
-  col: spawn.col,
-  row: spawn.row,
-  size: type === 'alpaca' ? 56 : type === 'fox' ? 72 : 52,
-  flipped: false,
-  isMoving: false,
-};
+    id: `${type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+    name: nameMap[type] || type,
+    type,
+    image: getCharacterImage(type, false),
+    col: spawn.col,
+    row: spawn.row,
+    size: sizeMap[type] || 64,
+    flipped: false,
+    isMoving: false,
+  };
 }
 
 export function isCharacterTooFarFromVillageCore(character) {
