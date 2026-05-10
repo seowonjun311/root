@@ -496,6 +496,7 @@ export function createDecoration(subtype) {
     mammoth_hut: 560, thatch_hut: 62, smoke_hut: 64, wood_house: 66,
     dino_fossil: 58, dino_egg_nest: 52, campfire: 44, totem_pole: 56, tribe_banner: 48,
     palm_tree: 64, ancient_tree: 68,
+    thatched_hut_dino: 160,
     trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,
   };
   return {
