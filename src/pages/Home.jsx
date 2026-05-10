@@ -87,6 +87,7 @@ export default function Home() {
   const [tileTheme, setTileTheme] = useState('grass');
   const [decorations, setDecorations] = useState([]);
   const [characters, setCharacters] = useState(DEFAULT_VILLAGE_DATA.village_characters);
+  const [buildings, setBuildings] = useState(DEFAULT_VILLAGE_DATA.village_buildings);
 
   const originalVillageRef = useRef(null);
   const hasCategoryInteractionRef = useRef(false);
@@ -284,16 +285,17 @@ export default function Home() {
   }, [isUserLoading, isGuest, guestData, user, goals, activeCategory]);
 
   useEffect(() => {
-    const source = isGuest ? guestData : user;
-    const village = getVillageState(source || {});
+     const source = isGuest ? guestData : user;
+     const village = getVillageState(source || {});
 
-    setTileTheme(village.village_tile_theme || 'grass');
-    setDecorations((village.village_decorations || []).map((item) => ({ ...item, image: getDecorationImage(item.type) })));
-    setCharacters((village.village_characters || []).map((item) => ({ ...item, isMoving: false, image: getCharacterImage(item.type, false, 0) })));
-    setInventoryCharacters(village.village_inventory_characters || []);
-    setInventoryDecorations(village.village_inventory_decorations || []);
-    originalVillageRef.current = village;
-  }, [isGuest, guestData, user]);
+     setTileTheme(village.village_tile_theme || 'grass');
+     setDecorations((village.village_decorations || []).map((item) => ({ ...item, image: getDecorationImage(item.type) })));
+     setCharacters((village.village_characters || []).map((item) => ({ ...item, isMoving: false, image: getCharacterImage(item.type, false, 0) })));
+     setBuildings(village.village_buildings || DEFAULT_VILLAGE_DATA.village_buildings);
+     setInventoryCharacters(village.village_inventory_characters || []);
+     setInventoryDecorations(village.village_inventory_decorations || []);
+     originalVillageRef.current = village;
+   }, [isGuest, guestData, user]);
 
   const handleCategoryChange = async (category) => {
     const normalizedCategory = normalizeCategoryValue(category, 'exercise');
@@ -755,30 +757,31 @@ export default function Home() {
       <VillageBagModal open={isBagOpen} activeTab={bagTab} onTabChange={setBagTab} inventoryCharacters={inventoryCharacters} inventoryDecorations={inventoryDecorations} onClose={() => setIsBagOpen(false)} onPlaceItem={handlePlaceInventoryItem} />
 
       <VillageWorldLayer
-        isOverview={isOverview}
-        nickname={nickname}
-        totalLevel={totalLevel}
-        points={points}
-        tileTheme={tileTheme}
-        decorations={decorations}
-        setDecorations={setDecorations}
-        characters={characters}
-        setCharacters={setCharacters}
-        isEditMode={isEditMode}
-        selectedObject={selectedObject}
-        setSelectedObject={setSelectedObject}
-        placementPreview={placementPreview}
-        setPlacementPreview={setPlacementPreview}
-        onToggleOverview={() => setIsOverview((prev) => !prev)}
-        onOpenShop={() => { setShopTab('character'); setIsShopOpen(true); }}
-        onOpenBag={() => { setBagTab('character'); setIsBagOpen(true); }}
-        onToggleEditMode={handleToggleEditMode}
-        onFlipSelected={handleFlipSelected}
-        onSaveEdit={handleSaveEdit}
-        onCancelEdit={handleCancelEdit}
-        onStoreSelected={handleStoreSelected}
+         isOverview={isOverview}
+         nickname={nickname}
+         totalLevel={totalLevel}
+         points={points}
+         tileTheme={tileTheme}
+         decorations={decorations}
+         setDecorations={setDecorations}
+         characters={characters}
+         setCharacters={setCharacters}
+         buildings={buildings}
+         isEditMode={isEditMode}
+         selectedObject={selectedObject}
+         setSelectedObject={setSelectedObject}
+         placementPreview={placementPreview}
+         setPlacementPreview={setPlacementPreview}
+         onToggleOverview={() => setIsOverview((prev) => !prev)}
+         onOpenShop={() => { setShopTab('character'); setIsShopOpen(true); }}
+         onOpenBag={() => { setBagTab('character'); setIsBagOpen(true); }}
+         onToggleEditMode={handleToggleEditMode}
+         onFlipSelected={handleFlipSelected}
+         onSaveEdit={handleSaveEdit}
+         onCancelEdit={handleCancelEdit}
+         onStoreSelected={handleStoreSelected}
 
-      />
+       />
 
       <div
         className="sticky top-[314px] z-40 -mx-4 px-4 pt-1 pb-2"

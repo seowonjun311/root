@@ -97,6 +97,7 @@ export default function VillageWorldLayer({
   onStoreSelected,
   isOverview,
   onToggleOverview,
+  buildings = [],
 }) {
   const dragRef = useRef(null);
   const viewportRef = useRef(null);
@@ -229,6 +230,7 @@ zoomTo(nextScale, centerX, centerY);
     let sourceItem = null;
     if (objType === 'decoration') sourceItem = decorations.find((item) => item.id === objId) || null;
     else if (objType === 'character') sourceItem = characters.find((item) => item.id === objId) || null;
+    else if (objType === 'building') sourceItem = buildings.find((item) => item.id === objId) || null;
     dragRef.current = { mode: 'object', objectType: objType, objectId: objId, startX: e.clientX, startY: e.clientY, startCol: sourceItem?.col ?? 0, startRow: sourceItem?.row ?? 0 };
   };
 
@@ -493,7 +495,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
   const tilePos = gridToScreen(item.col, item.row);
 
   return (
-    <div key={item.id} style={{ pointerEvents: 'none' }}>
+    <div key={item.id}>
       {/* 바닥 타일 표시 */}
       <div
         className="absolute pointer-events-none"
@@ -529,36 +531,76 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
 
 
               {characters.map((npc) => {
-  const isSelected =
-    selectedObject?.type === 'character' && selectedObject?.id === npc.id;
-  const pos = getObjectScreenPosition(npc, 'character');
+              const isSelected =
+              selectedObject?.type === 'character' && selectedObject?.id === npc.id;
+              const pos = getObjectScreenPosition(npc, 'character');
 
-  return (
-    <div
-      key={npc.id}
-      className="absolute"
-      onPointerDown={(e) => startObjectDrag(e, 'character', npc.id)}
-      style={{
-        left: pos.x,
-        top: pos.y,
-        width: npc.size,
-        height: npc.size,
-        transform: 'translate(-50%, -100%)',
-        transition: isEditMode
-          ? 'none'
-          : 'left 2200ms ease-in-out, top 2200ms ease-in-out',
-        outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
-        outlineOffset: '3px',
-        borderRadius: '999px',
-        cursor: isEditMode ? 'grab' : 'default',
-        zIndex: Math.round(pos.y),
-      }}
-    >
-      <CharacterSprite npc={npc} />
-    </div>
-  );
-})}
-            </div>
+              return (
+              <div
+              key={npc.id}
+              className="absolute"
+              onPointerDown={(e) => startObjectDrag(e, 'character', npc.id)}
+              style={{
+              left: pos.x,
+              top: pos.y,
+              width: npc.size,
+              height: npc.size,
+              transform: 'translate(-50%, -100%)',
+              transition: isEditMode
+              ? 'none'
+              : 'left 2200ms ease-in-out, top 2200ms ease-in-out',
+              outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
+              outlineOffset: '3px',
+              borderRadius: '999px',
+              cursor: isEditMode ? 'grab' : 'default',
+              zIndex: Math.round(pos.y),
+              }}
+              >
+              <CharacterSprite npc={npc} />
+              </div>
+              );
+              })}
+
+              {buildings.map((building) => {
+              const isSelected = selectedObject?.type === 'building' && selectedObject?.id === building.id;
+              const pos = getObjectScreenPosition(building, 'building');
+
+              return (
+              <div
+              key={building.id}
+              className="absolute"
+              onPointerDown={(e) => startObjectDrag(e, 'building', building.id)}
+              style={{
+              left: pos.x,
+              top: pos.y,
+              width: building.w,
+              height: building.h,
+              transform: 'translate(-50%, -100%)',
+              outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
+              outlineOffset: '3px',
+              borderRadius: '8px',
+              cursor: isEditMode ? 'grab' : 'default',
+              zIndex: Math.round(pos.y),
+              }}
+              >
+              <img
+              src={building.image}
+              alt={building.label}
+              draggable={false}
+              style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              display: 'block',
+              userSelect: 'none',
+              WebkitUserDrag: 'none',
+              transform: `scaleX(${building.flipped ? -1 : 1})`,
+              }}
+              />
+              </div>
+              );
+              })}
+              </div>
           </div>
         </div>
       </div>
