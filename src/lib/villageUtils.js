@@ -529,7 +529,7 @@ export function createDecoration(subtype) {
     dino_fossil: 58, dino_egg_nest: 52, campfire: 44, totem_pole: 56, tribe_banner: 48,
     palm_tree: 64, ancient_tree: 68,
     thatched_hut_dino: 160,
-    volcano_hut: 16000,
+    volcano_hut: 160000,
     trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,
   };
   return {
