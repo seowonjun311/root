@@ -722,7 +722,7 @@ export default function Home() {
         <TitleUnlockModal title={newTitle} onClose={() => setNewTitle(null)} onEquip={() => handleEquipTitle(newTitle.id)} />
       ) : null}
 
-      <VillageShopModal open={isShopOpen} activeTab={shopTab} onTabChange={setShopTab} points={points} onClose={() => setIsShopOpen(false)} onBuy={handleVillagePurchase} />
+      <VillageShopModal open={isShopOpen} points={points} onClose={() => setIsShopOpen(false)} onBuy={handleVillagePurchase} />
       <VillageBagModal open={isBagOpen} activeTab={bagTab} onTabChange={setBagTab} inventoryCharacters={inventoryCharacters} inventoryDecorations={inventoryDecorations} onClose={() => setIsBagOpen(false)} onPlaceItem={handlePlaceInventoryItem} />
 
       <VillageWorldLayer
