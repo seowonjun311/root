@@ -79,6 +79,7 @@ export default function VillageWorldLayer({
   totalLevel,
   points,
   userLevels,
+  tileTheme = 'grass',
   decorations,
   characters,
   buildingLayout,
@@ -473,7 +474,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
 
               {tileMap.map((tile) => {
                 const pos = gridToScreen(tile.col, tile.row);
-                const tileImg = getTileImageByKind(tile.kind);
+                const tileImg = getTileImageByKind(tile.kind, tileTheme);
                 const revealed = revealedTiles.find((item) => item.col === tile.col && item.row === tile.row);
                 return (
                   <img key={tile.id} src={tileImg} alt="" draggable={false} className="pointer-events-none absolute select-none"

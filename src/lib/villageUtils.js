@@ -21,7 +21,7 @@ import {
 } from '@/assets/root/characters';
 import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, thatchHutImg, smokeHutImg, woodHouseImg, dinoFossilImg, dinoEggNestImg, campfireImg, totemPoleImg, tribeBannerImg, palmTreeImg, ancientTreeImg, trexImg, brachiosaurusImg, triceratopsImg, stegosaurusImg } from '@/assets/root/decorations';
 import { getBuilding } from '@/assets/root/buildings';
-import { baseGrassTileImg, variantGrassTileImg, pathTileImg } from '@/assets/root/tiles/index.js';
+import { baseGrassTileImg, variantGrassTileImg, pathTileImg, dinoTile1Img, dinoTile2Img, dinoTile3Img } from '@/assets/root/tiles/index.js';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
 
 
@@ -566,6 +566,7 @@ export function relocateCharactersToVillageCore(rawCharacters = []) {
 export function getVillageState(source) {
   return {
     village_points: Number(source?.village_points ?? DEFAULT_VILLAGE_DATA.village_points),
+    village_tile_theme: source?.village_tile_theme || 'grass',
     village_decorations: Array.isArray(source?.village_decorations) ? source.village_decorations : DEFAULT_VILLAGE_DATA.village_decorations,
     village_characters: relocateCharactersToVillageCore(
       Array.isArray(source?.village_characters) && source.village_characters.length > 0
@@ -636,7 +637,15 @@ export function buildWorldBuildings({ userLevels, buildingLayout }) {
 }
 
 // --- 타일맵 ---
-export function getTileImageByKind(kind) {
+const DINO_TILE_IMAGES = [dinoTile1Img, dinoTile2Img, dinoTile3Img];
+
+export function getTileImageByKind(kind, tileTheme = 'grass') {
+  if (tileTheme === 'dino') {
+    // col/row 기반 변형은 kind에 인코딩되어 있으므로 variant에 따라 분기
+    if (kind === TILE_KIND.VARIANT_GRASS) return DINO_TILE_IMAGES[1];
+    if (kind === TILE_KIND.PATH) return DINO_TILE_IMAGES[2];
+    return DINO_TILE_IMAGES[0];
+  }
   if (kind === TILE_KIND.VARIANT_GRASS) return variantGrassTileImg;
   return baseGrassTileImg;
 }

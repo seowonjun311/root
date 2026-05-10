@@ -6,8 +6,16 @@ export const baseGrassTileImg    = 'https://media.base44.com/images/public/69b63
 export const variantGrassTileImg = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a0337ce48_variantGrassTilepng.png';
 export const pathTileImg         = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5a166b418_pathTilepng.png';
 
+// 공룡시대 타일
+export const dinoTile1Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e94ae29de_1.png';
+export const dinoTile2Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ace9d0e0d_2.png';
+export const dinoTile3Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e02b33aa8_3.png';
+
 export const tiles = {
   baseGrass:   baseGrassTileImg,
   variantGrass: variantGrassTileImg,
   path:        pathTileImg,
+  dinoTile1:   dinoTile1Img,
+  dinoTile2:   dinoTile2Img,
+  dinoTile3:   dinoTile3Img,
 };

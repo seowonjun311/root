@@ -8,7 +8,7 @@ export default function VillageShopModal({ open, onClose, points, onBuy }) {
 
   const theme = SHOP_THEMES.find((t) => t.id === activeTheme) || SHOP_THEMES[0];
   const items = theme.items.filter((item) =>
-    activeTab === 'character' ? item.type === 'character' : item.type === 'decoration'
+    activeTab === 'character' ? item.type === 'character' : item.type === 'decoration' || item.type === 'tile'
   );
 
   return (

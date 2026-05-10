@@ -1,4 +1,5 @@
 import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
+import { dinoTile1Img } from '@/assets/root/tiles/index.js';
 import { trexImg, brachiosaurusImg, triceratopsImg, stegosaurusImg } from '@/assets/root/decorations';
 import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, thatchHutImg, smokeHutImg, woodHouseImg, dinoFossilImg, dinoEggNestImg, campfireImg, totemPoleImg, tribeBannerImg, palmTreeImg, ancientTreeImg } from '@/assets/root/decorations';
 import { borderTree1Img, borderTree2Img, borderTree3Img } from '@/assets/root/borderTrees/index.js';
@@ -72,6 +73,7 @@ export const SHOP_THEMES = [
     label: '공룡시대',
     emoji: '🦕',
     items: [
+      { id: 'tile_dino_1', label: '공룡시대 땅', type: 'tile', subtype: 'dino', price: 50, image: dinoTile1Img },
       { id: 'trex_1', label: '티라노사우루스', type: 'decoration', subtype: 'trex', price: 35, image: trexImg },
       { id: 'brachiosaurus_1', label: '브라키오사우루스', type: 'decoration', subtype: 'brachiosaurus', price: 40, image: brachiosaurusImg },
       { id: 'triceratops_1', label: '트리케라톱스', type: 'decoration', subtype: 'triceratops', price: 35, image: triceratopsImg },

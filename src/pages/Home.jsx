@@ -84,6 +84,7 @@ export default function Home() {
   const [selectedObject, setSelectedObject] = useState(null);
   const [placementPreview, setPlacementPreview] = useState(null);
 
+  const [tileTheme, setTileTheme] = useState('grass');
   const [decorations, setDecorations] = useState([]);
   const [characters, setCharacters] = useState(DEFAULT_VILLAGE_DATA.village_characters);
   const [buildingLayout, setBuildingLayout] = useState(DEFAULT_BUILDINGS);
@@ -287,6 +288,7 @@ export default function Home() {
     const source = isGuest ? guestData : user;
     const village = getVillageState(source || {});
 
+    setTileTheme(village.village_tile_theme || 'grass');
     setDecorations((village.village_decorations || []).map((item) => ({ ...item, image: getDecorationImage(item.type) })));
     setCharacters((village.village_characters || []).map((item) => ({ ...item, isMoving: false, image: getCharacterImage(item.type, false, 0) })));
     setBuildingLayout(village.village_buildings || DEFAULT_BUILDINGS);
@@ -395,6 +397,7 @@ export default function Home() {
   const saveVillageState = async (nextState) => {
     const safeState = {
       village_points: Number(nextState?.village_points || 0),
+      village_tile_theme: nextState?.village_tile_theme || 'grass',
       village_decorations: Array.isArray(nextState?.village_decorations) ? nextState.village_decorations : [],
       village_characters: Array.isArray(nextState?.village_characters) ? nextState.village_characters : [],
       village_buildings: Array.isArray(nextState?.village_buildings) ? nextState.village_buildings : [],
@@ -406,6 +409,7 @@ export default function Home() {
       writeGuestDataPatch((prev) => ({
         ...prev,
         village_points: safeState.village_points,
+        village_tile_theme: safeState.village_tile_theme,
         village_decorations: safeState.village_decorations.map(({ image, ...rest }) => rest),
         village_characters: safeState.village_characters.map(({ image, ...rest }) => rest),
         village_buildings: safeState.village_buildings,
@@ -418,6 +422,7 @@ export default function Home() {
 
     await base44.auth.updateMe({
       village_points: safeState.village_points,
+      village_tile_theme: safeState.village_tile_theme,
       village_decorations: safeState.village_decorations.map(({ image, ...rest }) => rest),
       village_characters: safeState.village_characters.map(({ image, ...rest }) => rest),
       village_buildings: safeState.village_buildings,
@@ -436,6 +441,23 @@ export default function Home() {
     if (currentPoints < item.price) { toast.error('포인트가 부족해요.'); return; }
 
     const nextPoints = currentPoints - item.price;
+
+    // 타일 타입: 즉시 적용
+    if (item.type === 'tile') {
+      const nextTheme = item.subtype;
+      const nextState = { village_points: nextPoints, village_tile_theme: nextTheme, village_decorations: decorations, village_characters: characters, village_buildings: buildingLayout, village_inventory_characters: inventoryCharacters, village_inventory_decorations: inventoryDecorations };
+      try {
+        await saveVillageState(nextState);
+        setTileTheme(nextTheme);
+        originalVillageRef.current = { ...currentVillage, ...nextState };
+        toast.success(`${item.label} 구매 완료! 마을에 깔았어요. (-${item.price} 포인트)`);
+      } catch (error) {
+        console.error('handleVillagePurchase tile error:', error);
+        toast.error('구매 중 오류가 발생했어요.');
+      }
+      return;
+    }
+
     const newInventoryItem = createInventoryItem(item);
     const nextInventoryCharacters = [...inventoryCharacters];
     const nextInventoryDecorations = [...inventoryDecorations];
@@ -443,7 +465,7 @@ export default function Home() {
     if (item.type === 'decoration') nextInventoryDecorations.push(newInventoryItem);
     else nextInventoryCharacters.push(newInventoryItem);
 
-    const nextState = { village_points: nextPoints, village_decorations: decorations, village_characters: characters, village_buildings: buildingLayout, village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
+    const nextState = { village_points: nextPoints, village_tile_theme: tileTheme, village_decorations: decorations, village_characters: characters, village_buildings: buildingLayout, village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
 
     try {
       await saveVillageState(nextState);
@@ -745,6 +767,7 @@ export default function Home() {
         totalLevel={totalLevel}
         points={points}
         userLevels={userLevels}
+        tileTheme={tileTheme}
         decorations={decorations}
         setDecorations={setDecorations}
         characters={characters}
