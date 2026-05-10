@@ -578,7 +578,7 @@ export default function Home() {
       setIsEditMode(false);
       setSelectedObject(null);
       setPlacementPreview(null);
-      toast.success('마을 편집이 저장되었어요.');
+      toast.success('마을 편집이 저장되었어요.', { duration: 1000 });
     } catch (error) {
       console.error('handleSaveEdit error:', error);
       toast.error('마을 저장 중 오류가 발생했어요.');
