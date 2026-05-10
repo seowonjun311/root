@@ -474,6 +474,7 @@ export function getDecorationImage(type) {
   if (type === 'ancient_tree') return ancientTreeImg;
   if (type === 'thatched_hut_dino') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/217aafe7d_ChatGPTImage202642810_33_49-Photoroom.png';
   if (type === 'volcano_hut') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a2166f6a5_ChatGPTImage202642810_33_51-Photoroom.png';
+  if (type === 'wooden_hut') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0e3b3552d_ChatGPTImage202642810_33_54-Photoroom.png';
   return grassImg;
 }
 
@@ -504,6 +505,7 @@ export function getDecorationLabel(type) {
     ancient_tree: '고대나무',
     thatched_hut_dino: '움집',
     volcano_hut: '화산집',
+    wooden_hut: '나무 오두막',
   };
   return labelMap[type] || '잔디';
 }
@@ -533,6 +535,7 @@ export function createDecoration(subtype) {
     palm_tree: 64, ancient_tree: 68,
     thatched_hut_dino: 160,
     volcano_hut: 320,
+    wooden_hut: 160,
     trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,
   };
   return {
