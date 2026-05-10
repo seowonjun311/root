@@ -89,6 +89,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'building') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'mammoth_hut') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'volcano_hut') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'wooden_hut') return { cols: 3, rows: 3 };
   return { cols: 1, rows: 1 };
 }
 
@@ -212,6 +213,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'mammoth_hut') return { x, y: y + TILE_H * 5 + 14 };
   if (kind === 'decoration' && item?.type === 'thatched_hut_dino') return { x, y: y + 31 };
   if (kind === 'decoration' && item?.type === 'volcano_hut') return { x, y: y + 100 };
+  if (kind === 'decoration' && item?.type === 'wooden_hut') return { x, y: y + TILE_H * 5 + 14 };
   return { x, y: y + 14 };
 }
 
