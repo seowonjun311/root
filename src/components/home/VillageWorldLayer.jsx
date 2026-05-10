@@ -463,10 +463,13 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
                 const pos = gridToScreen(tile.col, tile.row);
                 const tileImg = getTileImageByKind(tile.kind, tileTheme);
                 const revealed = revealedTiles.find((item) => item.col === tile.col && item.row === tile.row);
+                const scale = tileTheme === 'dino' ? 1.1 : 1;
+                const scaledW = TILE_W * scale;
+                const scaledH = TILE_H * scale;
                 return (
                   <img key={tile.id} src={tileImg} alt="" draggable={false} className="pointer-events-none absolute select-none"
                     style={{
-                      left: pos.x - TILE_W / 2, top: pos.y - TILE_H / 2, width: TILE_W, height: TILE_H, objectFit: 'contain', userSelect: 'none', WebkitUserDrag: 'none',
+                      left: pos.x - scaledW / 2, top: pos.y - scaledH / 2, width: scaledW, height: scaledH, objectFit: 'contain', userSelect: 'none', WebkitUserDrag: 'none',
                       opacity: revealed ? 0 : 1,
                       transform: revealed ? 'translateY(10px) scale(0.88)' : 'translateY(0px) scale(1)',
                       filter: revealed ? 'brightness(1.5) drop-shadow(0 0 10px rgba(255,255,180,0.7))' : 'none',
