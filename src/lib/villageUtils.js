@@ -555,7 +555,7 @@ export function createDecoration(subtype) {
     stone_hut: 240,
     wooden_watchtower: 140,
     blacksmith_forge: 324,
-    primitive_tent: 240,
+    primitive_tent: 216,
     trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,
   };
   return {
