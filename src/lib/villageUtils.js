@@ -219,6 +219,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'stone_hut') return { x, y: y + TILE_H + 44 };
   if (kind === 'decoration' && item?.type === 'wooden_watchtower') return { x, y: y + TILE_H - 15 };
   if (kind === 'decoration' && item?.type === 'blacksmith_forge') return { x, y: y + TILE_H * 2 - 10 };
+  if (kind === 'decoration' && item?.type === 'primitive_tent') return { x, y: y + TILE_H + 14 };
   return { x, y: y + 14 };
 }
 
