@@ -91,6 +91,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'volcano_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'wooden_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'stone_hut') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'blacksmith_forge') return { cols: 2, rows: 2 };
   return { cols: 1, rows: 1 };
 }
 
@@ -217,7 +218,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'wooden_hut') return { x, y: y + TILE_H + 14 };
   if (kind === 'decoration' && item?.type === 'stone_hut') return { x, y: y + TILE_H + 44 };
   if (kind === 'decoration' && item?.type === 'wooden_watchtower') return { x, y: y + TILE_H - 15 };
-  if (kind === 'decoration' && item?.type === 'blacksmith_forge') return { x, y: y + TILE_H + 20 };
+  if (kind === 'decoration' && item?.type === 'blacksmith_forge') return { x, y: y + TILE_H * 2 + 20 };
   return { x, y: y + 14 };
 }
 
@@ -550,7 +551,7 @@ export function createDecoration(subtype) {
     wooden_hut: 213,
     stone_hut: 240,
     wooden_watchtower: 140,
-    blacksmith_forge: 180,
+    blacksmith_forge: 360,
     trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,
   };
   return {
