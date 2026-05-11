@@ -485,6 +485,7 @@ export function getDecorationImage(type) {
   if (type === 'stone_hut') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/759808ec1_ChatGPTImage202642810_33_57-Photoroom.png';
   if (type === 'wooden_watchtower') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/846c7a296_ChatGPTImage202642810_34_00-Photoroom.png';
   if (type === 'blacksmith_forge') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/76cfe7407_ChatGPTImage202642810_34_03-Photoroom.png';
+  if (type === 'primitive_tent') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2d8126df4_ChatGPTImage202642810_34_05-Photoroom.png';
   return grassImg;
 }
 
@@ -519,6 +520,7 @@ export function getDecorationLabel(type) {
     stone_hut: '돌 오두막',
     wooden_watchtower: '나무 망대',
     blacksmith_forge: '대장간',
+    primitive_tent: '원시 텐트',
   };
   return labelMap[type] || '잔디';
 }
@@ -552,6 +554,7 @@ export function createDecoration(subtype) {
     stone_hut: 240,
     wooden_watchtower: 140,
     blacksmith_forge: 324,
+    primitive_tent: 120,
     trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,
   };
   return {

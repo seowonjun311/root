@@ -82,6 +82,7 @@ export const SHOP_THEMES = [
       { id: 'stone_hut_1', label: '돌 오두막', type: 'decoration', subtype: 'stone_hut', price: 40, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/759808ec1_ChatGPTImage202642810_33_57-Photoroom.png' },
       { id: 'wooden_watchtower_1', label: '나무 망대', type: 'decoration', subtype: 'wooden_watchtower', price: 50, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/846c7a296_ChatGPTImage202642810_34_00-Photoroom.png' },
       { id: 'blacksmith_forge_1', label: '대장간', type: 'decoration', subtype: 'blacksmith_forge', price: 55, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/76cfe7407_ChatGPTImage202642810_34_03-Photoroom.png' },
+      { id: 'primitive_tent_1', label: '원시 텐트', type: 'decoration', subtype: 'primitive_tent', price: 25, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2d8126df4_ChatGPTImage202642810_34_05-Photoroom.png' },
       ],
       },
       ];
