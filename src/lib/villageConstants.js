@@ -86,6 +86,7 @@ export const SHOP_THEMES = [
       { id: 'jungle_palm_1', label: '정글 야자수', type: 'decoration', subtype: 'jungle_palm', price: 20, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/55aaaea7d_ChatGPTImage202642810_34_09-Photoroom.png' },
       { id: 'ancient_tree_1', label: '고대 나무', type: 'decoration', subtype: 'ancient_tree', price: 25, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/32dfe7ce8_ChatGPTImage202642810_34_10-Photoroom.png' },
       { id: 'brachiosaurus2_1', label: '브라키오사우루스2', type: 'decoration', subtype: 'brachiosaurus2', price: 30, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/4499d1b58_ChatGPTImage202642810_34_11-Photoroom.png' },
+      { id: 'triceratops2_1', label: '트리케라톱스2', type: 'decoration', subtype: 'triceratops2', price: 30, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/9a879c08e_ChatGPTImage202642810_34_12-Photoroom.png' },
       ],
       },
       ];

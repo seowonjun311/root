@@ -492,6 +492,7 @@ export function getDecorationImage(type) {
   if (type === 'jungle_palm') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/55aaaea7d_ChatGPTImage202642810_34_09-Photoroom.png';
   if (type === 'ancient_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/32dfe7ce8_ChatGPTImage202642810_34_10-Photoroom.png';
   if (type === 'brachiosaurus2') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/4499d1b58_ChatGPTImage202642810_34_11-Photoroom.png';
+  if (type === 'triceratops2') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/9a879c08e_ChatGPTImage202642810_34_12-Photoroom.png';
   return grassImg;
 }
 
@@ -529,6 +530,7 @@ export function getDecorationLabel(type) {
     primitive_tent: '원시 텐트',
     jungle_palm: '정글 야자수',
     brachiosaurus2: '브라키오사우루스2',
+    triceratops2: '트리케라톱스2',
   };
   return labelMap[type] || '잔디';
 }
@@ -564,7 +566,7 @@ export function createDecoration(subtype) {
     blacksmith_forge: 324,
     primitive_tent: 216,
     jungle_palm: 222,
-    trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78, brachiosaurus2: 180,
+    trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78, brachiosaurus2: 180, triceratops2: 90,
   };
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
