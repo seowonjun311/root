@@ -132,14 +132,14 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
             </div>
             <div className="flex gap-2">
               <button
-                onPointerDown={(e) => { e.stopPropagation(); closeConfirm(); }}
+                onClick={closeConfirm}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
                 style={{ background: '#f3ead7', color: '#7a5020' }}
               >
                 취소
               </button>
               <button
-                onPointerDown={(e) => { e.stopPropagation(); handleSellConfirm(); }}
+                onClick={handleSellConfirm}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold"
                 style={{ background: '#c49a4a', color: '#fff' }}
               >
