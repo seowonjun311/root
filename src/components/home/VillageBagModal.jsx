@@ -59,7 +59,7 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
                     ? getCharacterImage(item.subtype)
                     : getDecorationImage(item.subtype);
                   const refund = getRefundPrice(item.subtype);
-                  const displayLabel = item.type === 'decoration' ? getDecorationLabel(item.subtype) : item.label;
+                  const displayLabel = item.label || (item.type === 'decoration' ? getDecorationLabel(item.subtype) : '항목');
                   return (
                     <div
                       key={key}
