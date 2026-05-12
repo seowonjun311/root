@@ -122,6 +122,7 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
           <div
             className="mx-6 p-5 rounded-2xl flex flex-col gap-4"
             style={{ background: '#fff8ee', border: '2px solid #c49a4a', maxWidth: 320, width: '100%' }}
+            onPointerDown={(e) => e.stopPropagation()}
           >
             <div className="text-center">
               <div className="text-base font-bold mb-1" style={{ color: '#4a2c08' }}>🪙 {confirmSell.label} 환급</div>
@@ -132,14 +133,14 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
             </div>
             <div className="flex gap-2">
               <button
-                onClick={closeConfirm}
+                onPointerDown={(e) => { e.stopPropagation(); closeConfirm(); }}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
                 style={{ background: '#f3ead7', color: '#7a5020' }}
               >
                 취소
               </button>
               <button
-                onClick={handleSellConfirm}
+                onPointerDown={(e) => { e.stopPropagation(); handleSellConfirm(); }}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold"
                 style={{ background: '#c49a4a', color: '#fff' }}
               >
