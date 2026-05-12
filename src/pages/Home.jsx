@@ -522,6 +522,39 @@ export default function Home() {
     }
   };
 
+  const handleSellInventoryItem = async (subtype, refundPoints) => {
+    const source = isGuest ? guestData : user;
+    const currentVillage = getVillageState(source || {});
+    const nextPoints = Number(currentVillage.village_points || 0) + refundPoints;
+
+    let nextInventoryCharacters = [...inventoryCharacters];
+    let nextInventoryDecorations = [...inventoryDecorations];
+
+    // subtype에 해당하는 아이템 1개만 제거
+    const removeFromList = (list) => {
+      const idx = list.findIndex((item) => item.subtype === subtype);
+      if (idx >= 0) list.splice(idx, 1);
+      return list;
+    };
+
+    const isCharacter = inventoryCharacters.some((item) => item.subtype === subtype);
+    if (isCharacter) nextInventoryCharacters = removeFromList(nextInventoryCharacters);
+    else nextInventoryDecorations = removeFromList(nextInventoryDecorations);
+
+    const nextState = { village_points: nextPoints, village_tile_theme: tileTheme, village_decorations: decorations, village_characters: characters, village_buildings: [], village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
+
+    try {
+      await saveVillageState(nextState);
+      setInventoryCharacters(nextInventoryCharacters);
+      setInventoryDecorations(nextInventoryDecorations);
+      originalVillageRef.current = { ...currentVillage, ...nextState };
+      toast.success(`+${refundPoints}P 환급되었어요!`, { duration: 1200 });
+    } catch (error) {
+      console.error('handleSellInventoryItem error:', error);
+      toast.error('환급 중 오류가 발생했어요.');
+    }
+  };
+
   const handleStoreSelected = async () => {
     if (!selectedObject) return;
     if (selectedObject.type !== 'character' && selectedObject.type !== 'decoration') return;
@@ -763,7 +796,7 @@ export default function Home() {
       ) : null}
 
       <VillageShopModal open={isShopOpen} points={points} onClose={() => setIsShopOpen(false)} onBuy={handleVillagePurchase} />
-      <VillageBagModal open={isBagOpen} activeTab={bagTab} onTabChange={setBagTab} inventoryCharacters={inventoryCharacters} inventoryDecorations={inventoryDecorations} onClose={() => setIsBagOpen(false)} onPlaceItem={handlePlaceInventoryItem} />
+      <VillageBagModal open={isBagOpen} activeTab={bagTab} onTabChange={setBagTab} inventoryCharacters={inventoryCharacters} inventoryDecorations={inventoryDecorations} onClose={() => setIsBagOpen(false)} onPlaceItem={handlePlaceInventoryItem} onSellItem={handleSellInventoryItem} />
 
       <VillageWorldLayer
          isOverview={isOverview}
