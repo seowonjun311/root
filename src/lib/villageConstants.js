@@ -88,6 +88,7 @@ export const SHOP_THEMES = [
       { id: 'brachiosaurus_1', label: '브라키오사우루스', type: 'decoration', subtype: 'brachiosaurus', price: 30, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3adc0b9c5_ChatGPTImage202642810_34_11-Photoroom.png' },
       { id: 'triceratops_1', label: '트리케라톱스', type: 'decoration', subtype: 'triceratops', price: 30, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/9a879c08e_ChatGPTImage202642810_34_12-Photoroom.png' },
       { id: 'ankylosaurus_1', label: '안킬로사우루스', type: 'decoration', subtype: 'ankylosaurus', price: 32, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6ecd3cdfd_ChatGPTImage202642810_34_13-Photoroom.png' },
+      { id: 'carnotaurus_1', label: '카르노타우루스', type: 'decoration', subtype: 'carnotaurus', price: 35, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/32c2f1257_ChatGPTImage202642810_34_15-Photoroom.png' },
       ],
       },
       ];
