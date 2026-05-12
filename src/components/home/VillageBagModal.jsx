@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { getCharacterImage, getDecorationImage } from '@/lib/villageUtils';
+import { getCharacterImage, getDecorationImage, getDecorationLabel } from '@/lib/villageUtils';
 import { SHOP_ITEMS } from '@/lib/villageConstants';
 
 function getRefundPrice(subtype) {
@@ -59,6 +59,7 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
                     ? getCharacterImage(item.subtype)
                     : getDecorationImage(item.subtype);
                   const refund = getRefundPrice(item.subtype);
+                  const displayLabel = item.type === 'decoration' ? getDecorationLabel(item.subtype) : item.label;
                   return (
                     <div
                       key={key}
@@ -73,8 +74,8 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
                           {item.count}
                         </div>
                       )}
-                      <img src={img} alt={item.label} className="w-14 h-14 object-contain" />
-                      <div className="text-xs font-bold text-center" style={{ color: '#4a2c08' }}>{item.label}</div>
+                      <img src={img} alt={displayLabel} className="w-14 h-14 object-contain" />
+                      <div className="text-xs font-bold text-center" style={{ color: '#4a2c08' }}>{displayLabel}</div>
                       <button
                         onClick={() => onPlaceItem(item)}
                         className="w-full py-1 rounded-xl text-xs font-bold"
