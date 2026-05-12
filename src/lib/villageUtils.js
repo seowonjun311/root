@@ -568,12 +568,13 @@ export function createDecoration(subtype) {
     jungle_palm: 222,
     trex: 80, brachiosaurus: 180, triceratops: 90, ankylosaurus: 200, stegosaurus: 78,
   };
+  const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     type: subtype,
     image: getDecorationImage(subtype),
     col: Math.floor(randomBetween(1, GRID_COLS - 2)),
-    row: Math.floor(randomBetween(1, GRID_ROWS - 2)),
+    row: defaultRow,
     flipped: false,
     size: sizeMap[subtype] || 32,
   };
