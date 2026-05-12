@@ -551,7 +551,7 @@ export function createDecoration(subtype) {
     bone_hut: 68,
     mammoth_hut: 560, thatch_hut: 62, smoke_hut: 64, wood_house: 66,
     dino_fossil: 58, dino_egg_nest: 52, campfire: 44, totem_pole: 56, tribe_banner: 48,
-    palm_tree: 64, ancient_tree: 68,
+    palm_tree: 64, ancient_tree: 204,
     thatched_hut_dino: 160,
     volcano_hut: 320,
     wooden_hut: 213,
