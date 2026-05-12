@@ -480,7 +480,6 @@ export function getDecorationImage(type) {
   if (type === 'totem_pole') return totemPoleImg;
   if (type === 'tribe_banner') return tribeBannerImg;
   if (type === 'palm_tree') return palmTreeImg;
-  if (type === 'ancient_tree') return ancientTreeImg;
   if (type === 'thatched_hut_dino') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/217aafe7d_ChatGPTImage202642810_33_49-Photoroom.png';
   if (type === 'volcano_hut') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a2166f6a5_ChatGPTImage202642810_33_51-Photoroom.png';
   if (type === 'wooden_hut') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0e3b3552d_ChatGPTImage202642810_33_54-Photoroom.png';
