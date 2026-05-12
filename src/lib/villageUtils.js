@@ -489,6 +489,7 @@ export function getDecorationImage(type) {
   if (type === 'blacksmith_forge') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/76cfe7407_ChatGPTImage202642810_34_03-Photoroom.png';
   if (type === 'primitive_tent') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2d8126df4_ChatGPTImage202642810_34_05-Photoroom.png';
   if (type === 'jungle_palm') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/55aaaea7d_ChatGPTImage202642810_34_09-Photoroom.png';
+  if (type === 'ancient_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/32dfe7ce8_ChatGPTImage202642810_34_10-Photoroom.png';
   return grassImg;
 }
 

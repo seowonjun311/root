@@ -84,6 +84,7 @@ export const SHOP_THEMES = [
       { id: 'blacksmith_forge_1', label: '대장간', type: 'decoration', subtype: 'blacksmith_forge', price: 55, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/76cfe7407_ChatGPTImage202642810_34_03-Photoroom.png' },
       { id: 'primitive_tent_1', label: '원시 텐트', type: 'decoration', subtype: 'primitive_tent', price: 25, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2d8126df4_ChatGPTImage202642810_34_05-Photoroom.png' },
       { id: 'jungle_palm_1', label: '정글 야자수', type: 'decoration', subtype: 'jungle_palm', price: 20, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/55aaaea7d_ChatGPTImage202642810_34_09-Photoroom.png' },
+      { id: 'ancient_tree_1', label: '고대 나무', type: 'decoration', subtype: 'ancient_tree', price: 25, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/32dfe7ce8_ChatGPTImage202642810_34_10-Photoroom.png' },
       ],
       },
       ];
