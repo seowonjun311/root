@@ -477,6 +477,7 @@ export function getDecorationImage(type) {
   if (type === 'brachiosaurus') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3adc0b9c5_ChatGPTImage202642810_34_11-Photoroom.png';
   if (type === 'triceratops') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/9a879c08e_ChatGPTImage202642810_34_12-Photoroom.png';
   if (type === 'ankylosaurus') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6ecd3cdfd_ChatGPTImage202642810_34_13-Photoroom.png';
+  if (type === 'carnotaurus') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5694099f1_ChatGPTImage202642810_34_15-Photoroom.png';
   if (type === 'stegosaurus') return stegosaurusImg;
   if (type === 'dino_fossil') return dinoFossilImg;
   if (type === 'dino_egg_nest') return dinoEggNestImg;
