@@ -473,7 +473,7 @@ export function getDecorationImage(type) {
   if (type === 'smoke_hut') return smokeHutImg;
   if (type === 'wood_house') return woodHouseImg;
   if (type === 'trex') return trexImg;
-  if (type === 'brachiosaurus') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/4499d1b58_ChatGPTImage202642810_34_11-Photoroom.png';
+  if (type === 'brachiosaurus') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3adc0b9c5_ChatGPTImage202642810_34_11-Photoroom.png';
   if (type === 'triceratops') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/9a879c08e_ChatGPTImage202642810_34_12-Photoroom.png';
   if (type === 'stegosaurus') return stegosaurusImg;
   if (type === 'dino_fossil') return dinoFossilImg;
