@@ -563,7 +563,7 @@ export function createDecoration(subtype) {
     blacksmith_forge: 324,
     primitive_tent: 216,
     jungle_palm: 222,
-    trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78, brachiosaurus2: 90,
+    trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78, brachiosaurus2: 180,
   };
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
