@@ -495,6 +495,7 @@ export function getDecorationImage(type) {
   if (type === 'primitive_tent') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2d8126df4_ChatGPTImage202642810_34_05-Photoroom.png';
   if (type === 'jungle_palm') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/55aaaea7d_ChatGPTImage202642810_34_09-Photoroom.png';
   if (type === 'ancient_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/32dfe7ce8_ChatGPTImage202642810_34_10-Photoroom.png';
+  if (type === 'bone_dino') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/633f3662c_ChatGPTImage202642810_34_16-Photoroom.png';
 
   return grassImg;
 }
@@ -533,6 +534,7 @@ export function getDecorationLabel(type) {
     blacksmith_forge: '대장간',
     primitive_tent: '원시 텐트',
     jungle_palm: '정글 야자수',
+    bone_dino: '뼈 공룡',
 
   };
   return labelMap[type] || '잔디';
@@ -569,7 +571,7 @@ export function createDecoration(subtype) {
     blacksmith_forge: 324,
     primitive_tent: 216,
     jungle_palm: 222,
-    trex: 80, brachiosaurus: 180, triceratops: 90, ankylosaurus: 200, carnotaurus: 240, stegosaurus: 78,
+    trex: 80, brachiosaurus: 180, triceratops: 90, ankylosaurus: 200, carnotaurus: 240, stegosaurus: 78, bone_dino: 120,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
