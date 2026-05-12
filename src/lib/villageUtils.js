@@ -558,7 +558,7 @@ export function createDecoration(subtype) {
     wooden_watchtower: 140,
     blacksmith_forge: 324,
     primitive_tent: 216,
-    jungle_palm: 130,
+    jungle_palm: 260,
     trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,
   };
   return {
