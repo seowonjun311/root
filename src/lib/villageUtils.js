@@ -222,7 +222,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'primitive_tent') return { x, y: y + TILE_H + 14 };
   if (kind === 'decoration' && item?.type === 'jungle_palm') return { x, y: y + TILE_H / 2 + 14 };
   if (kind === 'decoration' && item?.type === 'ancient_tree') return { x, y: y + 35 };
-  if (kind === 'decoration' && item?.type === 'brachiosaurus2') return { x, y: y + 44 };
+  if (kind === 'decoration' && item?.type === 'brachiosaurus2') return { x, y: y + 42 };
   return { x, y: y + 14 };
 }
 
