@@ -220,6 +220,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'wooden_watchtower') return { x, y: y + TILE_H - 15 };
   if (kind === 'decoration' && item?.type === 'blacksmith_forge') return { x, y: y + TILE_H * 2 - 10 };
   if (kind === 'decoration' && item?.type === 'primitive_tent') return { x, y: y + TILE_H + 14 };
+  if (kind === 'decoration' && item?.type === 'jungle_palm') return { x, y: y + TILE_H / 2 + 14 };
   return { x, y: y + 14 };
 }
 
@@ -558,7 +559,7 @@ export function createDecoration(subtype) {
     wooden_watchtower: 140,
     blacksmith_forge: 324,
     primitive_tent: 216,
-    jungle_palm: 260,
+    jungle_palm: 234,
     trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78,
   };
   return {
