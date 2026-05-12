@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { createPortal } from 'react-dom';
+
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { getCharacterImage, getDecorationImage } from '@/lib/villageUtils';
 import { SHOP_ITEMS } from '@/lib/villageConstants';
@@ -10,8 +10,6 @@ function getRefundPrice(subtype) {
 }
 
 export default function VillageBagModal({ open, activeTab, onTabChange, inventoryCharacters, inventoryDecorations, onClose, onPlaceItem, onSellItem }) {
-  const [confirmSell, setConfirmSell] = useState(null); // { itemId, subtype, label, refund }
-  const closingRef = React.useRef(false);
   const items = activeTab === 'character' ? inventoryCharacters : inventoryDecorations;
 
   const grouped = Object.entries(
@@ -24,16 +22,8 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
     }, {})
   );
 
-  const closeConfirm = () => {
-    setConfirmSell(null);
-    closingRef.current = true;
-    setTimeout(() => { closingRef.current = false; }, 300);
-  };
-
-  const handleSellConfirm = () => {
-    if (!confirmSell) return;
-    onSellItem(confirmSell.itemId, confirmSell.refund);
-    closeConfirm();
+  const handleSell = (itemId, refund) => {
+    onSellItem(itemId, refund);
   };
 
   return (
@@ -93,10 +83,7 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
                         꺼내기
                       </button>
                       <button
-                        onClick={() => {
-                          if (closingRef.current) return;
-                          setConfirmSell({ itemId: item.allItems[0].id, subtype: item.subtype, label: item.label, refund });
-                        }}
+                        onClick={() => handleSell(item.allItems[0].id, refund)}
                         className="w-full py-1 rounded-xl text-xs font-semibold"
                         style={{ background: '#f3ead7', color: '#7a5020', border: '1px solid #d4b870' }}
                       >
@@ -111,46 +98,7 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
         </DrawerContent>
       </Drawer>
 
-      {confirmSell && createPortal(
-        <div
-          className="fixed inset-0 flex items-center justify-center"
-          style={{ background: 'rgba(0,0,0,0.55)', zIndex: 9999, touchAction: 'none' }}
-          onPointerDown={(e) => {
-            if (e.target === e.currentTarget) closeConfirm();
-          }}
-        >
-          <div
-            className="mx-6 p-5 rounded-2xl flex flex-col gap-4"
-            style={{ background: '#fff8ee', border: '2px solid #c49a4a', maxWidth: 320, width: '100%' }}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            <div className="text-center">
-              <div className="text-base font-bold mb-1" style={{ color: '#4a2c08' }}>🪙 {confirmSell.label} 환급</div>
-              <div className="text-sm mt-1" style={{ color: '#7a5020' }}>
-                아이템 1개를 <span className="font-bold" style={{ color: '#b8760a' }}>{confirmSell.refund}P</span>로 환급합니다.
-              </div>
-              <div className="text-xs mt-1.5" style={{ color: '#a07040' }}>환급 후 되돌릴 수 없어요.</div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onPointerDown={(e) => { e.stopPropagation(); closeConfirm(); }}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: '#f3ead7', color: '#7a5020' }}
-              >
-                취소
-              </button>
-              <button
-                onPointerDown={(e) => { e.stopPropagation(); handleSellConfirm(); }}
-                className="flex-1 py-2.5 rounded-xl text-sm font-bold"
-                style={{ background: '#c49a4a', color: '#fff' }}
-              >
-                환급하기
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+
     </>
   );
 }
