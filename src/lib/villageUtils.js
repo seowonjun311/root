@@ -473,8 +473,8 @@ export function getDecorationImage(type) {
   if (type === 'smoke_hut') return smokeHutImg;
   if (type === 'wood_house') return woodHouseImg;
   if (type === 'trex') return trexImg;
-  if (type === 'brachiosaurus') return brachiosaurusImg;
-  if (type === 'triceratops') return triceratopsImg;
+  if (type === 'brachiosaurus') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/4499d1b58_ChatGPTImage202642810_34_11-Photoroom.png';
+  if (type === 'triceratops') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/9a879c08e_ChatGPTImage202642810_34_12-Photoroom.png';
   if (type === 'stegosaurus') return stegosaurusImg;
   if (type === 'dino_fossil') return dinoFossilImg;
   if (type === 'dino_egg_nest') return dinoEggNestImg;
@@ -491,8 +491,7 @@ export function getDecorationImage(type) {
   if (type === 'primitive_tent') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2d8126df4_ChatGPTImage202642810_34_05-Photoroom.png';
   if (type === 'jungle_palm') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/55aaaea7d_ChatGPTImage202642810_34_09-Photoroom.png';
   if (type === 'ancient_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/32dfe7ce8_ChatGPTImage202642810_34_10-Photoroom.png';
-  if (type === 'brachiosaurus2') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/4499d1b58_ChatGPTImage202642810_34_11-Photoroom.png';
-  if (type === 'triceratops2') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/9a879c08e_ChatGPTImage202642810_34_12-Photoroom.png';
+
   return grassImg;
 }
 
@@ -529,8 +528,7 @@ export function getDecorationLabel(type) {
     blacksmith_forge: '대장간',
     primitive_tent: '원시 텐트',
     jungle_palm: '정글 야자수',
-    brachiosaurus2: '브라키오사우루스2',
-    triceratops2: '트리케라톱스2',
+
   };
   return labelMap[type] || '잔디';
 }
@@ -566,7 +564,7 @@ export function createDecoration(subtype) {
     blacksmith_forge: 324,
     primitive_tent: 216,
     jungle_palm: 222,
-    trex: 80, brachiosaurus: 88, triceratops: 76, stegosaurus: 78, brachiosaurus2: 180, triceratops2: 90,
+    trex: 80, brachiosaurus: 180, triceratops: 90, stegosaurus: 78,
   };
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
