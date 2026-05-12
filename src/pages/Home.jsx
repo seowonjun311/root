@@ -527,27 +527,43 @@ export default function Home() {
     const currentVillage = getVillageState(source || {});
     const nextPoints = Number(currentVillage.village_points || 0) + refundPoints;
 
-    let nextInventoryCharacters = [...inventoryCharacters];
-    let nextInventoryDecorations = [...inventoryDecorations];
+    const nextInventoryCharacters = [...inventoryCharacters];
+    const nextInventoryDecorations = [...inventoryDecorations];
 
-    // subtype에 해당하는 아이템 1개만 제거
-    const removeFromList = (list) => {
-      const idx = list.findIndex((item) => item.subtype === subtype);
-      if (idx >= 0) list.splice(idx, 1);
-      return list;
-    };
+    const isCharacter = nextInventoryCharacters.some((item) => item.subtype === subtype);
+    if (isCharacter) {
+      const idx = nextInventoryCharacters.findIndex((item) => item.subtype === subtype);
+      if (idx >= 0) nextInventoryCharacters.splice(idx, 1);
+    } else {
+      const idx = nextInventoryDecorations.findIndex((item) => item.subtype === subtype);
+      if (idx >= 0) nextInventoryDecorations.splice(idx, 1);
+    }
 
-    const isCharacter = inventoryCharacters.some((item) => item.subtype === subtype);
-    if (isCharacter) nextInventoryCharacters = removeFromList(nextInventoryCharacters);
-    else nextInventoryDecorations = removeFromList(nextInventoryDecorations);
-
-    const nextState = { village_points: nextPoints, village_tile_theme: tileTheme, village_decorations: decorations, village_characters: characters, village_buildings: [], village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
-
-    try {
-      await saveVillageState(nextState);
+    if (isGuest) {
+      writeGuestDataPatch((prev) => ({
+        ...prev,
+        village_points: nextPoints,
+        village_inventory_characters: nextInventoryCharacters,
+        village_inventory_decorations: nextInventoryDecorations,
+      }));
       setInventoryCharacters(nextInventoryCharacters);
       setInventoryDecorations(nextInventoryDecorations);
-      originalVillageRef.current = { ...currentVillage, ...nextState };
+      originalVillageRef.current = { ...currentVillage, village_points: nextPoints, village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
+      window.dispatchEvent(new Event('root-home-data-updated'));
+      toast.success(`+${refundPoints}P 환급되었어요!`, { duration: 1200 });
+      return;
+    }
+
+    try {
+      await base44.auth.updateMe({
+        village_points: nextPoints,
+        village_inventory_characters: nextInventoryCharacters,
+        village_inventory_decorations: nextInventoryDecorations,
+      });
+      setInventoryCharacters(nextInventoryCharacters);
+      setInventoryDecorations(nextInventoryDecorations);
+      originalVillageRef.current = { ...currentVillage, village_points: nextPoints, village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
+      queryClient.invalidateQueries({ queryKey: ['me'] });
       toast.success(`+${refundPoints}P 환급되었어요!`, { duration: 1200 });
     } catch (error) {
       console.error('handleSellInventoryItem error:', error);
