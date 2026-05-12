@@ -226,7 +226,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'brachiosaurus') return { x, y: y + 44 };
   if (kind === 'decoration' && item?.type === 'ankylosaurus') return { x, y: y + 60 };
   if (kind === 'decoration' && item?.type === 'carnotaurus') return { x, y: y + 74 };
-  if (kind === 'decoration' && item?.type === 'bone_dino') return { x: x - 50, y: y + 99 };
+  if (kind === 'decoration' && item?.type === 'bone_dino') return { x: x - 48, y: y + 99 };
 
   return { x, y: y + 14 };
 }
