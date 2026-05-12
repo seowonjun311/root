@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { getCharacterImage, getDecorationImage } from '@/lib/villageUtils';
 import { SHOP_ITEMS } from '@/lib/villageConstants';
@@ -100,11 +101,10 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
         </DrawerContent>
       </Drawer>
 
-      {/* 환급 확인 모달 */}
-      {confirmSell && (
+      {confirmSell && createPortal(
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center"
-          style={{ background: 'rgba(0,0,0,0.45)' }}
+          className="fixed inset-0 flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.55)', zIndex: 9999 }}
           onClick={() => setConfirmSell(null)}
         >
           <div
@@ -113,29 +113,31 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
-              <div className="text-base font-bold mb-1" style={{ color: '#4a2c08' }}>{confirmSell.label} 환급</div>
-              <div className="text-sm" style={{ color: '#7a5020' }}>
-                아이템 1개를 <span className="font-bold text-amber-700">{confirmSell.refund}P</span>로 환급할게요.
+              <div className="text-base font-bold mb-1" style={{ color: '#4a2c08' }}>🪙 {confirmSell.label} 환급</div>
+              <div className="text-sm mt-1" style={{ color: '#7a5020' }}>
+                아이템 1개를 <span className="font-bold" style={{ color: '#b8760a' }}>{confirmSell.refund}P</span>로 환급합니다.
               </div>
+              <div className="text-xs mt-1.5" style={{ color: '#a07040' }}>환급 후 되돌릴 수 없어요.</div>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmSell(null)}
-                className="flex-1 py-2 rounded-xl text-sm font-semibold"
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
                 style={{ background: '#f3ead7', color: '#7a5020' }}
               >
                 취소
               </button>
               <button
                 onClick={handleSellConfirm}
-                className="flex-1 py-2 rounded-xl text-sm font-bold"
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold"
                 style={{ background: '#c49a4a', color: '#fff' }}
               >
                 환급하기
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
