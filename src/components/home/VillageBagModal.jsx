@@ -25,8 +25,8 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
   );
 
   const closeConfirm = () => {
-    closingRef.current = true;
     setConfirmSell(null);
+    closingRef.current = true;
     setTimeout(() => { closingRef.current = false; }, 300);
   };
 
