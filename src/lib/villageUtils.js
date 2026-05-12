@@ -475,6 +475,7 @@ export function getDecorationImage(type) {
   if (type === 'trex') return trexImg;
   if (type === 'brachiosaurus') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3adc0b9c5_ChatGPTImage202642810_34_11-Photoroom.png';
   if (type === 'triceratops') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/9a879c08e_ChatGPTImage202642810_34_12-Photoroom.png';
+  if (type === 'ankylosaurus') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6ecd3cdfd_ChatGPTImage202642810_34_13-Photoroom.png';
   if (type === 'stegosaurus') return stegosaurusImg;
   if (type === 'dino_fossil') return dinoFossilImg;
   if (type === 'dino_egg_nest') return dinoEggNestImg;
@@ -512,6 +513,7 @@ export function getDecorationLabel(type) {
     trex: 'T-렉스',
     brachiosaurus: '브라키오사우루스',
     triceratops: '트리케라톱스',
+    ankylosaurus: '안킬로사우루스',
     stegosaurus: '스테고사우루스',
     dino_fossil: '공룡화석',
     dino_egg_nest: '공룡알둥지',
@@ -564,7 +566,7 @@ export function createDecoration(subtype) {
     blacksmith_forge: 324,
     primitive_tent: 216,
     jungle_palm: 222,
-    trex: 80, brachiosaurus: 180, triceratops: 90, stegosaurus: 78,
+    trex: 80, brachiosaurus: 180, triceratops: 90, ankylosaurus: 100, stegosaurus: 78,
   };
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
