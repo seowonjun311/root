@@ -10,7 +10,7 @@ function getRefundPrice(subtype) {
 }
 
 export default function VillageBagModal({ open, activeTab, onTabChange, inventoryCharacters, inventoryDecorations, onClose, onPlaceItem, onSellItem }) {
-  const [confirmSell, setConfirmSell] = useState(null); // { subtype, label, refund }
+  const [confirmSell, setConfirmSell] = useState(null); // { itemId, subtype, label, refund }
   const items = activeTab === 'character' ? inventoryCharacters : inventoryDecorations;
 
   const grouped = Object.entries(
@@ -25,7 +25,7 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
 
   const handleSellConfirm = () => {
     if (!confirmSell) return;
-    onSellItem(confirmSell.subtype, confirmSell.refund);
+    onSellItem(confirmSell.itemId, confirmSell.refund);
     setConfirmSell(null);
   };
 
@@ -86,7 +86,7 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
                         꺼내기
                       </button>
                       <button
-                        onClick={() => setConfirmSell({ subtype: item.subtype, label: item.label, refund })}
+                        onClick={() => setConfirmSell({ itemId: item.allItems[0].id, subtype: item.subtype, label: item.label, refund })}
                         className="w-full py-1 rounded-xl text-xs font-semibold"
                         style={{ background: '#f3ead7', color: '#7a5020', border: '1px solid #d4b870' }}
                       >

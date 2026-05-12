@@ -522,7 +522,7 @@ export default function Home() {
     }
   };
 
-  const handleSellInventoryItem = async (subtype, refundPoints) => {
+  const handleSellInventoryItem = async (itemId, refundPoints) => {
     const source = isGuest ? guestData : user;
     const currentVillage = getVillageState(source || {});
     const nextPoints = Number(currentVillage.village_points || 0) + refundPoints;
@@ -530,13 +530,12 @@ export default function Home() {
     const nextInventoryCharacters = [...inventoryCharacters];
     const nextInventoryDecorations = [...inventoryDecorations];
 
-    const isCharacter = nextInventoryCharacters.some((item) => item.subtype === subtype);
-    if (isCharacter) {
-      const idx = nextInventoryCharacters.findIndex((item) => item.subtype === subtype);
-      if (idx >= 0) nextInventoryCharacters.splice(idx, 1);
+    const charIdx = nextInventoryCharacters.findIndex((item) => item.id === itemId);
+    if (charIdx >= 0) {
+      nextInventoryCharacters.splice(charIdx, 1);
     } else {
-      const idx = nextInventoryDecorations.findIndex((item) => item.subtype === subtype);
-      if (idx >= 0) nextInventoryDecorations.splice(idx, 1);
+      const decoIdx = nextInventoryDecorations.findIndex((item) => item.id === itemId);
+      if (decoIdx >= 0) nextInventoryDecorations.splice(decoIdx, 1);
     }
 
     if (isGuest) {
