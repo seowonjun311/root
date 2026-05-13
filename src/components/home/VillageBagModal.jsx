@@ -1,16 +1,31 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { getCharacterImage, getDecorationImage, getDecorationLabel } from '@/lib/villageUtils';
-import { SHOP_ITEMS } from '@/lib/villageConstants';
+import { SHOP_ITEMS, SHOP_THEMES } from '@/lib/villageConstants';
 
 function getRefundPrice(subtype) {
   const shopItem = SHOP_ITEMS.find((i) => i.subtype === subtype);
   return shopItem ? Math.floor(shopItem.price / 2) : 1;
 }
 
+// 각 subtype이 어느 테마에 속하는지 매핑
+function getThemeForSubtype(subtype) {
+  for (const theme of SHOP_THEMES) {
+    if (theme.items.some((i) => i.subtype === subtype)) return theme.id;
+  }
+  return 'basic';
+}
+
 export default function VillageBagModal({ open, activeTab, onTabChange, inventoryCharacters, inventoryDecorations, onClose, onPlaceItem, onSellItem }) {
-  const items = activeTab === 'character' ? inventoryCharacters : inventoryDecorations;
+  const [decoTheme, setDecoTheme] = useState('all');
+
+  const rawItems = activeTab === 'character' ? inventoryCharacters : inventoryDecorations;
+
+  // 꾸미기 탭일 때 테마 필터 적용
+  const items = (activeTab === 'decoration' && decoTheme !== 'all')
+    ? rawItems.filter((item) => getThemeForSubtype(item.subtype) === decoTheme)
+    : rawItems;
 
   const grouped = Object.entries(
     items.reduce((acc, item) => {
@@ -25,6 +40,8 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
   const handleSell = (itemId, refund) => {
     onSellItem(itemId, refund);
   };
+
+  const themeFilters = [{ id: 'all', label: '전체', emoji: '🗂️' }, ...SHOP_THEMES.map((t) => ({ id: t.id, label: t.label, emoji: t.emoji }))];
 
   return (
     <>
@@ -49,7 +66,24 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
             ))}
           </div>
 
-          <div className="px-4 pb-8 overflow-y-auto max-h-96">
+          {activeTab === 'decoration' && (
+            <div className="flex gap-2 px-4 mb-3 overflow-x-auto">
+              {themeFilters.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setDecoTheme(t.id)}
+                  className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold"
+                  style={decoTheme === t.id
+                    ? { background: '#c49a4a', color: '#fff' }
+                    : { background: '#f3ead7', color: '#7a5020', border: '1px solid #d4b870' }}
+                >
+                  {t.emoji} {t.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="px-4 pb-8 overflow-y-auto max-h-80">
             {grouped.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-8">가방이 비어 있어요.</p>
             ) : (
@@ -98,8 +132,6 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
           </div>
         </DrawerContent>
       </Drawer>
-
-
     </>
   );
 }
