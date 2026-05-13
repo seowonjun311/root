@@ -88,6 +88,7 @@ export function screenToGrid(x, y, totalLevel = 1) {
 export function getObjectTileSize(item, kind) {
   if (kind === 'building') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'mammoth_hut') return { cols: 3, rows: 3 };
+  if (kind === 'decoration' && item?.type === 'pyramid') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'volcano_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'wooden_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'stone_hut') return { cols: 2, rows: 2 };
