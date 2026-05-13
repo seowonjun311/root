@@ -501,6 +501,7 @@ export function getDecorationImage(type) {
   if (type === 'ancient_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/32dfe7ce8_ChatGPTImage202642810_34_10-Photoroom.png';
   if (type === 'bone_dino') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/633f3662c_ChatGPTImage202642810_34_16-Photoroom.png';
   if (type === 'golden_totem') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/762345fc7_ChatGPTImage202642810_34_20-Photoroom.png';
+  if (type === 'pyramid') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7efebb662_ChatGPTImage202642810_09_26.png';
 
   return grassImg;
 }
@@ -541,7 +542,7 @@ export function getDecorationLabel(type) {
     jungle_palm: '정글 야자수',
     bone_dino: '뼈 공룡',
     golden_totem: '황금 토템',
-
+    pyramid: '피라미드',
   };
   return labelMap[type] || '잔디';
 }

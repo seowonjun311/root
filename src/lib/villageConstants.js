@@ -92,8 +92,16 @@ export const SHOP_THEMES = [
       { id: 'bone_dino_1', label: '뼈 공룡', type: 'decoration', subtype: 'bone_dino', price: 40, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/633f3662c_ChatGPTImage202642810_34_16-Photoroom.png' },
       { id: 'golden_totem_1', label: '황금 토템', type: 'decoration', subtype: 'golden_totem', price: 450, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/762345fc7_ChatGPTImage202642810_34_20-Photoroom.png' },
       ],
-      },
-      ];
+  },
+  {
+    id: 'egypt',
+    label: '이집트',
+    emoji: '🏛️',
+    items: [
+      { id: 'pyramid_1', label: '피라미드', type: 'decoration', subtype: 'pyramid', price: 80, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7efebb662_ChatGPTImage202642810_09_26.png' },
+    ],
+  },
+];
 
 // 기존 호환성 유지 (SHOP_ITEMS 사용처가 있을 경우 대비)
 export const SHOP_ITEMS = SHOP_THEMES.flatMap((theme) => theme.items);
