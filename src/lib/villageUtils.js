@@ -229,6 +229,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'carnotaurus') return { x, y: y + 74 };
   if (kind === 'decoration' && item?.type === 'bone_dino') return { x: x - 48, y: y + 99 };
   if (kind === 'decoration' && item?.type === 'golden_totem') return { x: x - 12, y: y + TILE_H - 21 };
+  if (kind === 'decoration' && item?.type === 'pyramid') return { x, y: y + TILE_H * 5 };
 
   return { x, y: y + 14 };
 }
@@ -580,6 +581,7 @@ export function createDecoration(subtype) {
     primitive_tent: 216,
     jungle_palm: 222,
     trex: 80, brachiosaurus: 180, triceratops: 90, ankylosaurus: 200, carnotaurus: 240, stegosaurus: 78, bone_dino: 216, golden_totem: 240,
+    pyramid: 320,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
