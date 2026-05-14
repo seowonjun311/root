@@ -233,7 +233,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'golden_totem') return { x: x - 12, y: y + TILE_H - 21 };
   if (kind === 'decoration' && item?.type === 'pyramid') return { x: x + 15, y: y + TILE_H * 5 - 100 };
   if (kind === 'decoration' && item?.type === 'sphinx') return { x: x - 38, y: y + TILE_H * 3 + 98 };
-  if (kind === 'decoration' && item?.type === 'egypt_temple') return { x: x - 10, y: y + TILE_H * 2 + 81 };
+  if (kind === 'decoration' && item?.type === 'egypt_temple') return { x: x - 8, y: y + TILE_H * 2 + 79 };
 
   return { x, y: y + 14 };
 }
