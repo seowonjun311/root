@@ -101,6 +101,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'blacksmith_forge') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'bone_dino') return { cols: 1, rows: 2 };
   if (kind === 'decoration' && item?.type === 'egypt_treasury') return { cols: 2, rows: 3 };
+  if (kind === 'decoration' && item?.type === 'pharaoh_tomb') return { cols: 2, rows: 2 };
   return { cols: 1, rows: 1 };
 }
 
@@ -249,6 +250,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'egypt_mummy') return { x, y: y + TILE_H - 10 };
   if (kind === 'decoration' && item?.type === 'pharaoh_throne') return { x, y: y + TILE_H * 3 - 110 };
   if (kind === 'decoration' && item?.type === 'egypt_treasury') return { x: x - 30, y: y + TILE_H * 2 + 30 };
+  if (kind === 'decoration' && item?.type === 'pharaoh_tomb') return { x, y: y + TILE_H * 2 + 50 };
 
   return { x, y: y + 14 };
 }
@@ -535,6 +537,7 @@ export function getDecorationImage(type) {
   if (type === 'egypt_mummy') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/cfeccf354_ChatGPTImage202642810_10_03.png';
   if (type === 'pharaoh_throne') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/eb992eccd_ChatGPTImage202642810_10_05.png';
   if (type === 'egypt_treasury') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/97f42a681_ChatGPTImage202651404_57_32-Photoroom.png';
+  if (type === 'pharaoh_tomb') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e3ba2fd8b_ChatGPTImage202651404_55_00-Photoroom.png';
 
   return grassImg;
 }
@@ -588,6 +591,7 @@ export function getDecorationLabel(type) {
     egypt_mummy: '미라',
     pharaoh_throne: '파라오 왕좌',
     egypt_treasury: '이집트 보물실',
+    pharaoh_tomb: '파라오 무덤',
   };
   return labelMap[type] || '잔디';
 }
@@ -637,6 +641,7 @@ export function createDecoration(subtype) {
     egypt_mummy: 176,
     pharaoh_throne: 216,
     egypt_treasury: 347,
+    pharaoh_tomb: 400,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
