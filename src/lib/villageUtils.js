@@ -101,7 +101,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'blacksmith_forge') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'bone_dino') return { cols: 1, rows: 2 };
   if (kind === 'decoration' && item?.type === 'egypt_treasury') return { cols: 2, rows: 3 };
-  if (kind === 'decoration' && item?.type === 'pharaoh_tomb') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'pharaoh_tomb') return { cols: 2, rows: 3 };
   return { cols: 1, rows: 1 };
 }
 
