@@ -524,6 +524,7 @@ export function getDecorationImage(type) {
   if (type === 'pharaoh_tent') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7028230e9_ChatGPTImage202642810_09_47-Photoroom.png';
   if (type === 'pharaoh_bazaar') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2d354813a_ChatGPTImage202642810_09_42-Photoroom.png';
   if (type === 'pharaoh_palace') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/570c0eaa4_ChatGPTImage202642810_09_45-Photoroom.png';
+  if (type === 'egypt_camel') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d67967890_ChatGPTImage202642810_09_49-Photoroom.png';
 
   return grassImg;
 }
@@ -572,6 +573,7 @@ export function getDecorationLabel(type) {
     pharaoh_tent: '파라오의 천막',
     pharaoh_bazaar: '파라오 시장',
     pharaoh_palace: '이집트 주택',
+    egypt_camel: '낙타',
   };
   return labelMap[type] || '잔디';
 }
@@ -616,6 +618,7 @@ export function createDecoration(subtype) {
     pharaoh_tent: 410,
     pharaoh_bazaar: 440,
     pharaoh_palace: 460,
+    egypt_camel: 380,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
