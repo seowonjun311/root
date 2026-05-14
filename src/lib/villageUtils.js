@@ -504,6 +504,7 @@ export function getDecorationImage(type) {
   if (type === 'bone_dino') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/633f3662c_ChatGPTImage202642810_34_16-Photoroom.png';
   if (type === 'golden_totem') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/762345fc7_ChatGPTImage202642810_34_20-Photoroom.png';
   if (type === 'pyramid') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7efebb662_ChatGPTImage202642810_09_26.png';
+  if (type === 'sphinx') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3dfb1b37b_ChatGPTImage202651409_17_11-Photoroom.png';
 
   return grassImg;
 }
@@ -545,6 +546,7 @@ export function getDecorationLabel(type) {
     bone_dino: '뼈 공룡',
     golden_totem: '황금 토템',
     pyramid: '피라미드',
+    sphinx: '스핑크스',
   };
   return labelMap[type] || '잔디';
 }
@@ -582,6 +584,7 @@ export function createDecoration(subtype) {
     jungle_palm: 222,
     trex: 80, brachiosaurus: 180, triceratops: 90, ankylosaurus: 200, carnotaurus: 240, stegosaurus: 78, bone_dino: 216, golden_totem: 240,
     pyramid: 422,
+    sphinx: 320,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
