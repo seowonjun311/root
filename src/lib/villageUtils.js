@@ -600,7 +600,7 @@ export function createDecoration(subtype) {
     sphinx: 640,
     egypt_temple: 430,
     egypt_tomb: 440,
-    obelisk: 330,
+    obelisk: 350,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
