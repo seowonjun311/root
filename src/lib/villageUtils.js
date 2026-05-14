@@ -245,7 +245,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'pharaoh_palace') return { x, y: y + TILE_H * 2 + 89 };
   if (kind === 'decoration' && item?.type === 'egypt_camel') return { x: x - 5, y: y + 55 };
   if (kind === 'decoration' && item?.type === 'anubis') return { x, y: y + TILE_H - 20 };
-  if (kind === 'decoration' && item?.type === 'egypt_mummy') return { x, y: y + TILE_H + 20 };
+  if (kind === 'decoration' && item?.type === 'egypt_mummy') return { x, y: y + TILE_H - 10 };
 
   return { x, y: y + 14 };
 }
@@ -627,7 +627,7 @@ export function createDecoration(subtype) {
     pharaoh_palace: 460,
     egypt_camel: 190,
     anubis: 188,
-    egypt_mummy: 160,
+    egypt_mummy: 176,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
