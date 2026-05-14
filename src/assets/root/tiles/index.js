@@ -12,7 +12,7 @@ export const dinoTile2Img = 'https://media.base44.com/images/public/69b63292a629
 export const dinoTile3Img = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e02b33aa8_3.png';
 
 // 이집트 타일
-export const egyptTileImg = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/766328e1c_ChatGPTImage202651412_47_39.png';
+export const egyptTileImg = 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7a84c46ce_ChatGPTImage202651412_47_39-Photoroom.png';
 
 export const tiles = {
   baseGrass:   baseGrassTileImg,
