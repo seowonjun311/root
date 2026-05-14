@@ -242,7 +242,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'obelisk') return { x, y: y + TILE_H + 19 };
   if (kind === 'decoration' && item?.type === 'pharaoh_tent') return { x, y: y + TILE_H + 134 };
   if (kind === 'decoration' && item?.type === 'pharaoh_bazaar') return { x: x - 5, y: y + TILE_H * 2 + 74 };
-  if (kind === 'decoration' && item?.type === 'pharaoh_palace') return { x, y: y + TILE_H * 2 + 84 };
+  if (kind === 'decoration' && item?.type === 'pharaoh_palace') return { x, y: y + TILE_H * 2 + 89 };
 
   return { x, y: y + 14 };
 }
