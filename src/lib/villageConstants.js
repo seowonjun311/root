@@ -102,6 +102,7 @@ export const SHOP_THEMES = [
       { id: 'sphinx_1', label: '스핑크스', type: 'decoration', subtype: 'sphinx', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3dfb1b37b_ChatGPTImage202651409_17_11-Photoroom.png' },
       { id: 'egypt_temple_1', label: '이집트 신전', type: 'decoration', subtype: 'egypt_temple', price: 90, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0aa248db3_ChatGPTImage202642810_09_32-Photoroom.png' },
       { id: 'egypt_tomb_1', label: '이집트 신전2', type: 'decoration', subtype: 'egypt_tomb', price: 90, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/b970ac0e2_ChatGPTImage202651412_04_43-Photoroom.png' },
+      { id: 'obelisk_1', label: '오벨리스크', type: 'decoration', subtype: 'obelisk', price: 60, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3b65addb4_ChatGPTImage202642810_09_37-Photoroom.png' },
     ],
   },
 ];

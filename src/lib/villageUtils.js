@@ -236,6 +236,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'sphinx') return { x: x - 38, y: y + TILE_H * 3 + 98 };
   if (kind === 'decoration' && item?.type === 'egypt_temple') return { x: x - 6, y: y + TILE_H * 2 + 79 };
   if (kind === 'decoration' && item?.type === 'egypt_tomb') return { x: x - 10, y: y + TILE_H * 2 + 84 };
+  if (kind === 'decoration' && item?.type === 'obelisk') return { x, y: y + TILE_H + 14 };
 
   return { x, y: y + 14 };
 }
@@ -513,6 +514,7 @@ export function getDecorationImage(type) {
   if (type === 'sphinx') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3dfb1b37b_ChatGPTImage202651409_17_11-Photoroom.png';
   if (type === 'egypt_temple') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0aa248db3_ChatGPTImage202642810_09_32-Photoroom.png';
   if (type === 'egypt_tomb') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/b970ac0e2_ChatGPTImage202651412_04_43-Photoroom.png';
+  if (type === 'obelisk') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3b65addb4_ChatGPTImage202642810_09_37-Photoroom.png';
 
   return grassImg;
 }
@@ -557,6 +559,7 @@ export function getDecorationLabel(type) {
     sphinx: '스핑크스',
     egypt_temple: '이집트 신전',
     egypt_tomb: '이집트 신전2',
+    obelisk: '오벨리스크',
   };
   return labelMap[type] || '잔디';
 }
@@ -597,6 +600,7 @@ export function createDecoration(subtype) {
     sphinx: 640,
     egypt_temple: 430,
     egypt_tomb: 440,
+    obelisk: 300,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
