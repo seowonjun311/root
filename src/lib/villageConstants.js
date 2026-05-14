@@ -108,6 +108,7 @@ export const SHOP_THEMES = [
       { id: 'pharaoh_palace_1', label: '이집트 주택', type: 'decoration', subtype: 'pharaoh_palace', price: 95, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/570c0eaa4_ChatGPTImage202642810_09_45-Photoroom.png' },
       { id: 'egypt_camel_1', label: '낙타', type: 'decoration', subtype: 'egypt_camel', price: 60, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d67967890_ChatGPTImage202642810_09_49-Photoroom.png' },
       { id: 'anubis_1', label: '아누비스', type: 'decoration', subtype: 'anubis', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/dd63a75f9_ChatGPTImage202642810_09_52.png' },
+      { id: 'egypt_mummy_1', label: '미라', type: 'decoration', subtype: 'egypt_mummy', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/cfeccf354_ChatGPTImage202642810_10_03.png' },
     ],
   },
 ];
