@@ -100,6 +100,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'stone_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'blacksmith_forge') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'bone_dino') return { cols: 1, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'egypt_treasury') return { cols: 2, rows: 2 };
   return { cols: 1, rows: 1 };
 }
 
