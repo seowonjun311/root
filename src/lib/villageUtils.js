@@ -250,7 +250,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'egypt_mummy') return { x, y: y + TILE_H - 10 };
   if (kind === 'decoration' && item?.type === 'pharaoh_throne') return { x, y: y + TILE_H * 3 - 110 };
   if (kind === 'decoration' && item?.type === 'egypt_treasury') return { x: x - 30, y: y + TILE_H * 2 + 30 };
-  if (kind === 'decoration' && item?.type === 'pharaoh_tomb') return { x: x - 10, y: y + TILE_H * 2 };
+  if (kind === 'decoration' && item?.type === 'pharaoh_tomb') return { x: x - 20, y: y + TILE_H * 2 - 10 };
 
   return { x, y: y + 14 };
 }
