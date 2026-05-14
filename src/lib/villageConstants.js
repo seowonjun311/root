@@ -113,6 +113,7 @@ export const SHOP_THEMES = [
       { id: 'egypt_treasury_1', label: '이집트 보물실', type: 'decoration', subtype: 'egypt_treasury', price: 180, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/97f42a681_ChatGPTImage202651404_57_32-Photoroom.png' },
       { id: 'pharaoh_tomb_1', label: '파라오 무덤', type: 'decoration', subtype: 'pharaoh_tomb', price: 200, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e3ba2fd8b_ChatGPTImage202651404_55_00-Photoroom.png' },
       { id: 'bastet_1', label: '바스테트', type: 'decoration', subtype: 'bastet', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7eab4517d_ChatGPTImage202651404_37_37-Photoroom.png' },
+      { id: 'egypt_canal_1', label: '이집트 운하', type: 'decoration', subtype: 'egypt_canal', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/b208b8e0f_ChatGPTImage202651406_26_54-Photoroom.png' },
     ],
   },
 ];

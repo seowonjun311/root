@@ -92,6 +92,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'sphinx') return { cols: 2, rows: 3 };
   if (kind === 'decoration' && item?.type === 'egypt_temple') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'egypt_tomb') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'egypt_canal') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'pharaoh_tent') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'pharaoh_bazaar') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'pharaoh_palace') return { cols: 2, rows: 2 };
@@ -252,6 +253,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'egypt_treasury') return { x: x - 30, y: y + TILE_H * 2 + 30 };
   if (kind === 'decoration' && item?.type === 'pharaoh_tomb') return { x: x - 5, y: y + TILE_H * 2 - 10 };
   if (kind === 'decoration' && item?.type === 'bastet') return { x: x - 10, y: y + TILE_H * 2 - 80 };
+  if (kind === 'decoration' && item?.type === 'egypt_canal') return { x, y: y + TILE_H * 2 + 20 };
 
   return { x, y: y + 14 };
 }
@@ -540,6 +542,7 @@ export function getDecorationImage(type) {
   if (type === 'egypt_treasury') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/97f42a681_ChatGPTImage202651404_57_32-Photoroom.png';
   if (type === 'pharaoh_tomb') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e3ba2fd8b_ChatGPTImage202651404_55_00-Photoroom.png';
   if (type === 'bastet') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7eab4517d_ChatGPTImage202651404_37_37-Photoroom.png';
+  if (type === 'egypt_canal') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/b208b8e0f_ChatGPTImage202651406_26_54-Photoroom.png';
 
   return grassImg;
 }
@@ -595,6 +598,7 @@ export function getDecorationLabel(type) {
     egypt_treasury: '이집트 보물실',
     pharaoh_tomb: '파라오 무덤',
     bastet: '바스테트',
+    egypt_canal: '이집트 운하',
   };
   return labelMap[type] || '잔디';
 }
@@ -646,6 +650,7 @@ export function createDecoration(subtype) {
     egypt_treasury: 347,
     pharaoh_tomb: 300,
     bastet: 224,
+    egypt_canal: 240,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
