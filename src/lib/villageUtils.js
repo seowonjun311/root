@@ -246,6 +246,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'egypt_camel') return { x: x - 5, y: y + 55 };
   if (kind === 'decoration' && item?.type === 'anubis') return { x, y: y + TILE_H - 20 };
   if (kind === 'decoration' && item?.type === 'egypt_mummy') return { x, y: y + TILE_H - 10 };
+  if (kind === 'decoration' && item?.type === 'pharaoh_throne') return { x, y: y + TILE_H * 3 + 40 };
 
   return { x, y: y + 14 };
 }
@@ -530,6 +531,7 @@ export function getDecorationImage(type) {
   if (type === 'egypt_camel') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d67967890_ChatGPTImage202642810_09_49-Photoroom.png';
   if (type === 'anubis') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/dd63a75f9_ChatGPTImage202642810_09_52.png';
   if (type === 'egypt_mummy') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/cfeccf354_ChatGPTImage202642810_10_03.png';
+  if (type === 'pharaoh_throne') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/eb992eccd_ChatGPTImage202642810_10_05.png';
 
   return grassImg;
 }
@@ -581,6 +583,7 @@ export function getDecorationLabel(type) {
     egypt_camel: '낙타',
     anubis: '아누비스',
     egypt_mummy: '미라',
+    pharaoh_throne: '파라오 왕좌',
   };
   return labelMap[type] || '잔디';
 }
@@ -628,6 +631,7 @@ export function createDecoration(subtype) {
     egypt_camel: 190,
     anubis: 188,
     egypt_mummy: 176,
+    pharaoh_throne: 280,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
