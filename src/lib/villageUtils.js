@@ -89,6 +89,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'building') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'mammoth_hut') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'pyramid') return { cols: 3, rows: 3 };
+  if (kind === 'decoration' && item?.type === 'sphinx') return { cols: 2, rows: 1 };
   if (kind === 'decoration' && item?.type === 'volcano_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'wooden_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'stone_hut') return { cols: 2, rows: 2 };
@@ -584,7 +585,7 @@ export function createDecoration(subtype) {
     jungle_palm: 222,
     trex: 80, brachiosaurus: 180, triceratops: 90, ankylosaurus: 200, carnotaurus: 240, stegosaurus: 78, bone_dino: 216, golden_totem: 240,
     pyramid: 422,
-    sphinx: 320,
+    sphinx: 640,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
