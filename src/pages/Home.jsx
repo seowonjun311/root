@@ -443,8 +443,23 @@ export default function Home() {
 
     const nextPoints = currentPoints - item.price;
 
-    // 타일 타입: 즉시 적용
+    // 타일 타입: 가방에 보관 (dino 계열은 즉시 적용, egypt는 가방에 넣기)
     if (item.type === 'tile') {
+      if (item.subtype === 'egypt') {
+        const newInventoryItem = createInventoryItem(item);
+        const nextInventoryDecorations = [...inventoryDecorations, newInventoryItem];
+        const nextState = { village_points: nextPoints, village_tile_theme: tileTheme, village_decorations: decorations, village_characters: characters, village_buildings: [], village_inventory_characters: inventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
+        try {
+          await saveVillageState(nextState);
+          setInventoryDecorations(nextInventoryDecorations);
+          originalVillageRef.current = { ...currentVillage, ...nextState };
+          toast.success(`${item.label} 구매 완료! 가방에 보관했어요. (-${item.price} 포인트)`, { duration: 1000 });
+        } catch (error) {
+          console.error('handleVillagePurchase tile error:', error);
+          toast.error('구매 중 오류가 발생했어요.');
+        }
+        return;
+      }
       const nextTheme = item.subtype;
       const nextState = { village_points: nextPoints, village_tile_theme: nextTheme, village_decorations: decorations, village_characters: characters, village_buildings: [], village_inventory_characters: inventoryCharacters, village_inventory_decorations: inventoryDecorations };
       try {
@@ -489,6 +504,25 @@ export default function Home() {
     const nextInventoryDecorations = [...inventoryDecorations];
 
     let placedItemId = null;
+
+    // 타일 타입: 테마 변경
+    if (inventoryItem.type === 'tile') {
+      const nextTheme = inventoryItem.subtype;
+      const removeIndex = nextInventoryDecorations.findIndex((item) => item.id === inventoryItem.id);
+      if (removeIndex >= 0) nextInventoryDecorations.splice(removeIndex, 1);
+      const nextState = { village_points: currentVillage.village_points, village_tile_theme: nextTheme, village_decorations: nextDecorations, village_characters: nextCharacters, village_buildings: [], village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
+      try {
+        await saveVillageState(nextState);
+        setTileTheme(nextTheme);
+        setInventoryDecorations(nextInventoryDecorations);
+        originalVillageRef.current = { ...currentVillage, ...nextState };
+        toast.success(`${inventoryItem.label} 땅을 깔았어요!`);
+      } catch (error) {
+        console.error('handlePlaceInventoryItem tile error:', error);
+        toast.error('가방에서 꺼내는 중 오류가 발생했어요.');
+      }
+      return;
+    }
 
     if (inventoryItem.type === 'character') {
       const newCharacter = createPlacedObjectFromInventory(inventoryItem);

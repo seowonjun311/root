@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { getCharacterImage, getDecorationImage, getDecorationLabel } from '@/lib/villageUtils';
 import { SHOP_ITEMS, SHOP_THEMES } from '@/lib/villageConstants';
+import { egyptTileImg } from '@/assets/root/tiles/index.js';
 
 function getRefundPrice(subtype) {
   const shopItem = SHOP_ITEMS.find((i) => i.subtype === subtype);
@@ -29,7 +30,7 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
 
   const grouped = Object.entries(
     items.reduce((acc, item) => {
-      const key = item.subtype;
+      const key = item.subtype || item.id;
       if (!acc[key]) acc[key] = { ...item, count: 0, allItems: [] };
       acc[key].count += 1;
       acc[key].allItems.push(item);
@@ -90,10 +91,12 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
               <div className="grid grid-cols-3 gap-3">
                 {grouped.map(([key, item]) => {
                   const img = item.type === 'character'
-                    ? getCharacterImage(item.subtype)
-                    : getDecorationImage(item.subtype);
+                  ? getCharacterImage(item.subtype)
+                  : item.type === 'tile'
+                  ? (item.subtype === 'egypt' ? egyptTileImg : getDecorationImage(item.subtype))
+                  : getDecorationImage(item.subtype);
                   const refund = getRefundPrice(item.subtype);
-                  const displayLabel = item.label || (item.type === 'decoration' ? getDecorationLabel(item.subtype) : '항목');
+                  const displayLabel = item.label || (item.type === 'tile' ? '이집트 땅' : item.type === 'decoration' ? getDecorationLabel(item.subtype) : '항목');
                   return (
                     <div
                       key={key}

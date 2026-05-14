@@ -1,5 +1,5 @@
 import { foxImg, alpacaImg, platypusImg } from '@/assets/root/characters';
-import { dinoTile1Img, dinoTile2Img, dinoTile3Img } from '@/assets/root/tiles/index.js';
+import { dinoTile1Img, dinoTile2Img, dinoTile3Img, egyptTileImg } from '@/assets/root/tiles/index.js';
 import { grassImg, treeImg, flowerImg, boneHutImg, mammothHutImg } from '@/assets/root/decorations';
 import { borderTree1Img, borderTree2Img, borderTree3Img } from '@/assets/root/borderTrees/index.js';
 import { borderBush1Img } from '@/assets/root/borderBushes/index.js';
@@ -98,6 +98,7 @@ export const SHOP_THEMES = [
     label: '이집트',
     emoji: '🏛️',
     items: [
+      { id: 'tile_egypt_1', label: '이집트 땅', type: 'tile', subtype: 'egypt', price: 50, image: egyptTileImg },
       { id: 'pyramid_1', label: '피라미드', type: 'decoration', subtype: 'pyramid', price: 80, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7efebb662_ChatGPTImage202642810_09_26.png' },
     ],
   },

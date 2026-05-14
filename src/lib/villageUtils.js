@@ -21,7 +21,7 @@ import {
 } from '@/assets/root/characters';
 import { grassImg, treeImg, flowerImg, stoneCaveImg, woodTowerImg, smithyLargeImg, tentImg, smithySmallImg, boneHutImg, mammothHutImg, thatchHutImg, smokeHutImg, woodHouseImg, dinoFossilImg, dinoEggNestImg, campfireImg, totemPoleImg, tribeBannerImg, palmTreeImg, ancientTreeImg, trexImg, brachiosaurusImg, triceratopsImg, stegosaurusImg } from '@/assets/root/decorations';
 import { getBuilding } from '@/assets/root/buildings';
-import { baseGrassTileImg, variantGrassTileImg, pathTileImg, dinoTile1Img, dinoTile2Img, dinoTile3Img } from '@/assets/root/tiles/index.js';
+import { baseGrassTileImg, variantGrassTileImg, pathTileImg, dinoTile1Img, dinoTile2Img, dinoTile3Img, egyptTileImg } from '@/assets/root/tiles/index.js';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
 
 
@@ -736,6 +736,9 @@ export function getTileImageByKind(kind, tileTheme = 'grass') {
     if (kind === TILE_KIND.VARIANT_GRASS) return DINO_TILE_IMAGES[1];
     if (kind === TILE_KIND.PATH) return DINO_TILE_IMAGES[2];
     return DINO_TILE_IMAGES[0];
+  }
+  if (tileTheme === 'egypt') {
+    return egyptTileImg;
   }
   if (kind === TILE_KIND.VARIANT_GRASS) return variantGrassTileImg;
   return baseGrassTileImg;
