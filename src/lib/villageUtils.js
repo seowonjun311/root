@@ -92,6 +92,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'sphinx') return { cols: 2, rows: 3 };
   if (kind === 'decoration' && item?.type === 'egypt_temple') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'egypt_tomb') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'pharaoh_tent') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'volcano_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'wooden_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'stone_hut') return { cols: 2, rows: 2 };
