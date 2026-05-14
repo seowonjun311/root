@@ -112,6 +112,7 @@ export const SHOP_THEMES = [
       { id: 'pharaoh_throne_1', label: '파라오 왕좌', type: 'decoration', subtype: 'pharaoh_throne', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/eb992eccd_ChatGPTImage202642810_10_05.png' },
       { id: 'egypt_treasury_1', label: '이집트 보물실', type: 'decoration', subtype: 'egypt_treasury', price: 180, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/97f42a681_ChatGPTImage202651404_57_32-Photoroom.png' },
       { id: 'pharaoh_tomb_1', label: '파라오 무덤', type: 'decoration', subtype: 'pharaoh_tomb', price: 200, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e3ba2fd8b_ChatGPTImage202651404_55_00-Photoroom.png' },
+      { id: 'bastet_1', label: '바스테트', type: 'decoration', subtype: 'bastet', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7eab4517d_ChatGPTImage202651404_37_37-Photoroom.png' },
     ],
   },
 ];
