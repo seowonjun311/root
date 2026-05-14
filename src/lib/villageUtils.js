@@ -641,7 +641,7 @@ export function createDecoration(subtype) {
     egypt_mummy: 176,
     pharaoh_throne: 216,
     egypt_treasury: 347,
-    pharaoh_tomb: 400,
+    pharaoh_tomb: 900,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
