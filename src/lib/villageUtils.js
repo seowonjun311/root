@@ -94,6 +94,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'egypt_tomb') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'pharaoh_tent') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'pharaoh_bazaar') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'pharaoh_palace') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'volcano_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'wooden_hut') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'stone_hut') return { cols: 2, rows: 2 };
@@ -241,6 +242,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'obelisk') return { x, y: y + TILE_H + 19 };
   if (kind === 'decoration' && item?.type === 'pharaoh_tent') return { x, y: y + TILE_H + 134 };
   if (kind === 'decoration' && item?.type === 'pharaoh_bazaar') return { x: x - 5, y: y + TILE_H * 2 + 74 };
+  if (kind === 'decoration' && item?.type === 'pharaoh_palace') return { x, y: y + TILE_H * 2 + 84 };
 
   return { x, y: y + 14 };
 }
@@ -521,6 +523,7 @@ export function getDecorationImage(type) {
   if (type === 'obelisk') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3b65addb4_ChatGPTImage202642810_09_37-Photoroom.png';
   if (type === 'pharaoh_tent') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7028230e9_ChatGPTImage202642810_09_47-Photoroom.png';
   if (type === 'pharaoh_bazaar') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2d354813a_ChatGPTImage202642810_09_42-Photoroom.png';
+  if (type === 'pharaoh_palace') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/570c0eaa4_ChatGPTImage202642810_09_45-Photoroom.png';
 
   return grassImg;
 }
@@ -568,6 +571,7 @@ export function getDecorationLabel(type) {
     obelisk: '오벨리스크',
     pharaoh_tent: '파라오의 천막',
     pharaoh_bazaar: '파라오 시장',
+    pharaoh_palace: '파라오의 궁전',
   };
   return labelMap[type] || '잔디';
 }
@@ -611,6 +615,7 @@ export function createDecoration(subtype) {
     obelisk: 350,
     pharaoh_tent: 410,
     pharaoh_bazaar: 440,
+    pharaoh_palace: 460,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
