@@ -571,7 +571,7 @@ export function getDecorationLabel(type) {
     obelisk: '오벨리스크',
     pharaoh_tent: '파라오의 천막',
     pharaoh_bazaar: '파라오 시장',
-    pharaoh_palace: '파라오의 궁전',
+    pharaoh_palace: '이집트 주택',
   };
   return labelMap[type] || '잔디';
 }
