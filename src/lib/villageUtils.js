@@ -591,7 +591,7 @@ export function createDecoration(subtype) {
     trex: 80, brachiosaurus: 180, triceratops: 90, ankylosaurus: 200, carnotaurus: 240, stegosaurus: 78, bone_dino: 216, golden_totem: 240,
     pyramid: 422,
     sphinx: 640,
-    egypt_temple: 416,
+    egypt_temple: 458,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
