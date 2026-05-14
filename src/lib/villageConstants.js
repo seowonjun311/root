@@ -98,7 +98,6 @@ export const SHOP_THEMES = [
     label: '이집트',
     emoji: '🏛️',
     items: [
-      { id: 'tile_egypt_1', label: '이집트 땅', type: 'tile', subtype: 'egypt', price: 50, image: egyptTileImg },
       { id: 'pyramid_1', label: '피라미드', type: 'decoration', subtype: 'pyramid', price: 80, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7efebb662_ChatGPTImage202642810_09_26.png' },
     ],
   },
