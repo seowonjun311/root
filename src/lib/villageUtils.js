@@ -533,7 +533,7 @@ export function getDecorationImage(type) {
   if (type === 'anubis') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/dd63a75f9_ChatGPTImage202642810_09_52.png';
   if (type === 'egypt_mummy') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/cfeccf354_ChatGPTImage202642810_10_03.png';
   if (type === 'pharaoh_throne') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/eb992eccd_ChatGPTImage202642810_10_05.png';
-  if (type === 'egypt_treasury') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6da8fca82_ChatGPTImage202651404_57_32.png';
+  if (type === 'egypt_treasury') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/97f42a681_ChatGPTImage202651404_57_32-Photoroom.png';
 
   return grassImg;
 }
