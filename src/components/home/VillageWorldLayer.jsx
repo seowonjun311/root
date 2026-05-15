@@ -571,12 +571,13 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
               {buildings.map((building) => {
               const isSelected = selectedObject?.type === 'building' && selectedObject?.id === building.id;
               const pos = getObjectScreenPosition(building, 'building');
+              const hitW = building.w * 0.5;
+              const hitH = building.h * 0.6;
 
               return (
               <div
               key={building.id}
-              className="absolute"
-              onPointerDown={(e) => startObjectDrag(e, 'building', building.id)}
+              className="absolute pointer-events-none"
               style={{
               left: pos.x,
               top: pos.y,
@@ -586,7 +587,6 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
               outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
               outlineOffset: '3px',
               borderRadius: '8px',
-              cursor: isEditMode ? 'grab' : 'default',
               zIndex: building.row * 1000 + building.col * 10 + Math.round(pos.y),
               }}
               >
@@ -602,6 +602,21 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
               userSelect: 'none',
               WebkitUserDrag: 'none',
               transform: `scaleX(${building.flipped ? -1 : 1})`,
+              pointerEvents: 'none',
+              }}
+              />
+              {/* 실제 클릭 가능한 히트 영역 - 건물 중앙 하단에만 */}
+              <div
+              onPointerDown={(e) => startObjectDrag(e, 'building', building.id)}
+              style={{
+              position: 'absolute',
+              left: '50%',
+              bottom: 0,
+              width: hitW,
+              height: hitH,
+              transform: 'translateX(-50%)',
+              cursor: isEditMode ? 'grab' : 'default',
+              pointerEvents: isEditMode ? 'auto' : 'none',
               }}
               />
               </div>
