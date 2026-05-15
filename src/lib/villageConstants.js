@@ -127,7 +127,6 @@ export const SHOP_THEMES = [
       { id: 'japan_mill_1', label: '물레방아 가게', type: 'decoration', subtype: 'japan_mill', price: 90, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0fad2a90d_2026-04-23205124-Photoroom.png' },
       { id: 'japan_onsen_1', label: '온천', type: 'decoration', subtype: 'japan_onsen', price: 85, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/fc291de22_2026-04-23204940-Photoroom.png' },
       { id: 'japan_shop_1', label: '일본 상점', type: 'decoration', subtype: 'japan_shop', price: 110, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c262b9377_2026-04-23204539-Photoroom.png' },
-      { id: 'japan_torii_1', label: '도리이', type: 'decoration', subtype: 'japan_torii', price: 140, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/73de5a0bb_ChatGPTImage202651505_52_28-Photoroom.png' },
     ],
   },
 ];
