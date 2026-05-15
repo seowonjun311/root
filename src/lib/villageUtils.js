@@ -99,6 +99,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'japan_inn') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_mill') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_shop') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'japan_sake_shop') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_tea_house') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_lucky_cat') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'japan_onsen') return { cols: 2, rows: 2 };
@@ -269,6 +270,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'japan_mill') return { x, y: y + TILE_H * 2 - 25 };
   if (kind === 'decoration' && item?.type === 'japan_onsen') return { x, y: y + TILE_H * 2 - 30 };
   if (kind === 'decoration' && item?.type === 'japan_shop') return { x, y: y + TILE_H * 2 - 30 };
+  if (kind === 'decoration' && item?.type === 'japan_sake_shop') return { x, y: y + TILE_H * 2 - 15 };
   if (kind === 'decoration' && item?.type === 'japan_tea_house') return { x, y: y + TILE_H * 2 - 10 };
   if (kind === 'decoration' && item?.type === 'japan_lucky_cat') return { x, y: y + 24 };
   if (kind === 'decoration' && item?.type === 'japan_cherry_tree') return { x: x - 5, y: y + TILE_H * 2 - 65 };
@@ -573,6 +575,7 @@ export function getDecorationImage(type) {
   if (type === 'japan_lucky_cat') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/477a4bb91_ChatGPTImage202651503_01_27-Photoroom.png';
   if (type === 'japan_cherry_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a204cec80_ChatGPTImage202651506_16_27-Photoroom.png';
   if (type === 'japan_lantern') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/24af2f5d0_2026-04-23205859-Photoroom.png';
+  if (type === 'japan_sake_shop') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/bf9f75d02_ChatGPTImage202651506_24_22-Photoroom.png';
 
   return grassImg;
 }
@@ -636,6 +639,7 @@ export function getDecorationLabel(type) {
     japan_mill: '물레방아 가게',
     japan_onsen: '온천',
     japan_shop: '일본 상점',
+    japan_sake_shop: '일본 주점',
     japan_tea_house: '다실',
     japan_lucky_cat: '행운의 고양이',
     japan_cherry_tree: '벚꽃나무',
@@ -699,6 +703,7 @@ export function createDecoration(subtype) {
     japan_mill: 280,
     japan_onsen: 252,
     japan_shop: 266,
+    japan_sake_shop: 290,
     japan_tea_house: 320,
     japan_lucky_cat: 140,
     japan_cherry_tree: 286,
