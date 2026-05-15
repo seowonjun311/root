@@ -543,6 +543,7 @@ export function getDecorationImage(type) {
   if (type === 'pharaoh_tomb') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e3ba2fd8b_ChatGPTImage202651404_55_00-Photoroom.png';
   if (type === 'bastet') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7eab4517d_ChatGPTImage202651404_37_37-Photoroom.png';
   if (type === 'egypt_canal') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/b208b8e0f_ChatGPTImage202651406_26_54-Photoroom.png';
+  if (type === 'egypt_palm') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/16601936d_ChatGPTImage202651404_40_30-Photoroom.png';
 
   return grassImg;
 }
@@ -599,6 +600,7 @@ export function getDecorationLabel(type) {
     pharaoh_tomb: '파라오 무덤',
     bastet: '바스테트',
     egypt_canal: '이집트 운하',
+    egypt_palm: '이집트 야자수',
   };
   return labelMap[type] || '잔디';
 }
@@ -651,6 +653,7 @@ export function createDecoration(subtype) {
     pharaoh_tomb: 300,
     bastet: 224,
     egypt_canal: 170,
+    egypt_palm: 200,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
