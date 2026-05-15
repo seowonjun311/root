@@ -498,6 +498,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
   const isNewlyPlaced = newlyPlacedItemId === item.id;
   const pos = getObjectScreenPosition(item, 'decoration');
   const tilePos = gridToScreen(item.col, item.row);
+  const zBase = (item.row + item.col) * 1000;
 
   return (
     <div key={item.id}>
@@ -511,7 +512,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
           height: TILE_H,
           clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
           background: isNewlyPlaced ? 'rgba(255,215,0,0.4)' : 'rgba(80,40,0,0.18)',
-          zIndex: item.row * 1000 + item.col * 10 + Math.round(pos.y) - 1,
+          zIndex: zBase - 1,
           transition: 'background 1s ease-out',
         }}
       />
@@ -526,7 +527,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
           outlineOffset: '3px',
           borderRadius: '999px',
           cursor: isEditMode ? 'grab' : 'default',
-          zIndex: item.row * 1000 + item.col * 10 + Math.round(pos.y),
+          zIndex: zBase,
           transition: 'outline 1s ease-out',
         }}
       >
@@ -560,7 +561,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
               outlineOffset: '3px',
               borderRadius: '999px',
               cursor: isEditMode ? 'grab' : 'default',
-              zIndex: npc.row * 1000 + npc.col * 10 + Math.round(pos.y),
+              zIndex: (npc.row + npc.col) * 1000 + 500,
               }}
               >
               <CharacterSprite npc={npc} />
@@ -587,7 +588,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
               outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
               outlineOffset: '3px',
               borderRadius: '8px',
-              zIndex: building.row * 1000 + building.col * 10 + Math.round(pos.y),
+              zIndex: (building.row + building.col) * 1000,
               }}
               >
               <img
