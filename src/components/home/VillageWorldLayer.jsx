@@ -486,7 +486,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
                     const color = getPreviewColor(placementPreview.valid);
                     return (
                       <div key={`preview-${tile.col}-${tile.row}`} className="absolute pointer-events-none"
-                        style={{ left: pos.x - TILE_W / 2, top: pos.y - TILE_H / 2, width: TILE_W, height: TILE_H, clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)', border: color.border, background: color.background, boxSizing: 'border-box', zIndex: 2000, filter: 'brightness(1.4) saturate(1.8)', outline: color.border, boxShadow: `inset 0 0 12px ${placementPreview.valid ? 'rgba(34,197,94,0.6)' : 'rgba(239,68,68,0.6)'}` }}
+                        style={{ left: pos.x - TILE_W / 2, top: pos.y - TILE_H / 2, width: TILE_W, height: TILE_H, clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)', border: color.border, background: color.background, boxSizing: 'border-box', zIndex: 2000, boxShadow: `0 0 16px 4px ${placementPreview.valid ? '#00ff88' : '#ff4444'}` }}
                       />
                     );
                   })

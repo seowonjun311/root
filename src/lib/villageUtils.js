@@ -273,8 +273,8 @@ export function getPreviewTiles(item, kind, col, row) {
 
 export function getPreviewColor(valid) {
   return valid
-    ? { border: '3px solid rgba(34,197,94,1)', background: 'rgba(34,197,94,0.45)' }
-    : { border: '3px solid rgba(239,68,68,1)', background: 'rgba(239,68,68,0.45)' };
+    ? { border: '4px solid #00ff88', background: 'rgba(0,255,136,0.6)' }
+    : { border: '4px solid #ff4444', background: 'rgba(255,68,68,0.6)' };
 }
 
 // --- 날짜/주간 ---
