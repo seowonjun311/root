@@ -271,6 +271,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'japan_shop') return { x, y: y + TILE_H * 2 - 30 };
   if (kind === 'decoration' && item?.type === 'japan_tea_house') return { x, y: y + TILE_H * 2 - 10 };
   if (kind === 'decoration' && item?.type === 'japan_lucky_cat') return { x, y: y + 24 };
+  if (kind === 'decoration' && item?.type === 'japan_cherry_tree') return { x, y: y + TILE_H * 2 + 50 };
 
   return { x, y: y + 14 };
 }
@@ -569,6 +570,7 @@ export function getDecorationImage(type) {
   if (type === 'japan_shop') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c262b9377_2026-04-23204539-Photoroom.png';
   if (type === 'japan_tea_house') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d604595ee_ChatGPTImage202651506_00_15-Photoroom.png';
   if (type === 'japan_lucky_cat') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/477a4bb91_ChatGPTImage202651503_01_27-Photoroom.png';
+  if (type === 'japan_cherry_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a204cec80_ChatGPTImage202651506_16_27-Photoroom.png';
 
   return grassImg;
 }
@@ -634,6 +636,7 @@ export function getDecorationLabel(type) {
     japan_shop: '일본 상점',
     japan_tea_house: '다실',
     japan_lucky_cat: '행운의 고양이',
+    japan_cherry_tree: '벚꽃나무',
   };
   return labelMap[type] || '잔디';
 }
@@ -695,6 +698,7 @@ export function createDecoration(subtype) {
     japan_shop: 266,
     japan_tea_house: 320,
     japan_lucky_cat: 140,
+    japan_cherry_tree: 380,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
