@@ -122,6 +122,7 @@ export const SHOP_THEMES = [
     emoji: '🏯',
     items: [
       { id: 'japan_castle_1', label: '일본성', type: 'decoration', subtype: 'japan_castle', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d064df234_ChatGPTImage202651503_18_36-Photoroom.png' },
+      { id: 'japan_pagoda_1', label: '일본 탑', type: 'decoration', subtype: 'japan_pagoda', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6f0885e7f_ChatGPTImage202651503_15_50-Photoroom.png' },
     ],
   },
 ];

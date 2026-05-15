@@ -95,6 +95,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'egypt_canal') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'egypt_palm') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'japan_castle') return { cols: 3, rows: 3 };
+  if (kind === 'decoration' && item?.type === 'japan_pagoda') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'pharaoh_tent') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'pharaoh_bazaar') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'pharaoh_palace') return { cols: 2, rows: 2 };
@@ -257,6 +258,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'bastet') return { x: x - 10, y: y + TILE_H * 2 - 80 };
   if (kind === 'decoration' && item?.type === 'egypt_canal') return { x, y: y + TILE_H * 2 - 40 };
   if (kind === 'decoration' && item?.type === 'japan_castle') return { x: x - 5, y: y + TILE_H * 5 - 50 };
+  if (kind === 'decoration' && item?.type === 'japan_pagoda') return { x, y: y + TILE_H * 4 - 20 };
 
   return { x, y: y + 14 };
 }
@@ -548,6 +550,7 @@ export function getDecorationImage(type) {
   if (type === 'egypt_canal') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/b208b8e0f_ChatGPTImage202651406_26_54-Photoroom.png';
   if (type === 'egypt_palm') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/16601936d_ChatGPTImage202651404_40_30-Photoroom.png';
   if (type === 'japan_castle') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d064df234_ChatGPTImage202651503_18_36-Photoroom.png';
+  if (type === 'japan_pagoda') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6f0885e7f_ChatGPTImage202651503_15_50-Photoroom.png';
 
   return grassImg;
 }
@@ -606,6 +609,7 @@ export function getDecorationLabel(type) {
     egypt_canal: '이집트 운하',
     egypt_palm: '이집트 야자수',
     japan_castle: '일본성',
+    japan_pagoda: '일본 탑',
   };
   return labelMap[type] || '잔디';
 }
@@ -660,6 +664,7 @@ export function createDecoration(subtype) {
     egypt_canal: 170,
     egypt_palm: 200,
     japan_castle: 686,
+    japan_pagoda: 420,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
