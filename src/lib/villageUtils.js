@@ -260,7 +260,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'pharaoh_tomb') return { x: x - 5, y: y + TILE_H * 2 - 10 };
   if (kind === 'decoration' && item?.type === 'bastet') return { x: x - 10, y: y + TILE_H * 2 - 80 };
   if (kind === 'decoration' && item?.type === 'egypt_canal') return { x, y: y + TILE_H * 2 - 40 };
-  if (kind === 'decoration' && item?.type === 'japan_castle') return { x: x - 5, y: y + TILE_H * 5 - 50 };
+  if (kind === 'decoration' && item?.type === 'japan_castle') return { x: x - 5, y: y + TILE_H * 5 - 80 };
   if (kind === 'decoration' && item?.type === 'japan_pagoda') return { x: x - 10, y: y + TILE_H * 4 - 110 };
   if (kind === 'decoration' && item?.type === 'japan_inn') return { x, y: y + TILE_H * 2 - 10 };
   if (kind === 'decoration' && item?.type === 'japan_mill') return { x, y: y + TILE_H * 2 - 10 };
@@ -675,7 +675,7 @@ export function createDecoration(subtype) {
     bastet: 224,
     egypt_canal: 170,
     egypt_palm: 200,
-    japan_castle: 446,
+    japan_castle: 491,
     japan_pagoda: 630,
     japan_inn: 288,
     japan_mill: 280,
