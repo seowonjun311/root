@@ -99,7 +99,6 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'japan_inn') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_mill') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_shop') return { cols: 2, rows: 2 };
-  if (kind === 'decoration' && item?.type === 'japan_torii') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_onsen') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'pharaoh_tent') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'pharaoh_bazaar') return { cols: 2, rows: 2 };
@@ -268,7 +267,6 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'japan_mill') return { x, y: y + TILE_H * 2 - 25 };
   if (kind === 'decoration' && item?.type === 'japan_onsen') return { x, y: y + TILE_H * 2 - 30 };
   if (kind === 'decoration' && item?.type === 'japan_shop') return { x, y: y + TILE_H * 2 - 30 };
-  if (kind === 'decoration' && item?.type === 'japan_torii') return { x, y: y + TILE_H * 2 + 20 };
 
   return { x, y: y + 14 };
 }
@@ -565,7 +563,6 @@ export function getDecorationImage(type) {
   if (type === 'japan_mill') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0fad2a90d_2026-04-23205124-Photoroom.png';
   if (type === 'japan_onsen') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/fc291de22_2026-04-23204940-Photoroom.png';
   if (type === 'japan_shop') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c262b9377_2026-04-23204539-Photoroom.png';
-  if (type === 'japan_torii') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/869a33fef_2026-04-23205239-Photoroom.png';
 
   return grassImg;
 }
@@ -629,7 +626,6 @@ export function getDecorationLabel(type) {
     japan_mill: '물레방아 가게',
     japan_onsen: '온천',
     japan_shop: '일본 상점',
-    japan_torii: '도리이',
   };
   return labelMap[type] || '잔디';
 }
@@ -689,7 +685,6 @@ export function createDecoration(subtype) {
     japan_mill: 280,
     japan_onsen: 252,
     japan_shop: 266,
-    japan_torii: 280,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
