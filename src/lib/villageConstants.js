@@ -116,6 +116,14 @@ export const SHOP_THEMES = [
       { id: 'egypt_palm_1', label: '이집트 야자수', type: 'decoration', subtype: 'egypt_palm', price: 40, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/16601936d_ChatGPTImage202651404_40_30-Photoroom.png' },
     ],
   },
+  {
+    id: 'japan',
+    label: '일본',
+    emoji: '🏯',
+    items: [
+      { id: 'japan_castle_1', label: '일본성', type: 'decoration', subtype: 'japan_castle', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d064df234_ChatGPTImage202651503_18_36-Photoroom.png' },
+    ],
+  },
 ];
 
 // 기존 호환성 유지 (SHOP_ITEMS 사용처가 있을 경우 대비)
