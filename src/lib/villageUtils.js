@@ -266,7 +266,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'japan_inn') return { x, y: y + TILE_H * 2 - 20 };
   if (kind === 'decoration' && item?.type === 'japan_mill') return { x, y: y + TILE_H * 2 - 25 };
   if (kind === 'decoration' && item?.type === 'japan_onsen') return { x, y: y + TILE_H * 2 - 30 };
-  if (kind === 'decoration' && item?.type === 'japan_shop') return { x, y: y + TILE_H * 2 - 20 };
+  if (kind === 'decoration' && item?.type === 'japan_shop') return { x, y: y + TILE_H * 2 - 30 };
 
   return { x, y: y + 14 };
 }
