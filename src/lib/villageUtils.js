@@ -675,7 +675,7 @@ export function createDecoration(subtype) {
     bastet: 224,
     egypt_canal: 170,
     egypt_palm: 200,
-    japan_castle: 343,
+    japan_castle: 446,
     japan_pagoda: 630,
     japan_inn: 288,
     japan_mill: 280,
