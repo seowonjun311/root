@@ -260,7 +260,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'egypt_canal') return { x, y: y + TILE_H * 2 - 40 };
   if (kind === 'decoration' && item?.type === 'japan_castle') return { x: x - 5, y: y + TILE_H * 5 - 50 };
   if (kind === 'decoration' && item?.type === 'japan_pagoda') return { x: x - 10, y: y + TILE_H * 4 - 110 };
-  if (kind === 'decoration' && item?.type === 'japan_inn') return { x, y: y + TILE_H * 2 + 20 };
+  if (kind === 'decoration' && item?.type === 'japan_inn') return { x, y: y + TILE_H * 2 - 10 };
 
   return { x, y: y + 14 };
 }
@@ -669,7 +669,7 @@ export function createDecoration(subtype) {
     egypt_palm: 200,
     japan_castle: 686,
     japan_pagoda: 630,
-    japan_inn: 320,
+    japan_inn: 288,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
