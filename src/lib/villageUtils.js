@@ -555,7 +555,7 @@ export function getDecorationImage(type) {
   if (type === 'bastet') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7eab4517d_ChatGPTImage202651404_37_37-Photoroom.png';
   if (type === 'egypt_canal') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/b208b8e0f_ChatGPTImage202651406_26_54-Photoroom.png';
   if (type === 'egypt_palm') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/16601936d_ChatGPTImage202651404_40_30-Photoroom.png';
-  if (type === 'japan_castle') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d064df234_ChatGPTImage202651503_18_36-Photoroom.png';
+  if (type === 'japan_castle') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c3ff840a7_ChatGPTImage202651505_35_33-Photoroom.png';
   if (type === 'japan_pagoda') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6f0885e7f_ChatGPTImage202651503_15_50-Photoroom.png';
   if (type === 'japan_inn') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d10c07fb1_2026-04-23204336-Photoroom.png';
   if (type === 'japan_mill') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0fad2a90d_2026-04-23205124-Photoroom.png';

@@ -121,7 +121,7 @@ export const SHOP_THEMES = [
     label: '일본',
     emoji: '🏯',
     items: [
-      { id: 'japan_castle_1', label: '일본성', type: 'decoration', subtype: 'japan_castle', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d064df234_ChatGPTImage202651503_18_36-Photoroom.png' },
+      { id: 'japan_castle_1', label: '일본성', type: 'decoration', subtype: 'japan_castle', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c3ff840a7_ChatGPTImage202651505_35_33-Photoroom.png' },
       { id: 'japan_pagoda_1', label: '일본 탑', type: 'decoration', subtype: 'japan_pagoda', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6f0885e7f_ChatGPTImage202651503_15_50-Photoroom.png' },
       { id: 'japan_inn_1', label: '일본 여관', type: 'decoration', subtype: 'japan_inn', price: 80, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d10c07fb1_2026-04-23204336-Photoroom.png' },
       { id: 'japan_mill_1', label: '물레방아 가게', type: 'decoration', subtype: 'japan_mill', price: 90, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0fad2a90d_2026-04-23205124-Photoroom.png' },
