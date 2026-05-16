@@ -133,6 +133,7 @@ export const SHOP_THEMES = [
       { id: 'japan_cherry_tree_1', label: '벚꽃나무', type: 'decoration', subtype: 'japan_cherry_tree', price: 200, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a204cec80_ChatGPTImage202651506_16_27-Photoroom.png' },
       { id: 'japan_lantern_1', label: '일본 랜턴', type: 'decoration', subtype: 'japan_lantern', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/24af2f5d0_2026-04-23205859-Photoroom.png' },
       { id: 'japan_sake_shop_1', label: '일본 주점', type: 'decoration', subtype: 'japan_sake_shop', price: 180, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/bf9f75d02_ChatGPTImage202651506_24_22-Photoroom.png' },
+      { id: 'japan_komainu_1', label: '고마이누', type: 'decoration', subtype: 'japan_komainu', price: 90, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/10eed23c3_ChatGPTImage202651503_01_27-Photoroom.png' },
       ],
       },
       ];
