@@ -585,8 +585,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
               width: building.w,
               height: building.h,
               transform: 'translate(-50%, -100%)',
-              outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
-              outlineOffset: '3px',
+              outline: 'none',
               borderRadius: '8px',
               zIndex: (building.row + building.col) * 1000,
               }}
