@@ -281,7 +281,6 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'japan_komainu') return { x, y: y + TILE_H - 20 };
   if (kind === 'decoration' && item?.type === 'japan_stall') return { x, y: y + TILE_H * 2 - 80 };
   if (kind === 'decoration' && item?.type === 'japan_bamboo') return { x, y: y + TILE_H - 20 };
-  if (kind === 'decoration' && item?.type === 'japan_stone_lantern') return { x, y: y + TILE_H - 10 };
 
   return { x, y: y + 14 };
 }
@@ -587,7 +586,6 @@ export function getDecorationImage(type) {
   if (type === 'japan_komainu') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/10eed23c3_ChatGPTImage202651503_01_27-Photoroom.png';
   if (type === 'japan_stall') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c57f406f7_ChatGPTImage202651503_20_52-Photoroom.png';
   if (type === 'japan_bamboo') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ae3bea9bc_ChatGPTImage202651604_05_03-Photoroom.png';
-  if (type === 'japan_stone_lantern') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/09d2d84e4_image.png';
 
   return grassImg;
 }
@@ -660,7 +658,6 @@ export function getDecorationLabel(type) {
     japan_komainu: '고마이누',
     japan_stall: '일본 포장마차',
     japan_bamboo: '대나무',
-    japan_stone_lantern: '일본 석등',
   };
   return labelMap[type] || '잔디';
 }
@@ -729,7 +726,6 @@ export function createDecoration(subtype) {
     japan_komainu: 160,
     japan_stall: 192,
     japan_bamboo: 160,
-    japan_stone_lantern: 150,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
