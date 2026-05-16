@@ -97,7 +97,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'japan_castle') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'japan_pagoda') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_inn') return { cols: 2, rows: 2 };
-  if (kind === 'decoration' && item?.type === 'japan_inn2') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'japan_inn2') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'japan_mill') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_shop') return { cols: 2, rows: 2 };
 
@@ -711,7 +711,7 @@ export function createDecoration(subtype) {
     japan_castle: 460,
     japan_pagoda: 630,
     japan_inn: 275,
-    japan_inn2: 275,
+    japan_inn2: 550,
     japan_mill: 280,
     japan_onsen: 252,
     japan_shop: 266,
