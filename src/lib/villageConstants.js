@@ -137,6 +137,7 @@ export const SHOP_THEMES = [
       { id: 'japan_komainu_1', label: '고마이누', type: 'decoration', subtype: 'japan_komainu', price: 90, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/10eed23c3_ChatGPTImage202651503_01_27-Photoroom.png' },
       { id: 'japan_stall_1', label: '일본 포장마차', type: 'decoration', subtype: 'japan_stall', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c57f406f7_ChatGPTImage202651503_20_52-Photoroom.png' },
       { id: 'japan_bamboo_1', label: '대나무', type: 'decoration', subtype: 'japan_bamboo', price: 30, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ae3bea9bc_ChatGPTImage202651604_05_03-Photoroom.png' },
+      { id: 'japan_stone_lantern_1', label: '일본 석등', type: 'decoration', subtype: 'japan_stone_lantern', price: 45, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/09d2d84e4_image.png' },
       ],
       },
       ];
