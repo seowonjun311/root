@@ -99,7 +99,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'japan_inn') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_mill') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_shop') return { cols: 2, rows: 2 };
-  if (kind === 'decoration' && item?.type === 'japan_stall') return { cols: 2, rows: 2 };
+
   if (kind === 'decoration' && item?.type === 'japan_sake_shop') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_tea_house') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_lucky_cat') return { cols: 1, rows: 1 };
