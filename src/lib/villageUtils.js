@@ -711,7 +711,7 @@ export function createDecoration(subtype) {
     japan_castle: 460,
     japan_pagoda: 630,
     japan_inn: 275,
-    japan_inn2: 550,
+    japan_inn2: 578,
     japan_mill: 280,
     japan_onsen: 252,
     japan_shop: 266,
