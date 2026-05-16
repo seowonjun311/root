@@ -275,7 +275,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'japan_lucky_cat') return { x, y: y + 24 };
   if (kind === 'decoration' && item?.type === 'japan_cherry_tree') return { x: x - 5, y: y + TILE_H * 2 - 65 };
   if (kind === 'decoration' && item?.type === 'japan_lantern') return { x, y: y + TILE_H * 2 - 115 };
-  if (kind === 'decoration' && item?.type === 'japan_komainu') return { x, y: y + TILE_H - 10 };
+  if (kind === 'decoration' && item?.type === 'japan_komainu') return { x, y: y + TILE_H - 20 };
 
   return { x, y: y + 14 };
 }
