@@ -68,12 +68,15 @@ export default function VillageBagModal({ open, activeTab, onTabChange, inventor
           </div>
 
           {activeTab === 'decoration' && (
-            <div className="flex gap-2 px-4 mb-3 overflow-x-auto">
+            <div
+              className="flex gap-2 px-4 mb-3"
+              style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
               {themeFilters.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setDecoTheme(t.id)}
-                  className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold"
+                  className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap"
                   style={decoTheme === t.id
                     ? { background: '#c49a4a', color: '#fff' }
                     : { background: '#f3ead7', color: '#7a5020', border: '1px solid #d4b870' }}
