@@ -270,7 +270,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'japan_mill') return { x, y: y + TILE_H * 2 - 25 };
   if (kind === 'decoration' && item?.type === 'japan_onsen') return { x, y: y + TILE_H * 2 - 30 };
   if (kind === 'decoration' && item?.type === 'japan_shop') return { x, y: y + TILE_H * 2 - 30 };
-  if (kind === 'decoration' && item?.type === 'japan_sake_shop') return { x: x - 10, y: y + TILE_H * 2 + 15 };
+  if (kind === 'decoration' && item?.type === 'japan_sake_shop') return { x: x, y: y + TILE_H * 2 + 15 };
   if (kind === 'decoration' && item?.type === 'japan_tea_house') return { x, y: y + TILE_H * 2 - 10 };
   if (kind === 'decoration' && item?.type === 'japan_lucky_cat') return { x, y: y + 24 };
   if (kind === 'decoration' && item?.type === 'japan_cherry_tree') return { x: x - 5, y: y + TILE_H * 2 - 65 };
