@@ -139,7 +139,15 @@ export const SHOP_THEMES = [
       { id: 'japan_bamboo_1', label: '대나무', type: 'decoration', subtype: 'japan_bamboo', price: 30, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ae3bea9bc_ChatGPTImage202651604_05_03-Photoroom.png' },
       ],
       },
-      ];
+  {
+    id: 'steampunk',
+    label: '스팀펑크',
+    emoji: '⚙️',
+    items: [
+      { id: 'tile_steampunk_1', label: '스팀펑크 땅', type: 'tile', subtype: 'steampunk', price: 80, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c2ec1c853_ChatGPTImage202651705_14_04-Photoroom.png' },
+    ],
+  },
+];
 
 // 기존 호환성 유지 (SHOP_ITEMS 사용처가 있을 경우 대비)
 export const SHOP_ITEMS = SHOP_THEMES.flatMap((theme) => theme.items);
