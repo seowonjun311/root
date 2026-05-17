@@ -586,6 +586,7 @@ export function getDecorationImage(type) {
   if (type === 'japan_komainu') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/10eed23c3_ChatGPTImage202651503_01_27-Photoroom.png';
   if (type === 'japan_stall') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c57f406f7_ChatGPTImage202651503_20_52-Photoroom.png';
   if (type === 'japan_bamboo') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ae3bea9bc_ChatGPTImage202651604_05_03-Photoroom.png';
+  if (type === 'steampunk_clock_tower') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/26a9f5ef9_ChatGPTImage202642810_16_13-Photoroom.png';
 
   return grassImg;
 }
@@ -658,6 +659,7 @@ export function getDecorationLabel(type) {
     japan_komainu: '고마이누',
     japan_stall: '일본 포장마차',
     japan_bamboo: '대나무',
+    steampunk_clock_tower: '스팀펑크 시계탑',
   };
   return labelMap[type] || '잔디';
 }
@@ -726,6 +728,7 @@ export function createDecoration(subtype) {
     japan_komainu: 160,
     japan_stall: 192,
     japan_bamboo: 160,
+    steampunk_clock_tower: 300,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
