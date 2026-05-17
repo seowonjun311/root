@@ -282,7 +282,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'japan_komainu') return { x, y: y + TILE_H - 20 };
   if (kind === 'decoration' && item?.type === 'japan_stall') return { x, y: y + TILE_H * 2 - 80 };
   if (kind === 'decoration' && item?.type === 'japan_bamboo') return { x, y: y + TILE_H - 20 };
-  if (kind === 'decoration' && item?.type === 'steampunk_clock_tower') return { x, y: y + 214 };
+  if (kind === 'decoration' && item?.type === 'steampunk_clock_tower') return { x, y: y + 204 };
 
   return { x, y: y + 14 };
 }
