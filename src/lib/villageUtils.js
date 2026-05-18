@@ -311,7 +311,6 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'steampunk_lamp') return { x, y: y + TILE_H * 2 - 75 };
   if (kind === 'decoration' && item?.type === 'steampunk_bench') return { x, y: y + 60 };
   if (kind === 'decoration' && item?.type === 'steampunk_trash') return { x, y: y + 35 };
-  if (kind === 'decoration' && item?.type === 'steampunk_fountain') return { x, y: y + TILE_H * 2 - 20 };
   if (kind === 'decoration' && item?.type === 'fruit_tree') return { x: x - 10, y: y + TILE_H };
 
   return { x, y: y + 14 };
@@ -720,7 +719,6 @@ export function getDecorationLabel(type) {
     steampunk_lamp: '스팀펑크 가로등',
     steampunk_bench: '스팀펑크 벤치',
     steampunk_trash: '스팀펑크 쓰레기통',
-    steampunk_fountain: '스팀펑크 분수',
     fruit_tree: '과일나무',
   };
   return labelMap[type] || '잔디';
@@ -804,8 +802,8 @@ export function createDecoration(subtype) {
     steampunk_lamp: 200,
     steampunk_bench: 160,
     steampunk_trash: 112,
-    steampunk_fountain: 312,
     fruit_tree: 280,
+    steampunk_fountain: 280,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
