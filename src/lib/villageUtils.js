@@ -104,7 +104,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'steampunk_engine') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'steampunk_shop') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'steampunk_station') return { cols: 2, rows: 2 };
-  if (kind === 'decoration' && item?.type === 'steampunk_airship_dock') return { cols: 3, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'steampunk_airship_dock') return { cols: 2, rows: 3 };
 
   if (kind === 'decoration' && item?.type === 'japan_sake_shop') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_tea_house') return { cols: 2, rows: 2 };
