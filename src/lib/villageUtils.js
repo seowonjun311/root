@@ -110,6 +110,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'steampunk_house3') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'steampunk_dairy') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'steampunk_pipe_factory') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'steampunk_steam_factory') return { cols: 2, rows: 2 };
 
   if (kind === 'decoration' && item?.type === 'japan_sake_shop') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_tea_house') return { cols: 2, rows: 2 };
@@ -301,6 +302,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'steampunk_house3') return { x, y: y + 285 };
   if (kind === 'decoration' && item?.type === 'steampunk_dairy') return { x, y: y + 200 };
   if (kind === 'decoration' && item?.type === 'steampunk_pipe_factory') return { x, y: y + 180 };
+  if (kind === 'decoration' && item?.type === 'steampunk_steam_factory') return { x, y: y + 200 };
 
   return { x, y: y + 14 };
 }
@@ -616,6 +618,7 @@ export function getDecorationImage(type) {
   if (type === 'steampunk_house3') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/f95d1732f_ChatGPTImage202642810_16_33-Photoroom.png';
   if (type === 'steampunk_dairy') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/fa6c517c7_ChatGPTImage202642810_16_36-Photoroom.png';
   if (type === 'steampunk_pipe_factory') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/f2c215d16_ChatGPTImage202642810_16_47-Photoroom.png';
+  if (type === 'steampunk_steam_factory') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3feb42a28_ChatGPTImage202642810_16_52-Photoroom.png';
 
   return grassImg;
 }
@@ -698,6 +701,7 @@ export function getDecorationLabel(type) {
     steampunk_house3: '스팀펑크 주택3',
     steampunk_dairy: '스팀펑크 유제품 가게',
     steampunk_pipe_factory: '스팀펑크 파이프 공장',
+    steampunk_steam_factory: '스팀펑크 증기 공장',
   };
   return labelMap[type] || '잔디';
 }
@@ -776,6 +780,7 @@ export function createDecoration(subtype) {
     steampunk_house3: 684,
     steampunk_dairy: 456,
     steampunk_pipe_factory: 420,
+    steampunk_steam_factory: 456,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
