@@ -145,11 +145,6 @@ export const SHOP_THEMES = [
     emoji: '🏯',
     items: [
       { id: 'joseon_palace_1', label: '궁전', type: 'decoration', subtype: 'joseon_palace', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d56b400eb_ChatGPTImage202642305_45_18-Photoroom.png' },
-      { id: 'joseon_pavilion_1', label: '정자', type: 'decoration', subtype: 'joseon_pavilion', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d56b400eb_ChatGPTImage202642305_45_18-Photoroom.png' },
-      { id: 'joseon_bell_1', label: '종각', type: 'decoration', subtype: 'joseon_bell', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d56b400eb_ChatGPTImage202642305_45_18-Photoroom.png' },
-      { id: 'joseon_tower_1', label: '탑', type: 'decoration', subtype: 'joseon_tower', price: 110, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d56b400eb_ChatGPTImage202642305_45_18-Photoroom.png' },
-      { id: 'joseon_lantern_1', label: '석등', type: 'decoration', subtype: 'joseon_lantern', price: 60, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d56b400eb_ChatGPTImage202642305_45_18-Photoroom.png' },
-      { id: 'joseon_gazebo_1', label: '누각', type: 'decoration', subtype: 'joseon_gazebo', price: 130, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d56b400eb_ChatGPTImage202642305_45_18-Photoroom.png' },
     ],
   },
   {
