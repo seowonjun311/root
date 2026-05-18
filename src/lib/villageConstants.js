@@ -149,6 +149,7 @@ export const SHOP_THEMES = [
       { id: 'steampunk_engine_1', label: '스팀펑크 증기엔진', type: 'decoration', subtype: 'steampunk_engine', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/59aa3c781_ChatGPTImage202642810_16_14-Photoroom.png' },
       { id: 'steampunk_shop_1', label: '스팀펑크 상점', type: 'decoration', subtype: 'steampunk_shop', price: 110, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d3dd1a6eb_ChatGPTImage202642810_16_17-Photoroom.png' },
       { id: 'steampunk_station_1', label: '스팀펑크 기차역', type: 'decoration', subtype: 'steampunk_station', price: 130, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ef99c4498_ChatGPTImage202642810_16_20-Photoroom.png' },
+      { id: 'steampunk_airship_dock_1', label: '스팀펑크 비행선 도크', type: 'decoration', subtype: 'steampunk_airship_dock', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5463bf0ed_ChatGPTImage202642810_16_22-Photoroom.png' },
     ],
   },
 ];
