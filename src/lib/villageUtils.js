@@ -87,6 +87,7 @@ export function screenToGrid(x, y, totalLevel = 1) {
 
 export function getObjectTileSize(item, kind) {
   if (kind === 'building') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'joseon_palace') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'mammoth_hut') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'pyramid') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'sphinx') return { cols: 2, rows: 3 };
@@ -313,6 +314,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'steampunk_trash') return { x, y: y + 35 };
   if (kind === 'decoration' && item?.type === 'fruit_tree') return { x: x - 10, y: y + TILE_H };
   if (kind === 'decoration' && item?.type === 'steampunk_fountain') return { x, y: y + TILE_H * 2 + 20 };
+  if (kind === 'decoration' && item?.type === 'joseon_palace') return { x, y: y + TILE_H * 2 + 100 };
 
   return { x, y: y + 14 };
 }
@@ -634,6 +636,7 @@ export function getDecorationImage(type) {
   if (type === 'steampunk_trash') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ba9640df5_ChatGPTImage202651409_43_37-Photoroom.png';
   if (type === 'fruit_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0d75d0dd0_ChatGPTImage202651409_43_30-Photoroom.png';
   if (type === 'steampunk_fountain') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7d748ee59_ChatGPTImage202651812_13_37-Photoroom.png';
+  if (type === 'joseon_palace') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d56b400eb_ChatGPTImage202642305_45_18-Photoroom.png';
 
   return grassImg;
 }
@@ -721,6 +724,7 @@ export function getDecorationLabel(type) {
     steampunk_bench: '스팀펑크 벤치',
     steampunk_trash: '스팀펑크 쓰레기통',
     fruit_tree: '과일나무',
+    joseon_palace: '궁전',
   };
   return labelMap[type] || '잔디';
 }
@@ -805,6 +809,7 @@ export function createDecoration(subtype) {
     steampunk_trash: 112,
     fruit_tree: 280,
     steampunk_fountain: 252,
+    joseon_palace: 400,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
