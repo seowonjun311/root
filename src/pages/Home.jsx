@@ -698,6 +698,17 @@ export default function Home() {
     }
   };
 
+  const handleDeleteSelected = () => {
+    if (!selectedObject) return;
+    if (selectedObject.type === 'decoration') {
+      setDecorations((prev) => prev.filter((item) => item.id !== selectedObject.id));
+    } else if (selectedObject.type === 'character') {
+      setCharacters((prev) => prev.filter((item) => item.id !== selectedObject.id));
+    }
+    setSelectedObject(null);
+    setPlacementPreview(null);
+  };
+
   const handleActionComplete = async (actionGoal, minutes = 0, extra = {}) => {
     try {
       const now = new Date().toISOString();
@@ -868,6 +879,7 @@ export default function Home() {
          onOpenBag={() => { setBagTab('character'); setIsBagOpen(true); }}
          onToggleEditMode={handleToggleEditMode}
          onFlipSelected={handleFlipSelected}
+         onDeleteSelected={handleDeleteSelected}
          onSaveEdit={handleSaveEdit}
          onCancelEdit={handleCancelEdit}
          onStoreSelected={handleStoreSelected}

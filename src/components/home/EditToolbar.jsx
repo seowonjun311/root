@@ -1,7 +1,7 @@
 import React from 'react';
-import { Pencil, FlipHorizontal, Save, X, Archive } from 'lucide-react';
+import { Pencil, FlipHorizontal, Save, X, Archive, Trash2 } from 'lucide-react';
 
-export default function EditToolbar({ isEditMode, selectedObject, onToggleEditMode, onFlip, onSave, onCancel, onStoreSelected, canSave }) {
+export default function EditToolbar({ isEditMode, selectedObject, onToggleEditMode, onFlip, onSave, onCancel, onStoreSelected, onDeleteSelected, canSave }) {
   return (
     <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1.5">
       {isEditMode && selectedObject && (
@@ -15,14 +15,24 @@ export default function EditToolbar({ isEditMode, selectedObject, onToggleEditMo
             <FlipHorizontal className="w-4 h-4" style={{ color: '#8b5a20' }} />
           </button>
           {(selectedObject.type === 'character' || selectedObject.type === 'decoration') && (
-            <button
-              onClick={onStoreSelected}
-              className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: 'rgba(255,248,232,0.92)', backdropFilter: 'blur(4px)' }}
-              aria-label="가방에 넣기"
-            >
-              <Archive className="w-4 h-4" style={{ color: '#8b5a20' }} />
-            </button>
+            <>
+              <button
+                onClick={onStoreSelected}
+                className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(255,248,232,0.92)', backdropFilter: 'blur(4px)' }}
+                aria-label="가방에 넣기"
+              >
+                <Archive className="w-4 h-4" style={{ color: '#8b5a20' }} />
+              </button>
+              <button
+                onClick={onDeleteSelected}
+                className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(255,100,80,0.88)', backdropFilter: 'blur(4px)' }}
+                aria-label="삭제"
+              >
+                <Trash2 className="w-4 h-4 text-white" />
+              </button>
+            </>
           )}
         </>
       )}
