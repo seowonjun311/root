@@ -304,7 +304,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'steampunk_dairy') return { x, y: y + 200 };
   if (kind === 'decoration' && item?.type === 'steampunk_pipe_factory') return { x, y: y + 180 };
   if (kind === 'decoration' && item?.type === 'steampunk_steam_factory') return { x, y: y + 200 };
-  if (kind === 'decoration' && item?.type === 'steampunk_lamp') return { x, y: y + TILE_H * 2 - 60 };
+  if (kind === 'decoration' && item?.type === 'steampunk_lamp') return { x, y: y + TILE_H * 2 - 70 };
 
   return { x, y: y + 14 };
 }
