@@ -107,7 +107,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'steampunk_airship_dock') return { cols: 2, rows: 3 };
   if (kind === 'decoration' && item?.type === 'steampunk_house') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'steampunk_house2') return { cols: 2, rows: 2 };
-  if (kind === 'decoration' && item?.type === 'steampunk_house3') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'steampunk_house3') return { cols: 3, rows: 3 };
 
   if (kind === 'decoration' && item?.type === 'japan_sake_shop') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_tea_house') return { cols: 2, rows: 2 };
@@ -765,7 +765,7 @@ export function createDecoration(subtype) {
     steampunk_airship_dock: 504,
     steampunk_house: 456,
     steampunk_house2: 456,
-    steampunk_house3: 456,
+    steampunk_house3: 684,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
