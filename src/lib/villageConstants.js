@@ -157,6 +157,7 @@ export const SHOP_THEMES = [
       { id: 'steampunk_pipe_factory_1', label: '스팀펑크 파이프 공장', type: 'decoration', subtype: 'steampunk_pipe_factory', price: 130, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/f2c215d16_ChatGPTImage202642810_16_47-Photoroom.png' },
       { id: 'steampunk_steam_factory_1', label: '스팀펑크 증기 공장', type: 'decoration', subtype: 'steampunk_steam_factory', price: 140, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3feb42a28_ChatGPTImage202642810_16_52-Photoroom.png' },
       { id: 'steampunk_lamp_1', label: '스팀펑크 가로등', type: 'decoration', subtype: 'steampunk_lamp', price: 50, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c141f1897_ChatGPTImage202651409_44_00-Photoroom.png' },
+      { id: 'steampunk_bench_1', label: '스팀펑크 벤치', type: 'decoration', subtype: 'steampunk_bench', price: 40, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/28257de3b_ChatGPTImage202651409_43_54-Photoroom.png' },
     ],
   },
 ];
