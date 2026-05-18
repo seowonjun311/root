@@ -4,12 +4,9 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/u
 
 export default function VillageShopModal({ open, onClose, points, onBuy }) {
   const [activeTheme, setActiveTheme] = useState(SHOP_THEMES[0].id);
-  const [activeTab, setActiveTab] = useState('character');
 
   const theme = SHOP_THEMES.find((t) => t.id === activeTheme) || SHOP_THEMES[0];
-  const items = theme.items.filter((item) =>
-    activeTab === 'character' ? item.type === 'character' : item.type === 'decoration' || item.type === 'tile'
-  );
+  const items = theme.items;
 
   return (
     <Drawer open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
@@ -20,33 +17,17 @@ export default function VillageShopModal({ open, onClose, points, onBuy }) {
         </DrawerHeader>
 
         {/* 테마 탭 */}
-        <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto no-scrollbar">
+        <div className="px-4 pt-3 pb-3 flex gap-2 overflow-x-auto no-scrollbar">
           {SHOP_THEMES.map((t) => (
             <button
               key={t.id}
-              onClick={() => { setActiveTheme(t.id); setActiveTab('character'); }}
+              onClick={() => setActiveTheme(t.id)}
               className="flex-shrink-0 px-3 py-1.5 rounded-xl text-sm font-semibold whitespace-nowrap"
               style={activeTheme === t.id
                 ? { background: '#8b5a20', color: '#fff' }
                 : { background: '#f3ead7', color: '#7a5020' }}
             >
               {t.emoji} {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* 캐릭터/꾸미기 탭 */}
-        <div className="flex gap-2 px-4 pt-2 pb-3">
-          {['character', 'decoration'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className="flex-1 py-2 rounded-xl text-sm font-semibold"
-              style={activeTab === tab
-                ? { background: '#c49a4a', color: '#fff' }
-                : { background: '#f3ead7', color: '#7a5020' }}
-            >
-              {tab === 'character' ? '캐릭터' : '꾸미기'}
             </button>
           ))}
         </div>
