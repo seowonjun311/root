@@ -113,6 +113,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'steampunk_steam_factory') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'steampunk_lamp') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'steampunk_bench') return { cols: 1, rows: 1 };
+  if (kind === 'decoration' && item?.type === 'steampunk_trash') return { cols: 1, rows: 1 };
 
   if (kind === 'decoration' && item?.type === 'japan_sake_shop') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_tea_house') return { cols: 2, rows: 2 };
@@ -307,6 +308,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'steampunk_steam_factory') return { x, y: y + 200 };
   if (kind === 'decoration' && item?.type === 'steampunk_lamp') return { x, y: y + TILE_H * 2 - 75 };
   if (kind === 'decoration' && item?.type === 'steampunk_bench') return { x, y: y + 60 };
+  if (kind === 'decoration' && item?.type === 'steampunk_trash') return { x, y: y + 55 };
 
   return { x, y: y + 14 };
 }
@@ -625,6 +627,7 @@ export function getDecorationImage(type) {
   if (type === 'steampunk_steam_factory') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3feb42a28_ChatGPTImage202642810_16_52-Photoroom.png';
   if (type === 'steampunk_lamp') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c141f1897_ChatGPTImage202651409_44_00-Photoroom.png';
   if (type === 'steampunk_bench') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/28257de3b_ChatGPTImage202651409_43_54-Photoroom.png';
+  if (type === 'steampunk_trash') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ba9640df5_ChatGPTImage202651409_43_37-Photoroom.png';
 
   return grassImg;
 }
@@ -710,6 +713,7 @@ export function getDecorationLabel(type) {
     steampunk_steam_factory: '스팀펑크 증기 공장',
     steampunk_lamp: '스팀펑크 가로등',
     steampunk_bench: '스팀펑크 벤치',
+    steampunk_trash: '스팀펑크 쓰레기통',
   };
   return labelMap[type] || '잔디';
 }
@@ -791,6 +795,7 @@ export function createDecoration(subtype) {
     steampunk_steam_factory: 456,
     steampunk_lamp: 200,
     steampunk_bench: 160,
+    steampunk_trash: 140,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
