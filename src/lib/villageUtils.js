@@ -745,7 +745,7 @@ export function createDecoration(subtype) {
     steampunk_clock_tower: 500,
     steampunk_engine: 460,
     steampunk_shop: 400,
-    steampunk_station: 420,
+    steampunk_station: 399,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
