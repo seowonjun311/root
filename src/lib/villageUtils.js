@@ -290,7 +290,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'steampunk_engine') return { x, y: y + 180 };
   if (kind === 'decoration' && item?.type === 'steampunk_shop') return { x, y: y + 170 };
   if (kind === 'decoration' && item?.type === 'steampunk_station') return { x, y: y + 170 };
-  if (kind === 'decoration' && item?.type === 'steampunk_airship_dock') return { x, y: y + 200 };
+  if (kind === 'decoration' && item?.type === 'steampunk_airship_dock') return { x, y: y + 160 };
 
   return { x, y: y + 14 };
 }
@@ -750,7 +750,7 @@ export function createDecoration(subtype) {
     steampunk_engine: 460,
     steampunk_shop: 400,
     steampunk_station: 399,
-    steampunk_airship_dock: 420,
+    steampunk_airship_dock: 504,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
