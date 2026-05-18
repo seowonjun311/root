@@ -709,6 +709,13 @@ export default function Home() {
     setPlacementPreview(null);
   };
 
+  const handleClearAll = () => {
+    setDecorations([]);
+    setCharacters([]);
+    setSelectedObject(null);
+    setPlacementPreview(null);
+  };
+
   const handleActionComplete = async (actionGoal, minutes = 0, extra = {}) => {
     try {
       const now = new Date().toISOString();
@@ -880,6 +887,7 @@ export default function Home() {
          onToggleEditMode={handleToggleEditMode}
          onFlipSelected={handleFlipSelected}
          onDeleteSelected={handleDeleteSelected}
+         onClearAll={handleClearAll}
          onSaveEdit={handleSaveEdit}
          onCancelEdit={handleCancelEdit}
          onStoreSelected={handleStoreSelected}
