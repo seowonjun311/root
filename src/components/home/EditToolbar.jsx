@@ -6,7 +6,7 @@ export default function EditToolbar({ isEditMode, selectedObject, onToggleEditMo
   const isCharOrDeco = selectedObject?.type === 'character' || selectedObject?.type === 'decoration';
 
   return (
-    <div className="absolute bottom-2 right-2 z-10 flex flex-col items-center gap-1.5">
+    <div className="absolute right-2 z-10 flex flex-col items-center gap-1.5" style={{ bottom: '-72px' }}>
       {isEditMode && !selectedObject && (
         <button
           onClick={onClearAll}
