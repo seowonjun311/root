@@ -159,7 +159,7 @@ export const SHOP_THEMES = [
       { id: 'steampunk_lamp_1', label: '스팀펑크 가로등', type: 'decoration', subtype: 'steampunk_lamp', price: 50, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c141f1897_ChatGPTImage202651409_44_00-Photoroom.png' },
       { id: 'steampunk_bench_1', label: '스팀펑크 벤치', type: 'decoration', subtype: 'steampunk_bench', price: 40, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/28257de3b_ChatGPTImage202651409_43_54-Photoroom.png' },
       { id: 'steampunk_trash_1', label: '스팀펑크 쓰레기통', type: 'decoration', subtype: 'steampunk_trash', price: 35, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ba9640df5_ChatGPTImage202651409_43_37-Photoroom.png' },
-      { id: 'fruit_tree_1', label: '과일나무', type: 'decoration', subtype: 'fruit_tree', price: 45, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/88133bc2a_ChatGPTImage202651409_43_30.png' },
+      { id: 'fruit_tree_1', label: '과일나무', type: 'decoration', subtype: 'fruit_tree', price: 45, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0d75d0dd0_ChatGPTImage202651409_43_30-Photoroom.png' },
     ],
   },
 ];

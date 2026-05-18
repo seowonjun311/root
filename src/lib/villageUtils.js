@@ -630,7 +630,7 @@ export function getDecorationImage(type) {
   if (type === 'steampunk_lamp') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c141f1897_ChatGPTImage202651409_44_00-Photoroom.png';
   if (type === 'steampunk_bench') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/28257de3b_ChatGPTImage202651409_43_54-Photoroom.png';
   if (type === 'steampunk_trash') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ba9640df5_ChatGPTImage202651409_43_37-Photoroom.png';
-  if (type === 'fruit_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/88133bc2a_ChatGPTImage202651409_43_30.png';
+  if (type === 'fruit_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0d75d0dd0_ChatGPTImage202651409_43_30-Photoroom.png';
 
   return grassImg;
 }
