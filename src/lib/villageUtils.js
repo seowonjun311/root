@@ -337,7 +337,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'joseon_street_lamp') return { x: x + 13, y: y + TILE_H * 2 - 115 };
   if (kind === 'decoration' && item?.type === 'joseon_pond') return { x: x + 5, y: y + TILE_H * 3 + 20 };
   if (kind === 'decoration' && item?.type === 'joseon_garden_pond') return { x: x + 15, y: y + TILE_H * 3 + 90 };
-  if (kind === 'decoration' && item?.type === 'autumn_oak') return { x, y: y + TILE_H + 50 };
+  if (kind === 'decoration' && item?.type === 'autumn_oak') return { x, y: y + TILE_H + 40 };
   if (kind === 'decoration' && item?.type === 'joseon_flag') return { x, y: y + TILE_H * 2 - 80 };
 
   return { x, y: y + 14 };
