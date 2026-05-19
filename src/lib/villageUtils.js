@@ -883,7 +883,7 @@ export function createDecoration(subtype) {
     steampunk_trash: 112,
     fruit_tree: 280,
     steampunk_fountain: 252,
-    joseon_palace: 400,
+    joseon_palace: 440,
     joseon_pavilion: 320,
     joseon_pavilion2: 320,
     joseon_pavilion3: 330,
