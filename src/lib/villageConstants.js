@@ -160,6 +160,7 @@ export const SHOP_THEMES = [
       { id: 'joseon_flag_1', label: '조선 깃발', type: 'decoration', subtype: 'joseon_flag', price: 60, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/bd97b1389_ChatGPTImage202651911_36_37-Photoroom.png' },
       { id: 'joseon_garden_pond_1', label: '조선 연못', type: 'decoration', subtype: 'joseon_garden_pond', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/505b6227d_ChatGPTImage202651901_47_12-Photoroom.png' },
       { id: 'autumn_oak_1', label: '가을 참나무', type: 'decoration', subtype: 'autumn_oak', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e62894b08_ChatGPTImage202651902_31_22-Photoroom.png' },
+      { id: 'red_maple_1', label: '붉은 단풍나무', type: 'decoration', subtype: 'red_maple_tree', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/22c109158_ChatGPTImage202651903_24_21-Photoroom.png' },
       ],
       },
       {
