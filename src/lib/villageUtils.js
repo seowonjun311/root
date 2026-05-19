@@ -331,7 +331,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'joseon_tower') return { x: x, y: y + TILE_H * 2 + 70 };
   if (kind === 'decoration' && item?.type === 'joseon_lantern') return { x, y: y + TILE_H - 30 };
   if (kind === 'decoration' && item?.type === 'joseon_cherry_tree') return { x, y: y + TILE_H * 2 - 60 };
-  if (kind === 'decoration' && item?.type === 'joseon_small_cherry_tree') return { x, y: y + TILE_H - 30 };
+  if (kind === 'decoration' && item?.type === 'joseon_small_cherry_tree') return { x, y: y + TILE_H };
   if (kind === 'decoration' && item?.type === 'joseon_pine_tree') return { x, y: y + TILE_H * 2 - 70 };
   if (kind === 'decoration' && item?.type === 'joseon_street_lamp') return { x: x + 13, y: y + TILE_H * 2 - 115 };
   if (kind === 'decoration' && item?.type === 'joseon_pond') return { x: x + 5, y: y + TILE_H * 3 + 20 };
@@ -859,7 +859,7 @@ export function createDecoration(subtype) {
     joseon_tower: 456,
     joseon_lantern: 160,
     joseon_cherry_tree: 280,
-    joseon_small_cherry_tree: 160,
+    joseon_small_cherry_tree: 320,
     joseon_pine_tree: 280,
     joseon_street_lamp: 100,
     joseon_pond: 420,
