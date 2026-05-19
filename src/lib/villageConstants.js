@@ -159,10 +159,11 @@ export const SHOP_THEMES = [
       { id: 'joseon_pond_1', label: '연못 정자', type: 'decoration', subtype: 'joseon_pond', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/1570601c5_ChatGPTImage202642305_59_35-Photoroom.png' },
       { id: 'joseon_flag_1', label: '조선 깃발', type: 'decoration', subtype: 'joseon_flag', price: 60, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/bd97b1389_ChatGPTImage202651911_36_37-Photoroom.png' },
       { id: 'joseon_garden_pond_1', label: '조선 연못', type: 'decoration', subtype: 'joseon_garden_pond', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/505b6227d_ChatGPTImage202651901_47_12-Photoroom.png' },
-    ],
-  },
-  {
-    id: 'steampunk',
+      { id: 'autumn_oak_1', label: '가을 참나무', type: 'decoration', subtype: 'autumn_oak', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e62894b08_ChatGPTImage202651902_31_22-Photoroom.png' },
+      ],
+      },
+      {
+      id: 'steampunk',
     label: '스팀펑크',
     emoji: '⚙️',
     items: [
@@ -183,10 +184,9 @@ export const SHOP_THEMES = [
       { id: 'steampunk_trash_1', label: '스팀펑크 쓰레기통', type: 'decoration', subtype: 'steampunk_trash', price: 35, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ba9640df5_ChatGPTImage202651409_43_37-Photoroom.png' },
       { id: 'steampunk_fountain_1', label: '스팀펑크 분수', type: 'decoration', subtype: 'steampunk_fountain', price: 200, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7d748ee59_ChatGPTImage202651812_13_37-Photoroom.png' },
       { id: 'fruit_tree_1', label: '과일나무', type: 'decoration', subtype: 'fruit_tree', price: 45, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0d75d0dd0_ChatGPTImage202651409_43_30-Photoroom.png' },
-      { id: 'autumn_oak_1', label: '가을 참나무', type: 'decoration', subtype: 'autumn_oak', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e62894b08_ChatGPTImage202651902_31_22-Photoroom.png' },
-    ],
-  },
-];
+      ],
+      },
+      ];
 
 // 기존 호환성 유지 (SHOP_ITEMS 사용처가 있을 경우 대비)
 export const SHOP_ITEMS = SHOP_THEMES.flatMap((theme) => theme.items);
