@@ -432,7 +432,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
           <VillageOverlayBar nickname={nickname} level={totalLevel} points={points} onOpenShop={onOpenShop} onOpenBag={onOpenBag} onToggleOverview={onToggleOverview} isOverview={isOverview} isEditMode={isEditMode} onToggleEditMode={onToggleEditMode} />
           <EditToolbar isEditMode={isEditMode} selectedObject={selectedObject} onToggleEditMode={onToggleEditMode} onFlip={onFlipSelected} onDeleteSelected={onDeleteSelected} onClearAll={onClearAll} onSave={onSaveEdit} onCancel={onCancelEdit} onStoreSelected={onStoreSelected} canSave={!placementPreview || placementPreview.valid} />
 
-          <div className="absolute inset-0 touch-none overflow-hidden" onPointerDown={handleWorldPointerDown} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}>
+          <div className="absolute inset-0 touch-none overflow-visible" onPointerDown={handleWorldPointerDown} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}>
            <div
   className="absolute left-0 top-0"
   style={{
