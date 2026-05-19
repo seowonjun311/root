@@ -510,7 +510,7 @@ export default function Home() {
       const nextTheme = inventoryItem.subtype;
       const removeIndex = nextInventoryDecorations.findIndex((item) => item.id === inventoryItem.id);
       if (removeIndex >= 0) nextInventoryDecorations.splice(removeIndex, 1);
-      const nextState = { village_points: currentVillage.village_points, village_tile_theme: nextTheme, village_decorations: nextDecorations, village_characters: nextCharacters, village_buildings: [], village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
+      const nextState = { village_points: currentVillage.village_points, village_tile_theme: nextTheme, village_decorations: nextDecorations, village_characters: nextCharacters, village_buildings: buildings, village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
       try {
         await saveVillageState(nextState);
         setTileTheme(nextTheme);
@@ -538,7 +538,7 @@ export default function Home() {
       if (removeIndex >= 0) nextInventoryDecorations.splice(removeIndex, 1);
     }
 
-    const nextState = { village_points: currentVillage.village_points, village_tile_theme: tileTheme, village_decorations: nextDecorations, village_characters: nextCharacters, village_buildings: [], village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
+    const nextState = { village_points: currentVillage.village_points, village_tile_theme: tileTheme, village_decorations: nextDecorations, village_characters: nextCharacters, village_buildings: buildings, village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
 
     try {
       await saveVillageState(nextState);
@@ -624,14 +624,14 @@ export default function Home() {
     }
 
     if (selectedObject.type === 'decoration') {
-      const target = nextDecorations.find((item) => item.id === selectedObject.id);
-      if (!target) return;
-      const removeIndex = nextDecorations.findIndex((item) => item.id === selectedObject.id);
-      if (removeIndex >= 0) nextDecorations.splice(removeIndex, 1);
-      nextInventoryDecorations.push({ id: `inv_${target.type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`, type: 'decoration', subtype: target.type, label: getDecorationLabel(target.type) });
-    }
+       const target = nextDecorations.find((item) => item.id === selectedObject.id);
+       if (!target) return;
+       const removeIndex = nextDecorations.findIndex((item) => item.id === selectedObject.id);
+       if (removeIndex >= 0) nextDecorations.splice(removeIndex, 1);
+       nextInventoryDecorations.push({ id: `inv_${target.type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`, type: 'decoration', subtype: target.type, label: getDecorationLabel(target.type) });
+     }
 
-    const nextState = { village_points: currentVillage.village_points, village_tile_theme: tileTheme, village_decorations: nextDecorations, village_characters: nextCharacters, village_buildings: [], village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
+     const nextState = { village_points: currentVillage.village_points, village_tile_theme: tileTheme, village_decorations: nextDecorations, village_characters: nextCharacters, village_buildings: buildings, village_inventory_characters: nextInventoryCharacters, village_inventory_decorations: nextInventoryDecorations };
 
     try {
       await saveVillageState(nextState);
@@ -661,7 +661,7 @@ export default function Home() {
 
     const source = isGuest ? guestData : user;
     const currentVillage = getVillageState(source || {});
-    const nextState = { village_points: currentVillage.village_points, village_tile_theme: tileTheme, village_decorations: decorations, village_characters: characters, village_buildings: [], village_inventory_characters: inventoryCharacters, village_inventory_decorations: inventoryDecorations };
+    const nextState = { village_points: currentVillage.village_points, village_tile_theme: tileTheme, village_decorations: decorations, village_characters: characters, village_buildings: buildings, village_inventory_characters: inventoryCharacters, village_inventory_decorations: inventoryDecorations };
 
     try {
       await saveVillageState(nextState);
@@ -741,7 +741,7 @@ export default function Home() {
       village_tile_theme: tileTheme,
       village_decorations: [],
       village_characters: [],
-      village_buildings: [],
+      village_buildings: buildings,
       village_inventory_characters: nextInventoryCharacters,
       village_inventory_decorations: nextInventoryDecorations,
     };
