@@ -73,6 +73,8 @@ function CharacterSprite({ npc }) {
   );
 }
 
+const BASE_Z_INDEX = 10000;
+
 export default function VillageWorldLayer({
   nickname,
   totalLevel,
@@ -500,7 +502,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
   const isNewlyPlaced = newlyPlacedItemId === item.id;
   const pos = getObjectScreenPosition(item, 'decoration');
   const tilePos = gridToScreen(item.col, item.row);
-  const zBase = (item.row + item.col) * 1000;
+  const zBase = BASE_Z_INDEX + (item.row + item.col) * 1000;
 
   return (
     <div key={item.id}>
@@ -563,7 +565,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
               outlineOffset: '3px',
               borderRadius: '999px',
               cursor: isEditMode ? 'grab' : 'default',
-              zIndex: (npc.row + npc.col) * 1000 + 500,
+              zIndex: BASE_Z_INDEX + (npc.row + npc.col) * 1000 + 500,
               }}
               >
               <CharacterSprite npc={npc} />
@@ -589,7 +591,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
               transform: 'translate(-50%, -100%)',
               outline: 'none',
               borderRadius: '8px',
-              zIndex: (building.row + building.col) * 1000,
+              zIndex: BASE_Z_INDEX + (building.row + building.col) * 1000,
               }}
               >
               <img
