@@ -131,6 +131,7 @@ export function getObjectTileSize(item, kind) {
 
   if (kind === 'decoration' && item?.type === 'joseon_flower_garden') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'joseon_flower_garden2') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'joseon_waterfall_pond') return { cols: 3, rows: 3 };
 
   if (kind === 'decoration' && item?.type === 'japan_sake_shop') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_tea_house') return { cols: 2, rows: 2 };
@@ -343,8 +344,9 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'autumn_oak') return { x, y: y + TILE_H + 40 };
   if (kind === 'decoration' && item?.type === 'red_maple_tree') return { x, y: y + TILE_H + 70 };
   if (kind === 'decoration' && item?.type === 'joseon_flower_garden') return { x: x - 6, y: y + TILE_H * 3 - 32 };
-  if (kind === 'decoration' && item?.type === 'joseon_flower_garden2') return { x, y: y + TILE_H * 3 - 28 };
-  if (kind === 'decoration' && item?.type === 'joseon_flag') return { x, y: y + TILE_H * 2 - 80 };
+   if (kind === 'decoration' && item?.type === 'joseon_flower_garden2') return { x, y: y + TILE_H * 3 - 28 };
+   if (kind === 'decoration' && item?.type === 'joseon_waterfall_pond') return { x, y: y + TILE_H * 4 + 50 };
+   if (kind === 'decoration' && item?.type === 'joseon_flag') return { x, y: y + TILE_H * 2 - 80 };
 
   return { x, y: y + 14 };
 }
@@ -683,6 +685,7 @@ export function getDecorationImage(type) {
   if (type === 'red_maple_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/22c109158_ChatGPTImage202651903_24_21-Photoroom.png';
   if (type === 'joseon_flower_garden') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d47c9c8d9_ChatGPTImage202651903_39_27-Photoroom.png';
   if (type === 'joseon_flower_garden2') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/87c0b9aa5_ChatGPTImage202651903_52_57-Photoroom.png';
+  if (type === 'joseon_waterfall_pond') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/85a7877ac_ChatGPTImage202651904_14_20-Photoroom.png';
 
   return grassImg;
 }
@@ -787,6 +790,7 @@ export function getDecorationLabel(type) {
     red_maple_tree: '붉은 단풍나무',
     joseon_flower_garden: '화단',
     joseon_flower_garden2: '화단2',
+    joseon_waterfall_pond: '폭포연못',
   };
   return labelMap[type] || '잔디';
 }
@@ -888,6 +892,7 @@ export function createDecoration(subtype) {
     red_maple_tree: 400,
     joseon_flower_garden: 306,
     joseon_flower_garden2: 306,
+    joseon_waterfall_pond: 420,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
