@@ -1025,7 +1025,7 @@ export function getTileImageByKind(kind, tileTheme = 'grass') {
     return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c2ec1c853_ChatGPTImage202651705_14_04-Photoroom.png';
   }
   if (tileTheme === 'joseon') {
-    return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/964a74eaa_image.png';
+    return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/edc8f44f5_image-Photoroom.png';
   }
   if (kind === TILE_KIND.VARIANT_GRASS) return variantGrassTileImg;
   return baseGrassTileImg;

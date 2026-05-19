@@ -144,6 +144,7 @@ export const SHOP_THEMES = [
     label: '조선시대',
     emoji: '🏯',
     items: [
+      { id: 'tile_joseon_1', label: '조선시대 돌바닥', type: 'tile', subtype: 'joseon', price: 80, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/edc8f44f5_image-Photoroom.png' },
 
       { id: 'joseon_palace_1', label: '궁전', type: 'decoration', subtype: 'joseon_palace', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d56b400eb_ChatGPTImage202642305_45_18-Photoroom.png' },
       { id: 'joseon_pavilion_1', label: '정자', type: 'decoration', subtype: 'joseon_pavilion', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6b0675300_ChatGPTImage202642305_46_25-Photoroom.png' },
