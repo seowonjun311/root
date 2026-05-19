@@ -158,6 +158,7 @@ export const SHOP_THEMES = [
       { id: 'joseon_street_lamp_1', label: '조선 가로등', type: 'decoration', subtype: 'joseon_street_lamp', price: 50, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/61a8874c9_Gemini_Generated_Image_vopvrtvopvrtvopv-Photoroom.png' },
       { id: 'joseon_pond_1', label: '연못 정자', type: 'decoration', subtype: 'joseon_pond', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/1570601c5_ChatGPTImage202642305_59_35-Photoroom.png' },
       { id: 'joseon_flag_1', label: '조선 깃발', type: 'decoration', subtype: 'joseon_flag', price: 60, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/bd97b1389_ChatGPTImage202651911_36_37-Photoroom.png' },
+      { id: 'joseon_garden_pond_1', label: '조선 연못', type: 'decoration', subtype: 'joseon_garden_pond', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/505b6227d_ChatGPTImage202651901_47_12-Photoroom.png' },
     ],
   },
   {
