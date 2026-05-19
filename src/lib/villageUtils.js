@@ -323,7 +323,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'joseon_pavilion') return { x: x + 40, y: y + TILE_H * 2 + 30 };
   if (kind === 'decoration' && item?.type === 'joseon_pavilion2') return { x: x + 40, y: y + TILE_H * 2 + 30 };
   if (kind === 'decoration' && item?.type === 'joseon_pavilion3') return { x: x, y: y + TILE_H * 2 + 10 };
-  if (kind === 'decoration' && item?.type === 'joseon_tower') return { x: x, y: y + TILE_H * 2 + 20 };
+  if (kind === 'decoration' && item?.type === 'joseon_tower') return { x: x, y: y + TILE_H * 2 + 40 };
   if (kind === 'decoration' && item?.type === 'joseon_pond') return { x: x + 5, y: y + TILE_H * 3 + 20 };
 
   return { x, y: y + 14 };
@@ -833,7 +833,7 @@ export function createDecoration(subtype) {
     joseon_pavilion: 320,
     joseon_pavilion2: 320,
     joseon_pavilion3: 330,
-    joseon_tower: 380,
+    joseon_tower: 456,
     joseon_pond: 420,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
