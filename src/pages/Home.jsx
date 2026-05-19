@@ -709,11 +709,57 @@ export default function Home() {
     setPlacementPreview(null);
   };
 
-  const handleClearAll = () => {
-    setDecorations([]);
-    setCharacters([]);
-    setSelectedObject(null);
-    setPlacementPreview(null);
+  const handleClearAll = async () => {
+    const source = isGuest ? guestData : user;
+    const currentVillage = getVillageState(source || {});
+    const nextInventoryCharacters = [...inventoryCharacters];
+    const nextInventoryDecorations = [...inventoryDecorations];
+
+    // 현재 배치된 캐릭터와 장식을 가방에 추가
+    characters.forEach((char) => {
+      if (char.id !== 'starter_fox') {
+        nextInventoryCharacters.push({
+          id: `inv_${char.type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+          type: 'character',
+          subtype: char.type,
+          label: char.name || (char.type === 'alpaca' ? '알파카' : char.type === 'platypus' ? '오리너구리' : '여우'),
+        });
+      }
+    });
+
+    decorations.forEach((deco) => {
+      nextInventoryDecorations.push({
+        id: `inv_${deco.type}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+        type: 'decoration',
+        subtype: deco.type,
+        label: getDecorationLabel(deco.type),
+      });
+    });
+
+    const nextState = {
+      village_points: currentVillage.village_points,
+      village_tile_theme: tileTheme,
+      village_decorations: [],
+      village_characters: [],
+      village_buildings: [],
+      village_inventory_characters: nextInventoryCharacters,
+      village_inventory_decorations: nextInventoryDecorations,
+    };
+
+    try {
+      await saveVillageState(nextState);
+      setDecorations([]);
+      setCharacters([]);
+      setInventoryCharacters(nextInventoryCharacters);
+      setInventoryDecorations(nextInventoryDecorations);
+      setSelectedObject(null);
+      setPlacementPreview(null);
+      originalVillageRef.current = { ...currentVillage, ...nextState };
+      toast.success('모든 꾸미기가 가방으로 복귀했어요!', { duration: 1000 });
+    } catch (error) {
+      console.error('handleClearAll error:', error);
+      toast.error('전체 제거 중 오류가 발생했어요.');
+    }
   };
 
   const handleActionComplete = async (actionGoal, minutes = 0, extra = {}) => {
