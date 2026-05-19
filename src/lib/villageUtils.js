@@ -98,7 +98,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'joseon_pine_tree') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'joseon_street_lamp') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'joseon_pond') return { cols: 3, rows: 3 };
-  if (kind === 'decoration' && item?.type === 'joseon_garden_pond') return { cols: 3, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'joseon_garden_pond') return { cols: 4, rows: 3 };
   if (kind === 'decoration' && item?.type === 'mammoth_hut') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'pyramid') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'sphinx') return { cols: 2, rows: 3 };
