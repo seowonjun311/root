@@ -129,6 +129,8 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'fruit_tree') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'steampunk_fountain') return { cols: 2, rows: 2 };
 
+  if (kind === 'decoration' && item?.type === 'joseon_flower_garden') return { cols: 3, rows: 3 };
+
   if (kind === 'decoration' && item?.type === 'japan_sake_shop') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_tea_house') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'japan_lucky_cat') return { cols: 1, rows: 1 };
@@ -339,6 +341,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'joseon_garden_pond') return { x: x + 15, y: y + TILE_H * 3 + 90 };
   if (kind === 'decoration' && item?.type === 'autumn_oak') return { x, y: y + TILE_H + 40 };
   if (kind === 'decoration' && item?.type === 'red_maple_tree') return { x, y: y + TILE_H + 70 };
+  if (kind === 'decoration' && item?.type === 'joseon_flower_garden') return { x: x + 10, y: y + TILE_H * 3 + 120 };
   if (kind === 'decoration' && item?.type === 'joseon_flag') return { x, y: y + TILE_H * 2 - 80 };
 
   return { x, y: y + 14 };
@@ -676,6 +679,7 @@ export function getDecorationImage(type) {
   if (type === 'joseon_flag') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/bd97b1389_ChatGPTImage202651911_36_37-Photoroom.png';
   if (type === 'autumn_oak') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e62894b08_ChatGPTImage202651902_31_22-Photoroom.png';
   if (type === 'red_maple_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/22c109158_ChatGPTImage202651903_24_21-Photoroom.png';
+  if (type === 'joseon_flower_garden') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d47c9c8d9_ChatGPTImage202651903_39_27-Photoroom.png';
 
   return grassImg;
 }
@@ -778,6 +782,7 @@ export function getDecorationLabel(type) {
     joseon_flag: '조선 깃발',
     autumn_oak: '가을 참나무',
     red_maple_tree: '붉은 단풍나무',
+    joseon_flower_garden: '화단',
   };
   return labelMap[type] || '잔디';
 }
@@ -877,6 +882,7 @@ export function createDecoration(subtype) {
     joseon_flag: 280,
     autumn_oak: 384,
     red_maple_tree: 400,
+    joseon_flower_garden: 680,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
