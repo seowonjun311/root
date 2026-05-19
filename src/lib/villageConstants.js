@@ -234,7 +234,7 @@ export const DEFAULT_VILLAGE_DATA = {
   village_points: 500,
   village_decorations: [
     { id: 'joseon_palace_1', type: 'joseon_palace', image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d56b400eb_ChatGPTImage202642305_45_18-Photoroom.png', col: 3, row: 1, flipped: false, size: 440 },
-    { id: 'joseon_pond_1', type: 'joseon_pond', image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/1570601c5_ChatGPTImage202642305_59_35-Photoroom.png', col: 6, row: 2, flipped: false, size: 600 },
+    { id: 'joseon_pond_1', type: 'joseon_pond', image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/1570601c5_ChatGPTImage202642305_59_35-Photoroom.png', col: 6, row: 2, flipped: false, size: 500 },
     { id: 'joseon_cherry_tree_1', type: 'joseon_cherry_tree', image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/fb5c06920_ChatGPTImage202651910_26_28-Photoroom.png', col: 1, row: 5, flipped: false, size: 280 },
     { id: 'joseon_pavilion_1', type: 'joseon_pavilion', image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6b0675300_ChatGPTImage202642305_46_25-Photoroom.png', col: 8, row: 7, flipped: false, size: 320 },
     { id: 'joseon_lantern_1', type: 'joseon_lantern', image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/04d72cad1_ChatGPTImage202642306_03_55-Photoroom.png', col: 2, row: 2, flipped: false, size: 160 },
