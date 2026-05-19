@@ -320,7 +320,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'joseon_palace') return { x: x - 15, y: y + TILE_H * 2 + 110 };
   if (kind === 'decoration' && item?.type === 'joseon_pavilion') return { x: x + 40, y: y + TILE_H * 2 + 30 };
   if (kind === 'decoration' && item?.type === 'joseon_pavilion2') return { x: x + 40, y: y + TILE_H * 2 + 30 };
-  if (kind === 'decoration' && item?.type === 'joseon_pond') return { x: x + 15, y: y + TILE_H * 3 + 20 };
+  if (kind === 'decoration' && item?.type === 'joseon_pond') return { x: x + 5, y: y + TILE_H * 3 + 20 };
 
   return { x, y: y + 14 };
 }
