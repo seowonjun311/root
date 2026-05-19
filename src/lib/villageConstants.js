@@ -183,6 +183,7 @@ export const SHOP_THEMES = [
       { id: 'steampunk_trash_1', label: '스팀펑크 쓰레기통', type: 'decoration', subtype: 'steampunk_trash', price: 35, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ba9640df5_ChatGPTImage202651409_43_37-Photoroom.png' },
       { id: 'steampunk_fountain_1', label: '스팀펑크 분수', type: 'decoration', subtype: 'steampunk_fountain', price: 200, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7d748ee59_ChatGPTImage202651812_13_37-Photoroom.png' },
       { id: 'fruit_tree_1', label: '과일나무', type: 'decoration', subtype: 'fruit_tree', price: 45, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0d75d0dd0_ChatGPTImage202651409_43_30-Photoroom.png' },
+      { id: 'autumn_oak_1', label: '가을 참나무', type: 'decoration', subtype: 'autumn_oak', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e62894b08_ChatGPTImage202651902_31_22-Photoroom.png' },
     ],
   },
 ];

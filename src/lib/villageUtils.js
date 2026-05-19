@@ -672,6 +672,7 @@ export function getDecorationImage(type) {
   if (type === 'joseon_pond') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/1570601c5_ChatGPTImage202642305_59_35-Photoroom.png';
   if (type === 'joseon_garden_pond') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/505b6227d_ChatGPTImage202651901_47_12-Photoroom.png';
   if (type === 'joseon_flag') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/bd97b1389_ChatGPTImage202651911_36_37-Photoroom.png';
+  if (type === 'autumn_oak') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e62894b08_ChatGPTImage202651902_31_22-Photoroom.png';
 
   return grassImg;
 }
@@ -772,6 +773,7 @@ export function getDecorationLabel(type) {
     joseon_pond: '연못 정자',
     joseon_garden_pond: '조선 연못',
     joseon_flag: '조선 깃발',
+    autumn_oak: '가을 참나무',
   };
   return labelMap[type] || '잔디';
 }
@@ -869,6 +871,7 @@ export function createDecoration(subtype) {
     joseon_pond: 420,
     joseon_garden_pond: 420,
     joseon_flag: 280,
+    autumn_oak: 320,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
