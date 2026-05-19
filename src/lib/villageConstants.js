@@ -162,6 +162,7 @@ export const SHOP_THEMES = [
       { id: 'autumn_oak_1', label: '가을 참나무', type: 'decoration', subtype: 'autumn_oak', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e62894b08_ChatGPTImage202651902_31_22-Photoroom.png' },
       { id: 'red_maple_1', label: '붉은 단풍나무', type: 'decoration', subtype: 'red_maple_tree', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/22c109158_ChatGPTImage202651903_24_21-Photoroom.png' },
       { id: 'joseon_flower_garden_1', label: '화단', type: 'decoration', subtype: 'joseon_flower_garden', price: 140, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d47c9c8d9_ChatGPTImage202651903_39_27-Photoroom.png' },
+      { id: 'joseon_flower_garden2_1', label: '화단2', type: 'decoration', subtype: 'joseon_flower_garden2', price: 140, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/87c0b9aa5_ChatGPTImage202651903_52_57-Photoroom.png' },
       ],
       },
       {
