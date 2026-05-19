@@ -150,6 +150,7 @@ export const SHOP_THEMES = [
       { id: 'joseon_pavilion3_1', label: '팔각정', type: 'decoration', subtype: 'joseon_pavilion3', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/cde3dafa0_ChatGPTImage202642306_00_40-Photoroom.png' },
       { id: 'joseon_tower_1', label: '누각탑', type: 'decoration', subtype: 'joseon_tower', price: 160, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ddb9d1390_ChatGPTImage202651912_37_11-Photoroom.png' },
       { id: 'joseon_lantern_1', label: '석등', type: 'decoration', subtype: 'joseon_lantern', price: 50, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/04d72cad1_ChatGPTImage202642306_03_55-Photoroom.png' },
+      { id: 'joseon_cherry_tree_1', label: '벚꽃나무', type: 'decoration', subtype: 'joseon_cherry_tree', price: 80, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/fb5c06920_ChatGPTImage202651910_26_28-Photoroom.png' },
       { id: 'joseon_pond_1', label: '연못 정자', type: 'decoration', subtype: 'joseon_pond', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/1570601c5_ChatGPTImage202642305_59_35-Photoroom.png' },
     ],
   },
