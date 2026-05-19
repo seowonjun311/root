@@ -92,6 +92,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'joseon_pavilion2') return { cols: 3, rows: 2 };
   if (kind === 'decoration' && item?.type === 'joseon_pavilion3') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'joseon_tower') return { cols: 3, rows: 3 };
+  if (kind === 'decoration' && item?.type === 'joseon_lantern') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'joseon_pond') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'mammoth_hut') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'pyramid') return { cols: 3, rows: 3 };
@@ -324,6 +325,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'joseon_pavilion2') return { x: x + 40, y: y + TILE_H * 2 + 30 };
   if (kind === 'decoration' && item?.type === 'joseon_pavilion3') return { x: x, y: y + TILE_H * 2 + 10 };
   if (kind === 'decoration' && item?.type === 'joseon_tower') return { x: x, y: y + TILE_H * 2 + 70 };
+  if (kind === 'decoration' && item?.type === 'joseon_lantern') return { x, y: y + TILE_H - 10 };
   if (kind === 'decoration' && item?.type === 'joseon_pond') return { x: x + 5, y: y + TILE_H * 3 + 20 };
 
   return { x, y: y + 14 };
@@ -651,6 +653,7 @@ export function getDecorationImage(type) {
   if (type === 'joseon_pavilion2') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/106f4e0ca_ChatGPTImage202642305_48_00-Photoroom.png';
   if (type === 'joseon_pavilion3') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/cde3dafa0_ChatGPTImage202642306_00_40-Photoroom.png';
   if (type === 'joseon_tower') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ddb9d1390_ChatGPTImage202651912_37_11-Photoroom.png';
+  if (type === 'joseon_lantern') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/04d72cad1_ChatGPTImage202642306_03_55-Photoroom.png';
   if (type === 'joseon_pond') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/1570601c5_ChatGPTImage202642305_59_35-Photoroom.png';
 
   return grassImg;
@@ -744,6 +747,7 @@ export function getDecorationLabel(type) {
     joseon_pavilion2: '누각',
     joseon_pavilion3: '팔각정',
     joseon_tower: '누각탑',
+    joseon_lantern: '석등',
     joseon_pond: '연못 정자',
   };
   return labelMap[type] || '잔디';
@@ -834,6 +838,7 @@ export function createDecoration(subtype) {
     joseon_pavilion2: 320,
     joseon_pavilion3: 330,
     joseon_tower: 456,
+    joseon_lantern: 160,
     joseon_pond: 420,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
