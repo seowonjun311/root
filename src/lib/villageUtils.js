@@ -96,6 +96,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'joseon_cherry_tree') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'joseon_small_cherry_tree') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'joseon_pine_tree') return { cols: 1, rows: 1 };
+  if (kind === 'decoration' && item?.type === 'joseon_magnolia_tree') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'joseon_street_lamp') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'joseon_pond') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'joseon_garden_pond') return { cols: 4, rows: 3 };
@@ -339,6 +340,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'joseon_cherry_tree') return { x, y: y + TILE_H * 2 - 60 };
   if (kind === 'decoration' && item?.type === 'joseon_small_cherry_tree') return { x, y: y + TILE_H + 55 };
   if (kind === 'decoration' && item?.type === 'joseon_pine_tree') return { x, y: y + TILE_H * 2 - 70 };
+  if (kind === 'decoration' && item?.type === 'joseon_magnolia_tree') return { x, y: y + TILE_H * 2 - 70 };
   if (kind === 'decoration' && item?.type === 'joseon_street_lamp') return { x: x + 13, y: y + TILE_H * 2 - 115 };
   if (kind === 'decoration' && item?.type === 'joseon_pond') return { x: x + 5, y: y + TILE_H * 3 + 20 };
   if (kind === 'decoration' && item?.type === 'joseon_garden_pond') return { x: x + 15, y: y + TILE_H * 3 + 90 };
@@ -679,6 +681,7 @@ export function getDecorationImage(type) {
   if (type === 'joseon_cherry_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/fb5c06920_ChatGPTImage202651910_26_28-Photoroom.png';
   if (type === 'joseon_small_cherry_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/92324726f_ChatGPTImage202651911_35_36-Photoroom.png';
   if (type === 'joseon_pine_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/17d18a84e_ChatGPTImage202651910_15_08-Photoroom.png';
+  if (type === 'joseon_magnolia_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d850eeb96_ChatGPTImage202651903_56_52-Photoroom.png';
   if (type === 'joseon_street_lamp') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/61a8874c9_Gemini_Generated_Image_vopvrtvopvrtvopv-Photoroom.png';
   if (type === 'joseon_pond') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/1570601c5_ChatGPTImage202642305_59_35-Photoroom.png';
   if (type === 'joseon_garden_pond') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/505b6227d_ChatGPTImage202651901_47_12-Photoroom.png';
@@ -785,6 +788,7 @@ export function getDecorationLabel(type) {
     joseon_cherry_tree: '벚꽃나무',
     joseon_small_cherry_tree: '작은 벚꽃나무',
     joseon_pine_tree: '소나무',
+    joseon_magnolia_tree: '목련나무',
     joseon_street_lamp: '조선 가로등',
     joseon_pond: '연못 정자',
     joseon_garden_pond: '조선 연못',
@@ -888,6 +892,7 @@ export function createDecoration(subtype) {
     joseon_cherry_tree: 280,
     joseon_small_cherry_tree: 320,
     joseon_pine_tree: 280,
+    joseon_magnolia_tree: 280,
     joseon_street_lamp: 100,
     joseon_pond: 420,
     joseon_garden_pond: 420,
