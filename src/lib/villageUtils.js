@@ -894,7 +894,7 @@ export function createDecoration(subtype) {
     joseon_pine_tree: 280,
     joseon_magnolia_tree: 280,
     joseon_street_lamp: 100,
-    joseon_pond: 420,
+    joseon_pond: 378,
     joseon_garden_pond: 500,
     joseon_flag: 280,
     autumn_oak: 384,
