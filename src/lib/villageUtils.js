@@ -897,7 +897,7 @@ export function createDecoration(subtype) {
     joseon_flower_garden: 306,
     joseon_flower_garden2: 306,
     joseon_waterfall_pond: 504,
-    joseon_wildflower_bed: 340,
+    joseon_wildflower_bed: 170,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
