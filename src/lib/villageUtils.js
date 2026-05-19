@@ -345,7 +345,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'red_maple_tree') return { x, y: y + TILE_H + 70 };
   if (kind === 'decoration' && item?.type === 'joseon_flower_garden') return { x: x - 6, y: y + TILE_H * 3 - 32 };
    if (kind === 'decoration' && item?.type === 'joseon_flower_garden2') return { x, y: y + TILE_H * 3 - 28 };
-   if (kind === 'decoration' && item?.type === 'joseon_waterfall_pond') return { x, y: y + TILE_H * 4 - 10 };
+   if (kind === 'decoration' && item?.type === 'joseon_waterfall_pond') return { x, y: y + TILE_H * 4 - 40 };
    if (kind === 'decoration' && item?.type === 'joseon_flag') return { x, y: y + TILE_H * 2 - 80 };
 
   return { x, y: y + 14 };
@@ -892,7 +892,7 @@ export function createDecoration(subtype) {
     red_maple_tree: 400,
     joseon_flower_garden: 306,
     joseon_flower_garden2: 306,
-    joseon_waterfall_pond: 420,
+    joseon_waterfall_pond: 504,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
