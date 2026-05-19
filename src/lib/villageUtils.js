@@ -89,6 +89,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'building') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'joseon_palace') return { cols: 4, rows: 4 };
   if (kind === 'decoration' && item?.type === 'joseon_pavilion') return { cols: 3, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'joseon_pavilion2') return { cols: 3, rows: 2 };
   if (kind === 'decoration' && item?.type === 'mammoth_hut') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'pyramid') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'sphinx') return { cols: 2, rows: 3 };
@@ -317,6 +318,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'steampunk_fountain') return { x, y: y + TILE_H * 2 + 20 };
   if (kind === 'decoration' && item?.type === 'joseon_palace') return { x: x - 15, y: y + TILE_H * 2 + 110 };
   if (kind === 'decoration' && item?.type === 'joseon_pavilion') return { x: x + 40, y: y + TILE_H * 2 + 30 };
+  if (kind === 'decoration' && item?.type === 'joseon_pavilion2') return { x: x + 40, y: y + TILE_H * 2 + 30 };
 
   return { x, y: y + 14 };
 }
@@ -640,6 +642,7 @@ export function getDecorationImage(type) {
   if (type === 'steampunk_fountain') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7d748ee59_ChatGPTImage202651812_13_37-Photoroom.png';
   if (type === 'joseon_palace') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/d56b400eb_ChatGPTImage202642305_45_18-Photoroom.png';
   if (type === 'joseon_pavilion') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6b0675300_ChatGPTImage202642305_46_25-Photoroom.png';
+  if (type === 'joseon_pavilion2') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/106f4e0ca_ChatGPTImage202642305_48_00-Photoroom.png';
 
   return grassImg;
 }
@@ -729,6 +732,7 @@ export function getDecorationLabel(type) {
     fruit_tree: '과일나무',
     joseon_palace: '궁전',
     joseon_pavilion: '정자',
+    joseon_pavilion2: '누각',
   };
   return labelMap[type] || '잔디';
 }
@@ -815,6 +819,7 @@ export function createDecoration(subtype) {
     steampunk_fountain: 252,
     joseon_palace: 400,
     joseon_pavilion: 320,
+    joseon_pavilion2: 320,
   };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
