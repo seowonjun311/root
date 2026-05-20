@@ -151,6 +151,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'pharaoh_tomb') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'atlantis_temple') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'atlantis_palace') return { cols: 4, rows: 4 };
+  if (kind === 'decoration' && item?.type === 'atlantis_cathedral') return { cols: 3, rows: 3 };
   return { cols: 1, rows: 1 };
 }
 
@@ -355,6 +356,7 @@ export function getObjectScreenPosition(item, kind) {
    if (kind === 'decoration' && item?.type === 'joseon_wildflower_bed') return { x, y: y + TILE_H * 2 - 45 };
   if (kind === 'decoration' && item?.type === 'atlantis_temple') return { x: x - 6, y: y + TILE_H * 4 - 35 };
   if (kind === 'decoration' && item?.type === 'atlantis_palace') return { x: x + 30, y: y + TILE_H * 5 - 84 };
+  if (kind === 'decoration' && item?.type === 'atlantis_cathedral') return { x: x - 6, y: y + TILE_H * 4 - 30 };
 
    return { x, y: y + 14 };
 }
@@ -698,6 +700,7 @@ export function getDecorationImage(type) {
   if (type === 'joseon_wildflower_bed') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7feb5ba62_ChatGPTImage202651904_46_32-Photoroom.png';
   if (type === 'atlantis_temple') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/80acba6e4_ChatGPTImage202651908_35_56-Photoroom.png';
   if (type === 'atlantis_palace') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3c2e48053_ChatGPTImage202651908_46_34-Photoroom.png';
+  if (type === 'atlantis_cathedral') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e81cec599_ChatGPTImage202651908_57_51-Photoroom.png';
 
   return grassImg;
 }
@@ -807,6 +810,7 @@ export function getDecorationLabel(type) {
     joseon_wildflower_bed: '들꽃밭',
     atlantis_temple: '아틀란티스 신전',
     atlantis_palace: '아틀란티스 궁전',
+    atlantis_cathedral: '아틀란티스 대성당',
     };
     return labelMap[type] || '잔디';
 }
@@ -913,6 +917,7 @@ export function createDecoration(subtype) {
     joseon_wildflower_bed: 170,
     atlantis_temple: 480,
     atlantis_palace: 560,
+    atlantis_cathedral: 500,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
