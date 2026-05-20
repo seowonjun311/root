@@ -149,6 +149,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'bone_dino') return { cols: 1, rows: 2 };
   if (kind === 'decoration' && item?.type === 'egypt_treasury') return { cols: 2, rows: 3 };
   if (kind === 'decoration' && item?.type === 'pharaoh_tomb') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'atlantis_temple') return { cols: 3, rows: 3 };
   return { cols: 1, rows: 1 };
 }
 
@@ -351,6 +352,7 @@ export function getObjectScreenPosition(item, kind) {
    if (kind === 'decoration' && item?.type === 'joseon_waterfall_pond') return { x, y: y + TILE_H * 4 + 6 };
     if (kind === 'decoration' && item?.type === 'joseon_flag') return { x, y: y + TILE_H * 2 - 80 };
    if (kind === 'decoration' && item?.type === 'joseon_wildflower_bed') return { x, y: y + TILE_H * 2 - 45 };
+  if (kind === 'decoration' && item?.type === 'atlantis_temple') return { x, y: y + TILE_H * 4 + 20 };
 
    return { x, y: y + 14 };
 }
@@ -692,6 +694,7 @@ export function getDecorationImage(type) {
   if (type === 'joseon_flower_garden2') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/87c0b9aa5_ChatGPTImage202651903_52_57-Photoroom.png';
   if (type === 'joseon_waterfall_pond') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/85a7877ac_ChatGPTImage202651904_14_20-Photoroom.png';
   if (type === 'joseon_wildflower_bed') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7feb5ba62_ChatGPTImage202651904_46_32-Photoroom.png';
+  if (type === 'atlantis_temple') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/80acba6e4_ChatGPTImage202651908_35_56-Photoroom.png';
 
   return grassImg;
 }
@@ -799,6 +802,7 @@ export function getDecorationLabel(type) {
     joseon_flower_garden2: '화단2',
     joseon_waterfall_pond: '폭포연못',
     joseon_wildflower_bed: '들꽃밭',
+    atlantis_temple: '아틀란티스 신전',
     };
     return labelMap[type] || '잔디';
 }
@@ -903,6 +907,7 @@ export function createDecoration(subtype) {
     joseon_flower_garden2: 306,
     joseon_waterfall_pond: 504,
     joseon_wildflower_bed: 170,
+    atlantis_temple: 480,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
