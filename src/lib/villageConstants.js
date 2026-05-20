@@ -168,6 +168,14 @@ export const SHOP_THEMES = [
       ],
       },
       {
+    id: 'atlantis',
+    label: '고대 아틀란티스',
+    emoji: '🌊',
+    items: [
+      { id: 'tile_atlantis_1', label: '아틀란티스 타일', type: 'tile', subtype: 'atlantis', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e95648b90_ChatGPTImage202652002_28_41-Photoroom.png' },
+    ],
+  },
+  {
       id: 'steampunk',
     label: '스팀펑크',
     emoji: '⚙️',

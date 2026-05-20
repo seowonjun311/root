@@ -1070,6 +1070,9 @@ export function getTileImageByKind(kind, tileTheme = 'grass') {
   if (tileTheme === 'joseon') {
     return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/edc8f44f5_image-Photoroom.png';
   }
+  if (tileTheme === 'atlantis') {
+    return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e95648b90_ChatGPTImage202652002_28_41-Photoroom.png';
+  }
   if (kind === TILE_KIND.VARIANT_GRASS) return variantGrassTileImg;
   return baseGrassTileImg;
 }
