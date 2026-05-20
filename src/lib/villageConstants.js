@@ -172,7 +172,7 @@ export const SHOP_THEMES = [
     label: '고대 아틀란티스',
     emoji: '🌊',
     items: [
-      { id: 'tile_atlantis_1', label: '아틀란티스 타일', type: 'tile', subtype: 'atlantis', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e95648b90_ChatGPTImage202652002_28_41-Photoroom.png' },
+      { id: 'tile_atlantis_1', label: '아틀란티스 타일', type: 'tile', subtype: 'atlantis', price: 100, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/21c9af158_ChatGPTImage202652003_47_09-Photoroom.png' },
       { id: 'atlantis_temple_1', label: '아틀란티스 신전', type: 'decoration', subtype: 'atlantis_temple', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/80acba6e4_ChatGPTImage202651908_35_56-Photoroom.png' },
     ],
   },
