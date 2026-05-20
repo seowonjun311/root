@@ -352,7 +352,7 @@ export function getObjectScreenPosition(item, kind) {
    if (kind === 'decoration' && item?.type === 'joseon_waterfall_pond') return { x, y: y + TILE_H * 4 + 6 };
     if (kind === 'decoration' && item?.type === 'joseon_flag') return { x, y: y + TILE_H * 2 - 80 };
    if (kind === 'decoration' && item?.type === 'joseon_wildflower_bed') return { x, y: y + TILE_H * 2 - 45 };
-  if (kind === 'decoration' && item?.type === 'atlantis_temple') return { x: x - 10, y: y + TILE_H * 4 - 30 };
+  if (kind === 'decoration' && item?.type === 'atlantis_temple') return { x: x - 6, y: y + TILE_H * 4 - 35 };
 
    return { x, y: y + 14 };
 }
