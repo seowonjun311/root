@@ -702,7 +702,7 @@ export function getDecorationImage(type) {
   if (type === 'joseon_flower_garden2') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/87c0b9aa5_ChatGPTImage202651903_52_57-Photoroom.png';
   if (type === 'joseon_waterfall_pond') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/85a7877ac_ChatGPTImage202651904_14_20-Photoroom.png';
   if (type === 'joseon_wildflower_bed') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7feb5ba62_ChatGPTImage202651904_46_32-Photoroom.png';
-  if (type === 'atlantis_temple') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/80acba6e4_ChatGPTImage202651908_35_56-Photoroom.png';
+  if (type === 'atlantis_temple') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a3d7e907a_ChatGPTImage202652004_28_51-Photoroom.png';
   if (type === 'atlantis_palace') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/3c2e48053_ChatGPTImage202651908_46_34-Photoroom.png';
   if (type === 'atlantis_cathedral') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e81cec599_ChatGPTImage202651908_57_51-Photoroom.png';
   if (type === 'atlantis_chapel') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2c6fcea72_ChatGPTImage202651908_43_25-Photoroom.png';
