@@ -150,7 +150,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'egypt_treasury') return { cols: 2, rows: 3 };
   if (kind === 'decoration' && item?.type === 'pharaoh_tomb') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'atlantis_temple') return { cols: 3, rows: 3 };
-  if (kind === 'decoration' && item?.type === 'atlantis_palace') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'atlantis_palace') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'atlantis_cathedral') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'atlantis_chapel') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'atlantis_tower') return { cols: 2, rows: 2 };
