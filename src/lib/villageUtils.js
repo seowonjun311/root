@@ -357,7 +357,7 @@ export function getObjectScreenPosition(item, kind) {
     if (kind === 'decoration' && item?.type === 'joseon_flag') return { x, y: y + TILE_H * 2 - 80 };
    if (kind === 'decoration' && item?.type === 'joseon_wildflower_bed') return { x, y: y + TILE_H * 2 - 45 };
   if (kind === 'decoration' && item?.type === 'atlantis_temple') return { x: x - 41, y: y + TILE_H * 4 - 45 };
-  if (kind === 'decoration' && item?.type === 'atlantis_palace') return { x: x + 30, y: y + TILE_H * 5 - 84 };
+  if (kind === 'decoration' && item?.type === 'atlantis_palace') return { x: x, y: y + TILE_H * 5 - 99 };
   if (kind === 'decoration' && item?.type === 'atlantis_cathedral') return { x: x - 1, y: y + TILE_H * 4 };
   if (kind === 'decoration' && item?.type === 'atlantis_chapel') return { x, y: y + TILE_H * 2 + 80 };
   if (kind === 'decoration' && item?.type === 'atlantis_tower') return { x, y: y + TILE_H * 3 + 20 };
