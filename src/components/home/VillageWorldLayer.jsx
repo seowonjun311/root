@@ -468,7 +468,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
                 const pos = gridToScreen(tile.col, tile.row);
                 const tileImg = getTileImageByKind(tile.kind, tileTheme);
                 const revealed = revealedTiles.find((item) => item.col === tile.col && item.row === tile.row);
-                const scale = (tileTheme === 'dino' || tileTheme === 'egypt') ? 1.4641 : (tileTheme === 'japan_garden' ? 2.2 : (tileTheme === 'steampunk' ? 1.327 : (tileTheme === 'joseon' ? 1.3 : (tileTheme === 'atlantis' ? 1.9326 : 1.1))));
+                const scale = (tileTheme === 'dino' || tileTheme === 'egypt') ? 1.4641 : (tileTheme === 'japan_garden' ? 2.2 : (tileTheme === 'steampunk' ? 1.327 : (tileTheme === 'joseon' ? 1.3 : (tileTheme === 'atlantis' ? 2.0292 : 1.1))));
                 const scaledW = TILE_W * scale;
                 const scaledH = TILE_H * scale;
                 return (
