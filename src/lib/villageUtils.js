@@ -924,7 +924,7 @@ export function createDecoration(subtype) {
     joseon_waterfall_pond: 504,
     joseon_wildflower_bed: 170,
     atlantis_temple: 480,
-    atlantis_palace: 373,
+    atlantis_palace: 485,
     atlantis_cathedral: 500,
     atlantis_chapel: 500,
     atlantis_tower: 480,
