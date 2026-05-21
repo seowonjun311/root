@@ -166,7 +166,13 @@ export function getObjectTileSize(item, kind) {
 }
 
 export function getOccupiedTiles(item, kind, nextCol = item?.col, nextRow = item?.row) {
-  const { cols, rows } = getObjectTileSize(item, kind);
+  let { cols, rows } = getObjectTileSize(item, kind);
+  
+  // flipped 상태일 때 cols와 rows를 swap
+  if (item?.flipped && cols !== rows) {
+    [cols, rows] = [rows, cols];
+  }
+  
   const tiles = [];
   for (let c = 0; c < cols; c += 1) {
     for (let r = 0; r < rows; r += 1) {
