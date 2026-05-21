@@ -728,6 +728,7 @@ export function getDecorationImage(type) {
   if (type === 'stone_house') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/fee45281f_ChatGPTImage202652106_37_46-Photoroom.png';
   if (type === 'market_house') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/53b38bbce_ChatGPTImage202652107_02_58-Photoroom.png';
   if (type === 'evergreen_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/897cc0dea_ChatGPTImage202652107_40_35-Photoroom.png';
+  if (type === 'pink_flower_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a7dbcdb57_ChatGPTImage202652107_42_45-Photoroom.png';
 
   return grassImg;
 }
@@ -847,6 +848,7 @@ export function getDecorationLabel(type) {
     stone_house: '돌 주택',
     market_house: '시장 집',
     evergreen_tree: '상록수',
+    pink_flower_tree: '분홍 벚꽃나무',
     };
     return labelMap[type] || '잔디';
 }
@@ -963,6 +965,7 @@ export function createDecoration(subtype) {
     stone_house: 320,
     market_house: 445,
     evergreen_tree: 280,
+    pink_flower_tree: 350,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {

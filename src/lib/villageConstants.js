@@ -66,6 +66,7 @@ export const SHOP_THEMES = [
       { id: 'grass_1', label: '잔디', type: 'decoration', subtype: 'grass', price: 3, image: grassImg },
       { id: 'tree_1', label: '나무', type: 'decoration', subtype: 'tree', price: 8, image: treeImg },
       { id: 'evergreen_tree_1', label: '상록수', type: 'decoration', subtype: 'evergreen_tree', price: 70, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/897cc0dea_ChatGPTImage202652107_40_35-Photoroom.png' },
+      { id: 'pink_flower_tree_1', label: '분홍 벚꽃나무', type: 'decoration', subtype: 'pink_flower_tree', price: 85, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a7dbcdb57_ChatGPTImage202652107_42_45-Photoroom.png' },
       { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, image: flowerImg },
     ],
   },
