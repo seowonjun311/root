@@ -356,7 +356,7 @@ export function getObjectScreenPosition(item, kind) {
    if (kind === 'decoration' && item?.type === 'joseon_waterfall_pond') return { x, y: y + TILE_H * 4 + 6 };
     if (kind === 'decoration' && item?.type === 'joseon_flag') return { x, y: y + TILE_H * 2 - 80 };
    if (kind === 'decoration' && item?.type === 'joseon_wildflower_bed') return { x, y: y + TILE_H * 2 - 45 };
-  if (kind === 'decoration' && item?.type === 'atlantis_temple') return { x: x - 11, y: y + TILE_H * 4 - 45 };
+  if (kind === 'decoration' && item?.type === 'atlantis_temple') return { x: x + 4, y: y + TILE_H * 4 - 45 };
   if (kind === 'decoration' && item?.type === 'atlantis_palace') return { x: x - 5, y: y + TILE_H * 5 - 114 };
   if (kind === 'decoration' && item?.type === 'atlantis_cathedral') return { x: x - 1, y: y + TILE_H * 4 };
   if (kind === 'decoration' && item?.type === 'atlantis_chapel') return { x, y: y + TILE_H * 2 + 80 };
@@ -923,7 +923,7 @@ export function createDecoration(subtype) {
     joseon_flower_garden2: 306,
     joseon_waterfall_pond: 504,
     joseon_wildflower_bed: 170,
-    atlantis_temple: 480,
+    atlantis_temple: 528,
     atlantis_palace: 485,
     atlantis_cathedral: 500,
     atlantis_chapel: 500,
