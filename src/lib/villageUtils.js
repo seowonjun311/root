@@ -389,7 +389,7 @@ export function getObjectScreenPosition(item, kind) {
     const offset = item?.flipped ? -44 : 44;
     return { x: x + offset, y: y + TILE_H * 2 - 39 };
   }
-  if (kind === 'decoration' && item?.type === 'wooden_bench') return { x, y: y + TILE_H - 40 };
+  if (kind === 'decoration' && item?.type === 'wooden_bench') return { x, y: y + TILE_H - 10 };
 
    return { x, y: y + 14 };
 }
