@@ -62,6 +62,7 @@ export const SHOP_THEMES = [
       { id: 'fox_1', label: '여우', type: 'character', subtype: 'fox', price: 15, image: foxImg },
       { id: 'alpaca_1', label: '알파카', type: 'character', subtype: 'alpaca', price: 18, image: alpacaImg },
       { id: 'platypus_1', label: '오리너구리', type: 'character', subtype: 'platypus', price: 20, image: platypusImg },
+      { id: 'tile_grass_1', label: '잔디 타일', type: 'tile', subtype: 'grass', price: 30, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/46d775f39_-Photoroom.png' },
       { id: 'grass_1', label: '잔디', type: 'decoration', subtype: 'grass', price: 3, image: grassImg },
       { id: 'tree_1', label: '나무', type: 'decoration', subtype: 'tree', price: 8, image: treeImg },
       { id: 'flower_1', label: '꽃', type: 'decoration', subtype: 'flower', price: 5, image: flowerImg },
