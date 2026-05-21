@@ -891,7 +891,7 @@ export function createPlacedObjectFromInventory(inventoryItem) {
 
 export function createDecoration(subtype) {
   const sizeMap = {
-    wooden_bench: 160,
+    wooden_bench: 144,
     grass: 68, tree: 62, flower: 30,
     stone_cave: 70, wood_tower: 65, smithy_large: 72, tent: 60, smithy_small: 58,
     bone_hut: 68,
