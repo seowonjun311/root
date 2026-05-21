@@ -260,7 +260,7 @@ export const DEFAULT_VILLAGE_DATA = {
     { id: 'joseon_pine_tree_1', type: 'joseon_pine_tree', image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/17d18a84e_ChatGPTImage202651910_15_08-Photoroom.png', col: 9, row: 4, flipped: false, size: 280 },
     { id: 'joseon_wildflower_bed_1', type: 'joseon_wildflower_bed', image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7feb5ba62_ChatGPTImage202651904_46_32-Photoroom.png', col: 2, row: 8, flipped: false, size: 170 },
     { id: 'joseon_wildflower_bed_2', type: 'joseon_wildflower_bed', image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7feb5ba62_ChatGPTImage202651904_46_32-Photoroom.png', col: 8, row: 5, flipped: false, size: 170 },
-    { id: 'evergreen_tree_1', type: 'evergreen_tree', image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/897cc0dea_ChatGPTImage202652107_40_35-Photoroom.png', col: 4, row: 8, flipped: false, size: 280 },
+    { id: 'evergreen_tree_1', type: 'evergreen_tree', image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/897cc0dea_ChatGPTImage202652107_40_35-Photoroom.png', col: 4, row: 9, flipped: false, size: 280 },
   ],
   village_characters: [],
   village_buildings: DEFAULT_BUILDINGS,
