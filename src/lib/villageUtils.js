@@ -747,6 +747,7 @@ export function getDecorationImage(type) {
   if (type === 'lime_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/740576dd6_ChatGPTImage202652108_03_36-Photoroom.png';
   if (type === 'market_stall') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5f469a00a_ChatGPTImage202652108_17_30-Photoroom.png';
   if (type === 'wooden_bench') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/eb9c25ea3_ChatGPTImage202652109_03_33-Photoroom.png';
+  if (type === 'basic_lamp') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2a425ef73_ChatGPTImage202652111_56_20-Photoroom.png';
 
   return grassImg;
 }
@@ -870,6 +871,7 @@ export function getDecorationLabel(type) {
     pink_flower_tree: '분홍 벚꽃나무',
     lime_tree: '라임 나무',
     market_stall: '과일 노점',
+    basic_lamp: '기본 가로등',
     };
     return labelMap[type] || '잔디';
 }
@@ -990,8 +992,9 @@ export function createDecoration(subtype) {
     pink_flower_tree: 280,
     lime_tree: 300,
     market_stall: 224,
+    basic_lamp: 240,
     };
-  const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
+    const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
     id: `${subtype}_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
     type: subtype,
