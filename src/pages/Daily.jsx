@@ -5,7 +5,7 @@ import guestDataPersistence from '@/lib/GuestDataPersistence';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 
-const HOURS = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
 const getTimeDisplay = (hour) => {
   if (hour === 0) return '12:00 AM';
@@ -173,40 +173,69 @@ export default function Daily() {
           </div>
         ) : null}
 
-        {/* 24시간 타임블록 */}
-        <div className="space-y-2">
-          {HOURS.map((hour) => {
-            const blockCategory = todayBlocks[hour];
-            const autoFilled = autoFilledHours[hour];
-            const displayBlock = blockCategory ? { category: blockCategory, isManual: true } : autoFilled ? { ...autoFilled, isManual: false } : null;
+        {/* 타임블록 테이블 */}
+         <div className="px-2 overflow-x-auto">
+           <table className="w-full border-collapse">
+             <thead>
+               <tr>
+                 <th className="border border-border p-3 text-sm font-semibold text-foreground bg-background">시간</th>
+                 <th className="border border-border p-3 text-sm font-semibold text-foreground bg-background">오전</th>
+                 <th className="border border-border p-3 text-sm font-semibold text-foreground bg-background">오후</th>
+               </tr>
+             </thead>
+             <tbody>
+               {HOURS.map((hour) => {
+                 const blockCategory = todayBlocks[hour];
+                 const autoFilled = autoFilledHours[hour];
+                 const displayBlock = blockCategory ? { category: blockCategory, isManual: true } : autoFilled ? { ...autoFilled, isManual: false } : null;
 
-            return (
-              <div key={`hour-${hour}`} className="flex items-center gap-3 px-2">
-                <div className="w-16 text-[0.75rem] font-semibold text-muted-foreground text-right shrink-0">
-                  {getTimeDisplay(hour)}
-                </div>
-
-                {displayBlock ? (
-                  <button
-                    onClick={() => blockCategory && removeTimeBlock(hour)}
-                    className="flex-1 h-12 rounded-lg text-white font-semibold text-xs flex items-center justify-between px-3 hover:opacity-90 transition-opacity"
-                    style={{ backgroundColor: CAT_COLORS[displayBlock.category] }}
-                  >
-                    <span>{CAT_LABELS[displayBlock.category]}</span>
-                    {blockCategory && <X className="w-4 h-4" />}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setSelectedHour(hour)}
-                    className="flex-1 h-12 rounded-lg bg-secondary/30 border-2 border-dashed border-secondary text-muted-foreground text-xs font-semibold hover:bg-secondary/50 transition-colors"
-                  >
-                    +
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                 return (
+                   <tr key={`hour-${hour}`}>
+                     <td className="border border-border p-3 text-sm font-semibold text-foreground min-w-14">
+                       {hour}:00
+                     </td>
+                     <td className="border border-border p-2 min-h-16">
+                       {displayBlock ? (
+                         <button
+                           onClick={() => blockCategory && removeTimeBlock(hour)}
+                           className="w-full h-14 rounded text-white font-semibold text-xs hover:opacity-90 transition-opacity"
+                           style={{ backgroundColor: CAT_COLORS[displayBlock.category] }}
+                         >
+                           {CAT_LABELS[displayBlock.category]}
+                         </button>
+                       ) : (
+                         <button
+                           onClick={() => setSelectedHour(hour)}
+                           className="w-full h-14 rounded bg-secondary/20 border border-dashed border-secondary text-muted-foreground text-xs font-semibold hover:bg-secondary/30 transition-colors"
+                         >
+                           +
+                         </button>
+                       )}
+                     </td>
+                     <td className="border border-border p-2 min-h-16">
+                       {displayBlock ? (
+                         <button
+                           onClick={() => blockCategory && removeTimeBlock(hour)}
+                           className="w-full h-14 rounded text-white font-semibold text-xs hover:opacity-90 transition-opacity"
+                           style={{ backgroundColor: CAT_COLORS[displayBlock.category] }}
+                         >
+                           {CAT_LABELS[displayBlock.category]}
+                         </button>
+                       ) : (
+                         <button
+                           onClick={() => setSelectedHour(hour)}
+                           className="w-full h-14 rounded bg-secondary/20 border border-dashed border-secondary text-muted-foreground text-xs font-semibold hover:bg-secondary/30 transition-colors"
+                         >
+                           +
+                         </button>
+                       )}
+                     </td>
+                   </tr>
+                 );
+               })}
+             </tbody>
+           </table>
+         </div>
       </div>
     </div>
   );
