@@ -174,11 +174,12 @@ export default function Daily() {
                const blockCategory = todayBlocks[hour];
                const autoFilled = autoFilledHours[hour];
                const displayBlock = blockCategory ? { category: blockCategory, isManual: true } : autoFilled ? { ...autoFilled, isManual: false } : null;
+               const displayTime = hour === 0 ? '12:00 AM' : `${hour}:00 AM`;
 
                return (
                  <div key={`am-${hour}`} className="flex items-center gap-3 px-2">
-                   <div className="w-12 text-[0.75rem] font-semibold text-muted-foreground text-right shrink-0">
-                     {hour}:00
+                   <div className="w-16 text-[0.75rem] font-semibold text-muted-foreground text-right shrink-0">
+                     {displayTime}
                    </div>
 
                    {displayBlock ? (
@@ -213,11 +214,12 @@ export default function Daily() {
                const autoFilled = autoFilledHours[hour];
                const displayBlock = blockCategory ? { category: blockCategory, isManual: true } : autoFilled ? { ...autoFilled, isManual: false } : null;
                const displayHour = hour === 12 ? 12 : hour - 12;
+               const displayTime = `${displayHour}:00 PM`;
 
                return (
                  <div key={`pm-${hour}`} className="flex items-center gap-3 px-2">
-                   <div className="w-12 text-[0.75rem] font-semibold text-muted-foreground text-right shrink-0">
-                     {displayHour}:00
+                   <div className="w-16 text-[0.75rem] font-semibold text-muted-foreground text-right shrink-0">
+                     {displayTime}
                    </div>
 
                    {displayBlock ? (
