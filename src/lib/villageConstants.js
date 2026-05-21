@@ -170,6 +170,7 @@ export const SHOP_THEMES = [
       { id: 'joseon_flower_garden2_1', label: '화단2', type: 'decoration', subtype: 'joseon_flower_garden2', price: 140, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/87c0b9aa5_ChatGPTImage202651903_52_57-Photoroom.png' },
       { id: 'joseon_waterfall_pond_1', label: '폭포연못', type: 'decoration', subtype: 'joseon_waterfall_pond', price: 180, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/85a7877ac_ChatGPTImage202651904_14_20-Photoroom.png' },
       { id: 'joseon_wildflower_bed_1', label: '들꽃밭', type: 'decoration', subtype: 'joseon_wildflower_bed', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7feb5ba62_ChatGPTImage202651904_46_32-Photoroom.png' },
+      { id: 'wooden_bench_1', label: '나무 벤치', type: 'decoration', subtype: 'wooden_bench', price: 80, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/eb9c25ea3_ChatGPTImage202652109_03_33-Photoroom.png' },
       ],
       },
       {

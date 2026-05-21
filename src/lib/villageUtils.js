@@ -161,6 +161,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'stone_house') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'market_house') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'market_stall') return { cols: 2, rows: 1 };
+  if (kind === 'decoration' && item?.type === 'wooden_bench') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'evergreen_tree') return { cols: 1, rows: 1 };
   return { cols: 1, rows: 1 };
 }
@@ -388,6 +389,7 @@ export function getObjectScreenPosition(item, kind) {
     const offset = item?.flipped ? -44 : 44;
     return { x: x + offset, y: y + TILE_H * 2 - 39 };
   }
+  if (kind === 'decoration' && item?.type === 'wooden_bench') return { x, y: y + TILE_H - 40 };
 
    return { x, y: y + 14 };
 }
@@ -744,12 +746,14 @@ export function getDecorationImage(type) {
   if (type === 'pink_flower_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a7dbcdb57_ChatGPTImage202652107_42_45-Photoroom.png';
   if (type === 'lime_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/740576dd6_ChatGPTImage202652108_03_36-Photoroom.png';
   if (type === 'market_stall') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5f469a00a_ChatGPTImage202652108_17_30-Photoroom.png';
+  if (type === 'wooden_bench') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/eb9c25ea3_ChatGPTImage202652109_03_33-Photoroom.png';
 
   return grassImg;
 }
 
 export function getDecorationLabel(type) {
   const labelMap = {
+    wooden_bench: '나무 벤치',
     tree: '나무',
     flower: '꽃',
     stone_cave: '돌동굴',
@@ -887,6 +891,7 @@ export function createPlacedObjectFromInventory(inventoryItem) {
 
 export function createDecoration(subtype) {
   const sizeMap = {
+    wooden_bench: 160,
     grass: 68, tree: 62, flower: 30,
     stone_cave: 70, wood_tower: 65, smithy_large: 72, tent: 60, smithy_small: 58,
     bone_hut: 68,
