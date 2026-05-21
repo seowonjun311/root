@@ -156,7 +156,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'atlantis_tower') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'atlantis_guardian') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'atlantis_dolphin') return { cols: 1, rows: 1 };
-  if (kind === 'decoration' && item?.type === 'atlantis_coral') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'atlantis_coral') return { cols: 1, rows: 1 };
   return { cols: 1, rows: 1 };
 }
 
@@ -942,7 +942,7 @@ export function createDecoration(subtype) {
     atlantis_tower: 576,
     atlantis_guardian: 300,
     atlantis_dolphin: 252,
-    atlantis_coral: 380,
+    atlantis_coral: 190,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
