@@ -9,6 +9,8 @@ export default function VillageOverlayBar({ nickname, level, points, onOpenShop,
         style={{ background: 'rgba(255,248,232,0.88)', color: '#4a2c08', backdropFilter: 'blur(4px)' }}
       >
         <span>{nickname}</span>
+        <span style={{ color: '#c49a4a' }}>Lv.{level}</span>
+        <span className="ml-1" style={{ color: '#8b5a20' }}>✦ {points}</span>
       </div>
 
       <div className="flex items-center gap-1.5">

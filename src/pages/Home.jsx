@@ -860,46 +860,7 @@ export default function Home() {
       className="min-h-screen pb-28"
       style={{ background: 'linear-gradient(180deg, #f8f1df 0%, #f5e8c9 38%, #f2e1bc 68%, #ebd6a9 100%)' }}
     >
-      {/* 디버그 레벨 버튼 */}
-      <div className="fixed bottom-24 right-4 z-50 flex flex-col gap-1">
-        {!isGuest && (
-          <button
-            onClick={async () => {
-              const current = getVillageState(user).village_points;
-              await base44.auth.updateMe({ village_points: current + 3000 });
-              queryClient.invalidateQueries({ queryKey: ['me'] });
-              toast.success('+3000 포인트 지급!');
-            }}
-            className="px-2 py-1 rounded text-xs font-bold"
-            style={{ background: '#2a7a20', color: '#fff' }}
-          >
-            +3000P
-          </button>
-        )}
-        {debugLevel !== null && (
-          <button
-            onClick={() => setDebugLevel(null)}
-            className="px-2 py-1 rounded text-xs font-bold"
-            style={{ background: '#7a5020', color: '#fff' }}
-          >
-            실제 Lv.{realTotalLevel}로 복귀
-          </button>
-        )}
-        {[1, 2, 3, 5, 7, 9].map((lv) => (
-          <button
-            key={lv}
-            onClick={() => setDebugLevel(lv)}
-            className="px-2 py-1 rounded text-xs font-bold"
-            style={{
-              background: totalLevel === lv ? '#8b5a20' : '#e8d4a0',
-              color: totalLevel === lv ? '#fff' : '#7a5020',
-              border: '1px solid #c49a4a',
-            }}
-          >
-            Lv.{lv}
-          </button>
-        ))}
-      </div>
+
 
       {expPopup ? <ExpPopup exp={expPopup} /> : null}
       {pointPopup ? <PointPopup points={pointPopup} /> : null}
