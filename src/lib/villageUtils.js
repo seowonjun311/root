@@ -927,7 +927,7 @@ export function createDecoration(subtype) {
     atlantis_palace: 485,
     atlantis_cathedral: 500,
     atlantis_chapel: 500,
-    atlantis_tower: 480,
+    atlantis_tower: 576,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
