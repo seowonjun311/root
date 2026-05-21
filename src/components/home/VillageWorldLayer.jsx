@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   WORLD_VIEWPORT_HEIGHT, GRID_COLS, GRID_ROWS, OUTER_TILE_PADDING,
-  TILE_W, TILE_H, WORLD_WIDTH, WORLD_HEIGHT,
+  TILE_W, TILE_H, WORLD_WIDTH, WORLD_HEIGHT, GRID_ORIGIN_X, GRID_ORIGIN_Y,
 } from '@/lib/villageConstants';
 import {
   gridToScreen, screenToGrid,
@@ -103,6 +103,8 @@ export default function VillageWorldLayer({
   onToggleOverview,
   buildings = [],
   newlyPlacedItemId = null,
+  showGridGuide = false,
+  showSymmetryGuide = false,
 }) {
   const dragRef = useRef(null);
   const viewportRef = useRef(null);
@@ -491,6 +493,59 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
                   />
                 );
               })}
+
+              {/* 격자선 표시 */}
+              {isEditMode && showGridGuide && tileMap.map((tile) => {
+                const pos = gridToScreen(tile.col, tile.row);
+                return (
+                  <div
+                    key={`grid-${tile.col}-${tile.row}`}
+                    className="absolute pointer-events-none"
+                    style={{
+                      left: pos.x - TILE_W / 2,
+                      top: pos.y - TILE_H / 2,
+                      width: TILE_W,
+                      height: TILE_H,
+                      clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+                      border: '1px solid rgba(255, 150, 100, 0.3)',
+                      boxSizing: 'border-box',
+                      zIndex: 9999998,
+                    }}
+                  />
+                );
+              })}
+
+              {/* 대칭 가이드 (중심선) */}
+              {isEditMode && showSymmetryGuide && (
+                <>
+                  {/* 수직 중심선 */}
+                  <div
+                    className="absolute pointer-events-none"
+                    style={{
+                      left: GRID_ORIGIN_X,
+                      top: 0,
+                      width: 2,
+                      height: WORLD_HEIGHT,
+                      backgroundColor: 'rgba(100, 150, 255, 0.4)',
+                      zIndex: 9999997,
+                      transform: 'translateX(-50%)',
+                    }}
+                  />
+                  {/* 수평 중심선 */}
+                  <div
+                    className="absolute pointer-events-none"
+                    style={{
+                      left: 0,
+                      top: GRID_ORIGIN_Y,
+                      width: WORLD_WIDTH,
+                      height: 2,
+                      backgroundColor: 'rgba(100, 150, 255, 0.4)',
+                      zIndex: 9999997,
+                      transform: 'translateY(-50%)',
+                    }}
+                  />
+                </>
+              )}
 
               {isEditMode && placementPreview
                 ? getPreviewTiles(placementPreview.item, placementPreview.type, placementPreview.col, placementPreview.row).map((tile) => {

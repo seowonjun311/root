@@ -44,6 +44,7 @@ import TitleUnlockModal from '@/components/home/TitleUnlockModal';
 import Section from '@/components/home/Section';
 import AddActionGoalButton from '@/components/home/AddActionGoalButton';
 import VillageWorldLayer from '@/components/home/VillageWorldLayer';
+import GridGuideToggle from '@/components/home/GridGuideToggle';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -83,6 +84,8 @@ export default function Home() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedObject, setSelectedObject] = useState(null);
   const [placementPreview, setPlacementPreview] = useState(null);
+  const [showGridGuide, setShowGridGuide] = useState(false);
+  const [showSymmetryGuide, setShowSymmetryGuide] = useState(false);
 
   const [tileTheme, setTileTheme] = useState('grass');
   const [decorations, setDecorations] = useState([]);
@@ -899,8 +902,19 @@ export default function Home() {
          onCancelEdit={handleCancelEdit}
          onStoreSelected={handleStoreSelected}
          newlyPlacedItemId={newlyPlacedItemId}
+         showGridGuide={showGridGuide}
+         showSymmetryGuide={showSymmetryGuide}
 
        />
+
+      {isEditMode && (
+        <GridGuideToggle
+          showGrid={showGridGuide}
+          onToggleGrid={() => setShowGridGuide((prev) => !prev)}
+          showSymmetry={showSymmetryGuide}
+          onToggleSymmetry={() => setShowSymmetryGuide((prev) => !prev)}
+        />
+      )}
 
       <div
         className="sticky top-[314px] z-40 -mx-4 px-4 pt-1 pb-2"
