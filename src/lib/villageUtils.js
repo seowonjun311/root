@@ -376,6 +376,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'market_house') return { x: x - 10, y: y + TILE_H * 2 + 56 };
   if (kind === 'decoration' && item?.type === 'evergreen_tree') return { x, y: y + TILE_H * 2 - 65 };
   if (kind === 'decoration' && item?.type === 'pink_flower_tree') return { x, y: y + TILE_H * 2 - 76 };
+  if (kind === 'decoration' && item?.type === 'lime_tree') return { x, y: y + TILE_H * 2 - 50 };
 
    return { x, y: y + 14 };
 }
@@ -730,6 +731,7 @@ export function getDecorationImage(type) {
   if (type === 'market_house') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/53b38bbce_ChatGPTImage202652107_02_58-Photoroom.png';
   if (type === 'evergreen_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/897cc0dea_ChatGPTImage202652107_40_35-Photoroom.png';
   if (type === 'pink_flower_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a7dbcdb57_ChatGPTImage202652107_42_45-Photoroom.png';
+  if (type === 'lime_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/740576dd6_ChatGPTImage202652108_03_36-Photoroom.png';
 
   return grassImg;
 }
@@ -850,6 +852,7 @@ export function getDecorationLabel(type) {
     market_house: '시장 집',
     evergreen_tree: '상록수',
     pink_flower_tree: '분홍 벚꽃나무',
+    lime_tree: '라임 나무',
     };
     return labelMap[type] || '잔디';
 }
@@ -967,6 +970,7 @@ export function createDecoration(subtype) {
     market_house: 445,
     evergreen_tree: 280,
     pink_flower_tree: 280,
+    lime_tree: 300,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
