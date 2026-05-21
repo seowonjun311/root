@@ -109,7 +109,15 @@ export default function VillageWorldLayer({
   const touchGestureRef = useRef(null);
 
   const [viewportSize, setViewportSize] = useState({ width: 0, height: WORLD_VIEWPORT_HEIGHT });
-  const [offset, setOffset] = useState({ x: -360, y: -120 });
+  const [offset, setOffset] = useState(() => {
+    const vw = window.innerWidth || 390;
+    // 마을 중심(GRID_ORIGIN_X, GRID_ORIGIN_Y)이 뷰포트 중앙에 오도록 초기 오프셋 계산
+    const initScale = 0.46;
+    return {
+      x: vw / 2 - 1280 * initScale,
+      y: WORLD_VIEWPORT_HEIGHT / 2 - 550 * initScale,
+    };
+  });
   const [scale, setScale] = useState(isOverview ? 0.21 : 0.46);
   const [revealedTiles, setRevealedTiles] = useState([]);
   const prevExpansionRef = useRef(getWorldExpansionByLevel(totalLevel));
