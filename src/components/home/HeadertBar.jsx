@@ -43,16 +43,15 @@ export default function HeaderBar({
             </div>
           )}
           <div
-            className="truncate text-[15px] font-extrabold"
+            className="truncate text-[14px] font-extrabold"
             style={{ color: '#4a2c08' }}
           >
             {user?.nickname || '용사'}
           </div>
-          <div
-            className="truncate text-[11px] font-semibold"
-            style={{ color: '#8a5a17' }}
-          >
-            전체 Lv.{user?.level || 1}
+          <div className="flex items-center justify-center gap-2 text-[11px] font-semibold" style={{ color: '#8a5a17' }}>
+            <span>Lv.{user?.level || 1}</span>
+            <span style={{ color: '#c49a4a' }}>✦</span>
+            <span style={{ color: '#6b4e15' }}>{points}</span>
           </div>
         </div>
 
