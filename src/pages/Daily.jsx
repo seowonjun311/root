@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -24,6 +24,9 @@ const CAT_LABELS = {
 export default function Daily() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [guestVersion, setGuestVersion] = useState(0);
+  const [timeBlocks, setTimeBlocks] = useState({});
+  const [selectedHour, setSelectedHour] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
@@ -40,6 +43,11 @@ export default function Daily() {
     staleTime: 0,
   });
 
+  const { data: actionGoalsFromServer = [] } = useQuery({
+    queryKey: ['actionGoals'],
+    queryFn: () => base44.entities.ActionGoal.list().catch(() => []),
+  });
+
   const { data: logsFromServer = [] } = useQuery({
     queryKey: ['allLogs'],
     queryFn: () => base44.entities.ActionLog.list('-date', 500).catch(() => []),
@@ -47,31 +55,46 @@ export default function Daily() {
 
   const guestLogs = Array.isArray(guestData?.actionLogs) ? guestData.actionLogs : [];
   const logs = isGuest ? guestLogs : logsFromServer;
+  const actionGoals = isGuest ? (guestData?.actionGoals || []) : actionGoalsFromServer;
+  
+  // 시간 누적형 목표 필터링 (timer 타입)
+  const timerGoals = actionGoals.filter((goal) => goal.action_type === 'timer' && goal.status === 'active');
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
   const logsForDate = logs.filter((log) => log.date === dateStr);
 
-  const hourlyData = useMemo(() => {
-    const data = {};
-    HOURS.forEach((hour) => {
-      data[hour] = [];
+  // 타임블로킹 로컬 상태
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const todayBlocks = timeBlocks[dateKey] || {};
+
+  // 시간 누적형 목표 자동 표시 (실제 로그 기반)
+  const autoFilledHours = useMemo(() => {
+    const filled = {};
+    timerGoals.forEach((goal) => {
+      const logsForGoal = logsForDate.filter((log) => log.action_goal_id === goal.id);
+      logsForGoal.forEach((log) => {
+        const hour = new Date(log.createdAt).getHours();
+        filled[hour] = { goalId: goal.id, category: log.category, label: goal.title };
+      });
     });
+    return filled;
+  }, [logsForDate, timerGoals]);
 
-    logsForDate.forEach((log) => {
-      const createdAt = new Date(log.createdAt || new Date());
-      const startHour = createdAt.getHours();
-      const durationHours = Math.max(1, Math.ceil((log.duration_minutes || 30) / 60));
+  const addTimeBlock = (hour, category) => {
+    setTimeBlocks((prev) => ({
+      ...prev,
+      [dateKey]: { ...prev[dateKey], [hour]: category },
+    }));
+    setSelectedHour(null);
+    setSelectedCategory(null);
+  };
 
-      for (let i = 0; i < durationHours; i++) {
-        const hour = (startHour + i) % 24;
-        if (!data[hour].find((l) => l.id === log.id)) {
-          data[hour].push(log);
-        }
-      }
-    });
-
-    return data;
-  }, [logsForDate]);
+  const removeTimeBlock = (hour) => {
+    setTimeBlocks((prev) => ({
+      ...prev,
+      [dateKey]: { ...prev[dateKey], [hour]: undefined },
+    }));
+  };
 
   const goToPreviousDay = () => setSelectedDate(subDays(selectedDate, 1));
   const goToNextDay = () => setSelectedDate(addDays(selectedDate, 1));
@@ -118,118 +141,108 @@ export default function Daily() {
         )}
       </div>
 
-      <div className="p-4 space-y-1">
-        {/* 오전 (0시-11시) */}
-        <div>
-          <h2 className="text-[0.875rem] font-bold text-amber-900 mb-2 px-2">오전</h2>
-          <div className="space-y-1">
-            {HOURS.slice(0, 12).map((hour) => {
-              const hoursLogs = hourlyData[hour] || [];
-              const hasLogs = hoursLogs.length > 0;
+      <div className="p-4 space-y-6">
+         {selectedHour !== null && selectedCategory === null ? (
+           <div className="fixed inset-0 bg-black/50 flex items-end z-50">
+             <div className="w-full bg-background rounded-t-2xl p-4 space-y-2">
+               <p className="text-sm font-semibold text-foreground mb-3">카테고리 선택</p>
+               {Object.entries(CAT_LABELS).map(([key, label]) => (
+                 <button
+                   key={key}
+                   onClick={() => addTimeBlock(selectedHour, key)}
+                   className="w-full p-3 rounded-lg text-white font-semibold"
+                   style={{ backgroundColor: CAT_COLORS[key] }}
+                 >
+                   {label}
+                 </button>
+               ))}
+               <button
+                 onClick={() => setSelectedHour(null)}
+                 className="w-full p-3 rounded-lg bg-secondary text-foreground font-semibold"
+               >
+                 취소
+               </button>
+             </div>
+           </div>
+         ) : null}
 
-              return (
-                <div
-                  key={`am-${hour}`}
-                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-secondary/50 transition-colors"
-                >
-                  <div className="w-10 text-[0.75rem] font-semibold text-muted-foreground text-right shrink-0">
-                    {hour}:00
-                  </div>
+         {/* 오전 (0시-11시) */}
+         <div>
+           <h2 className="text-[0.875rem] font-bold text-amber-900 mb-3 px-2">오전</h2>
+           <div className="space-y-2">
+             {HOURS.slice(0, 12).map((hour) => {
+               const blockCategory = todayBlocks[hour];
+               const autoFilled = autoFilledHours[hour];
+               const displayBlock = blockCategory ? { category: blockCategory, isManual: true } : autoFilled ? { ...autoFilled, isManual: false } : null;
 
-                  <div
-                    className="flex-1 h-10 rounded-lg bg-secondary/30 flex items-center px-2 gap-1 overflow-x-auto"
-                    style={{
-                      backgroundColor: hasLogs ? 'rgba(250, 204, 21, 0.1)' : undefined,
-                    }}
-                  >
-                    {hasLogs ? (
-                      <div className="flex items-center gap-1 min-w-max">
-                        {hoursLogs.map((log) => (
-                          <span
-                            key={log.id}
-                            className="text-[0.625rem] px-1.5 py-0.5 rounded text-white font-semibold shrink-0"
-                            style={{
-                              backgroundColor: CAT_COLORS[log.category] || '#6b7280',
-                            }}
-                          >
-                            {CAT_LABELS[log.category] || '기타'}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-[0.625rem] text-muted-foreground">-</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+               return (
+                 <div key={`am-${hour}`} className="flex items-center gap-3 px-2">
+                   <div className="w-12 text-[0.75rem] font-semibold text-muted-foreground text-right shrink-0">
+                     {hour}:00
+                   </div>
 
-        {/* 오후 (12시-23시) */}
-        <div className="mt-6">
-          <h2 className="text-[0.875rem] font-bold text-amber-900 mb-2 px-2">오후</h2>
-          <div className="space-y-1">
-            {HOURS.slice(12, 24).map((hour) => {
-              const hoursLogs = hourlyData[hour] || [];
-              const hasLogs = hoursLogs.length > 0;
-              const displayHour = hour === 12 ? 12 : hour - 12;
+                   {displayBlock ? (
+                     <button
+                       onClick={() => blockCategory && removeTimeBlock(hour)}
+                       className="flex-1 h-12 rounded-lg text-white font-semibold text-xs flex items-center justify-between px-3 hover:opacity-90 transition-opacity"
+                       style={{ backgroundColor: CAT_COLORS[displayBlock.category] }}
+                     >
+                       <span>{CAT_LABELS[displayBlock.category]}</span>
+                       {blockCategory && <X className="w-4 h-4" />}
+                     </button>
+                   ) : (
+                     <button
+                       onClick={() => setSelectedHour(hour)}
+                       className="flex-1 h-12 rounded-lg bg-secondary/30 border-2 border-dashed border-secondary text-muted-foreground text-xs font-semibold hover:bg-secondary/50 transition-colors"
+                     >
+                       +
+                     </button>
+                   )}
+                 </div>
+               );
+             })}
+           </div>
+         </div>
 
-              return (
-                <div
-                  key={`pm-${hour}`}
-                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-secondary/50 transition-colors"
-                >
-                  <div className="w-10 text-[0.75rem] font-semibold text-muted-foreground text-right shrink-0">
-                    {displayHour}:00
-                  </div>
+         {/* 오후 (12시-23시) */}
+         <div>
+           <h2 className="text-[0.875rem] font-bold text-amber-900 mb-3 px-2">오후</h2>
+           <div className="space-y-2">
+             {HOURS.slice(12, 24).map((hour) => {
+               const blockCategory = todayBlocks[hour];
+               const autoFilled = autoFilledHours[hour];
+               const displayBlock = blockCategory ? { category: blockCategory, isManual: true } : autoFilled ? { ...autoFilled, isManual: false } : null;
+               const displayHour = hour === 12 ? 12 : hour - 12;
 
-                  <div
-                    className="flex-1 h-10 rounded-lg bg-secondary/30 flex items-center px-2 gap-1 overflow-x-auto"
-                    style={{
-                      backgroundColor: hasLogs ? 'rgba(250, 204, 21, 0.1)' : undefined,
-                    }}
-                  >
-                    {hasLogs ? (
-                      <div className="flex items-center gap-1 min-w-max">
-                        {hoursLogs.map((log) => (
-                          <span
-                            key={log.id}
-                            className="text-[0.625rem] px-1.5 py-0.5 rounded text-white font-semibold shrink-0"
-                            style={{
-                              backgroundColor: CAT_COLORS[log.category] || '#6b7280',
-                            }}
-                          >
-                            {CAT_LABELS[log.category] || '기타'}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-[0.625rem] text-muted-foreground">-</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+               return (
+                 <div key={`pm-${hour}`} className="flex items-center gap-3 px-2">
+                   <div className="w-12 text-[0.75rem] font-semibold text-muted-foreground text-right shrink-0">
+                     {displayHour}:00
+                   </div>
 
-        {/* 카테고리 범례 */}
-        <div className="mt-8 p-4 rounded-xl bg-secondary/20 border border-border/30">
-          <p className="text-[0.75rem] font-semibold text-amber-900 mb-2">카테고리</p>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(CAT_LABELS).map(([key, label]) => (
-              <span
-                key={key}
-                className="text-[0.625rem] px-2 py-1 rounded text-white font-semibold"
-                style={{ backgroundColor: CAT_COLORS[key] }}
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
+                   {displayBlock ? (
+                     <button
+                       onClick={() => blockCategory && removeTimeBlock(hour)}
+                       className="flex-1 h-12 rounded-lg text-white font-semibold text-xs flex items-center justify-between px-3 hover:opacity-90 transition-opacity"
+                       style={{ backgroundColor: CAT_COLORS[displayBlock.category] }}
+                     >
+                       <span>{CAT_LABELS[displayBlock.category]}</span>
+                       {blockCategory && <X className="w-4 h-4" />}
+                     </button>
+                   ) : (
+                     <button
+                       onClick={() => setSelectedHour(hour)}
+                       className="flex-1 h-12 rounded-lg bg-secondary/30 border-2 border-dashed border-secondary text-muted-foreground text-xs font-semibold hover:bg-secondary/50 transition-colors"
+                     >
+                       +
+                     </button>
+                   )}
+                 </div>
+               );
+             })}
+           </div>
+         </div>
+       </div>
     </div>
   );
 }
