@@ -716,6 +716,7 @@ export function getDecorationImage(type) {
   if (type === 'atlantis_guardian') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/38f28e2e5_ChatGPTImage202651908_45_06-Photoroom.png';
   if (type === 'atlantis_dolphin') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/8d803f482_ChatGPTImage202652001_02_30-Photoroom.png';
   if (type === 'atlantis_coral') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6545993d6_ChatGPTImage202651909_15_07-Photoroom.png';
+  if (type === 'log_cabin') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a7dc07c20_ChatGPTImage202652105_59_50-Photoroom.png';
 
   return grassImg;
 }
@@ -831,6 +832,7 @@ export function getDecorationLabel(type) {
     atlantis_guardian: '아틀란티스 수호신상',
     atlantis_dolphin: '아틀란티스 돌고래상',
     atlantis_coral: '아틀란티스 황금 산호',
+    log_cabin: '통나무 집',
     };
     return labelMap[type] || '잔디';
 }
@@ -943,6 +945,7 @@ export function createDecoration(subtype) {
     atlantis_guardian: 300,
     atlantis_dolphin: 252,
     atlantis_coral: 190,
+    log_cabin: 280,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
