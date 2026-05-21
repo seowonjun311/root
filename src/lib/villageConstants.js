@@ -68,6 +68,7 @@ export const SHOP_THEMES = [
       { id: 'lime_tree_1', label: '라임 나무', type: 'decoration', subtype: 'lime_tree', price: 90, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/740576dd6_ChatGPTImage202652108_03_36-Photoroom.png' },
       { id: 'market_stall_1', label: '과일 노점', type: 'decoration', subtype: 'market_stall', price: 120, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5f469a00a_ChatGPTImage202652108_17_30-Photoroom.png' },
       { id: 'wooden_bench_1', label: '나무 벤치', type: 'decoration', subtype: 'wooden_bench', price: 80, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/eb9c25ea3_ChatGPTImage202652109_03_33-Photoroom.png' },
+      { id: 'basic_lamp_1', label: '기본 가로등', type: 'decoration', subtype: 'basic_lamp', price: 60, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2a425ef73_ChatGPTImage202652111_56_20-Photoroom.png' },
     ],
   },
   {
