@@ -179,8 +179,7 @@ export default function Daily() {
              <thead>
                <tr>
                  <th className="border border-border p-3 text-sm font-semibold text-foreground bg-background">시간</th>
-                 <th className="border border-border p-3 text-sm font-semibold text-foreground bg-background">오전</th>
-                 <th className="border border-border p-3 text-sm font-semibold text-foreground bg-background">오후</th>
+                 <th className="border border-border p-3 text-sm font-semibold text-foreground bg-background">활동</th>
                </tr>
              </thead>
              <tbody>
@@ -193,24 +192,6 @@ export default function Daily() {
                    <tr key={`hour-${hour}`}>
                      <td className="border border-border p-3 text-sm font-semibold text-foreground min-w-14">
                        {hour}:00
-                     </td>
-                     <td className="border border-border p-2 min-h-16">
-                       {displayBlock ? (
-                         <button
-                           onClick={() => blockCategory && removeTimeBlock(hour)}
-                           className="w-full h-14 rounded text-white font-semibold text-xs hover:opacity-90 transition-opacity"
-                           style={{ backgroundColor: CAT_COLORS[displayBlock.category] }}
-                         >
-                           {CAT_LABELS[displayBlock.category]}
-                         </button>
-                       ) : (
-                         <button
-                           onClick={() => setSelectedHour(hour)}
-                           className="w-full h-14 rounded bg-secondary/20 border border-dashed border-secondary text-muted-foreground text-xs font-semibold hover:bg-secondary/30 transition-colors"
-                         >
-                           +
-                         </button>
-                       )}
                      </td>
                      <td className="border border-border p-2 min-h-16">
                        {displayBlock ? (
