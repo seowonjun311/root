@@ -160,6 +160,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'log_cabin') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'stone_house') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'market_house') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'market_stall') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'evergreen_tree') return { cols: 1, rows: 1 };
   return { cols: 1, rows: 1 };
 }
@@ -377,6 +378,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'evergreen_tree') return { x, y: y + TILE_H * 2 - 65 };
   if (kind === 'decoration' && item?.type === 'pink_flower_tree') return { x, y: y + TILE_H * 2 - 76 };
   if (kind === 'decoration' && item?.type === 'lime_tree') return { x, y: y + TILE_H * 2 - 60 };
+  if (kind === 'decoration' && item?.type === 'market_stall') return { x, y: y + TILE_H * 2 - 10 };
 
    return { x, y: y + 14 };
 }
@@ -732,6 +734,7 @@ export function getDecorationImage(type) {
   if (type === 'evergreen_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/897cc0dea_ChatGPTImage202652107_40_35-Photoroom.png';
   if (type === 'pink_flower_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a7dbcdb57_ChatGPTImage202652107_42_45-Photoroom.png';
   if (type === 'lime_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/740576dd6_ChatGPTImage202652108_03_36-Photoroom.png';
+  if (type === 'market_stall') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/5f469a00a_ChatGPTImage202652108_17_30-Photoroom.png';
 
   return grassImg;
 }
@@ -853,6 +856,7 @@ export function getDecorationLabel(type) {
     evergreen_tree: '상록수',
     pink_flower_tree: '분홍 벚꽃나무',
     lime_tree: '라임 나무',
+    market_stall: '과일 노점',
     };
     return labelMap[type] || '잔디';
 }
@@ -971,6 +975,7 @@ export function createDecoration(subtype) {
     evergreen_tree: 280,
     pink_flower_tree: 280,
     lime_tree: 300,
+    market_stall: 280,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
