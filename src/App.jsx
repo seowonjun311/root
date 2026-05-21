@@ -25,6 +25,7 @@ const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Home = lazy(() => import('./pages/Home'));
 const Records = lazy(() => import('./pages/Records'));
+const Daily = lazy(() => import('./pages/Daily'));
 const Memo = lazy(() => import('./pages/Memo'));
 const AppSettings = lazy(() => import('./pages/AppSettings'));
 
@@ -187,6 +188,15 @@ const AppRoutes = () => {
                   element={
                     <Suspense fallback={<PageFallback />}>
                       <Records />
+                    </Suspense>
+                  }
+                />
+
+                <Route
+                  path="/Daily"
+                  element={
+                    <Suspense fallback={<PageFallback />}>
+                      <Daily />
                     </Suspense>
                   }
                 />
