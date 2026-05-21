@@ -58,16 +58,14 @@ export default function Daily() {
     });
 
     logsForDate.forEach((log) => {
-      if (log.completed) {
-        const createdAt = new Date(log.createdAt);
-        const startHour = createdAt.getHours();
-        const durationHours = Math.max(1, Math.ceil((log.duration_minutes || 30) / 60));
+      const createdAt = new Date(log.createdAt || new Date());
+      const startHour = createdAt.getHours();
+      const durationHours = Math.max(1, Math.ceil((log.duration_minutes || 30) / 60));
 
-        for (let i = 0; i < durationHours; i++) {
-          const hour = (startHour + i) % 24;
-          if (!data[hour].find((l) => l.id === log.id)) {
-            data[hour].push(log);
-          }
+      for (let i = 0; i < durationHours; i++) {
+        const hour = (startHour + i) % 24;
+        if (!data[hour].find((l) => l.id === log.id)) {
+          data[hour].push(log);
         }
       }
     });
