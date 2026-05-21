@@ -390,7 +390,7 @@ export function getObjectScreenPosition(item, kind) {
     return { x: x + offset, y: y + TILE_H * 2 - 39 };
   }
   if (kind === 'decoration' && item?.type === 'wooden_bench') return { x, y: y + TILE_H - 10 };
-  if (kind === 'decoration' && item?.type === 'basic_lamp') return { x, y: y + TILE_H * 2 - 15 };
+  if (kind === 'decoration' && item?.type === 'basic_lamp') return { x, y: y + TILE_H * 2 - 45 };
 
    return { x, y: y + 14 };
 }
