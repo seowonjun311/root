@@ -157,6 +157,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'atlantis_guardian') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'atlantis_dolphin') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'atlantis_coral') return { cols: 1, rows: 1 };
+  if (kind === 'decoration' && item?.type === 'log_cabin') return { cols: 2, rows: 2 };
   return { cols: 1, rows: 1 };
 }
 
