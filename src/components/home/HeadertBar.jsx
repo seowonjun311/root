@@ -33,23 +33,23 @@ export default function HeaderBar({
           <Settings className="h-5 w-5" />
         </button>
 
-        <div className="min-w-0 flex-1 px-3 text-center">
+        <div className="min-w-0 flex-1 px-3 flex flex-col items-center gap-0.5">
           {!!user?.title && (
             <div
-              className="truncate text-[11px] font-bold"
+              className="truncate text-[11px] font-bold w-full text-center"
               style={{ color: '#a56d17' }}
             >
               {user.title}
             </div>
           )}
           <div
-            className="truncate text-[14px] font-extrabold"
+            className="truncate text-[14px] font-extrabold w-full text-center"
             style={{ color: '#4a2c08' }}
           >
             {user?.nickname || '용사'}
           </div>
-          <div className="flex items-center justify-center gap-2 text-[11px] font-semibold" style={{ color: '#8a5a17' }}>
-            <span>Lv.{user?.level || 1}</span>
+          <div className="flex items-center justify-center gap-1.5 text-[11px] font-semibold">
+            <span style={{ color: '#8a5a17' }}>Lv.{user?.level || 1}</span>
             <span style={{ color: '#c49a4a' }}>✦</span>
             <span style={{ color: '#6b4e15' }}>{points}</span>
           </div>
