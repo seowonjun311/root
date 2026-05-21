@@ -366,7 +366,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'atlantis_tower') return { x, y: y + TILE_H * 3 - 20 };
   if (kind === 'decoration' && item?.type === 'atlantis_guardian') return { x, y: y + TILE_H * 2 - 65 };
   if (kind === 'decoration' && item?.type === 'atlantis_dolphin') return { x, y: y + TILE_H * 2 - 70 };
-  if (kind === 'decoration' && item?.type === 'atlantis_coral') return { x, y: y + TILE_H * 3 - 70 };
+  if (kind === 'decoration' && item?.type === 'atlantis_coral') return { x, y: y + TILE_H * 3 - 120 };
 
    return { x, y: y + 14 };
 }
