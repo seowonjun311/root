@@ -159,6 +159,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'atlantis_coral') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'log_cabin') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'stone_house') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'market_house') return { cols: 2, rows: 2 };
   return { cols: 1, rows: 1 };
 }
 
@@ -371,6 +372,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'atlantis_coral') return { x, y: y + TILE_H * 3 - 140 };
   if (kind === 'decoration' && item?.type === 'log_cabin') return { x: x - 17, y: y + 167 };
   if (kind === 'decoration' && item?.type === 'stone_house') return { x, y: y + TILE_H * 2 + 20 };
+  if (kind === 'decoration' && item?.type === 'market_house') return { x, y: y + TILE_H * 2 + 26 };
 
    return { x, y: y + 14 };
 }
@@ -955,7 +957,7 @@ export function createDecoration(subtype) {
     atlantis_coral: 190,
     log_cabin: 403,
     stone_house: 320,
-    market_house: 360,
+    market_house: 468,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
