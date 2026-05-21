@@ -74,27 +74,31 @@ export default function Onboarding() {
   // Welcome 화면
   const [started, setStarted] = useState(false);
 
-  // 로그인 후 처리
+  // 로그인 상태 확인 및 처리
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('from') === 'login') {
+    const fromLogin = params.get('from') === 'login';
+
+    if (fromLogin) {
       window.history.replaceState({}, '', '/Onboarding');
-      base44.auth.isAuthenticated().then(async (isLoggedIn) => {
-        if (!isLoggedIn) return;
-        try {
-          const existingGoals = await base44.entities.Goal.filter({ status: 'active' });
-          if (existingGoals && existingGoals.length > 0) {
-            await base44.auth.updateMe({ onboarding_complete: true });
-            queryClient.setQueryData(['me'], (old) => ({ ...(old || {}), onboarding_complete: true }));
-            navigate('/Home', { replace: true });
-          } else {
-            setStarted(true);
-          }
-        } catch {
+    }
+
+    base44.auth.isAuthenticated().then(async (isLoggedIn) => {
+      if (!isLoggedIn) return; // 비로그인 → Welcome 화면 유지
+      try {
+        const existingGoals = await base44.entities.Goal.filter({ status: 'active' });
+        if (existingGoals && existingGoals.length > 0) {
+          await base44.auth.updateMe({ onboarding_complete: true });
+          queryClient.setQueryData(['me'], (old) => ({ ...(old || {}), onboarding_complete: true }));
+          navigate('/Home', { replace: true });
+        } else {
+          // 로그인됐지만 목표 없음 → 온보딩 바로 시작
           setStarted(true);
         }
-      });
-    }
+      } catch {
+        setStarted(true);
+      }
+    });
   }, []);
 
   // 단계별 노출 여부
