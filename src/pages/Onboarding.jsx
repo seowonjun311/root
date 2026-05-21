@@ -22,7 +22,7 @@ const ACTION_TYPE_OPTIONS = [
 ];
 
 // 각 섹션을 감싸는 카드
-function Section({ title, subtitle, children, visible }) {
+function Section({ title, subtitle, children, visible, sectionId, highlight }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -33,17 +33,31 @@ function Section({ title, subtitle, children, visible }) {
     }
   }, [visible]);
 
+  // 외부에서 스크롤 요청 시
+  useEffect(() => {
+    if (highlight && ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [highlight]);
+
   if (!visible) return null;
 
   return (
     <motion.div
       ref={ref}
+      id={sectionId}
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="rounded-2xl border border-amber-200/60 bg-white/70 backdrop-blur-sm px-5 py-5 space-y-4 shadow-sm"
+      className={`rounded-2xl border backdrop-blur-sm px-5 py-5 space-y-4 shadow-sm transition-all duration-300 ${
+        highlight ? 'border-red-400 bg-red-50/60 ring-2 ring-red-300' : 'border-amber-200/60 bg-white/70'
+      }`}
     >
-      {title && <h2 className="text-base font-bold text-amber-900">{title}</h2>}
+      {title && (
+        <h2 className={`text-base font-bold ${highlight ? 'text-red-700' : 'text-amber-900'}`}>
+          {highlight && <span className="mr-1">⚠️</span>}{title}
+        </h2>
+      )}
       {subtitle && <p className="text-xs text-muted-foreground -mt-2">{subtitle}</p>}
       {children}
     </motion.div>
@@ -70,6 +84,7 @@ export default function Onboarding() {
   const [actionMinutes, setActionMinutes] = useState(60);
   const [nickname, setNickname] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [highlightSection, setHighlightSection] = useState(null);
 
   // Welcome 화면
   const [started, setStarted] = useState(false);
@@ -276,7 +291,7 @@ export default function Onboarding() {
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4 pb-32">
 
         {/* 목표 입력 */}
-        <Section visible={showGoal} title="어떤 여정을 시작하시겠습니까?" subtitle="자유롭게 입력해 주세요">
+        <Section visible={showGoal} sectionId="section-goal" highlight={highlightSection === 'goal'} title="어떤 여정을 시작하시겠습니까?" subtitle="자유롭게 입력해 주세요">
           <Input
             value={goalInput}
             onChange={e => setGoalInput(e.target.value)}
@@ -297,24 +312,24 @@ export default function Onboarding() {
         </Section>
 
         {/* 카테고리 */}
-        <Section visible={showCategory} title="이 목표는 어떤 영역인가요?">
-          <div className="grid grid-cols-2 gap-3">
+        <Section visible={showCategory} sectionId="section-category" highlight={highlightSection === 'category'} title="이 목표는 어떤 영역인가요?">
+          <div className="grid grid-cols-4 gap-2">
             {CATEGORY_OPTIONS.map(opt => (
               <button
                 key={opt.id}
-                onClick={() => { setCategory(opt.id); triggerHaptic('impact', 'light'); }}
-                className={`p-4 rounded-2xl border-2 transition-all duration-200 text-center
+                onClick={() => { setCategory(opt.id); setHighlightSection(null); triggerHaptic('impact', 'light'); }}
+                className={`p-3 rounded-2xl border-2 transition-all duration-200 text-center
                   ${category === opt.id ? 'border-amber-600 bg-amber-100/80 shadow-md scale-[1.02]' : 'border-border bg-card hover:border-amber-400/50'}`}
               >
-                <span className="text-3xl block mb-2">{opt.emoji}</span>
-                <span className="font-semibold text-sm">{opt.label}</span>
+                <span className="text-2xl block mb-1">{opt.emoji}</span>
+                <span className="font-semibold text-xs">{opt.label}</span>
               </button>
             ))}
           </div>
         </Section>
 
         {/* 공부 D-day 여부 */}
-        <Section visible={showStudyDDay} title="시험 D-day가 있나요?" subtitle="목표 유형에 따라 다르게 설정돼요">
+        <Section visible={showStudyDDay} sectionId="section-dday" highlight={highlightSection === 'dday'} title="시험 D-day가 있나요?" subtitle="목표 유형에 따라 다르게 설정돼요">
           <button
             onClick={() => { setHasDDay(true); triggerHaptic('impact', 'light'); }}
             className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${hasDDay === true ? 'border-amber-600 bg-amber-100/80' : 'border-border bg-card hover:border-amber-400/50'}`}
@@ -332,7 +347,7 @@ export default function Onboarding() {
         </Section>
 
         {/* D-day 날짜 */}
-        <Section visible={showStudyDDayDate} title="시험 정보를 입력해 주세요">
+        <Section visible={showStudyDDayDate} sectionId="section-ddaydate" highlight={highlightSection === 'ddaydate'} title="시험 정보를 입력해 주세요">
           <div>
             <label className="text-xs font-semibold text-amber-800 mb-1.5 flex items-center gap-1">
               <CalendarDays className="w-3.5 h-3.5" /> 시험 날짜 (D-day)
@@ -360,7 +375,7 @@ export default function Onboarding() {
         </Section>
 
         {/* 기간 */}
-        <Section visible={showDuration} title="얼마 동안 도전하시겠습니까?" subtitle="기간을 선택해 주세요">
+        <Section visible={showDuration} sectionId="section-duration" highlight={highlightSection === 'duration'} title="얼마 동안 도전하시겠습니까?" subtitle="기간을 선택해 주세요">
           <div className="grid grid-cols-3 gap-3">
             {[4, 8, 12, 16, 20, 24].map(weeks => (
               <button
@@ -393,7 +408,7 @@ export default function Onboarding() {
         </Section>
 
         {/* 행동 목표 */}
-        <Section visible={showAction} title="이 목표를 위해 어떤 행동을 하시겠습니까?" subtitle="행동 목표를 설정해 주세요">
+        <Section visible={showAction} sectionId="section-action" highlight={highlightSection === 'action'} title="이 목표를 위해 어떤 행동을 하시겠습니까?" subtitle="행동 목표를 설정해 주세요">
           <Input
             value={actionTitle}
             onChange={e => setActionTitle(e.target.value)}
@@ -470,7 +485,7 @@ export default function Onboarding() {
         </Section>
 
         {/* 닉네임 */}
-        <Section visible={showNickname} title="이 여정을 함께 걸을 이름을 정해주세요" subtitle="루트에서 당신을 어떻게 부르면 될까요?">
+        <Section visible={showNickname} sectionId="section-nickname" highlight={highlightSection === 'nickname'} title="이 여정을 함께 걸을 이름을 정해주세요" subtitle="루트에서 당신을 어떻게 부르면 될까요?">
           <div className="flex justify-center mb-2">
             <div className="w-16 h-16 rounded-3xl bg-amber-200/80 border-2 border-amber-400/50 flex items-center justify-center text-3xl shadow">
               🦊
@@ -487,25 +502,61 @@ export default function Onboarding() {
           <p className="text-xs text-muted-foreground/60 text-center">나중에 변경할 수 있어요</p>
         </Section>
 
-        {/* 완료 버튼 */}
-        <AnimatePresence>
-          {showComplete && (
-            <motion.div
-              ref={bottomRef}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+        {/* 완료 버튼 - 항상 표시 */}
+        {started && (
+          <motion.div
+            ref={bottomRef}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <button
+              onClick={() => {
+                // 미완성 항목 찾기
+                if (!goalInput.trim()) {
+                  setHighlightSection('goal');
+                  document.getElementById('section-goal')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  return;
+                }
+                if (!category) {
+                  setHighlightSection('category');
+                  document.getElementById('section-category')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  return;
+                }
+                if (category === 'study' && hasDDay === null) {
+                  setHighlightSection('dday');
+                  document.getElementById('section-dday')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  return;
+                }
+                if (category === 'study' && hasDDay === true && (!dDay || !examTitle.trim())) {
+                  setHighlightSection('ddaydate');
+                  document.getElementById('section-ddaydate')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  return;
+                }
+                if (showDuration && duration === 0 && !customDuration) {
+                  setHighlightSection('duration');
+                  document.getElementById('section-duration')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  return;
+                }
+                if (!actionTitle.trim()) {
+                  setHighlightSection('action');
+                  document.getElementById('section-action')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  return;
+                }
+                if (!nickname.trim()) {
+                  setHighlightSection('nickname');
+                  document.getElementById('section-nickname')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  return;
+                }
+                handleComplete();
+              }}
+              disabled={isSubmitting}
+              className="w-full py-4 rounded-2xl font-bold text-base bg-amber-700 text-amber-50 hover:bg-amber-800 transition-colors shadow-lg disabled:opacity-60"
             >
-              <button
-                onClick={handleComplete}
-                disabled={isSubmitting}
-                className="w-full py-4 rounded-2xl font-bold text-base bg-amber-700 text-amber-50 hover:bg-amber-800 transition-colors shadow-lg disabled:opacity-60"
-              >
-                {isSubmitting ? '저장 중...' : '🦊 여정 시작하기'}
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {isSubmitting ? '저장 중...' : '🦊 여정 시작하기'}
+            </button>
+          </motion.div>
+        )}
 
       </div>
     </div>
