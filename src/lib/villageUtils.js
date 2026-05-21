@@ -390,6 +390,7 @@ export function getObjectScreenPosition(item, kind) {
     return { x: x + offset, y: y + TILE_H * 2 - 39 };
   }
   if (kind === 'decoration' && item?.type === 'wooden_bench') return { x, y: y + TILE_H - 10 };
+  if (kind === 'decoration' && item?.type === 'basic_lamp') return { x, y: y + TILE_H * 2 - 15 };
 
    return { x, y: y + 14 };
 }
@@ -992,7 +993,7 @@ export function createDecoration(subtype) {
     pink_flower_tree: 280,
     lime_tree: 300,
     market_stall: 224,
-    basic_lamp: 240,
+    basic_lamp: 180,
     };
     const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
