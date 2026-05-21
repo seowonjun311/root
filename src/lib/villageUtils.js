@@ -374,7 +374,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'log_cabin') return { x: x - 17, y: y + 167 };
   if (kind === 'decoration' && item?.type === 'stone_house') return { x, y: y + TILE_H * 2 + 20 };
   if (kind === 'decoration' && item?.type === 'market_house') return { x: x - 10, y: y + TILE_H * 2 + 56 };
-  if (kind === 'decoration' && item?.type === 'evergreen_tree') return { x, y: y + TILE_H * 2 - 60 };
+  if (kind === 'decoration' && item?.type === 'evergreen_tree') return { x, y: y + TILE_H * 2 - 65 };
 
    return { x, y: y + 14 };
 }
