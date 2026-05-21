@@ -368,7 +368,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'atlantis_guardian') return { x, y: y + TILE_H * 2 - 65 };
   if (kind === 'decoration' && item?.type === 'atlantis_dolphin') return { x, y: y + TILE_H * 2 - 70 };
   if (kind === 'decoration' && item?.type === 'atlantis_coral') return { x, y: y + TILE_H * 3 - 140 };
-  if (kind === 'decoration' && item?.type === 'log_cabin') return { x: x - 5, y: y + 134 };
+  if (kind === 'decoration' && item?.type === 'log_cabin') return { x: x - 5, y: y + 154 };
 
    return { x, y: y + 14 };
 }
@@ -947,7 +947,7 @@ export function createDecoration(subtype) {
     atlantis_guardian: 300,
     atlantis_dolphin: 252,
     atlantis_coral: 190,
-    log_cabin: 308,
+    log_cabin: 336,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
