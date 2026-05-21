@@ -160,6 +160,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'log_cabin') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'stone_house') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'market_house') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'evergreen_tree') return { cols: 1, rows: 1 };
   return { cols: 1, rows: 1 };
 }
 
@@ -373,6 +374,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'log_cabin') return { x: x - 17, y: y + 167 };
   if (kind === 'decoration' && item?.type === 'stone_house') return { x, y: y + TILE_H * 2 + 20 };
   if (kind === 'decoration' && item?.type === 'market_house') return { x: x - 10, y: y + TILE_H * 2 + 56 };
+  if (kind === 'decoration' && item?.type === 'evergreen_tree') return { x, y: y + TILE_H * 2 - 60 };
 
    return { x, y: y + 14 };
 }
@@ -725,6 +727,7 @@ export function getDecorationImage(type) {
   if (type === 'log_cabin') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a7dc07c20_ChatGPTImage202652105_59_50-Photoroom.png';
   if (type === 'stone_house') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/fee45281f_ChatGPTImage202652106_37_46-Photoroom.png';
   if (type === 'market_house') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/53b38bbce_ChatGPTImage202652107_02_58-Photoroom.png';
+  if (type === 'evergreen_tree') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/897cc0dea_ChatGPTImage202652107_40_35-Photoroom.png';
 
   return grassImg;
 }
@@ -843,6 +846,7 @@ export function getDecorationLabel(type) {
     log_cabin: '통나무 집',
     stone_house: '돌 주택',
     market_house: '시장 집',
+    evergreen_tree: '상록수',
     };
     return labelMap[type] || '잔디';
 }
@@ -958,6 +962,7 @@ export function createDecoration(subtype) {
     log_cabin: 403,
     stone_house: 320,
     market_house: 445,
+    evergreen_tree: 280,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
