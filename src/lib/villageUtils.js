@@ -375,6 +375,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'stone_house') return { x, y: y + TILE_H * 2 + 20 };
   if (kind === 'decoration' && item?.type === 'market_house') return { x: x - 10, y: y + TILE_H * 2 + 56 };
   if (kind === 'decoration' && item?.type === 'evergreen_tree') return { x, y: y + TILE_H * 2 - 65 };
+  if (kind === 'decoration' && item?.type === 'pink_flower_tree') return { x, y: y + TILE_H * 2 + 14 };
 
    return { x, y: y + 14 };
 }
@@ -965,7 +966,7 @@ export function createDecoration(subtype) {
     stone_house: 320,
     market_house: 445,
     evergreen_tree: 280,
-    pink_flower_tree: 350,
+    pink_flower_tree: 280,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
