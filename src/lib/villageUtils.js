@@ -154,6 +154,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'atlantis_cathedral') return { cols: 3, rows: 3 };
   if (kind === 'decoration' && item?.type === 'atlantis_chapel') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'atlantis_tower') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'atlantis_guardian') return { cols: 1, rows: 1 };
   return { cols: 1, rows: 1 };
 }
 
@@ -361,6 +362,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'atlantis_cathedral') return { x: x - 1, y: y + TILE_H * 4 };
   if (kind === 'decoration' && item?.type === 'atlantis_chapel') return { x, y: y + TILE_H * 2 + 80 };
   if (kind === 'decoration' && item?.type === 'atlantis_tower') return { x, y: y + TILE_H * 3 - 20 };
+  if (kind === 'decoration' && item?.type === 'atlantis_guardian') return { x, y: y + TILE_H * 2 - 20 };
 
    return { x, y: y + 14 };
 }
@@ -707,6 +709,7 @@ export function getDecorationImage(type) {
   if (type === 'atlantis_cathedral') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/e81cec599_ChatGPTImage202651908_57_51-Photoroom.png';
   if (type === 'atlantis_chapel') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2c6fcea72_ChatGPTImage202651908_43_25-Photoroom.png';
   if (type === 'atlantis_tower') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/de5883696_ChatGPTImage202652112_19_11-Photoroom.png';
+  if (type === 'atlantis_guardian') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/38f28e2e5_ChatGPTImage202651908_45_06-Photoroom.png';
 
   return grassImg;
 }
@@ -819,6 +822,7 @@ export function getDecorationLabel(type) {
     atlantis_cathedral: '아틀란티스 대성당',
     atlantis_chapel: '아틀란티스 예배당',
     atlantis_tower: '아틀란티스 탑',
+    atlantis_guardian: '아틀란티스 수호신상',
     };
     return labelMap[type] || '잔디';
 }
@@ -928,6 +932,7 @@ export function createDecoration(subtype) {
     atlantis_cathedral: 500,
     atlantis_chapel: 500,
     atlantis_tower: 576,
+    atlantis_guardian: 300,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
