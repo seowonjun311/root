@@ -160,7 +160,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'log_cabin') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'stone_house') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'market_house') return { cols: 2, rows: 2 };
-  if (kind === 'decoration' && item?.type === 'market_stall') return { cols: 2, rows: 1 };
+  if (kind === 'decoration' && item?.type === 'market_stall') return { cols: 1, rows: 2 };
   if (kind === 'decoration' && item?.type === 'evergreen_tree') return { cols: 1, rows: 1 };
   return { cols: 1, rows: 1 };
 }
