@@ -11,7 +11,7 @@ export default function OnboardingGoal({ value, onChange }) {
         value={value}
         onChange={onChange}
         placeholder="예: 살 빼고 싶어요, 토익 공부..."
-        className="h-12 rounded-xl text-center text-base border-amber-300 focus:border-amber-500 bg-white/80 text-amber-900 placeholder:text-amber-300"
+        className="h-12 rounded-xl text-center text-base border-amber-300 focus:border-amber-500 bg-white/80 text-amber-900 placeholder:text-amber-600"
         aria-describedby={!value.trim() ? 'goal-helper' : undefined}
       />
       {!value.trim() && (
