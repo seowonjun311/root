@@ -74,6 +74,7 @@ export default function Memo() {
   const [memos, setMemos] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [showPastMemos, setShowPastMemos] = useState(false);
 
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
@@ -299,32 +300,36 @@ export default function Memo() {
       </div>
 
       <div className="mx-auto max-w-3xl px-4 pt-4">
-        {grouped.length === 0 ? (
-          <div className="mt-10 rounded-3xl border border-dashed border-[#ddd3c2] bg-white px-6 py-12 text-center shadow-sm">
-            <div className="text-4xl">📝</div>
-            <div className="mt-3 text-lg font-semibold">아직 메모가 없어요</div>
-            <div className="mt-2 text-sm text-[#7a6f63]">
-              오른쪽 아래 + 버튼으로 날짜별 메모를 추가해보세요
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-5">
-            {grouped.map((group) => (
-              <section
-                key={group.date}
-                ref={(el) => {
-                  sectionRefs.current[group.date] = el;
-                }}
-                className="rounded-3xl border border-[#e7e0d2] bg-white p-4 shadow-sm"
-              >
-                <div className="mb-3 flex items-center gap-2">
-                  <h2 className="text-lg font-bold">{formatDateLabel(group.date)}</h2>
-                  {isToday(group.date) && (
-                    <span className="rounded-full bg-[#fff0c2] px-2 py-1 text-xs font-semibold text-[#8a6500]">
-                      오늘
-                    </span>
-                  )}
-                </div>
+         {grouped.length === 0 ? (
+           <div className="mt-10 rounded-3xl border border-dashed border-[#ddd3c2] bg-white px-6 py-12 text-center shadow-sm">
+             <div className="text-4xl">📝</div>
+             <div className="mt-3 text-lg font-semibold">아직 메모가 없어요</div>
+             <div className="mt-2 text-sm text-[#7a6f63]">
+               오른쪽 아래 + 버튼으로 날짜별 메모를 추가해보세요
+             </div>
+           </div>
+         ) : (
+           <div className="space-y-5">
+             {grouped.map((group) => {
+               const isPastDate = new Date(`${group.date}T00:00:00`) < new Date(todayStr + 'T00:00:00');
+               if (isPastDate && !showPastMemos) return null;
+
+               return (
+               <section
+                 key={group.date}
+                 ref={(el) => {
+                   sectionRefs.current[group.date] = el;
+                 }}
+                 className="rounded-3xl border border-[#e7e0d2] bg-white p-4 shadow-sm"
+               >
+                 <div className="mb-3 flex items-center gap-2">
+                   <h2 className="text-lg font-bold">{formatDateLabel(group.date)}</h2>
+                   {isToday(group.date) && (
+                     <span className="rounded-full bg-[#fff0c2] px-2 py-1 text-xs font-semibold text-[#8a6500]">
+                       오늘
+                     </span>
+                   )}
+                 </div>
 
                 <div className="space-y-2">
                   {group.items.map((memo) => (
@@ -376,11 +381,23 @@ export default function Memo() {
                     </div>
                   ))}
                 </div>
-              </section>
-            ))}
-          </div>
-        )}
-      </div>
+                </section>
+                );
+                })}
+
+                {grouped.some((group) => new Date(`${group.date}T00:00:00`) < new Date(todayStr + 'T00:00:00')) && (
+                <div className="text-center pt-4">
+                 <button
+                   onClick={() => setShowPastMemos(!showPastMemos)}
+                   className="rounded-2xl border border-[#ddd3c2] bg-white px-4 py-2 text-sm font-medium text-[#6e6458] hover:bg-[#f5f1eb]"
+                 >
+                   {showPastMemos ? '지난 날짜 숨기기' : '지난 날짜 보기'}
+                 </button>
+                </div>
+                )}
+                </div>
+                )}
+                </div>
 
       <button
         onClick={() => {
