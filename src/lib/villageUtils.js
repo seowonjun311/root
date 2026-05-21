@@ -378,7 +378,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'evergreen_tree') return { x, y: y + TILE_H * 2 - 65 };
   if (kind === 'decoration' && item?.type === 'pink_flower_tree') return { x, y: y + TILE_H * 2 - 76 };
   if (kind === 'decoration' && item?.type === 'lime_tree') return { x, y: y + TILE_H * 2 - 60 };
-  if (kind === 'decoration' && item?.type === 'market_stall') return { x, y: y + TILE_H * 2 - 10 };
+  if (kind === 'decoration' && item?.type === 'market_stall') return { x: x + 30, y: y + TILE_H * 2 - 17 };
 
    return { x, y: y + 14 };
 }
