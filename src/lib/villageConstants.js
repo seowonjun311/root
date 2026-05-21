@@ -59,6 +59,7 @@ export const SHOP_THEMES = [
     label: '기본',
     emoji: '🌿',
     items: [
+      { id: 'stone_house_1', label: '돌 주택', type: 'decoration', subtype: 'stone_house', price: 50, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/fee45281f_ChatGPTImage202652106_37_46-Photoroom.png' },
       { id: 'log_cabin_1', label: '통나무 집', type: 'decoration', subtype: 'log_cabin', price: 40, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a7dc07c20_ChatGPTImage202652105_59_50-Photoroom.png' },
       { id: 'tile_grass_1', label: '잔디 타일', type: 'tile', subtype: 'grass', price: 30, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/46d775f39_-Photoroom.png' },
       { id: 'grass_1', label: '잔디', type: 'decoration', subtype: 'grass', price: 3, image: grassImg },
