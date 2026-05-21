@@ -43,7 +43,7 @@ export default function HeaderBar({
             </div>
           )}
           <div
-            className="truncate text-[14px] font-extrabold w-full text-center"
+            className="whitespace-nowrap overflow-hidden text-ellipsis text-[14px] font-extrabold w-full text-center"
             style={{ color: '#4a2c08' }}
           >
             {user?.nickname || '용사'}
