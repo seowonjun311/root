@@ -5,7 +5,14 @@ import guestDataPersistence from '@/lib/GuestDataPersistence';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const HOURS = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+
+const getTimeDisplay = (hour) => {
+  if (hour === 0) return '12:00 AM';
+  if (hour < 12) return `${hour}:00 AM`;
+  if (hour === 12) return '12:00 PM';
+  return `${hour - 12}:00 PM`;
+};
 
 const CAT_COLORS = {
   exercise: '#f59e0b',
@@ -142,109 +149,65 @@ export default function Daily() {
       </div>
 
       <div className="p-4 space-y-6">
-         {selectedHour !== null && selectedCategory === null ? (
-           <div className="fixed inset-0 bg-black/50 flex items-end z-50">
-             <div className="w-full bg-background rounded-t-2xl p-4 space-y-2">
-               <p className="text-sm font-semibold text-foreground mb-3">카테고리 선택</p>
-               {Object.entries(CAT_LABELS).map(([key, label]) => (
-                 <button
-                   key={key}
-                   onClick={() => addTimeBlock(selectedHour, key)}
-                   className="w-full p-3 rounded-lg text-white font-semibold"
-                   style={{ backgroundColor: CAT_COLORS[key] }}
-                 >
-                   {label}
-                 </button>
-               ))}
-               <button
-                 onClick={() => setSelectedHour(null)}
-                 className="w-full p-3 rounded-lg bg-secondary text-foreground font-semibold"
-               >
-                 취소
-               </button>
-             </div>
-           </div>
-         ) : null}
+        {selectedHour !== null && selectedCategory === null ? (
+          <div className="fixed inset-0 bg-black/50 flex items-end z-50">
+            <div className="w-full bg-background rounded-t-2xl p-4 space-y-2">
+              <p className="text-sm font-semibold text-foreground mb-3">카테고리 선택</p>
+              {Object.entries(CAT_LABELS).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => addTimeBlock(selectedHour, key)}
+                  className="w-full p-3 rounded-lg text-white font-semibold"
+                  style={{ backgroundColor: CAT_COLORS[key] }}
+                >
+                  {label}
+                </button>
+              ))}
+              <button
+                onClick={() => setSelectedHour(null)}
+                className="w-full p-3 rounded-lg bg-secondary text-foreground font-semibold"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        ) : null}
 
-         {/* 오전 (0시-11시) */}
-         <div>
-           <h2 className="text-[0.875rem] font-bold text-amber-900 mb-3 px-2">오전</h2>
-           <div className="space-y-2">
-             {HOURS.slice(0, 12).map((hour) => {
-               const blockCategory = todayBlocks[hour];
-               const autoFilled = autoFilledHours[hour];
-               const displayBlock = blockCategory ? { category: blockCategory, isManual: true } : autoFilled ? { ...autoFilled, isManual: false } : null;
-               const displayTime = hour === 0 ? '12:00 AM' : `${hour}:00 AM`;
+        {/* 24시간 타임블록 */}
+        <div className="space-y-2">
+          {HOURS.map((hour) => {
+            const blockCategory = todayBlocks[hour];
+            const autoFilled = autoFilledHours[hour];
+            const displayBlock = blockCategory ? { category: blockCategory, isManual: true } : autoFilled ? { ...autoFilled, isManual: false } : null;
 
-               return (
-                 <div key={`am-${hour}`} className="flex items-center gap-3 px-2">
-                   <div className="w-16 text-[0.75rem] font-semibold text-muted-foreground text-right shrink-0">
-                     {displayTime}
-                   </div>
+            return (
+              <div key={`hour-${hour}`} className="flex items-center gap-3 px-2">
+                <div className="w-16 text-[0.75rem] font-semibold text-muted-foreground text-right shrink-0">
+                  {getTimeDisplay(hour)}
+                </div>
 
-                   {displayBlock ? (
-                     <button
-                       onClick={() => blockCategory && removeTimeBlock(hour)}
-                       className="flex-1 h-12 rounded-lg text-white font-semibold text-xs flex items-center justify-between px-3 hover:opacity-90 transition-opacity"
-                       style={{ backgroundColor: CAT_COLORS[displayBlock.category] }}
-                     >
-                       <span>{CAT_LABELS[displayBlock.category]}</span>
-                       {blockCategory && <X className="w-4 h-4" />}
-                     </button>
-                   ) : (
-                     <button
-                       onClick={() => setSelectedHour(hour)}
-                       className="flex-1 h-12 rounded-lg bg-secondary/30 border-2 border-dashed border-secondary text-muted-foreground text-xs font-semibold hover:bg-secondary/50 transition-colors"
-                     >
-                       +
-                     </button>
-                   )}
-                 </div>
-               );
-             })}
-           </div>
-         </div>
-
-         {/* 오후 (12시-23시) */}
-         <div>
-           <h2 className="text-[0.875rem] font-bold text-amber-900 mb-3 px-2">오후</h2>
-           <div className="space-y-2">
-             {HOURS.slice(12, 24).map((hour) => {
-               const blockCategory = todayBlocks[hour];
-               const autoFilled = autoFilledHours[hour];
-               const displayBlock = blockCategory ? { category: blockCategory, isManual: true } : autoFilled ? { ...autoFilled, isManual: false } : null;
-               const displayHour = hour === 12 ? 12 : hour - 12;
-               const displayTime = `${displayHour}:00 PM`;
-
-               return (
-                 <div key={`pm-${hour}`} className="flex items-center gap-3 px-2">
-                   <div className="w-16 text-[0.75rem] font-semibold text-muted-foreground text-right shrink-0">
-                     {displayTime}
-                   </div>
-
-                   {displayBlock ? (
-                     <button
-                       onClick={() => blockCategory && removeTimeBlock(hour)}
-                       className="flex-1 h-12 rounded-lg text-white font-semibold text-xs flex items-center justify-between px-3 hover:opacity-90 transition-opacity"
-                       style={{ backgroundColor: CAT_COLORS[displayBlock.category] }}
-                     >
-                       <span>{CAT_LABELS[displayBlock.category]}</span>
-                       {blockCategory && <X className="w-4 h-4" />}
-                     </button>
-                   ) : (
-                     <button
-                       onClick={() => setSelectedHour(hour)}
-                       className="flex-1 h-12 rounded-lg bg-secondary/30 border-2 border-dashed border-secondary text-muted-foreground text-xs font-semibold hover:bg-secondary/50 transition-colors"
-                     >
-                       +
-                     </button>
-                   )}
-                 </div>
-               );
-             })}
-           </div>
-         </div>
-       </div>
+                {displayBlock ? (
+                  <button
+                    onClick={() => blockCategory && removeTimeBlock(hour)}
+                    className="flex-1 h-12 rounded-lg text-white font-semibold text-xs flex items-center justify-between px-3 hover:opacity-90 transition-opacity"
+                    style={{ backgroundColor: CAT_COLORS[displayBlock.category] }}
+                  >
+                    <span>{CAT_LABELS[displayBlock.category]}</span>
+                    {blockCategory && <X className="w-4 h-4" />}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setSelectedHour(hour)}
+                    className="flex-1 h-12 rounded-lg bg-secondary/30 border-2 border-dashed border-secondary text-muted-foreground text-xs font-semibold hover:bg-secondary/50 transition-colors"
+                  >
+                    +
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
