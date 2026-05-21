@@ -179,6 +179,7 @@ export const SHOP_THEMES = [
       { id: 'atlantis_chapel_1', label: '아틀란티스 예배당', type: 'decoration', subtype: 'atlantis_chapel', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2c6fcea72_ChatGPTImage202651908_43_25-Photoroom.png' },
       { id: 'atlantis_tower_1', label: '아틀란티스 탑', type: 'decoration', subtype: 'atlantis_tower', price: 180, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/de5883696_ChatGPTImage202652112_19_11-Photoroom.png' },
       { id: 'atlantis_guardian_1', label: '아틀란티스 수호신상', type: 'decoration', subtype: 'atlantis_guardian', price: 200, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/38f28e2e5_ChatGPTImage202651908_45_06-Photoroom.png' },
+      { id: 'atlantis_dolphin_1', label: '아틀란티스 돌고래상', type: 'decoration', subtype: 'atlantis_dolphin', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/8d803f482_ChatGPTImage202652001_02_30-Photoroom.png' },
     ],
   },
   {

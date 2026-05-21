@@ -155,6 +155,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'atlantis_chapel') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'atlantis_tower') return { cols: 2, rows: 2 };
   if (kind === 'decoration' && item?.type === 'atlantis_guardian') return { cols: 1, rows: 1 };
+  if (kind === 'decoration' && item?.type === 'atlantis_dolphin') return { cols: 1, rows: 1 };
   return { cols: 1, rows: 1 };
 }
 
@@ -363,6 +364,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'atlantis_chapel') return { x, y: y + TILE_H * 2 + 80 };
   if (kind === 'decoration' && item?.type === 'atlantis_tower') return { x, y: y + TILE_H * 3 - 20 };
   if (kind === 'decoration' && item?.type === 'atlantis_guardian') return { x, y: y + TILE_H * 2 - 65 };
+  if (kind === 'decoration' && item?.type === 'atlantis_dolphin') return { x, y: y + TILE_H * 2 - 60 };
 
    return { x, y: y + 14 };
 }
@@ -710,6 +712,7 @@ export function getDecorationImage(type) {
   if (type === 'atlantis_chapel') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/2c6fcea72_ChatGPTImage202651908_43_25-Photoroom.png';
   if (type === 'atlantis_tower') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/de5883696_ChatGPTImage202652112_19_11-Photoroom.png';
   if (type === 'atlantis_guardian') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/38f28e2e5_ChatGPTImage202651908_45_06-Photoroom.png';
+  if (type === 'atlantis_dolphin') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/8d803f482_ChatGPTImage202652001_02_30-Photoroom.png';
 
   return grassImg;
 }
@@ -823,6 +826,7 @@ export function getDecorationLabel(type) {
     atlantis_chapel: '아틀란티스 예배당',
     atlantis_tower: '아틀란티스 탑',
     atlantis_guardian: '아틀란티스 수호신상',
+    atlantis_dolphin: '아틀란티스 돌고래상',
     };
     return labelMap[type] || '잔디';
 }
@@ -933,6 +937,7 @@ export function createDecoration(subtype) {
     atlantis_chapel: 500,
     atlantis_tower: 576,
     atlantis_guardian: 300,
+    atlantis_dolphin: 280,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
