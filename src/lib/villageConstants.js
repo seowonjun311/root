@@ -213,8 +213,8 @@ export const SHOP_THEMES = [
 // 기존 호환성 유지 (SHOP_ITEMS 사용처가 있을 경우 대비)
 export const SHOP_ITEMS = SHOP_THEMES.flatMap((theme) => theme.items);
 
-export const TILE_W = 128;
-export const TILE_H = 64;
+export const TILE_W = 256;
+export const TILE_H = 128;
 export const GRID_COLS = 10;
 export const GRID_ROWS = 10;
 export const GRID_ORIGIN_X = 1280;
