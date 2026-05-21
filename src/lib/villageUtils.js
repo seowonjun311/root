@@ -158,6 +158,7 @@ export function getObjectTileSize(item, kind) {
   if (kind === 'decoration' && item?.type === 'atlantis_dolphin') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'atlantis_coral') return { cols: 1, rows: 1 };
   if (kind === 'decoration' && item?.type === 'log_cabin') return { cols: 2, rows: 2 };
+  if (kind === 'decoration' && item?.type === 'stone_house') return { cols: 2, rows: 2 };
   return { cols: 1, rows: 1 };
 }
 
@@ -369,6 +370,7 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'atlantis_dolphin') return { x, y: y + TILE_H * 2 - 70 };
   if (kind === 'decoration' && item?.type === 'atlantis_coral') return { x, y: y + TILE_H * 3 - 140 };
   if (kind === 'decoration' && item?.type === 'log_cabin') return { x: x - 17, y: y + 167 };
+  if (kind === 'decoration' && item?.type === 'stone_house') return { x, y: y + TILE_H * 2 + 50 };
 
    return { x, y: y + 14 };
 }
@@ -719,6 +721,7 @@ export function getDecorationImage(type) {
   if (type === 'atlantis_dolphin') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/8d803f482_ChatGPTImage202652001_02_30-Photoroom.png';
   if (type === 'atlantis_coral') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/6545993d6_ChatGPTImage202651909_15_07-Photoroom.png';
   if (type === 'log_cabin') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/a7dc07c20_ChatGPTImage202652105_59_50-Photoroom.png';
+  if (type === 'stone_house') return 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/fee45281f_ChatGPTImage202652106_37_46-Photoroom.png';
 
   return grassImg;
 }
@@ -835,6 +838,7 @@ export function getDecorationLabel(type) {
     atlantis_dolphin: '아틀란티스 돌고래상',
     atlantis_coral: '아틀란티스 황금 산호',
     log_cabin: '통나무 집',
+    stone_house: '돌 주택',
     };
     return labelMap[type] || '잔디';
 }
@@ -948,6 +952,7 @@ export function createDecoration(subtype) {
     atlantis_dolphin: 252,
     atlantis_coral: 190,
     log_cabin: 403,
+    stone_house: 480,
     };
   const defaultRow = subtype === 'ankylosaurus' ? Math.floor(randomBetween(3, GRID_ROWS - 2)) : Math.floor(randomBetween(1, GRID_ROWS - 2));
   return {
