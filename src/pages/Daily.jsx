@@ -58,9 +58,11 @@ export default function Daily() {
     });
 
     logsForDate.forEach((log) => {
-      if (log.duration_minutes) {
-        const startHour = Math.floor((log.start_hour || 0) % 24);
-        const durationHours = Math.ceil(log.duration_minutes / 60);
+      if (log.completed) {
+        const createdAt = new Date(log.createdAt);
+        const startHour = createdAt.getHours();
+        const durationHours = Math.max(1, Math.ceil((log.duration_minutes || 30) / 60));
+
         for (let i = 0; i < durationHours; i++) {
           const hour = (startHour + i) % 24;
           if (!data[hour].find((l) => l.id === log.id)) {
