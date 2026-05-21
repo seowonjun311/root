@@ -384,7 +384,10 @@ export function getObjectScreenPosition(item, kind) {
   if (kind === 'decoration' && item?.type === 'evergreen_tree') return { x, y: y + TILE_H * 2 - 65 };
   if (kind === 'decoration' && item?.type === 'pink_flower_tree') return { x, y: y + TILE_H * 2 - 76 };
   if (kind === 'decoration' && item?.type === 'lime_tree') return { x, y: y + TILE_H * 2 - 60 };
-  if (kind === 'decoration' && item?.type === 'market_stall') return { x: x + 44, y: y + TILE_H * 2 - 39 };
+  if (kind === 'decoration' && item?.type === 'market_stall') {
+    const offset = item?.flipped ? -44 : 44;
+    return { x: x + offset, y: y + TILE_H * 2 - 39 };
+  }
 
    return { x, y: y + 14 };
 }
