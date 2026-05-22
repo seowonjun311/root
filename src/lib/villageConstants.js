@@ -216,7 +216,7 @@ export const SHOP_THEMES = [
         label: '캐릭터',
         emoji: '🐾',
         items: [
-          { id: 'desert_fox_1', label: '사막여우', type: 'character', subtype: 'fox', price: 150, image: foxImg },
+          { id: 'desert_fox_1', label: '사막여우', type: 'character', subtype: 'fox', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7ac8f03c6_-Photoroom.png' },
         ],
       },
       ];
