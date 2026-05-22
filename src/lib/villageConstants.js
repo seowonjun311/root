@@ -216,9 +216,7 @@ export const SHOP_THEMES = [
         label: '캐릭터',
         emoji: '🐾',
         items: [
-          { id: 'fox_1', label: '여우', type: 'character', subtype: 'fox', price: 100, image: foxImg },
-          { id: 'alpaca_1', label: '알파카', type: 'character', subtype: 'alpaca', price: 120, image: alpacaImg },
-          { id: 'platypus_1', label: '오리너구리', type: 'character', subtype: 'platypus', price: 110, image: platypusImg },
+          { id: 'desert_fox_1', label: '사막여우', type: 'character', subtype: 'fox', price: 150, image: foxImg },
         ],
       },
       ];
