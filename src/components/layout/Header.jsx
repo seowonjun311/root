@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 
-const TAB_PATHS = ['/Home', '/Records', '/Badges', '/AppSettings'];
+const TAB_PATHS = ['/Home', '/Records', '/Badges', '/AppSettings', '/Daily'];
 
 const PAGE_TITLES = {
   '/CreateGoal': '목표 만들기',
