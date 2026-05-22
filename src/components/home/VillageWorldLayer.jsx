@@ -274,7 +274,7 @@ zoomTo(nextScale, centerX, centerY);
       if (drag.objectType === 'decoration') previewItem = decorations.find((item) => item.id === drag.objectId) || null;
       if (drag.objectType === 'character') previewItem = characters.find((item) => item.id === drag.objectId) || null;
       if (previewItem) {
-        const previewValid = canPlaceObject({ movingType: drag.objectType, movingItem: previewItem, nextCol: col, nextRow: row, decorations, characters, buildings: [], totalLevel });
+        const previewValid = canPlaceObject({ movingType: drag.objectType, movingItem: previewItem, nextCol: col, nextRow: row, decorations, characters, buildings, totalLevel });
         setPlacementPreview({ type: drag.objectType, col, row, item: previewItem, valid: previewValid });
       }
       if (drag.objectType === 'decoration') {
@@ -288,7 +288,7 @@ zoomTo(nextScale, centerX, centerY);
       if (drag.objectType === 'character') {
         setCharacters((prev) => prev.map((npc) => {
           if (npc.id !== drag.objectId) return npc;
-          const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol: col, nextRow: row, decorations, characters: prev, buildings: [], totalLevel });
+          const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol: col, nextRow: row, decorations, characters: prev, buildings, totalLevel });
           if (!canPlace) return npc;
           let nextFlipped = npc.flipped;
           let nextDirection = npc.direction || 'se';
@@ -409,7 +409,7 @@ setOffset((prev) =>
 
 const nextCol = clamp(npc.col + moveCol, bounds.minCol, bounds.maxCol);
 const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
-        const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol, nextRow, decorations, characters: prev, buildings: [], totalLevel });
+        const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol, nextRow, decorations, characters: prev, buildings, totalLevel });
         const finalCol = canPlace ? nextCol : npc.col;
         const finalRow = canPlace ? nextRow : npc.row;
         const isActuallyMoving = canPlace && (finalCol !== npc.col || finalRow !== npc.row);
