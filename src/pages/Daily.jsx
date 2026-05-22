@@ -35,7 +35,14 @@ export default function Daily() {
   const [guestVersion] = useState(0);
   // timeBlocks: { [dateKey]: { [hour_slot_half]: text } }
   // cell key = `${hour}_${slot}_${half}` where slot='am'|'pm', half='first'|'second'
-  const [timeBlocks, setTimeBlocks] = useState({});
+  const [timeBlocks, setTimeBlocks] = useState(() => {
+    try {
+      const saved = localStorage.getItem('daily_timeblocks_v1');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   // pendingCell: { hour, slot, half }
   const [pendingCell, setPendingCell] = useState(null);
 
@@ -83,10 +90,11 @@ export default function Daily() {
   const setCellText = (hour, slot, half, text) => {
     if (!text.trim()) return;
     const key = `${hour}_${slot}_${half}`;
-    setTimeBlocks((prev) => ({
-      ...prev,
-      [dateKey]: { ...(prev[dateKey] || {}), [key]: text.trim() },
-    }));
+    setTimeBlocks((prev) => {
+      const next = { ...prev, [dateKey]: { ...(prev[dateKey] || {}), [key]: text.trim() } };
+      localStorage.setItem('daily_timeblocks_v1', JSON.stringify(next));
+      return next;
+    });
     setPendingCell(null);
     setInputText('');
   };
@@ -96,7 +104,9 @@ export default function Daily() {
     setTimeBlocks((prev) => {
       const dayBlocks = { ...(prev[dateKey] || {}) };
       delete dayBlocks[key];
-      return { ...prev, [dateKey]: dayBlocks };
+      const next = { ...prev, [dateKey]: dayBlocks };
+      localStorage.setItem('daily_timeblocks_v1', JSON.stringify(next));
+      return next;
     });
   };
 
