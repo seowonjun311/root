@@ -25,9 +25,9 @@ const CAT_LABELS = {
 };
 
 const formatHour = (hour) => {
-  if (hour === 12) return '12';
-  if (hour > 12) return `${hour - 12}`;
-  return `${hour}`;
+  if (hour === 12) return '12:00';
+  if (hour > 12) return `${hour - 12}:00`;
+  return `${hour}:00`;
 };
 
 export default function Daily() {
@@ -216,7 +216,7 @@ export default function Daily() {
 
               return (
                 <tr key={hour}>
-                  <td className="border border-border px-2 py-0 text-xs font-medium text-foreground whitespace-nowrap">
+                  <td className="border border-border px-2 py-0 text-xs font-medium text-foreground whitespace-nowrap w-14">
                     {formatHour(hour)}
                   </td>
                   <td className="border border-border p-0.5 h-10 w-[22%]">{renderHalfCell('am', 'first')}</td>
