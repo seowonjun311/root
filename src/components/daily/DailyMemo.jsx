@@ -51,6 +51,19 @@ export default function DailyMemo({ dateKey }) {
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [memos]);
 
+  // 과거 미완료 메모 (오늘 포함 이전 날짜, 미완료)
+  const pastIncompleteMemos = useMemo(() => {
+    const today = startOfDay(new Date());
+    return memos
+      .filter(m => {
+        try {
+          const d = startOfDay(parseISO(m.date));
+          return !isAfter(d, today) && !m.completed && m.date !== format(today, 'yyyy-MM-dd');
+        } catch { return false; }
+      })
+      .sort((a, b) => b.date.localeCompare(a.date));
+  }, [memos]);
+
   // 달력 날짜 그리드
   const calDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(calMonth), { weekStartsOn: 0 });
@@ -262,6 +275,27 @@ export default function DailyMemo({ dateKey }) {
                     달력에서 날짜를 탭하면 해당 날의 메모를 볼 수 있습니다
                   </div>
                 </>
+              )}
+
+              {/* 과거 미완료 메모 */}
+              {pastIncompleteMemos.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-xs font-bold text-muted-foreground mb-2">⚠️ 미완료 항목</p>
+                  <div className="space-y-1.5">
+                    {pastIncompleteMemos.map(memo => (
+                      <div key={memo.id} className="flex items-center gap-2 bg-red-50 dark:bg-red-950/30 rounded-xl px-3 py-2">
+                        <span className="text-[10px] font-semibold text-red-600 dark:text-red-400 shrink-0 w-10">
+                          {format(parseISO(memo.date), 'M/d')}
+                        </span>
+                        <p className="flex-1 text-xs text-foreground truncate">{memo.text}</p>
+                        <button onClick={() => handleToggle(memo.id)} className="text-[10px] text-green-600 font-semibold shrink-0 px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/40">완료</button>
+                        <button onClick={() => handleDelete(memo.id)} className="p-0.5 text-muted-foreground hover:text-destructive shrink-0">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
 
