@@ -31,6 +31,7 @@ export default function DailyLedger({ dateKey }) {
   const [form, setForm] = useState({ type: 'expense', category: '식비', memo: '', amount: '' });
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const amountRef = useRef(null);
+  const keyboardListenerRef = useRef(null);
 
   const entries = ledger[dateKey] || [];
 
@@ -48,21 +49,40 @@ export default function DailyLedger({ dateKey }) {
     const nextEntries = [...entries, entry];
     save({ ...ledger, [dateKey]: nextEntries });
     setForm({ type: 'expense', category: '식비', memo: '', amount: '' });
-    setShowForm(false);
-    setKeyboardHeight(0);
+    closeForm();
   };
 
   const deleteEntry = (id) => {
     save({ ...ledger, [dateKey]: entries.filter(e => e.id !== id) });
   };
 
-  const onFocusAmount = () => {
-    if (window.visualViewport) {
-      const h = window.innerHeight - window.visualViewport.height;
-      setKeyboardHeight(Math.max(280, h));
-    } else {
+  const startKeyboardListener = () => {
+    if (!window.visualViewport) {
       setKeyboardHeight(300);
+      return;
     }
+    const handler = () => {
+      const h = window.innerHeight - window.visualViewport.height;
+      if (h > 50) setKeyboardHeight(h);
+    };
+    window.visualViewport.addEventListener('resize', handler);
+    keyboardListenerRef.current = () => window.visualViewport.removeEventListener('resize', handler);
+    // 즉시 한 번 체크
+    const h = window.innerHeight - window.visualViewport.height;
+    if (h > 50) setKeyboardHeight(h);
+  };
+
+  const stopKeyboardListener = () => {
+    if (keyboardListenerRef.current) {
+      keyboardListenerRef.current();
+      keyboardListenerRef.current = null;
+    }
+    setKeyboardHeight(0);
+  };
+
+  const closeForm = () => {
+    stopKeyboardListener();
+    setShowForm(false);
   };
 
   return (
@@ -132,10 +152,10 @@ export default function DailyLedger({ dateKey }) {
 
       {/* 입력 모달 */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-50" onClick={() => { setShowForm(false); setKeyboardHeight(0); }}>
+        <div className="fixed inset-0 bg-black/50 z-50" onClick={closeForm}>
           <div
             className="bg-background rounded-2xl p-4 pb-6 absolute left-4 right-4"
-            style={{ bottom: keyboardHeight + 16 }}
+            style={{ bottom: Math.max(keyboardHeight, 80) + 16 }}
             onClick={e => e.stopPropagation()}
           >
             <p className="text-sm font-bold text-foreground mb-4">지출 / 수입 추가</p>
@@ -187,7 +207,7 @@ export default function DailyLedger({ dateKey }) {
               type="number"
               inputMode="numeric"
               value={form.amount}
-              onFocus={onFocusAmount}
+              onFocus={startKeyboardListener}
               onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
               onKeyDown={e => { if (e.key === 'Enter') addEntry(); }}
               placeholder="금액 입력 (원)"
@@ -198,7 +218,7 @@ export default function DailyLedger({ dateKey }) {
               <button onClick={addEntry} className="flex-1 p-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm">
                 저장
               </button>
-              <button onClick={() => { setShowForm(false); setKeyboardHeight(0); }} className="flex-1 p-3 rounded-lg bg-secondary text-foreground font-semibold text-sm">
+              <button onClick={closeForm} className="flex-1 p-3 rounded-lg bg-secondary text-foreground font-semibold text-sm">
                 취소
               </button>
             </div>
