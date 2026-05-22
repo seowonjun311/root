@@ -5,9 +5,9 @@ import guestDataPersistence from '@/lib/GuestDataPersistence';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 
-// 8:00 ~ 20:00 (오전: 8~11, 오후: 12~20)
-const AM_HOURS = [8, 9, 10, 11];
-const PM_HOURS = [12, 13, 14, 15, 16, 17, 18, 19, 20];
+// 12:00 ~ 23:00 (오전: 12~17, 오후: 18~23)
+const AM_HOURS = [12, 13, 14, 15, 16, 17];
+const PM_HOURS = [18, 19, 20, 21, 22, 23];
 const ALL_HOURS = [...AM_HOURS, ...PM_HOURS];
 
 const CAT_COLORS = {
@@ -181,8 +181,8 @@ export default function Daily() {
           <thead>
             <tr>
               <th className="border border-border px-3 py-3 text-sm font-semibold text-foreground text-left w-16">시간</th>
-              <th className="border border-border px-3 py-3 text-sm font-semibold text-foreground text-center">오전</th>
-              <th className="border border-border px-3 py-3 text-sm font-semibold text-foreground text-center">오후</th>
+              <th className="border border-border px-3 py-3 text-sm font-semibold text-foreground text-center">낮</th>
+              <th className="border border-border px-3 py-3 text-sm font-semibold text-foreground text-center">저녁</th>
             </tr>
           </thead>
           <tbody>
