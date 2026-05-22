@@ -211,6 +211,16 @@ export const SHOP_THEMES = [
       { id: 'fruit_tree_1', label: '과일나무', type: 'decoration', subtype: 'fruit_tree', price: 45, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0d75d0dd0_ChatGPTImage202651409_43_30-Photoroom.png' },
       ],
       },
+      {
+        id: 'character',
+        label: '캐릭터',
+        emoji: '🐾',
+        items: [
+          { id: 'fox_1', label: '여우', type: 'character', subtype: 'fox', price: 100, image: foxImg },
+          { id: 'alpaca_1', label: '알파카', type: 'character', subtype: 'alpaca', price: 120, image: alpacaImg },
+          { id: 'platypus_1', label: '오리너구리', type: 'character', subtype: 'platypus', price: 110, image: platypusImg },
+        ],
+      },
       ];
 
 // 기존 호환성 유지 (SHOP_ITEMS 사용처가 있을 경우 대비)
@@ -264,7 +274,9 @@ export const DEFAULT_VILLAGE_DATA = {
     { id: 'joseon_wildflower_bed_2', type: 'joseon_wildflower_bed', image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7feb5ba62_ChatGPTImage202651904_46_32-Photoroom.png', col: 8, row: 5, flipped: false, size: 170 },
     { id: 'evergreen_tree_1', type: 'evergreen_tree', image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/897cc0dea_ChatGPTImage202652107_40_35-Photoroom.png', col: 4, row: 9, flipped: false, size: 280 },
   ],
-  village_characters: [],
+  village_characters: [
+    { id: 'desert_fox_1', name: '사막여우', type: 'fox', col: 3, row: 4, size: 72, flipped: false, isMoving: false, direction: 'se' },
+  ],
   village_buildings: DEFAULT_BUILDINGS,
   village_tile_theme: 'joseon',
 };
