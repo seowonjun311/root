@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
@@ -75,11 +75,30 @@ export default function Daily() {
   const timerGoals = actionGoals.filter((g) => g.action_type === 'timer' && g.status === 'active');
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const dateKeyRef = React.useRef(dateKey);
+  dateKeyRef.current = dateKey;
   const logsForDate = logs.filter((log) => log.date === dateKey);
   const todayBlocks = timeBlocks[dateKey] || {};
 
   const [inputText, setInputText] = useState('');
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // 탭 전환 후 돌아올 때 localStorage에서 최신 데이터 동기화
+  useEffect(() => {
+    const sync = () => {
+      try {
+        const saved = localStorage.getItem('daily_timeblocks_v1');
+        if (saved) setTimeBlocks(JSON.parse(saved));
+      } catch {}
+    };
+    window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') sync();
+    });
+    return () => {
+      window.removeEventListener('focus', sync);
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!pendingCell) return;
@@ -113,8 +132,9 @@ export default function Daily() {
   const setCellText = (hour, slot, half, text) => {
     if (!text.trim()) return;
     const key = `${hour}_${slot}_${half}`;
+    const dk = dateKeyRef.current;
     setTimeBlocks((prev) => {
-      const next = { ...prev, [dateKey]: { ...(prev[dateKey] || {}), [key]: text.trim() } };
+      const next = { ...prev, [dk]: { ...(prev[dk] || {}), [key]: text.trim() } };
       localStorage.setItem('daily_timeblocks_v1', JSON.stringify(next));
       return next;
     });
@@ -124,10 +144,11 @@ export default function Daily() {
 
   const clearCell = (hour, slot, half) => {
     const key = `${hour}_${slot}_${half}`;
+    const dk = dateKeyRef.current;
     setTimeBlocks((prev) => {
-      const dayBlocks = { ...(prev[dateKey] || {}) };
+      const dayBlocks = { ...(prev[dk] || {}) };
       delete dayBlocks[key];
-      const next = { ...prev, [dateKey]: dayBlocks };
+      const next = { ...prev, [dk]: dayBlocks };
       localStorage.setItem('daily_timeblocks_v1', JSON.stringify(next));
       return next;
     });
