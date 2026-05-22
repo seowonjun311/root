@@ -187,64 +187,38 @@ export default function Daily() {
           </thead>
           <tbody>
             {ALL_HOURS.map((hour) => {
-              const isAmHour = hour < 12;
-              const isPmHour = hour >= 12;
-              const amData = isAmHour ? getCellData(hour, 'am') : null;
-              const pmData = isPmHour ? getCellData(hour, 'pm') : null;
+              const amData = getCellData(hour, 'am');
+              const pmData = getCellData(hour, 'pm');
+
+              const renderCell = (data, slot) => {
+                if (data) {
+                  return (
+                    <button
+                      onClick={() => data.isManual && clearCell(hour, slot)}
+                      className="w-full h-full rounded text-white font-semibold text-xs hover:opacity-90 transition-opacity"
+                      style={{ backgroundColor: CAT_COLORS[data.category] }}
+                    >
+                      {CAT_LABELS[data.category]}
+                    </button>
+                  );
+                }
+                return (
+                  <button
+                    onClick={() => setPendingCell({ hour, slot })}
+                    className="w-full h-full rounded text-muted-foreground text-lg hover:bg-secondary/30 transition-colors"
+                  >
+                    +
+                  </button>
+                );
+              };
 
               return (
                 <tr key={hour}>
                   <td className="border border-border px-3 py-0 text-sm font-medium text-foreground whitespace-nowrap">
                     {formatHour(hour)}
                   </td>
-
-                  {/* 오전 셀 */}
-                  <td className="border border-border p-1 h-14">
-                    {isAmHour ? (
-                      amData ? (
-                        <button
-                          onClick={() => amData.isManual && clearCell(hour, 'am')}
-                          className="w-full h-full rounded text-white font-semibold text-xs hover:opacity-90 transition-opacity"
-                          style={{ backgroundColor: CAT_COLORS[amData.category] }}
-                        >
-                          {CAT_LABELS[amData.category]}
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setPendingCell({ hour, slot: 'am' })}
-                          className="w-full h-full rounded text-muted-foreground text-lg hover:bg-secondary/30 transition-colors"
-                        >
-                          +
-                        </button>
-                      )
-                    ) : (
-                      <div className="w-full h-full bg-muted/30 rounded" />
-                    )}
-                  </td>
-
-                  {/* 오후 셀 */}
-                  <td className="border border-border p-1 h-14">
-                    {isPmHour ? (
-                      pmData ? (
-                        <button
-                          onClick={() => pmData.isManual && clearCell(hour, 'pm')}
-                          className="w-full h-full rounded text-white font-semibold text-xs hover:opacity-90 transition-opacity"
-                          style={{ backgroundColor: CAT_COLORS[pmData.category] }}
-                        >
-                          {CAT_LABELS[pmData.category]}
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setPendingCell({ hour, slot: 'pm' })}
-                          className="w-full h-full rounded text-muted-foreground text-lg hover:bg-secondary/30 transition-colors"
-                        >
-                          +
-                        </button>
-                      )
-                    ) : (
-                      <div className="w-full h-full bg-muted/30 rounded" />
-                    )}
-                  </td>
+                  <td className="border border-border p-1 h-14">{renderCell(amData, 'am')}</td>
+                  <td className="border border-border p-1 h-14">{renderCell(pmData, 'pm')}</td>
                 </tr>
               );
             })}
