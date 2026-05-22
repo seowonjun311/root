@@ -85,13 +85,15 @@ export default function Daily() {
     if (!pendingCell) return;
     const onResize = () => {
       if (window.visualViewport) {
-        const keyboardH = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+        const keyboardH = window.innerHeight - window.visualViewport.height;
         setKeyboardHeight(Math.max(0, keyboardH));
       }
     };
     window.visualViewport?.addEventListener('resize', onResize);
+    window.visualViewport?.addEventListener('scroll', onResize);
     return () => {
       window.visualViewport?.removeEventListener('resize', onResize);
+      window.visualViewport?.removeEventListener('scroll', onResize);
       setKeyboardHeight(0);
     };
   }, [pendingCell]);
@@ -232,8 +234,12 @@ export default function Daily() {
 
       {/* 텍스트 직접 입력 팝업 */}
       {pendingCell && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex flex-col justify-end" onClick={() => { setPendingCell(null); setInputText(''); }}>
-          <div className="w-full bg-background rounded-t-2xl p-4 pb-6" style={{ marginBottom: keyboardHeight }} onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 z-50" onClick={() => { setPendingCell(null); setInputText(''); }}>
+          <div
+            className="w-full bg-background rounded-t-2xl p-4 pb-6 absolute left-0"
+            style={{ bottom: keyboardHeight }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <p className="text-sm font-semibold text-foreground mb-3">
               {formatHour(pendingCell.hour)}:{pendingCell.half === 'first' ? '00' : '30'} {pendingCell.slot === 'am' ? '낮' : '저녁'} — 내용 입력
             </p>
