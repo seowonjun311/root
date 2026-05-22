@@ -1,18 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 
-const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
-
-const getTimeDisplay = (hour) => {
-  if (hour === 0) return '12:00 AM';
-  if (hour < 12) return `${hour}:00 AM`;
-  if (hour === 12) return '12:00 PM';
-  return `${hour - 12}:00 PM`;
-};
+// 8:00 ~ 20:00 (오전: 8~11, 오후: 12~20)
+const AM_HOURS = [8, 9, 10, 11];
+const PM_HOURS = [12, 13, 14, 15, 16, 17, 18, 19, 20];
+const ALL_HOURS = [...AM_HOURS, ...PM_HOURS];
 
 const CAT_COLORS = {
   exercise: '#f59e0b',
@@ -28,13 +24,20 @@ const CAT_LABELS = {
   daily: '일상',
 };
 
+const formatHour = (hour) => {
+  if (hour < 12) return `${hour}:00`;
+  if (hour === 12) return '12:00';
+  return `${hour - 12}:00`;
+};
+
 export default function Daily() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [guestVersion, setGuestVersion] = useState(0);
+  const [guestVersion] = useState(0);
+  // timeBlocks: { [dateKey]: { [hour_am]: cat, [hour_pm]: cat } }
+  // Each cell key = `${hour}_am` or `${hour}_pm`
   const [timeBlocks, setTimeBlocks] = useState({});
-  const [selectedHour, setSelectedHour] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const queryClient = useQueryClient();
+  // pendingCell: { hour, slot } where slot = 'am' | 'pm'
+  const [pendingCell, setPendingCell] = useState(null);
 
   const { data: user } = useQuery({
     queryKey: ['me'],
@@ -60,163 +63,193 @@ export default function Daily() {
     queryFn: () => base44.entities.ActionLog.list('-date', 500).catch(() => []),
   });
 
-  const guestLogs = Array.isArray(guestData?.actionLogs) ? guestData.actionLogs : [];
-  const logs = isGuest ? guestLogs : logsFromServer;
+  const logs = isGuest ? (Array.isArray(guestData?.actionLogs) ? guestData.actionLogs : []) : logsFromServer;
   const actionGoals = isGuest ? (guestData?.actionGoals || []) : actionGoalsFromServer;
-  
-  // 시간 누적형 목표 필터링 (timer 타입)
-  const timerGoals = actionGoals.filter((goal) => goal.action_type === 'timer' && goal.status === 'active');
+  const timerGoals = actionGoals.filter((g) => g.action_type === 'timer' && g.status === 'active');
 
-  const dateStr = format(selectedDate, 'yyyy-MM-dd');
-  const logsForDate = logs.filter((log) => log.date === dateStr);
-
-  // 타임블로킹 로컬 상태
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const logsForDate = logs.filter((log) => log.date === dateKey);
   const todayBlocks = timeBlocks[dateKey] || {};
 
-  // 시간 누적형 목표 자동 표시 (실제 로그 기반)
-  const autoFilledHours = useMemo(() => {
+  // auto-filled from logs
+  const autoFilledCells = useMemo(() => {
     const filled = {};
     timerGoals.forEach((goal) => {
-      const logsForGoal = logsForDate.filter((log) => log.action_goal_id === goal.id);
-      logsForGoal.forEach((log) => {
-        const hour = new Date(log.createdAt).getHours();
-        filled[hour] = { goalId: goal.id, category: log.category, label: goal.title };
-      });
+      logsForDate
+        .filter((log) => log.action_goal_id === goal.id)
+        .forEach((log) => {
+          const hour = new Date(log.created_date || log.createdAt).getHours();
+          const slot = hour < 12 ? 'am' : 'pm';
+          const key = `${hour}_${slot}`;
+          filled[key] = { category: log.category, label: goal.title };
+        });
     });
     return filled;
   }, [logsForDate, timerGoals]);
 
-  const addTimeBlock = (hour, category) => {
-    setTimeBlocks((prev) => ({
-      ...prev,
-      [dateKey]: { ...prev[dateKey], [hour]: category },
-    }));
-    setSelectedHour(null);
-    setSelectedCategory(null);
+  const getCellData = (hour, slot) => {
+    const key = `${hour}_${slot}`;
+    const manual = todayBlocks[key];
+    if (manual) return { category: manual, isManual: true };
+    const auto = autoFilledCells[key];
+    if (auto) return { ...auto, isManual: false };
+    return null;
   };
 
-  const removeTimeBlock = (hour) => {
+  const setCellCategory = (hour, slot, category) => {
+    const key = `${hour}_${slot}`;
     setTimeBlocks((prev) => ({
       ...prev,
-      [dateKey]: { ...prev[dateKey], [hour]: undefined },
+      [dateKey]: { ...(prev[dateKey] || {}), [key]: category },
     }));
+    setPendingCell(null);
+  };
+
+  const clearCell = (hour, slot) => {
+    const key = `${hour}_${slot}`;
+    setTimeBlocks((prev) => {
+      const dayBlocks = { ...(prev[dateKey] || {}) };
+      delete dayBlocks[key];
+      return { ...prev, [dateKey]: dayBlocks };
+    });
   };
 
   const goToPreviousDay = () => setSelectedDate(subDays(selectedDate, 1));
   const goToNextDay = () => setSelectedDate(addDays(selectedDate, 1));
   const goToToday = () => setSelectedDate(new Date());
 
+  const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+
+  // Unique hours that appear in either AM or PM column
+  // Table rows = all hours from 8~20, AM col shows 8~11, PM col shows 12~20
+  // We render 13 rows total (one per hour), AM cell empty for PM hours, PM cell empty for AM hours
+  // Actually: keep it simple — one row per hour, with AM/PM columns.
+  // AM column: show content if hour is 8-11; PM column: show content if hour is 12-20.
+
   return (
     <div className="min-h-full bg-background pb-24">
       {/* 날짜 네비게이션 */}
       <div className="sticky top-0 z-20 bg-background border-b border-border/50 p-4">
         <div className="flex items-center justify-between gap-3">
-          <button
-            onClick={goToPreviousDay}
-            className="p-2 rounded-lg hover:bg-secondary transition-colors"
-            aria-label="이전 날짜"
-          >
+          <button onClick={goToPreviousDay} className="p-2 rounded-lg hover:bg-secondary transition-colors" aria-label="이전 날짜">
             <ChevronLeft className="w-5 h-5" />
           </button>
-
           <div className="flex-1 text-center">
             <p className="text-[0.875rem] text-muted-foreground">
-              {format(selectedDate, 'yyyy년 M월 d일')} ({format(selectedDate, 'EEEE', { locale: new Intl.Locale('ko') })})
+              {format(selectedDate, 'yyyy년 M월 d일')}
             </p>
-            {format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') && (
-              <p className="text-[0.75rem] text-amber-600 font-semibold">오늘</p>
-            )}
+            {isToday && <p className="text-[0.75rem] text-amber-600 font-semibold">오늘</p>}
           </div>
-
-          <button
-            onClick={goToNextDay}
-            className="p-2 rounded-lg hover:bg-secondary transition-colors"
-            aria-label="다음 날짜"
-          >
+          <button onClick={goToNextDay} className="p-2 rounded-lg hover:bg-secondary transition-colors" aria-label="다음 날짜">
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
-
-        {format(selectedDate, 'yyyy-MM-dd') !== format(new Date(), 'yyyy-MM-dd') && (
-          <button
-            onClick={goToToday}
-            className="w-full mt-3 py-2 text-[0.875rem] font-semibold rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors"
-          >
+        {!isToday && (
+          <button onClick={goToToday} className="w-full mt-3 py-2 text-[0.875rem] font-semibold rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors">
             오늘로 이동
           </button>
         )}
       </div>
 
-      <div className="p-4 space-y-6">
-        {selectedHour !== null && selectedCategory === null ? (
-          <div className="fixed inset-0 bg-black/50 flex items-end z-50">
-            <div className="w-full bg-background rounded-t-2xl p-4 space-y-2">
-              <p className="text-sm font-semibold text-foreground mb-3">카테고리 선택</p>
-              {Object.entries(CAT_LABELS).map(([key, label]) => (
-                <button
-                  key={key}
-                  onClick={() => addTimeBlock(selectedHour, key)}
-                  className="w-full p-3 rounded-lg text-white font-semibold"
-                  style={{ backgroundColor: CAT_COLORS[key] }}
-                >
-                  {label}
-                </button>
-              ))}
+      {/* 카테고리 선택 팝업 */}
+      {pendingCell && (
+        <div className="fixed inset-0 bg-black/50 flex items-end z-50" onClick={() => setPendingCell(null)}>
+          <div className="w-full bg-background rounded-t-2xl p-4 space-y-2" onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm font-semibold text-foreground mb-3">
+              {pendingCell.hour}:00 {pendingCell.slot === 'am' ? '오전' : '오후'} — 카테고리 선택
+            </p>
+            {Object.entries(CAT_LABELS).map(([key, label]) => (
               <button
-                onClick={() => setSelectedHour(null)}
-                className="w-full p-3 rounded-lg bg-secondary text-foreground font-semibold"
+                key={key}
+                onClick={() => setCellCategory(pendingCell.hour, pendingCell.slot, key)}
+                className="w-full p-3 rounded-lg text-white font-semibold"
+                style={{ backgroundColor: CAT_COLORS[key] }}
               >
-                취소
+                {label}
               </button>
-            </div>
+            ))}
+            <button onClick={() => setPendingCell(null)} className="w-full p-3 rounded-lg bg-secondary text-foreground font-semibold">
+              취소
+            </button>
           </div>
-        ) : null}
+        </div>
+      )}
 
-        {/* 타임블록 테이블 */}
-         <div className="px-2 overflow-x-auto">
-           <table className="w-full border-collapse">
-             <thead>
-               <tr>
-                 <th className="border border-border p-3 text-sm font-semibold text-foreground bg-background">시간</th>
-                 <th className="border border-border p-3 text-sm font-semibold text-foreground bg-background">활동</th>
-               </tr>
-             </thead>
-             <tbody>
-               {HOURS.map((hour) => {
-                 const blockCategory = todayBlocks[hour];
-                 const autoFilled = autoFilledHours[hour];
-                 const displayBlock = blockCategory ? { category: blockCategory, isManual: true } : autoFilled ? { ...autoFilled, isManual: false } : null;
+      {/* 타임블록 테이블 */}
+      <div className="p-4">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr>
+              <th className="border border-border px-3 py-3 text-sm font-semibold text-foreground text-left w-16">시간</th>
+              <th className="border border-border px-3 py-3 text-sm font-semibold text-foreground text-center">오전</th>
+              <th className="border border-border px-3 py-3 text-sm font-semibold text-foreground text-center">오후</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ALL_HOURS.map((hour) => {
+              const isAmHour = hour < 12;
+              const isPmHour = hour >= 12;
+              const amData = isAmHour ? getCellData(hour, 'am') : null;
+              const pmData = isPmHour ? getCellData(hour, 'pm') : null;
 
-                 return (
-                   <tr key={`hour-${hour}`}>
-                     <td className="border border-border p-3 text-sm font-semibold text-foreground min-w-14">
-                       {hour}:00
-                     </td>
-                     <td className="border border-border p-2 min-h-16">
-                       {displayBlock ? (
-                         <button
-                           onClick={() => blockCategory && removeTimeBlock(hour)}
-                           className="w-full h-14 rounded text-white font-semibold text-xs hover:opacity-90 transition-opacity"
-                           style={{ backgroundColor: CAT_COLORS[displayBlock.category] }}
-                         >
-                           {CAT_LABELS[displayBlock.category]}
-                         </button>
-                       ) : (
-                         <button
-                           onClick={() => setSelectedHour(hour)}
-                           className="w-full h-14 rounded bg-secondary/20 border border-dashed border-secondary text-muted-foreground text-xs font-semibold hover:bg-secondary/30 transition-colors"
-                         >
-                           +
-                         </button>
-                       )}
-                     </td>
-                   </tr>
-                 );
-               })}
-             </tbody>
-           </table>
-         </div>
+              return (
+                <tr key={hour}>
+                  <td className="border border-border px-3 py-0 text-sm font-medium text-foreground whitespace-nowrap">
+                    {formatHour(hour)}
+                  </td>
+
+                  {/* 오전 셀 */}
+                  <td className="border border-border p-1 h-14">
+                    {isAmHour ? (
+                      amData ? (
+                        <button
+                          onClick={() => amData.isManual && clearCell(hour, 'am')}
+                          className="w-full h-full rounded text-white font-semibold text-xs hover:opacity-90 transition-opacity"
+                          style={{ backgroundColor: CAT_COLORS[amData.category] }}
+                        >
+                          {CAT_LABELS[amData.category]}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setPendingCell({ hour, slot: 'am' })}
+                          className="w-full h-full rounded text-muted-foreground text-lg hover:bg-secondary/30 transition-colors"
+                        >
+                          +
+                        </button>
+                      )
+                    ) : (
+                      <div className="w-full h-full bg-muted/30 rounded" />
+                    )}
+                  </td>
+
+                  {/* 오후 셀 */}
+                  <td className="border border-border p-1 h-14">
+                    {isPmHour ? (
+                      pmData ? (
+                        <button
+                          onClick={() => pmData.isManual && clearCell(hour, 'pm')}
+                          className="w-full h-full rounded text-white font-semibold text-xs hover:opacity-90 transition-opacity"
+                          style={{ backgroundColor: CAT_COLORS[pmData.category] }}
+                        >
+                          {CAT_LABELS[pmData.category]}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setPendingCell({ hour, slot: 'pm' })}
+                          className="w-full h-full rounded text-muted-foreground text-lg hover:bg-secondary/30 transition-colors"
+                        >
+                          +
+                        </button>
+                      )
+                    ) : (
+                      <div className="w-full h-full bg-muted/30 rounded" />
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
