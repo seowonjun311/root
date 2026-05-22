@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
@@ -79,6 +79,24 @@ export default function Daily() {
   const todayBlocks = timeBlocks[dateKey] || {};
 
   const [inputText, setInputText] = useState('');
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  React.useEffect(() => {
+    if (!pendingCell) return;
+    const onResize = () => {
+      if (window.visualViewport) {
+        const keyboardH = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+        setKeyboardHeight(Math.max(0, keyboardH));
+      }
+    };
+    window.visualViewport?.addEventListener('resize', onResize);
+    return () => {
+      window.visualViewport?.removeEventListener('resize', onResize);
+      setKeyboardHeight(0);
+    };
+  }, [pendingCell]);
+
+
 
   const getCellData = (hour, slot, half) => {
     const key = `${hour}_${slot}_${half}`;
@@ -214,8 +232,8 @@ export default function Daily() {
 
       {/* 텍스트 직접 입력 팝업 */}
       {pendingCell && (
-        <div className="fixed inset-0 bg-black/50 flex items-end z-50" onClick={() => { setPendingCell(null); setInputText(''); }}>
-          <div className="w-full bg-background rounded-t-2xl p-4" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex flex-col justify-end" onClick={() => { setPendingCell(null); setInputText(''); }}>
+          <div className="w-full bg-background rounded-t-2xl p-4 pb-6" style={{ marginBottom: keyboardHeight }} onClick={(e) => e.stopPropagation()}>
             <p className="text-sm font-semibold text-foreground mb-3">
               {formatHour(pendingCell.hour)}:{pendingCell.half === 'first' ? '00' : '30'} {pendingCell.slot === 'am' ? '낮' : '저녁'} — 내용 입력
             </p>
