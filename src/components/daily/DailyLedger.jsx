@@ -273,7 +273,7 @@ export default function DailyLedger({ dateKey }) {
       {/* 월별 달력 모달 */}
       {showMonthModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end" onClick={() => setShowMonthModal(false)}>
-          <div className="w-full bg-background rounded-t-2xl max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="w-full bg-background rounded-t-2xl max-h-[92dvh] overflow-y-auto pb-24" onClick={e => e.stopPropagation()}>
 
             {/* 달력 헤더 */}
             <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
