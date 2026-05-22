@@ -288,11 +288,17 @@ zoomTo(nextScale, centerX, centerY);
       if (drag.objectType === 'character') {
         setCharacters((prev) => prev.map((npc) => {
           if (npc.id !== drag.objectId) return npc;
-          const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol: col, nextRow: row, decorations, characters: prev, buildings, totalLevel });
-          if (!canPlace) return npc;
 
           const dCol = col - npc.col;
           const dRow = row - npc.row;
+
+          // 4방향(대각선)만 허용 - 대각선이 아니면 이동 거부
+          const isValidDiagonal = (dCol !== 0 && dRow !== 0) || (dCol === 0 && dRow === 0);
+          if (!isValidDiagonal) return npc;
+
+          const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol: col, nextRow: row, decorations, characters: prev, buildings, totalLevel });
+          if (!canPlace) return npc;
+
           let nextDirection = npc.direction || 'se';
           let nextFlipped = npc.flipped;
 
