@@ -278,9 +278,9 @@ zoomTo(nextScale, centerX, centerY);
         setPlacementPreview({ type: drag.objectType, col, row, item: previewItem, valid: previewValid });
       }
       if (drag.objectType === 'decoration') {
-        setDecorations((prev) => prev.map((item) => {
-          if (item.id !== drag.objectId) return item;
-          const canPlace = canPlaceObject({ movingType: 'decoration', movingItem: item, nextCol: col, nextRow: row, decorations: prev, characters, buildings: [], totalLevel });
+         setDecorations((prev) => prev.map((item) => {
+           if (item.id !== drag.objectId) return item;
+           const canPlace = canPlaceObject({ movingType: 'decoration', movingItem: item, nextCol: col, nextRow: row, decorations: prev, characters, buildings, totalLevel });
           if (!canPlace) return item;
           return { ...item, col, row };
         }));
@@ -290,21 +290,20 @@ zoomTo(nextScale, centerX, centerY);
           if (npc.id !== drag.objectId) return npc;
           const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol: col, nextRow: row, decorations, characters: prev, buildings, totalLevel });
           if (!canPlace) return npc;
-          let nextFlipped = npc.flipped;
-          let nextDirection = npc.direction || 'se';
-          
+
           const dCol = col - npc.col;
           const dRow = row - npc.row;
+          let nextDirection = npc.direction || 'se';
+          let nextFlipped = npc.flipped;
+
           if (dCol !== 0 || dRow !== 0) {
             // 4방향 계산
-            if (dCol > 0 && dRow < 0) nextDirection = 'ne'; // ↗
-            else if (dCol < 0 && dRow > 0) nextDirection = 'sw'; // ↙
-            else if (dCol > 0 && dRow > 0) nextDirection = 'se'; // ↘
-            else if (dCol < 0 && dRow < 0) nextDirection = 'nw'; // ↖
+            if (dCol > 0 && dRow < 0) { nextDirection = 'ne'; nextFlipped = false; } // ↗
+            else if (dCol < 0 && dRow > 0) { nextDirection = 'sw'; nextFlipped = true; } // ↙
+            else if (dCol > 0 && dRow > 0) { nextDirection = 'se'; nextFlipped = false; } // ↘
+            else if (dCol < 0 && dRow < 0) { nextDirection = 'nw'; nextFlipped = true; } // ↖
           }
-          
-          if (dCol > 0) nextFlipped = false;
-          else if (dCol < 0) nextFlipped = true;
+
           return { ...npc, col, row, flipped: nextFlipped, direction: nextDirection };
         }));
       }
@@ -413,19 +412,16 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
         const finalCol = canPlace ? nextCol : npc.col;
         const finalRow = canPlace ? nextRow : npc.row;
         const isActuallyMoving = canPlace && (finalCol !== npc.col || finalRow !== npc.row);
-        let nextFlipped = npc.flipped;
         let nextDirection = npc.direction || 'se';
+        let nextFlipped = npc.flipped;
         if (isActuallyMoving) {
           const dCol = finalCol - npc.col;
           const dRow = finalRow - npc.row;
           // 4방향 계산
-          if (dCol > 0 && dRow < 0) nextDirection = 'ne'; // ↗
-          else if (dCol < 0 && dRow > 0) nextDirection = 'sw'; // ↙
-          else if (dCol > 0 && dRow > 0) nextDirection = 'se'; // ↘
-          else if (dCol < 0 && dRow < 0) nextDirection = 'nw'; // ↖
-          
-          if (dCol > 0) nextFlipped = false;
-          else if (dCol < 0) nextFlipped = true;
+          if (dCol > 0 && dRow < 0) { nextDirection = 'ne'; nextFlipped = false; } // ↗
+          else if (dCol < 0 && dRow > 0) { nextDirection = 'sw'; nextFlipped = true; } // ↙
+          else if (dCol > 0 && dRow > 0) { nextDirection = 'se'; nextFlipped = false; } // ↘
+          else if (dCol < 0 && dRow < 0) { nextDirection = 'nw'; nextFlipped = true; } // ↖
         }
         return { ...npc, col: finalCol, row: finalRow, flipped: nextFlipped, isMoving: isActuallyMoving, direction: nextDirection };
       }));
