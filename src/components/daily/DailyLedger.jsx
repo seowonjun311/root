@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { Plus, Trash2, TrendingDown, TrendingUp, Wallet, CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth } from 'date-fns';
 
 const CATEGORIES = ['식비', '교통', '쇼핑', '의료', '문화', '교육', '기타'];
 
@@ -19,6 +19,46 @@ function formatKRW(num) {
   return Number(num).toLocaleString('ko-KR');
 }
 
+// 카테고리별 지출 띠그래프
+function SpendingBar({ entries }) {
+  const expenseEntries = entries.filter(e => e.type === 'expense');
+  const total = expenseEntries.reduce((s, e) => s + Number(e.amount), 0);
+  if (total === 0) return null;
+
+  const byCategory = {};
+  expenseEntries.forEach(e => {
+    byCategory[e.category] = (byCategory[e.category] || 0) + Number(e.amount);
+  });
+
+  const sorted = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+
+  return (
+    <div className="mb-3">
+      <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">카테고리별 지출 분석</p>
+      {/* 띠 그래프 */}
+      <div className="flex rounded-lg overflow-hidden h-4 mb-2">
+        {sorted.map(([cat, amt]) => (
+          <div
+            key={cat}
+            style={{ width: `${(amt / total) * 100}%`, backgroundColor: CAT_COLORS[cat] || '#6b7280' }}
+            title={`${cat}: ${formatKRW(amt)}원`}
+          />
+        ))}
+      </div>
+      {/* 범례 */}
+      <div className="flex flex-wrap gap-x-3 gap-y-1">
+        {sorted.map(([cat, amt]) => (
+          <div key={cat} className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CAT_COLORS[cat] || '#6b7280' }} />
+            <span className="text-[10px] text-muted-foreground">{cat}</span>
+            <span className="text-[10px] font-semibold text-foreground">{Math.round((amt / total) * 100)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DailyLedger({ dateKey }) {
   const [ledger, setLedger] = useState(() => {
     try {
@@ -33,7 +73,6 @@ export default function DailyLedger({ dateKey }) {
   const amountRef = useRef(null);
   const keyboardListenerRef = useRef(null);
 
-  // 달력/월별 내역 상태
   const [showMonthModal, setShowMonthModal] = useState(false);
   const [calMonth, setCalMonth] = useState(() => new Date(dateKey + 'T00:00:00'));
   const [selectedCalDay, setSelectedCalDay] = useState(null);
@@ -42,15 +81,14 @@ export default function DailyLedger({ dateKey }) {
   const totalExpense = entries.filter(e => e.type === 'expense').reduce((s, e) => s + Number(e.amount), 0);
   const totalIncome = entries.filter(e => e.type === 'income').reduce((s, e) => s + Number(e.amount), 0);
 
-  // 달력 그리드
   const calDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(calMonth), { weekStartsOn: 0 });
     const end = endOfWeek(endOfMonth(calMonth), { weekStartsOn: 0 });
     return eachDayOfInterval({ start, end });
   }, [calMonth]);
 
-  // 해당 월 전체 항목
   const monthKey = format(calMonth, 'yyyy-MM');
+
   const monthEntries = useMemo(() => {
     return Object.entries(ledger)
       .filter(([dk]) => dk.startsWith(monthKey))
@@ -60,13 +98,6 @@ export default function DailyLedger({ dateKey }) {
   const monthExpense = monthEntries.filter(e => e.type === 'expense').reduce((s, e) => s + Number(e.amount), 0);
   const monthIncome = monthEntries.filter(e => e.type === 'income').reduce((s, e) => s + Number(e.amount), 0);
 
-  // 선택된 날의 항목 (달력 클릭 시)
-  const selectedDayEntries = useMemo(() => {
-    if (!selectedCalDay) return null;
-    return ledger[selectedCalDay] || [];
-  }, [ledger, selectedCalDay]);
-
-  // 날짜별 지출/수입 요약 (달력 점 표시용)
   const dayTotals = useMemo(() => {
     const map = {};
     Object.entries(ledger).forEach(([dk, items]) => {
@@ -128,8 +159,14 @@ export default function DailyLedger({ dateKey }) {
   const prevMonth = () => setCalMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1));
   const nextMonth = () => setCalMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1));
 
-  // 월별 내역 리스트: 선택된 날 있으면 그 날만, 없으면 전체 월
-  const displayEntries = selectedCalDay ? (selectedDayEntries || []).map(i => ({ ...i, dateKey: selectedCalDay })) : monthEntries;
+  // 선택된 날 항목
+  const selectedDayEntries = useMemo(() => {
+    if (!selectedCalDay) return [];
+    return (ledger[selectedCalDay] || []).map(i => ({ ...i, dateKey: selectedCalDay }));
+  }, [ledger, selectedCalDay]);
+
+  const selectedDayExpense = selectedDayEntries.filter(e => e.type === 'expense').reduce((s, e) => s + Number(e.amount), 0);
+  const selectedDayIncome = selectedDayEntries.filter(e => e.type === 'income').reduce((s, e) => s + Number(e.amount), 0);
 
   return (
     <div className="px-4 pb-6">
@@ -140,17 +177,11 @@ export default function DailyLedger({ dateKey }) {
           <span className="text-sm font-bold text-foreground">오늘의 가계부</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={openMonthModal}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-secondary text-foreground text-xs font-semibold"
-          >
+          <button onClick={openMonthModal} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-secondary text-foreground text-xs font-semibold">
             <CalendarDays className="w-3.5 h-3.5" />
             월별
           </button>
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-semibold"
-          >
+          <button onClick={() => setShowForm(true)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-semibold">
             <Plus className="w-3.5 h-3.5" />
             추가
           </button>
@@ -242,7 +273,7 @@ export default function DailyLedger({ dateKey }) {
       {/* 월별 달력 모달 */}
       {showMonthModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end" onClick={() => setShowMonthModal(false)}>
-          <div className="w-full bg-background rounded-t-2xl max-h-[85dvh] flex flex-col" onClick={e => e.stopPropagation()}>
+          <div className="w-full bg-background rounded-t-2xl max-h-[90dvh] flex flex-col" onClick={e => e.stopPropagation()}>
 
             {/* 달력 헤더 */}
             <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
@@ -259,7 +290,7 @@ export default function DailyLedger({ dateKey }) {
             </div>
 
             {/* 월 요약 */}
-            <div className="grid grid-cols-2 gap-2 px-4 mb-3 shrink-0">
+            <div className="grid grid-cols-2 gap-2 px-4 mb-2 shrink-0">
               <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/30 rounded-xl p-2.5">
                 <TrendingDown className="w-3.5 h-3.5 text-red-500 shrink-0" />
                 <div>
@@ -276,15 +307,20 @@ export default function DailyLedger({ dateKey }) {
               </div>
             </div>
 
+            {/* 카테고리 지출 분석 띠그래프 */}
+            <div className="px-4 mb-2 shrink-0">
+              <SpendingBar entries={monthEntries} />
+            </div>
+
             {/* 요일 헤더 */}
             <div className="grid grid-cols-7 px-4 shrink-0">
               {['일','월','화','수','목','금','토'].map(d => (
-                <div key={d} className="text-center text-[11px] font-semibold text-muted-foreground py-1">{d}</div>
+                <div key={d} className="text-center text-[11px] font-semibold text-muted-foreground py-0.5">{d}</div>
               ))}
             </div>
 
-            {/* 날짜 그리드 */}
-            <div className="grid grid-cols-7 gap-y-1 px-4 pb-2 shrink-0">
+            {/* 날짜 그리드 — 행 간격 줄임 */}
+            <div className="grid grid-cols-7 px-4 shrink-0" style={{ rowGap: '2px' }}>
               {calDays.map(day => {
                 const dk = format(day, 'yyyy-MM-dd');
                 const inMonth = isSameMonth(day, calMonth);
@@ -293,13 +329,13 @@ export default function DailyLedger({ dateKey }) {
                 const totals = dayTotals[dk];
                 return (
                   <button key={dk} onClick={() => setSelectedCalDay(isSelected ? null : dk)}
-                    className={`flex flex-col items-center justify-center rounded-xl py-1.5 transition-colors
+                    className={`flex flex-col items-center justify-center rounded-lg py-1 transition-colors
                       ${isSelected ? 'bg-primary text-primary-foreground' : isToday ? 'bg-amber-100 text-amber-800' : inMonth ? 'hover:bg-secondary text-foreground' : 'text-muted-foreground/30'}`}>
                     <span className="text-xs font-semibold leading-none">{format(day, 'd')}</span>
                     {totals && (
-                      <div className="flex gap-0.5 mt-1">
-                        {totals.exp > 0 && <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-red-200' : 'bg-red-400'}`} />}
-                        {totals.inc > 0 && <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-green-200' : 'bg-green-500'}`} />}
+                      <div className="flex gap-0.5 mt-0.5">
+                        {totals.exp > 0 && <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-red-200' : 'bg-red-400'}`} />}
+                        {totals.inc > 0 && <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-green-200' : 'bg-green-500'}`} />}
                       </div>
                     )}
                   </button>
@@ -308,47 +344,59 @@ export default function DailyLedger({ dateKey }) {
             </div>
 
             {/* 구분선 */}
-            <div className="border-t border-border/50 mx-4 mb-2 shrink-0" />
+            <div className="border-t border-border/50 mx-4 mt-2 mb-0 shrink-0" />
 
-            {/* 내역 리스트 */}
-            <div className="overflow-y-auto flex-1 px-4 pb-8">
-              {selectedCalDay && (
-                <p className="text-xs font-semibold text-muted-foreground mb-2">
-                  {format(new Date(selectedCalDay + 'T00:00:00'), 'M월 d일')} 내역
-                  <button onClick={() => setSelectedCalDay(null)} className="ml-2 text-primary">전체 보기</button>
-                </p>
+            {/* 하단 내역 영역 — 스크롤 가능 */}
+            <div className="overflow-y-auto flex-1 px-4 pt-3 pb-8">
+              {/* 선택된 날 헤더 */}
+              {selectedCalDay ? (
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-bold text-foreground">
+                    {format(new Date(selectedCalDay + 'T00:00:00'), 'M월 d일')} 내역
+                  </p>
+                  <div className="flex items-center gap-3">
+                    {selectedDayExpense > 0 && (
+                      <span className="text-xs font-semibold text-red-600">-{formatKRW(selectedDayExpense)}원</span>
+                    )}
+                    {selectedDayIncome > 0 && (
+                      <span className="text-xs font-semibold text-green-600">+{formatKRW(selectedDayIncome)}원</span>
+                    )}
+                    <button onClick={() => setSelectedCalDay(null)} className="text-[11px] text-primary font-semibold">전체 보기</button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm font-bold text-foreground mb-2">{format(calMonth, 'M월')} 전체 내역</p>
               )}
-              {!selectedCalDay && (
-                <p className="text-xs font-semibold text-muted-foreground mb-2">{format(calMonth, 'M월')} 전체 내역</p>
-              )}
-              {displayEntries.length === 0 ? (
+
+              {/* 내역 리스트 */}
+              {(selectedCalDay ? selectedDayEntries : monthEntries).length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground text-sm border border-dashed border-border rounded-xl">
                   내역이 없습니다
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {displayEntries
+                  {(selectedCalDay ? selectedDayEntries : monthEntries)
                     .sort((a, b) => a.dateKey?.localeCompare(b.dateKey))
                     .map((entry) => (
-                    <div key={entry.id} className="flex items-center gap-3 bg-secondary/30 rounded-xl px-3 py-2.5">
-                      <div className="flex flex-col items-center shrink-0 w-7">
-                        <span className="text-[10px] text-muted-foreground font-semibold leading-none">
-                          {entry.dateKey ? format(new Date(entry.dateKey + 'T00:00:00'), 'M/d') : ''}
+                      <div key={entry.id} className="flex items-center gap-3 bg-secondary/30 rounded-xl px-3 py-2.5">
+                        {!selectedCalDay && (
+                          <span className="text-[10px] text-muted-foreground font-semibold shrink-0 w-8">
+                            {format(new Date(entry.dateKey + 'T00:00:00'), 'M/d')}
+                          </span>
+                        )}
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CAT_COLORS[entry.category] || '#6b7280' }} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-foreground truncate">{entry.memo || entry.category}</p>
+                          <p className="text-[10px] text-muted-foreground">{entry.category}</p>
+                        </div>
+                        <span className={`text-sm font-bold shrink-0 ${entry.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
+                          {entry.type === 'expense' ? '-' : '+'}{formatKRW(entry.amount)}원
                         </span>
+                        <button onClick={() => deleteMonthEntry(entry.dateKey, entry.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CAT_COLORS[entry.category] || '#6b7280' }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-foreground truncate">{entry.memo || entry.category}</p>
-                        <p className="text-[10px] text-muted-foreground">{entry.category}</p>
-                      </div>
-                      <span className={`text-sm font-bold shrink-0 ${entry.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
-                        {entry.type === 'expense' ? '-' : '+'}{formatKRW(entry.amount)}원
-                      </span>
-                      <button onClick={() => deleteMonthEntry(entry.dateKey, entry.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
             </div>
