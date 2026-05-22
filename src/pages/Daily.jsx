@@ -87,6 +87,9 @@ export default function Daily() {
       if (window.visualViewport) {
         const keyboardH = window.innerHeight - window.visualViewport.height;
         setKeyboardHeight(Math.max(0, keyboardH));
+      } else {
+        // fallback: assume ~300px keyboard
+        setKeyboardHeight(300);
       }
     };
     window.visualViewport?.addEventListener('resize', onResize);
@@ -237,7 +240,7 @@ export default function Daily() {
         <div className="fixed inset-0 bg-black/50 z-50" onClick={() => { setPendingCell(null); setInputText(''); }}>
           <div
             className="w-full bg-background rounded-t-2xl p-4 pb-6 absolute left-0"
-            style={{ bottom: keyboardHeight }}
+            style={{ bottom: keyboardHeight + 16 }}
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-sm font-semibold text-foreground mb-3">
@@ -247,6 +250,14 @@ export default function Daily() {
               autoFocus
               type="text"
               value={inputText}
+              onFocus={() => {
+                if (window.visualViewport) {
+                  const keyboardH = window.innerHeight - window.visualViewport.height;
+                  setKeyboardHeight(Math.max(280, keyboardH));
+                } else {
+                  setKeyboardHeight(300);
+                }
+              }}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') setCellText(pendingCell.hour, pendingCell.slot, pendingCell.half, inputText);
