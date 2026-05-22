@@ -613,12 +613,25 @@ export function validateGoalActionLogChain(goals = [], actionGoals = [], logs = 
 }
 
 // --- 캐릭터/장식 ---
+// 4방향 캐릭터 이미지 
+const CHARACTER_DIRECTION_IMAGES = {
+  nw: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ae4da3461_ChatGPTImage202652205_51_57-Photoroom.png', // ↖
+  ne: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c728362d4_ChatGPTImage202652205_52_03-Photoroom.png', // ↗
+  se: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7ac8f03c6_-Photoroom.png', // ↘ (기본 이미지)
+  sw: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/9d7dd4a3b_ChatGPTImage202652205_53_00-Photoroom.png', // ↙
+};
+
 // frameIndex: 0-based 프레임 인덱스를 직접 전달
-export function getCharacterImage(type, isMoving = false, frameIndex = 0) {
+// direction: 'nw', 'ne', 'se', 'sw'
+export function getCharacterImage(type, isMoving = false, frameIndex = 0, direction = 'se') {
   if (type === 'alpaca') return alpacaImg;
   if (type === 'platypus') return platypusImg;
 
   if (type === 'fox') {
+    // 4방향 커스텀 이미지
+    if (CHARACTER_DIRECTION_IMAGES[direction]) {
+      return CHARACTER_DIRECTION_IMAGES[direction];
+    }
     if (isMoving) {
       return foxWalkFrames[frameIndex % foxWalkFrames.length];
     }
@@ -1034,6 +1047,7 @@ export function createCharacter(type) {
     size: sizeMap[type] || 64,
     flipped: false,
     isMoving: false,
+    direction: 'se', // 기본 방향 (오른쪽 아래)
   };
 }
 

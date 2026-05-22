@@ -49,7 +49,7 @@ function CharacterSprite({ npc }) {
     return () => clearInterval(timer);
   }, [npc.isMoving]);
 
-  const src = getCharacterImage(npc.type, npc.isMoving, frame);
+  const src = getCharacterImage(npc.type, npc.isMoving, frame, npc.direction || 'se');
 
   return (
     <img
@@ -291,9 +291,21 @@ zoomTo(nextScale, centerX, centerY);
           const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol: col, nextRow: row, decorations, characters: prev, buildings: [], totalLevel });
           if (!canPlace) return npc;
           let nextFlipped = npc.flipped;
-          if (col > npc.col) nextFlipped = false;
-          else if (col < npc.col) nextFlipped = true;
-          return { ...npc, col, row, flipped: nextFlipped };
+          let nextDirection = npc.direction || 'se';
+          
+          const dCol = col - npc.col;
+          const dRow = row - npc.row;
+          if (dCol !== 0 || dRow !== 0) {
+            // 4방향 계산
+            if (dCol > 0 && dRow < 0) nextDirection = 'ne'; // ↗
+            else if (dCol < 0 && dRow > 0) nextDirection = 'sw'; // ↙
+            else if (dCol > 0 && dRow > 0) nextDirection = 'se'; // ↘
+            else if (dCol < 0 && dRow < 0) nextDirection = 'nw'; // ↖
+          }
+          
+          if (dCol > 0) nextFlipped = false;
+          else if (dCol < 0) nextFlipped = true;
+          return { ...npc, col, row, flipped: nextFlipped, direction: nextDirection };
         }));
       }
       dragRef.current = { ...drag, startX: e.clientX, startY: e.clientY, startCol: col, startRow: row };
@@ -402,11 +414,20 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
         const finalRow = canPlace ? nextRow : npc.row;
         const isActuallyMoving = canPlace && (finalCol !== npc.col || finalRow !== npc.row);
         let nextFlipped = npc.flipped;
+        let nextDirection = npc.direction || 'se';
         if (isActuallyMoving) {
-          if (finalCol > npc.col) nextFlipped = false;
-          else if (finalCol < npc.col) nextFlipped = true;
+          const dCol = finalCol - npc.col;
+          const dRow = finalRow - npc.row;
+          // 4방향 계산
+          if (dCol > 0 && dRow < 0) nextDirection = 'ne'; // ↗
+          else if (dCol < 0 && dRow > 0) nextDirection = 'sw'; // ↙
+          else if (dCol > 0 && dRow > 0) nextDirection = 'se'; // ↘
+          else if (dCol < 0 && dRow < 0) nextDirection = 'nw'; // ↖
+          
+          if (dCol > 0) nextFlipped = false;
+          else if (dCol < 0) nextFlipped = true;
         }
-        return { ...npc, col: finalCol, row: finalRow, flipped: nextFlipped, isMoving: isActuallyMoving };
+        return { ...npc, col: finalCol, row: finalRow, flipped: nextFlipped, isMoving: isActuallyMoving, direction: nextDirection };
       }));
     }, 240);
     return () => clearInterval(timer);
