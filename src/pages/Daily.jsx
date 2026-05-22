@@ -6,6 +6,8 @@ import { ChevronLeft, ChevronRight, CalendarDays, X } from 'lucide-react';
 import DailyLedger from '@/components/daily/DailyLedger';
 import DailyMemo from '@/components/daily/DailyMemo';
 import { format, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isToday as dateFnsIsToday } from 'date-fns';
+import html2canvas from 'html2canvas';
+import { Share2 } from 'lucide-react';
 
 // 12:00 ~ 23:00 (오전: 12~17, 오후: 18~23)
 const AM_HOURS = [12, 13, 14, 15, 16, 17];
@@ -66,6 +68,7 @@ export default function Daily() {
   });
   // pendingCell: { hour, slot, half }
   const [pendingCell, setPendingCell] = useState(null);
+  const gridRef = useRef(null);
 
   const { data: user } = useQuery({
     queryKey: ['me'],
@@ -181,6 +184,41 @@ export default function Daily() {
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
+  const shareTimeline = async () => {
+    if (!gridRef.current) return;
+    try {
+      const canvas = await html2canvas(gridRef.current, { backgroundColor: '#fff' });
+      const image = canvas.toDataURL('image/png');
+      
+      // 모바일 공유 API 지원 확인
+      if (navigator.share && navigator.canShare) {
+        const response = await fetch(image);
+        const blob = await response.blob();
+        const file = new File([blob], `timeline-${dateKey}.png`, { type: 'image/png' });
+        
+        navigator.share({
+          files: [file],
+          title: '나의 일정',
+          text: `${format(selectedDate, 'yyyy년 M월 d일')} 일정`
+        }).catch(() => {
+          // 공유 실패 시 다운로드로 폴백
+          downloadImage(image);
+        });
+      } else {
+        downloadImage(image);
+      }
+    } catch (err) {
+      console.error('공유 실패:', err);
+    }
+  };
+
+  const downloadImage = (imageData) => {
+    const link = document.createElement('a');
+    link.href = imageData;
+    link.download = `timeline-${dateKey}.png`;
+    link.click();
+  };
+
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
 
@@ -215,6 +253,9 @@ export default function Daily() {
           </button>
           <button onClick={() => setShowCalendar(true)} className="p-2 rounded-lg hover:bg-secondary transition-colors" aria-label="달력 열기">
             <CalendarDays className="w-5 h-5" />
+          </button>
+          <button onClick={shareTimeline} className="p-2 rounded-lg hover:bg-secondary transition-colors" aria-label="공유">
+            <Share2 className="w-5 h-5" />
           </button>
         </div>
         {!isToday && (
@@ -326,7 +367,7 @@ export default function Daily() {
       )}
 
       {/* 타임블록 그리드 */}
-      <div className="p-4">
+      <div className="p-4" ref={gridRef}>
         {/* 헤더 */}
         <div className="flex border border-border rounded-t-lg overflow-hidden mb-0">
           <div className="w-14 shrink-0 bg-secondary/40 border-r border-border py-2 text-center text-xs font-semibold text-foreground">시간</div>
