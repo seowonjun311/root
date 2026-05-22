@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
 import { ChevronLeft, ChevronRight, CalendarDays, X } from 'lucide-react';
+import DailyLedger from '@/components/daily/DailyLedger';
 import { format, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isToday as dateFnsIsToday } from 'date-fns';
 
 // 12:00 ~ 23:00 (오전: 12~17, 오후: 18~23)
@@ -323,7 +324,7 @@ export default function Daily() {
             ))}
           </div>
         </div>
-        {/* 시간 행들 */}
+        {/* 시간 행들 (오전 낮 그룹) */}
         {ALL_HOURS.map((hour) => {
           const renderCell = (slot, half) => {
             const data = getCellData(hour, slot, half);
@@ -363,6 +364,11 @@ export default function Daily() {
             </div>
           );
         })}
+      </div>
+
+      {/* 가계부 섹션 */}
+      <div className="mt-2 border-t border-border/50 pt-4">
+        <DailyLedger dateKey={dateKey} />
       </div>
     </div>
   );
