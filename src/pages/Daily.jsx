@@ -25,9 +25,9 @@ const CAT_LABELS = {
 };
 
 const formatHour = (hour) => {
-  if (hour === 12) return '12:00';
-  if (hour > 12) return `${hour - 12}:00`;
-  return `${hour}:00`;
+  if (hour === 12) return '12';
+  if (hour > 12) return `${hour - 12}`;
+  return `${hour}`;
 };
 
 export default function Daily() {
@@ -178,12 +178,11 @@ export default function Daily() {
         <table className="w-full border-collapse">
           <thead>
             <tr>
-              <th className="border border-border px-2 py-2 text-xs font-semibold text-foreground text-left w-12">시간</th>
+              <th className="border border-border px-1 py-2 text-xs font-semibold text-foreground text-center w-12" rowSpan={2}>시간</th>
               <th className="border border-border px-1 py-2 text-xs font-semibold text-foreground text-center" colSpan={2}>낮</th>
               <th className="border border-border px-1 py-2 text-xs font-semibold text-foreground text-center" colSpan={2}>저녁</th>
             </tr>
             <tr>
-              <th className="border border-border px-2 py-1 text-[10px] text-muted-foreground"></th>
               <th className="border border-border px-1 py-1 text-[10px] text-muted-foreground text-center">:00</th>
               <th className="border border-border px-1 py-1 text-[10px] text-muted-foreground text-center">:30</th>
               <th className="border border-border px-1 py-1 text-[10px] text-muted-foreground text-center">:00</th>
@@ -192,12 +191,12 @@ export default function Daily() {
           </thead>
           <tbody>
             {ALL_HOURS.map((hour) => {
-              const renderHalfCell = (slot, half) => {
+              const renderCell = (slot, half) => {
                 const data = getCellData(hour, slot, half);
                 if (data) {
                   return (
                     <button
-                      onClick={() => data.isManual && clearCell(hour, slot, half)}
+                      onClick={() => clearCell(hour, slot, half)}
                       className="w-full h-full rounded font-semibold text-[10px] leading-tight hover:opacity-90 transition-opacity bg-primary/20 text-primary px-0.5 break-words"
                     >
                       {data.text}
@@ -216,13 +215,13 @@ export default function Daily() {
 
               return (
                 <tr key={hour}>
-                  <td className="border border-border px-2 py-0 text-xs font-medium text-foreground whitespace-nowrap w-14">
+                  <td className="border border-border text-sm font-bold text-foreground text-center w-12 bg-secondary/20">
                     {formatHour(hour)}
                   </td>
-                  <td className="border border-border p-0.5 h-10 w-[22%]">{renderHalfCell('am', 'first')}</td>
-                  <td className="border border-border p-0.5 h-10 w-[22%]">{renderHalfCell('am', 'second')}</td>
-                  <td className="border border-border p-0.5 h-10 w-[22%]">{renderHalfCell('pm', 'first')}</td>
-                  <td className="border border-border p-0.5 h-10 w-[22%]">{renderHalfCell('pm', 'second')}</td>
+                  <td className="border border-border p-0.5 h-10">{renderCell('am', 'first')}</td>
+                  <td className="border border-border p-0.5 h-10">{renderCell('am', 'second')}</td>
+                  <td className="border border-border p-0.5 h-10">{renderCell('pm', 'first')}</td>
+                  <td className="border border-border p-0.5 h-10">{renderCell('pm', 'second')}</td>
                 </tr>
               );
             })}
