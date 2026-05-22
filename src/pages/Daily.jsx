@@ -173,60 +173,65 @@ export default function Daily() {
         </div>
       )}
 
-      {/* 타임블록 테이블 */}
+      {/* 타임블록 그리드 */}
       <div className="p-4">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="border border-border px-1 py-2 text-xs font-semibold text-foreground text-center w-12" rowSpan={2}>시간</th>
-              <th className="border border-border px-1 py-2 text-xs font-semibold text-foreground text-center" colSpan={2}>낮</th>
-              <th className="border border-border px-1 py-2 text-xs font-semibold text-foreground text-center" colSpan={2}>저녁</th>
-            </tr>
-            <tr>
-              <th className="border border-border px-1 py-1 text-[10px] text-muted-foreground text-center">:00</th>
-              <th className="border border-border px-1 py-1 text-[10px] text-muted-foreground text-center">:30</th>
-              <th className="border border-border px-1 py-1 text-[10px] text-muted-foreground text-center">:00</th>
-              <th className="border border-border px-1 py-1 text-[10px] text-muted-foreground text-center">:30</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ALL_HOURS.map((hour) => {
-              const renderCell = (slot, half) => {
-                const data = getCellData(hour, slot, half);
-                if (data) {
-                  return (
-                    <button
-                      onClick={() => clearCell(hour, slot, half)}
-                      className="w-full h-full rounded font-semibold text-[10px] leading-tight hover:opacity-90 transition-opacity bg-primary/20 text-primary px-0.5 break-words"
-                    >
-                      {data.text}
-                    </button>
-                  );
-                }
-                return (
-                  <button
-                    onClick={() => setPendingCell({ hour, slot, half })}
-                    className="w-full h-full rounded text-muted-foreground text-base hover:bg-secondary/30 transition-colors"
-                  >
-                    +
-                  </button>
-                );
-              };
-
+        {/* 헤더 */}
+        <div className="flex border border-border rounded-t-lg overflow-hidden mb-0">
+          <div className="w-14 shrink-0 bg-secondary/40 border-r border-border py-2 text-center text-xs font-semibold text-foreground">시간</div>
+          <div className="flex-1 grid grid-cols-2 divide-x divide-border">
+            <div className="py-2 text-center text-xs font-semibold text-foreground">낮 (오전)</div>
+            <div className="py-2 text-center text-xs font-semibold text-foreground">저녁 (오후)</div>
+          </div>
+        </div>
+        {/* 서브헤더 */}
+        <div className="flex border-x border-b border-border">
+          <div className="w-14 shrink-0 border-r border-border" />
+          <div className="flex-1 grid grid-cols-4 divide-x divide-border">
+            {[':00', ':30', ':00', ':30'].map((label, i) => (
+              <div key={i} className="py-1 text-center text-[10px] text-muted-foreground">{label}</div>
+            ))}
+          </div>
+        </div>
+        {/* 시간 행들 */}
+        {ALL_HOURS.map((hour) => {
+          const renderCell = (slot, half) => {
+            const data = getCellData(hour, slot, half);
+            if (data) {
               return (
-                <tr key={hour}>
-                  <td className="border border-border text-sm font-bold text-foreground text-center w-12 bg-secondary/20">
-                    {formatHour(hour)}
-                  </td>
-                  <td className="border border-border p-0.5 h-10">{renderCell('am', 'first')}</td>
-                  <td className="border border-border p-0.5 h-10">{renderCell('am', 'second')}</td>
-                  <td className="border border-border p-0.5 h-10">{renderCell('pm', 'first')}</td>
-                  <td className="border border-border p-0.5 h-10">{renderCell('pm', 'second')}</td>
-                </tr>
+                <button
+                  onClick={() => clearCell(hour, slot, half)}
+                  className="w-full h-full rounded font-semibold text-[10px] leading-tight hover:opacity-90 transition-opacity bg-primary/20 text-primary px-0.5 break-words"
+                >
+                  {data.text}
+                </button>
               );
-            })}
-          </tbody>
-        </table>
+            }
+            return (
+              <button
+                onClick={() => setPendingCell({ hour, slot, half })}
+                className="w-full h-full rounded text-muted-foreground text-lg hover:bg-secondary/30 transition-colors"
+              >
+                +
+              </button>
+            );
+          };
+
+          return (
+            <div key={hour} className="flex border-x border-b border-border" style={{ minHeight: '44px' }}>
+              {/* 시간 숫자 */}
+              <div className="w-14 shrink-0 border-r border-border bg-secondary/20 flex items-center justify-center text-base font-bold text-foreground">
+                {formatHour(hour)}
+              </div>
+              {/* 4칸 */}
+              <div className="flex-1 grid grid-cols-4 divide-x divide-border">
+                <div className="p-0.5">{renderCell('am', 'first')}</div>
+                <div className="p-0.5">{renderCell('am', 'second')}</div>
+                <div className="p-0.5">{renderCell('pm', 'first')}</div>
+                <div className="p-0.5">{renderCell('pm', 'second')}</div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
