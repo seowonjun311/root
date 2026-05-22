@@ -320,7 +320,7 @@ export default function DailyLedger({ dateKey }) {
             </div>
 
             {/* 날짜 그리드 — 행 간격 줄임 */}
-            <div className="grid grid-cols-7 px-4 shrink-0" style={{ rowGap: '2px' }}>
+            <div className="grid grid-cols-7 px-4 shrink-0" style={{ rowGap: '1px' }}>
               {calDays.map(day => {
                 const dk = format(day, 'yyyy-MM-dd');
                 const inMonth = isSameMonth(day, calMonth);
@@ -329,7 +329,7 @@ export default function DailyLedger({ dateKey }) {
                 const totals = dayTotals[dk];
                 return (
                   <button key={dk} onClick={() => setSelectedCalDay(isSelected ? null : dk)}
-                    className={`flex flex-col items-center justify-center rounded-lg py-1 transition-colors
+                    className={`flex flex-col items-center justify-center rounded-lg py-0.5 transition-colors
                       ${isSelected ? 'bg-primary text-primary-foreground' : isToday ? 'bg-amber-100 text-amber-800' : inMonth ? 'hover:bg-secondary text-foreground' : 'text-muted-foreground/30'}`}>
                     <span className="text-xs font-semibold leading-none">{format(day, 'd')}</span>
                     {totals && (
