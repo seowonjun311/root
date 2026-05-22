@@ -239,7 +239,7 @@ export default function Daily() {
       {pendingCell && (
         <div className="fixed inset-0 bg-black/50 z-50" onClick={() => { setPendingCell(null); setInputText(''); }}>
           <div
-            className="w-full bg-background rounded-2xl p-4 pb-6 absolute left-4 right-4 w-auto"
+            className="bg-background rounded-2xl p-4 pb-6 absolute left-4 right-4"
             style={{ bottom: keyboardHeight + 16 }}
             onClick={(e) => e.stopPropagation()}
           >
