@@ -25,18 +25,18 @@ const CAT_LABELS = {
 };
 
 const formatHour = (hour) => {
-  if (hour < 12) return `${hour}:00`;
-  if (hour === 12) return '12:00';
-  return `${hour - 12}:00`;
+  if (hour === 12) return '12';
+  if (hour > 12) return `${hour - 12}`;
+  return `${hour}`;
 };
 
 export default function Daily() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [guestVersion] = useState(0);
-  // timeBlocks: { [dateKey]: { [hour_am]: cat, [hour_pm]: cat } }
-  // Each cell key = `${hour}_am` or `${hour}_pm`
+  // timeBlocks: { [dateKey]: { [hour_slot_half]: text } }
+  // cell key = `${hour}_${slot}_${half}` where slot='am'|'pm', half='first'|'second'
   const [timeBlocks, setTimeBlocks] = useState({});
-  // pendingCell: { hour, slot } where slot = 'am' | 'pm'
+  // pendingCell: { hour, slot, half }
   const [pendingCell, setPendingCell] = useState(null);
 
   const { data: user } = useQuery({
@@ -71,36 +71,18 @@ export default function Daily() {
   const logsForDate = logs.filter((log) => log.date === dateKey);
   const todayBlocks = timeBlocks[dateKey] || {};
 
-  // auto-filled from logs
-  const autoFilledCells = useMemo(() => {
-    const filled = {};
-    timerGoals.forEach((goal) => {
-      logsForDate
-        .filter((log) => log.action_goal_id === goal.id)
-        .forEach((log) => {
-          const hour = new Date(log.created_date || log.createdAt).getHours();
-          const slot = hour < 12 ? 'am' : 'pm';
-          const key = `${hour}_${slot}`;
-          filled[key] = { category: log.category, label: goal.title };
-        });
-    });
-    return filled;
-  }, [logsForDate, timerGoals]);
-
   const [inputText, setInputText] = useState('');
 
-  const getCellData = (hour, slot) => {
-    const key = `${hour}_${slot}`;
+  const getCellData = (hour, slot, half) => {
+    const key = `${hour}_${slot}_${half}`;
     const manual = todayBlocks[key];
     if (manual) return { text: manual, isManual: true };
-    const auto = autoFilledCells[key];
-    if (auto) return { text: CAT_LABELS[auto.category] || auto.label, isManual: false };
     return null;
   };
 
-  const setCellText = (hour, slot, text) => {
+  const setCellText = (hour, slot, half, text) => {
     if (!text.trim()) return;
-    const key = `${hour}_${slot}`;
+    const key = `${hour}_${slot}_${half}`;
     setTimeBlocks((prev) => ({
       ...prev,
       [dateKey]: { ...(prev[dateKey] || {}), [key]: text.trim() },
@@ -109,8 +91,8 @@ export default function Daily() {
     setInputText('');
   };
 
-  const clearCell = (hour, slot) => {
-    const key = `${hour}_${slot}`;
+  const clearCell = (hour, slot, half) => {
+    const key = `${hour}_${slot}_${half}`;
     setTimeBlocks((prev) => {
       const dayBlocks = { ...(prev[dateKey] || {}) };
       delete dayBlocks[key];
@@ -160,7 +142,7 @@ export default function Daily() {
         <div className="fixed inset-0 bg-black/50 flex items-end z-50" onClick={() => { setPendingCell(null); setInputText(''); }}>
           <div className="w-full bg-background rounded-t-2xl p-4" onClick={(e) => e.stopPropagation()}>
             <p className="text-sm font-semibold text-foreground mb-3">
-              {formatHour(pendingCell.hour)} {pendingCell.slot === 'am' ? '낮' : '저녁'} — 내용 입력
+              {formatHour(pendingCell.hour)}:{pendingCell.half === 'first' ? '00' : '30'} {pendingCell.slot === 'am' ? '낮' : '저녁'} — 내용 입력
             </p>
             <input
               autoFocus
@@ -168,14 +150,14 @@ export default function Daily() {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') setCellText(pendingCell.hour, pendingCell.slot, inputText);
+                if (e.key === 'Enter') setCellText(pendingCell.hour, pendingCell.slot, pendingCell.half, inputText);
               }}
               placeholder="활동 내용을 입력하세요"
               className="w-full p-3 rounded-lg border border-border bg-background text-foreground text-sm mb-3 outline-none focus:ring-2 focus:ring-ring"
             />
             <div className="flex gap-2">
               <button
-                onClick={() => setCellText(pendingCell.hour, pendingCell.slot, inputText)}
+                onClick={() => setCellText(pendingCell.hour, pendingCell.slot, pendingCell.half, inputText)}
                 className="flex-1 p-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm"
               >
                 확인
@@ -196,22 +178,27 @@ export default function Daily() {
         <table className="w-full border-collapse">
           <thead>
             <tr>
-              <th className="border border-border px-3 py-3 text-sm font-semibold text-foreground text-left w-16">시간</th>
-              <th className="border border-border px-3 py-3 text-sm font-semibold text-foreground text-center">낮</th>
-              <th className="border border-border px-3 py-3 text-sm font-semibold text-foreground text-center">저녁</th>
+              <th className="border border-border px-2 py-2 text-xs font-semibold text-foreground text-left w-12">시간</th>
+              <th className="border border-border px-1 py-2 text-xs font-semibold text-foreground text-center" colSpan={2}>낮</th>
+              <th className="border border-border px-1 py-2 text-xs font-semibold text-foreground text-center" colSpan={2}>저녁</th>
+            </tr>
+            <tr>
+              <th className="border border-border px-2 py-1 text-[10px] text-muted-foreground"></th>
+              <th className="border border-border px-1 py-1 text-[10px] text-muted-foreground text-center">:00</th>
+              <th className="border border-border px-1 py-1 text-[10px] text-muted-foreground text-center">:30</th>
+              <th className="border border-border px-1 py-1 text-[10px] text-muted-foreground text-center">:00</th>
+              <th className="border border-border px-1 py-1 text-[10px] text-muted-foreground text-center">:30</th>
             </tr>
           </thead>
           <tbody>
             {ALL_HOURS.map((hour) => {
-              const amData = getCellData(hour, 'am');
-              const pmData = getCellData(hour, 'pm');
-
-              const renderCell = (data, slot) => {
+              const renderHalfCell = (slot, half) => {
+                const data = getCellData(hour, slot, half);
                 if (data) {
                   return (
                     <button
-                      onClick={() => data.isManual && clearCell(hour, slot)}
-                      className="w-full h-full rounded font-semibold text-xs hover:opacity-90 transition-opacity bg-primary/20 text-primary px-1"
+                      onClick={() => data.isManual && clearCell(hour, slot, half)}
+                      className="w-full h-full rounded font-semibold text-[10px] leading-tight hover:opacity-90 transition-opacity bg-primary/20 text-primary px-0.5 break-words"
                     >
                       {data.text}
                     </button>
@@ -219,8 +206,8 @@ export default function Daily() {
                 }
                 return (
                   <button
-                    onClick={() => setPendingCell({ hour, slot })}
-                    className="w-full h-full rounded text-muted-foreground text-lg hover:bg-secondary/30 transition-colors"
+                    onClick={() => setPendingCell({ hour, slot, half })}
+                    className="w-full h-full rounded text-muted-foreground text-base hover:bg-secondary/30 transition-colors"
                   >
                     +
                   </button>
@@ -229,11 +216,13 @@ export default function Daily() {
 
               return (
                 <tr key={hour}>
-                  <td className="border border-border px-3 py-0 text-sm font-medium text-foreground whitespace-nowrap">
+                  <td className="border border-border px-2 py-0 text-xs font-medium text-foreground whitespace-nowrap">
                     {formatHour(hour)}
                   </td>
-                  <td className="border border-border p-1 h-14">{renderCell(amData, 'am')}</td>
-                  <td className="border border-border p-1 h-14">{renderCell(pmData, 'pm')}</td>
+                  <td className="border border-border p-0.5 h-10 w-[22%]">{renderHalfCell('am', 'first')}</td>
+                  <td className="border border-border p-0.5 h-10 w-[22%]">{renderHalfCell('am', 'second')}</td>
+                  <td className="border border-border p-0.5 h-10 w-[22%]">{renderHalfCell('pm', 'first')}</td>
+                  <td className="border border-border p-0.5 h-10 w-[22%]">{renderHalfCell('pm', 'second')}</td>
                 </tr>
               );
             })}
