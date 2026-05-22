@@ -87,22 +87,26 @@ export default function Daily() {
     return filled;
   }, [logsForDate, timerGoals]);
 
+  const [inputText, setInputText] = useState('');
+
   const getCellData = (hour, slot) => {
     const key = `${hour}_${slot}`;
     const manual = todayBlocks[key];
-    if (manual) return { category: manual, isManual: true };
+    if (manual) return { text: manual, isManual: true };
     const auto = autoFilledCells[key];
-    if (auto) return { ...auto, isManual: false };
+    if (auto) return { text: CAT_LABELS[auto.category] || auto.label, isManual: false };
     return null;
   };
 
-  const setCellCategory = (hour, slot, category) => {
+  const setCellText = (hour, slot, text) => {
+    if (!text.trim()) return;
     const key = `${hour}_${slot}`;
     setTimeBlocks((prev) => ({
       ...prev,
-      [dateKey]: { ...(prev[dateKey] || {}), [key]: category },
+      [dateKey]: { ...(prev[dateKey] || {}), [key]: text.trim() },
     }));
     setPendingCell(null);
+    setInputText('');
   };
 
   const clearCell = (hour, slot) => {
@@ -151,26 +155,38 @@ export default function Daily() {
         )}
       </div>
 
-      {/* 카테고리 선택 팝업 */}
+      {/* 텍스트 직접 입력 팝업 */}
       {pendingCell && (
-        <div className="fixed inset-0 bg-black/50 flex items-end z-50" onClick={() => setPendingCell(null)}>
-          <div className="w-full bg-background rounded-t-2xl p-4 space-y-2" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 flex items-end z-50" onClick={() => { setPendingCell(null); setInputText(''); }}>
+          <div className="w-full bg-background rounded-t-2xl p-4" onClick={(e) => e.stopPropagation()}>
             <p className="text-sm font-semibold text-foreground mb-3">
-              {pendingCell.hour}:00 {pendingCell.slot === 'am' ? '오전' : '오후'} — 카테고리 선택
+              {formatHour(pendingCell.hour)} {pendingCell.slot === 'am' ? '낮' : '저녁'} — 내용 입력
             </p>
-            {Object.entries(CAT_LABELS).map(([key, label]) => (
+            <input
+              autoFocus
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') setCellText(pendingCell.hour, pendingCell.slot, inputText);
+              }}
+              placeholder="활동 내용을 입력하세요"
+              className="w-full p-3 rounded-lg border border-border bg-background text-foreground text-sm mb-3 outline-none focus:ring-2 focus:ring-ring"
+            />
+            <div className="flex gap-2">
               <button
-                key={key}
-                onClick={() => setCellCategory(pendingCell.hour, pendingCell.slot, key)}
-                className="w-full p-3 rounded-lg text-white font-semibold"
-                style={{ backgroundColor: CAT_COLORS[key] }}
+                onClick={() => setCellText(pendingCell.hour, pendingCell.slot, inputText)}
+                className="flex-1 p-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm"
               >
-                {label}
+                확인
               </button>
-            ))}
-            <button onClick={() => setPendingCell(null)} className="w-full p-3 rounded-lg bg-secondary text-foreground font-semibold">
-              취소
-            </button>
+              <button
+                onClick={() => { setPendingCell(null); setInputText(''); }}
+                className="flex-1 p-3 rounded-lg bg-secondary text-foreground font-semibold text-sm"
+              >
+                취소
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -195,10 +211,9 @@ export default function Daily() {
                   return (
                     <button
                       onClick={() => data.isManual && clearCell(hour, slot)}
-                      className="w-full h-full rounded text-white font-semibold text-xs hover:opacity-90 transition-opacity"
-                      style={{ backgroundColor: CAT_COLORS[data.category] }}
+                      className="w-full h-full rounded font-semibold text-xs hover:opacity-90 transition-opacity bg-primary/20 text-primary px-1"
                     >
-                      {CAT_LABELS[data.category]}
+                      {data.text}
                     </button>
                   );
                 }
