@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
 import { ChevronLeft, ChevronRight, CalendarDays, X } from 'lucide-react';
 import DailyLedger from '@/components/daily/DailyLedger';
+import DailyMemo from '@/components/daily/DailyMemo';
 import { format, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isToday as dateFnsIsToday } from 'date-fns';
 
 // 12:00 ~ 23:00 (오전: 12~17, 오후: 18~23)
@@ -364,6 +365,11 @@ export default function Daily() {
             </div>
           );
         })}
+      </div>
+
+      {/* 메모 섹션 */}
+      <div className="mt-2 border-t border-border/50 pt-4">
+        <DailyMemo dateKey={dateKey} />
       </div>
 
       {/* 가계부 섹션 */}

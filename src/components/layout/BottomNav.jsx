@@ -5,13 +5,11 @@ import { BookOpen, Settings } from 'lucide-react';
 
 const RouteIcon = () => <span className="text-lg leading-none">🛤️</span>;
 const DailyIcon = () => <span className="text-lg leading-none">📅</span>;
-const MemoIcon = () => <span className="text-lg leading-none">📝</span>;
 
 const navItems = [
   { path: '/Home', label: '길', icon: RouteIcon },
   { path: '/Records', label: '기록', icon: BookOpen },
   { path: '/Daily', label: '하루', icon: DailyIcon },
-  { path: '/Memo', label: '메모', icon: MemoIcon },
   { path: '/AppSettings', label: '설정', icon: Settings },
 ];
 

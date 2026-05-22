@@ -201,14 +201,7 @@ const AppRoutes = () => {
                   }
                 />
 
-                <Route
-                  path="/Memo"
-                  element={
-                    <Suspense fallback={<PageFallback />}>
-                      <Memo />
-                    </Suspense>
-                  }
-                />
+                <Route path="/Memo" element={<Navigate to="/Daily" replace />} />
 
                 <Route
                   path="/AppSettings"
