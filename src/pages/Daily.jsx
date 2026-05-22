@@ -2,8 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import guestDataPersistence from '@/lib/GuestDataPersistence';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, addDays, subDays } from 'date-fns';
+import { ChevronLeft, ChevronRight, CalendarDays, X } from 'lucide-react';
+import { format, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isToday as dateFnsIsToday } from 'date-fns';
 
 // 12:00 ~ 23:00 (오전: 12~17, 오후: 18~23)
 const AM_HOURS = [12, 13, 14, 15, 16, 17];
@@ -106,11 +106,20 @@ export default function Daily() {
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
-  // Unique hours that appear in either AM or PM column
-  // Table rows = all hours from 8~20, AM col shows 8~11, PM col shows 12~20
-  // We render 13 rows total (one per hour), AM cell empty for PM hours, PM cell empty for AM hours
-  // Actually: keep it simple — one row per hour, with AM/PM columns.
-  // AM column: show content if hour is 8-11; PM column: show content if hour is 12-20.
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+
+  // 달력 날짜 그리드 계산
+  const calendarDays = useMemo(() => {
+    const start = startOfWeek(startOfMonth(calendarMonth), { weekStartsOn: 0 });
+    const end = endOfWeek(endOfMonth(calendarMonth), { weekStartsOn: 0 });
+    return eachDayOfInterval({ start, end });
+  }, [calendarMonth]);
+
+  // 기록이 있는 날짜 set
+  const datesWithBlocks = useMemo(() => {
+    return new Set(Object.keys(timeBlocks).filter(k => Object.keys(timeBlocks[k] || {}).length > 0));
+  }, [timeBlocks]);
 
   return (
     <div className="min-h-full bg-background pb-24">
@@ -129,6 +138,9 @@ export default function Daily() {
           <button onClick={goToNextDay} className="p-2 rounded-lg hover:bg-secondary transition-colors" aria-label="다음 날짜">
             <ChevronRight className="w-5 h-5" />
           </button>
+          <button onClick={() => setShowCalendar(true)} className="p-2 rounded-lg hover:bg-secondary transition-colors" aria-label="달력 열기">
+            <CalendarDays className="w-5 h-5" />
+          </button>
         </div>
         {!isToday && (
           <button onClick={goToToday} className="w-full mt-3 py-2 text-[0.875rem] font-semibold rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors">
@@ -136,6 +148,59 @@ export default function Daily() {
           </button>
         )}
       </div>
+
+      {/* 달력 모달 */}
+      {showCalendar && (
+        <div className="fixed inset-0 bg-black/50 flex items-end z-50" onClick={() => setShowCalendar(false)}>
+          <div className="w-full bg-background rounded-t-2xl p-4 pb-8" onClick={e => e.stopPropagation()}>
+            {/* 달력 헤더 */}
+            <div className="flex items-center justify-between mb-4">
+              <button onClick={() => setCalendarMonth(m => subDays(startOfMonth(m), 1))} className="p-2 rounded-lg hover:bg-secondary transition-colors">
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <span className="text-base font-bold text-foreground">
+                {format(calendarMonth, 'yyyy년 M월')}
+              </span>
+              <button onClick={() => setCalendarMonth(m => addDays(endOfMonth(m), 1))} className="p-2 rounded-lg hover:bg-secondary transition-colors">
+                <ChevronRight className="w-5 h-5" />
+              </button>
+              <button onClick={() => setShowCalendar(false)} className="p-2 rounded-lg hover:bg-secondary transition-colors ml-2">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {/* 요일 헤더 */}
+            <div className="grid grid-cols-7 mb-1">
+              {['일','월','화','수','목','금','토'].map(d => (
+                <div key={d} className="text-center text-[11px] font-semibold text-muted-foreground py-1">{d}</div>
+              ))}
+            </div>
+            {/* 날짜 그리드 */}
+            <div className="grid grid-cols-7 gap-y-1">
+              {calendarDays.map(day => {
+                const dayKey = format(day, 'yyyy-MM-dd');
+                const isSelected = isSameDay(day, selectedDate);
+                const isCurrentMonth = isSameMonth(day, calendarMonth);
+                const isTodayDay = dateFnsIsToday(day);
+                const hasBlocks = datesWithBlocks.has(dayKey);
+                return (
+                  <button
+                    key={dayKey}
+                    onClick={() => { setSelectedDate(day); setShowCalendar(false); }}
+                    className={`relative flex flex-col items-center justify-center rounded-xl py-2 transition-colors
+                      ${isSelected ? 'bg-primary text-primary-foreground' : isTodayDay ? 'bg-amber-100 text-amber-800' : isCurrentMonth ? 'hover:bg-secondary text-foreground' : 'text-muted-foreground/40'}
+                    `}
+                  >
+                    <span className="text-sm font-semibold leading-none">{format(day, 'd')}</span>
+                    {hasBlocks && (
+                      <span className={`mt-1 w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-primary-foreground' : 'bg-primary'}`} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 텍스트 직접 입력 팝업 */}
       {pendingCell && (
