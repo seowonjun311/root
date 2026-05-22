@@ -55,6 +55,14 @@ export const TITLES = [
 // 테마 정의: 새 테마 추가 시 SHOP_THEMES에만 추가하면 됨
 export const SHOP_THEMES = [
   {
+    id: 'character',
+    label: '캐릭터',
+    emoji: '🐾',
+    items: [
+      { id: 'desert_fox_1', label: '사막여우', type: 'character', subtype: 'fox', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7ac8f03c6_-Photoroom.png' },
+    ],
+  },
+  {
     id: 'basic',
     label: '기본',
     emoji: '🌿',
@@ -210,14 +218,6 @@ export const SHOP_THEMES = [
       { id: 'steampunk_fountain_1', label: '스팀펑크 분수', type: 'decoration', subtype: 'steampunk_fountain', price: 200, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7d748ee59_ChatGPTImage202651812_13_37-Photoroom.png' },
       { id: 'fruit_tree_1', label: '과일나무', type: 'decoration', subtype: 'fruit_tree', price: 45, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/0d75d0dd0_ChatGPTImage202651409_43_30-Photoroom.png' },
       ],
-      },
-      {
-        id: 'character',
-        label: '캐릭터',
-        emoji: '🐾',
-        items: [
-          { id: 'desert_fox_1', label: '사막여우', type: 'character', subtype: 'fox', price: 150, image: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7ac8f03c6_-Photoroom.png' },
-        ],
       },
       ];
 
