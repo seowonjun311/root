@@ -402,8 +402,16 @@ setOffset((prev) =>
     if (isEditMode) return;
     const timer = setInterval(() => {
       setCharacters((prev) => prev.map((npc) => {
-        const moveCol = Math.round(randomBetween(-1, 1));
-        const moveRow = Math.round(randomBetween(-1, 1));
+        // 4방향(대각선)만 허용: NE, SE, SW, NW
+        const directions = [
+          { col: 1, row: -1 },   // NE ↗
+          { col: 1, row: 1 },    // SE ↘
+          { col: -1, row: 1 },   // SW ↙
+          { col: -1, row: -1 },  // NW ↖
+        ];
+        const dir = directions[Math.floor(Math.random() * directions.length)];
+        const moveCol = dir.col;
+        const moveRow = dir.row;
         const bounds = getExpandedGridBounds(totalLevel);
 
 const nextCol = clamp(npc.col + moveCol, bounds.minCol, bounds.maxCol);
