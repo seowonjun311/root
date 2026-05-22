@@ -32,6 +32,25 @@ const formatHour = (hour) => {
   return `${hour}`;
 };
 
+// 텍스트별 고유 색상 팔레트 (bg, text 쌍)
+const COLOR_PALETTE = [
+  { bg: 'rgba(59,130,246,0.18)', text: '#1d4ed8' },   // blue
+  { bg: 'rgba(16,185,129,0.18)', text: '#047857' },   // green
+  { bg: 'rgba(245,158,11,0.22)', text: '#b45309' },   // amber
+  { bg: 'rgba(139,92,246,0.18)', text: '#6d28d9' },   // purple
+  { bg: 'rgba(236,72,153,0.18)', text: '#be185d' },   // pink
+  { bg: 'rgba(239,68,68,0.18)',  text: '#b91c1c' },   // red
+  { bg: 'rgba(20,184,166,0.18)', text: '#0f766e' },   // teal
+  { bg: 'rgba(249,115,22,0.18)', text: '#c2410c' },   // orange
+];
+
+function getTextColor(text, allTexts) {
+  // 같은 날 등장한 고유 텍스트 목록에서 인덱스를 구해 일관된 색 반환
+  const unique = [...new Set(allTexts)];
+  const idx = unique.indexOf(text);
+  return COLOR_PALETTE[idx % COLOR_PALETTE.length];
+}
+
 export default function Daily() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [guestVersion] = useState(0);
@@ -326,14 +345,19 @@ export default function Daily() {
           </div>
         </div>
         {/* 시간 행들 (오전 낮 그룹) */}
-        {ALL_HOURS.map((hour) => {
+        {(() => {
+          // 오늘 블록에서 등장하는 모든 텍스트 수집 (색상 일관성용)
+          const allBlockTexts = Object.values(todayBlocks).filter(Boolean);
+          return ALL_HOURS.map((hour) => {
           const renderCell = (slot, half) => {
             const data = getCellData(hour, slot, half);
             if (data) {
+              const color = getTextColor(data.text, allBlockTexts);
               return (
                 <button
                   onClick={() => clearCell(hour, slot, half)}
-                  className="w-full h-full rounded font-semibold text-[10px] leading-tight hover:opacity-90 transition-opacity bg-primary/20 text-primary px-0.5 break-words"
+                  className="w-full h-full rounded font-semibold text-[10px] leading-tight hover:opacity-90 transition-opacity px-0.5 break-words"
+                  style={{ backgroundColor: color.bg, color: color.text }}
                 >
                   {data.text}
                 </button>
@@ -364,7 +388,8 @@ export default function Daily() {
               </div>
             </div>
           );
-        })}
+        });
+        })()}
       </div>
 
       {/* 메모 섹션 */}
