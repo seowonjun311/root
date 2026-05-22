@@ -67,7 +67,7 @@ function CharacterSprite({ npc }) {
         boxShadow: 'none',
         userSelect: 'none',
         WebkitUserDrag: 'none',
-        transform: `scaleX(${npc.flipped ? -1 : 1}) scale(${npc.isMoving ? 3 : 1})`,
+        transform: `scaleX(${npc.flipped ? -1 : 1}) scale(1)`,
       }}
     />
   );
