@@ -482,20 +482,30 @@ export default function Memo() {
           <div className="w-full max-w-md rounded-t-[28px] bg-[#fffaf2] shadow-2xl sm:rounded-[28px]">
             <div className="flex items-center justify-between border-b border-[#eee1cf] px-5 py-4">
               <button
-                onClick={goPrevMonth}
+                onClick={() => setShowCalendarModal(false)}
                 className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#ddd3c2] bg-white text-base font-bold text-[#6e6458]"
+                aria-label="닫기"
               >
-                ‹
+                ←
               </button>
 
-              <h3 className="text-lg font-bold text-[#2f2a24]">{calendarTitle}</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={goPrevMonth}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#ddd3c2] bg-white text-base font-bold text-[#6e6458]"
+                >
+                  ‹
+                </button>
+                <h3 className="text-lg font-bold text-[#2f2a24]">{calendarTitle}</h3>
+                <button
+                  onClick={goNextMonth}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#ddd3c2] bg-white text-base font-bold text-[#6e6458]"
+                >
+                  ›
+                </button>
+              </div>
 
-              <button
-                onClick={goNextMonth}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#ddd3c2] bg-white text-base font-bold text-[#6e6458]"
-              >
-                ›
-              </button>
+              <div className="w-9" />
             </div>
 
             <div className="px-4 pt-4">
