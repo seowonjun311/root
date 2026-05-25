@@ -5,6 +5,7 @@ import guestDataPersistence from '@/lib/GuestDataPersistence';
 import { ChevronLeft, ChevronRight, CalendarDays, X } from 'lucide-react';
 import DailyLedger from '@/components/daily/DailyLedger';
 import DailyMemo from '@/components/daily/DailyMemo';
+import DailyMeal from '@/components/daily/DailyMeal';
 import { format, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isToday as dateFnsIsToday } from 'date-fns';
 import html2canvas from 'html2canvas';
 import { Share2 } from 'lucide-react';
@@ -441,6 +442,11 @@ export default function Daily() {
       {/* 가계부 섹션 */}
       <div className="mt-2 border-t border-border/50 pt-4">
         <DailyLedger dateKey={dateKey} />
+      </div>
+
+      {/* 식단 섹션 */}
+      <div className="mt-2 border-t border-border/50 pt-4">
+        <DailyMeal dateKey={dateKey} />
       </div>
     </div>
   );
