@@ -370,6 +370,21 @@ export default function VillageWorldLayer({
         totalLevel
       );
 
+let nextCol = col;
+let nextRow = row;
+
+if (drag.objectType === 'character') {
+  const dCol = col - drag.startCol;
+  const dRow = row - drag.startRow;
+
+  if (Math.abs(dCol) > Math.abs(dRow)) {
+    nextRow = drag.startRow + Math.sign(dCol);
+  } else if (Math.abs(dRow) > Math.abs(dCol)) {
+    nextCol = drag.startCol + Math.sign(dRow);
+  }
+}
+
+      
       let previewItem = null;
 
       if (drag.objectType === 'decoration') {
@@ -440,84 +455,76 @@ export default function VillageWorldLayer({
 }
 
       if (drag.objectType === 'character') {
-        setCharacters((prev) =>
-          prev.map((npc) => {
-            if (npc.id !== drag.objectId) return npc;
+  setCharacters((prev) =>
+    prev.map((npc) => {
+      if (npc.id !== drag.objectId) return npc;
 
-            const dCol = col - npc.col;
-            const dRow = row - npc.row;
+      // 현재 드래그 기준 차이
+      const rawDCol = col - npc.col;
+      const rawDRow = row - npc.row;
 
-            const isValidDiagonal =
-  (Math.abs(dCol) === 1 && Math.abs(dRow) === 1) ||
-  (dCol === 0 && dRow === 0);
+      // 완전 대각선 방향으로 강제 보정
+      let nextCol = npc.col;
+      let nextRow = npc.row;
 
-            if (!isValidDiagonal) return npc;
-
-            const canPlace = canPlaceObject({
-              movingType: 'character',
-              movingItem: npc,
-              nextCol: col,
-              nextRow: row,
-              decorations,
-              characters: prev,
-              buildings,
-              totalLevel,
-            });
-
-            if (!canPlace) return npc;
-
-            let nextDirection = npc.direction || 'se';
-            let nextFlipped = npc.flipped;
-
-            if (dCol !== 0 || dRow !== 0) {
-              if (dCol > 0 && dRow < 0) {
-                nextDirection = 'ne';
-                nextFlipped = false;
-              } else if (dCol < 0 && dRow > 0) {
-                nextDirection = 'sw';
-                nextFlipped = true;
-              } else if (dCol > 0 && dRow > 0) {
-                nextDirection = 'se';
-                nextFlipped = false;
-              } else if (dCol < 0 && dRow < 0) {
-                nextDirection = 'nw';
-                nextFlipped = true;
-              }
-            }
-
-            return {
-              ...npc,
-              col,
-              row,
-              flipped: nextFlipped,
-              direction: nextDirection,
-            };
-          })
-        );
+      if (rawDCol > 0 && rawDRow < 0) {
+        nextCol = npc.col + 1;
+        nextRow = npc.row - 1;
+      } else if (rawDCol > 0 && rawDRow > 0) {
+        nextCol = npc.col + 1;
+        nextRow = npc.row + 1;
+      } else if (rawDCol < 0 && rawDRow > 0) {
+        nextCol = npc.col - 1;
+        nextRow = npc.row + 1;
+      } else if (rawDCol < 0 && rawDRow < 0) {
+        nextCol = npc.col - 1;
+        nextRow = npc.row - 1;
+      } else {
+        // 상하좌우 움직임이면 무시
+        return npc;
       }
 
-      dragRef.current = {
-        ...drag,
-        startX: e.clientX,
-        startY: e.clientY,
-        startCol: col,
-        startRow: row,
-      };
-    },
-    [
-      viewportSize.width,
-      viewportSize.height,
-      decorations,
-      characters,
-      buildings,
-      setDecorations,
-      setCharacters,
-      setBuildings,
-      setPlacementPreview,
-      totalLevel,
-    ]
-  );
+      const canPlace = canPlaceObject({
+        movingType: 'character',
+        movingItem: npc,
+        nextCol,
+        nextRow,
+        decorations,
+        characters: prev,
+        buildings,
+        totalLevel,
+      });
 
+      if (!canPlace) return npc;
+
+      let nextDirection = npc.direction || 'se';
+      let nextFlipped = npc.flipped;
+
+      if (rawDCol > 0 && rawDRow < 0) {
+        nextDirection = 'ne'; // ↗
+        nextFlipped = false;
+      } else if (rawDCol > 0 && rawDRow > 0) {
+        nextDirection = 'se'; // ↘
+        nextFlipped = false;
+      } else if (rawDCol < 0 && rawDRow > 0) {
+        nextDirection = 'sw'; // ↙
+        nextFlipped = true;
+      } else if (rawDCol < 0 && rawDRow < 0) {
+        nextDirection = 'nw'; // ↖
+        nextFlipped = true;
+      }
+
+      return {
+        ...npc,
+        col: nextCol,
+        row: nextRow,
+        flipped: nextFlipped,
+        direction: nextDirection,
+      };
+    })
+  );
+}
+      
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
     setPlacementPreview(null);
