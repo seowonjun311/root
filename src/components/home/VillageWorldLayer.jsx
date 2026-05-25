@@ -8,7 +8,7 @@ import {
   canPlaceObject, getObjectScreenPosition, getPreviewTiles, getPreviewColor,
   getCharacterImage,
   getTileImageByKind, buildTileMap,
-  clampWorldOffset, randomBetween, clamp,
+  clampWorldOffset, clamp,
   getWorldExpansionByLevel, getExpandedGridBounds,
 } from '@/lib/villageUtils';
 import VillageOverlayBar from '@/components/home/VillageOverlayBar';
@@ -61,12 +61,10 @@ function CharacterSprite({ npc }) {
         objectFit: 'contain',
         display: 'block',
         background: 'transparent',
-        backgroundColor: 'transparent',
         border: 'none',
         boxShadow: 'none',
         userSelect: 'none',
         WebkitUserDrag: 'none',
-        transform: 'scale(1)',
       }}
     />
   );
@@ -78,12 +76,13 @@ export default function VillageWorldLayer({
   nickname,
   totalLevel,
   points,
-  userLevels,
   tileTheme = 'grass',
   decorations,
   characters,
+  buildings = [],
   setCharacters,
   setDecorations,
+  setBuildings,
   setPlacementPreview,
   setSelectedObject,
   isEditMode,
@@ -100,7 +99,6 @@ export default function VillageWorldLayer({
   onStoreSelected,
   isOverview,
   onToggleOverview,
-  buildings = [],
   newlyPlacedItemId = null,
   showGridGuide = false,
   showSymmetryGuide = false,
@@ -109,80 +107,126 @@ export default function VillageWorldLayer({
   const viewportRef = useRef(null);
   const touchGestureRef = useRef(null);
 
-  const [viewportSize, setViewportSize] = useState({ width: 0, height: WORLD_VIEWPORT_HEIGHT });
+  const [viewportSize, setViewportSize] = useState({
+    width: 0,
+    height: WORLD_VIEWPORT_HEIGHT,
+  });
+
   const [offset, setOffset] = useState(() => {
     const vw = window.innerWidth || 390;
-    // 마을 중심(GRID_ORIGIN_X, GRID_ORIGIN_Y)이 뷰포트 중앙에 오도록 초기 오프셋 계산
     const initScale = 0.46;
     return {
       x: vw / 2 - 1280 * initScale,
       y: WORLD_VIEWPORT_HEIGHT / 2 - 550 * initScale,
     };
   });
+
   const [scale, setScale] = useState(isOverview ? 0.21 : 0.46);
   const [revealedTiles, setRevealedTiles] = useState([]);
+
   const prevExpansionRef = useRef(getWorldExpansionByLevel(totalLevel));
+  const npcMovePlanRef = useRef({});
 
   const scaleRef = useRef(scale);
   const offsetRef = useRef(offset);
 
- const MIN_SCALE = 0.10;
-const MAX_SCALE = 0.92;
-const OVERVIEW_SCALE = 0.21;
-const DETAIL_SCALE = 0.46;
+  const MIN_SCALE = 0.1;
+  const MAX_SCALE = 0.92;
+  const OVERVIEW_SCALE = 0.21;
+  const DETAIL_SCALE = 0.46;
 
-const SPACE_BG_MARGIN_X = 900;
-const SPACE_BG_MARGIN_TOP = 700;
-const SPACE_BG_MARGIN_BOTTOM = 300;
+  const SPACE_BG_MARGIN_X = 900;
+  const SPACE_BG_MARGIN_TOP = 700;
+  const SPACE_BG_MARGIN_BOTTOM = 300;
 
-  useEffect(() => { scaleRef.current = scale; }, [scale]);
-  useEffect(() => { offsetRef.current = offset; }, [offset]);
+  useEffect(() => {
+    scaleRef.current = scale;
+  }, [scale]);
+
+  useEffect(() => {
+    offsetRef.current = offset;
+  }, [offset]);
 
   const expansion = useMemo(() => getWorldExpansionByLevel(totalLevel), [totalLevel]);
+
+  const tileMap = useMemo(
+    () => buildTileMap(GRID_COLS, GRID_ROWS, OUTER_TILE_PADDING + expansion),
+    [expansion]
+  );
+
+  const revealedSet = useMemo(
+    () => new Set(revealedTiles.map((tile) => `${tile.col},${tile.row}`)),
+    [revealedTiles]
+  );
+
+  const stars = useMemo(
+    () =>
+      Array.from({ length: 800 }).map((_, i) => ({
+        id: `star_${i}`,
+        x: Math.random() * (WORLD_WIDTH + SPACE_BG_MARGIN_X * 2) - SPACE_BG_MARGIN_X,
+        y:
+          Math.random() *
+            (WORLD_HEIGHT + SPACE_BG_MARGIN_TOP + SPACE_BG_MARGIN_BOTTOM) -
+          SPACE_BG_MARGIN_TOP,
+        size:
+          Math.random() < 0.75
+            ? Math.random() * 1.8 + 0.6
+            : Math.random() * 2.8 + 1.2,
+        opacity: Math.random() * 0.35 + 0.25,
+        blur: Math.random() < 0.2 ? 10 : 5,
+      })),
+    []
+  );
 
   function getNewlyUnlockedTiles(prevExpansion, nextExpansion) {
     const prevPadding = OUTER_TILE_PADDING + prevExpansion;
     const nextPadding = OUTER_TILE_PADDING + nextExpansion;
     const newlyUnlocked = [];
+
     for (let row = -nextPadding; row < GRID_ROWS + nextPadding; row += 1) {
       for (let col = -nextPadding; col < GRID_COLS + nextPadding; col += 1) {
-        const wasVisible = col >= -prevPadding && row >= -prevPadding && col < GRID_COLS + prevPadding && row < GRID_ROWS + prevPadding;
-        const isNowVisible = col >= -nextPadding && row >= -nextPadding && col < GRID_COLS + nextPadding && row < GRID_ROWS + nextPadding;
+        const wasVisible =
+          col >= -prevPadding &&
+          row >= -prevPadding &&
+          col < GRID_COLS + prevPadding &&
+          row < GRID_ROWS + prevPadding;
+
+        const isNowVisible =
+          col >= -nextPadding &&
+          row >= -nextPadding &&
+          col < GRID_COLS + nextPadding &&
+          row < GRID_ROWS + nextPadding;
+
         if (!wasVisible && isNowVisible) {
-          newlyUnlocked.push({ id: `unlock-${col}-${row}`, col, row, delay: newlyUnlocked.length * 45 });
+          newlyUnlocked.push({
+            id: `unlock-${col}-${row}`,
+            col,
+            row,
+            delay: newlyUnlocked.length * 45,
+          });
         }
       }
     }
+
     return newlyUnlocked;
   }
-
-  const tileMap = useMemo(() => buildTileMap(GRID_COLS, GRID_ROWS, OUTER_TILE_PADDING + expansion), [expansion]);
 
   useEffect(() => {
     const nextExpansion = getWorldExpansionByLevel(totalLevel);
     const prevExpansion = prevExpansionRef.current;
+
     if (nextExpansion > prevExpansion) {
       const unlocked = getNewlyUnlockedTiles(prevExpansion, nextExpansion);
       setRevealedTiles(unlocked);
+
       const clearTimer = setTimeout(() => setRevealedTiles([]), 5000);
       prevExpansionRef.current = nextExpansion;
+
       return () => clearTimeout(clearTimer);
     }
+
     prevExpansionRef.current = nextExpansion;
   }, [totalLevel]);
-
-  const stars = useMemo(
-  () =>
-    Array.from({ length: 1400 }).map((_, i) => ({
-      id: `star_${i}`,
-      x: Math.random() * (WORLD_WIDTH + SPACE_BG_MARGIN_X * 2) - SPACE_BG_MARGIN_X,
-      y: Math.random() * (WORLD_HEIGHT + SPACE_BG_MARGIN_TOP + SPACE_BG_MARGIN_BOTTOM) - SPACE_BG_MARGIN_TOP,
-      size: Math.random() < 0.75 ? Math.random() * 1.8 + 0.6 : Math.random() * 2.8 + 1.2,
-      opacity: Math.random() * 0.35 + 0.25,
-      blur: Math.random() < 0.2 ? 10 : 5,
-    })),
-  []
-);
 
   const getTouchDistance = (touches) => {
     if (!touches || touches.length < 2) return 0;
@@ -193,197 +237,413 @@ const SPACE_BG_MARGIN_BOTTOM = 300;
 
   const getTouchCenter = (touches) => {
     if (!touches || touches.length === 0) return { x: 0, y: 0 };
-    if (touches.length === 1) return { x: touches[0].clientX, y: touches[0].clientY };
-    return { x: (touches[0].clientX + touches[1].clientX) / 2, y: (touches[0].clientY + touches[1].clientY) / 2 };
+    if (touches.length === 1) {
+      return { x: touches[0].clientX, y: touches[0].clientY };
+    }
+
+    return {
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2,
+    };
   };
 
-  const zoomTo = useCallback((nextScale, clientX, clientY) => {
-    const rect = viewportRef.current?.getBoundingClientRect();
-    if (!rect) { setScale(clamp(nextScale, MIN_SCALE, MAX_SCALE)); return; }
-    const clampedScale = clamp(nextScale, MIN_SCALE, MAX_SCALE);
-    const currentScale = scaleRef.current;
-    const currentOffset = offsetRef.current;
-    const localX = (clientX ?? rect.left + rect.width / 2) - rect.left;
-    const localY = (clientY ?? rect.top + rect.height / 2) - rect.top;
-    const worldX = (localX - currentOffset.x) / currentScale;
-    const worldY = (localY - currentOffset.y) / currentScale;
-    const nextOffset = { x: localX - worldX * clampedScale, y: localY - worldY * clampedScale };
-    const safeOffset = clampWorldOffset(
-  nextOffset,
-  rect.width,
-  rect.height || WORLD_VIEWPORT_HEIGHT,
-  clampedScale,
-  totalLevel
-);
-    setScale(clampedScale);
-    setOffset(safeOffset);
-  }, []);
+  const zoomTo = useCallback(
+    (nextScale, clientX, clientY) => {
+      const rect = viewportRef.current?.getBoundingClientRect();
+
+      if (!rect) {
+        setScale(clamp(nextScale, MIN_SCALE, MAX_SCALE));
+        return;
+      }
+
+      const clampedScale = clamp(nextScale, MIN_SCALE, MAX_SCALE);
+      const currentScale = scaleRef.current;
+      const currentOffset = offsetRef.current;
+
+      const localX = (clientX ?? rect.left + rect.width / 2) - rect.left;
+      const localY = (clientY ?? rect.top + rect.height / 2) - rect.top;
+
+      const worldX = (localX - currentOffset.x) / currentScale;
+      const worldY = (localY - currentOffset.y) / currentScale;
+
+      const nextOffset = {
+        x: localX - worldX * clampedScale,
+        y: localY - worldY * clampedScale,
+      };
+
+      const safeOffset = clampWorldOffset(
+        nextOffset,
+        rect.width,
+        rect.height || WORLD_VIEWPORT_HEIGHT,
+        clampedScale,
+        totalLevel
+      );
+
+      setScale(clampedScale);
+      setOffset(safeOffset);
+    },
+    [totalLevel]
+  );
 
   useEffect(() => {
-  const rect = viewportRef.current?.getBoundingClientRect();
-  const centerX = rect ? rect.left + rect.width / 2 : undefined;
-  const centerY = rect ? rect.top + rect.height / 2 : undefined;
+    const rect = viewportRef.current?.getBoundingClientRect();
+    const centerX = rect ? rect.left + rect.width / 2 : undefined;
+    const centerY = rect ? rect.top + rect.height / 2 : undefined;
 
- 
-   const nextScale = isOverview ? OVERVIEW_SCALE : DETAIL_SCALE;
-  
-zoomTo(nextScale, centerX, centerY);
-}, [isOverview, zoomTo]);
-  
+    const nextScale = isOverview ? OVERVIEW_SCALE : DETAIL_SCALE;
+    zoomTo(nextScale, centerX, centerY);
+  }, [isOverview, zoomTo]);
 
   const handleWorldPointerDown = (e) => {
     if (e.pointerType === 'touch') return;
     if (isEditMode) return;
-    dragRef.current = { mode: 'pan', startX: e.clientX, startY: e.clientY, originX: offsetRef.current.x, originY: offsetRef.current.y };
+
+    dragRef.current = {
+      mode: 'pan',
+      startX: e.clientX,
+      startY: e.clientY,
+      originX: offsetRef.current.x,
+      originY: offsetRef.current.y,
+    };
   };
 
   const startObjectDrag = (e, objType, objId) => {
     if (!isEditMode) return;
+
     e.stopPropagation();
+
     setSelectedObject({ type: objType, id: objId });
+
     let sourceItem = null;
-    if (objType === 'decoration') sourceItem = decorations.find((item) => item.id === objId) || null;
-    else if (objType === 'character') sourceItem = characters.find((item) => item.id === objId) || null;
-    else if (objType === 'building') sourceItem = buildings.find((item) => item.id === objId) || null;
-    dragRef.current = { mode: 'object', objectType: objType, objectId: objId, startX: e.clientX, startY: e.clientY, startCol: sourceItem?.col ?? 0, startRow: sourceItem?.row ?? 0 };
+
+    if (objType === 'decoration') {
+      sourceItem = decorations.find((item) => item.id === objId) || null;
+    } else if (objType === 'character') {
+      sourceItem = characters.find((item) => item.id === objId) || null;
+    } else if (objType === 'building') {
+      sourceItem = buildings.find((item) => item.id === objId) || null;
+    }
+
+    dragRef.current = {
+      mode: 'object',
+      objectType: objType,
+      objectId: objId,
+      startX: e.clientX,
+      startY: e.clientY,
+      startCol: sourceItem?.col ?? 0,
+      startRow: sourceItem?.row ?? 0,
+    };
   };
 
-  const handlePointerMove = useCallback((e) => {
-    if (touchGestureRef.current) return;
-    const drag = dragRef.current;
-    if (!drag) return;
-    if (drag.mode === 'pan') {
-      const dx = e.clientX - drag.startX;
-      const dy = e.clientY - drag.startY;
-      setOffset(clampWorldOffset(
-  { x: drag.originX + dx, y: drag.originY + dy },
-  viewportSize.width,
-  viewportSize.height,
-  scaleRef.current,
-  totalLevel
-));
-      return;
-    }
-    if (drag.mode === 'object') {
+  const handlePointerMove = useCallback(
+    (e) => {
+      if (touchGestureRef.current) return;
+
+      const drag = dragRef.current;
+      if (!drag) return;
+
+      if (drag.mode === 'pan') {
+        const dx = e.clientX - drag.startX;
+        const dy = e.clientY - drag.startY;
+
+        setOffset(
+          clampWorldOffset(
+            { x: drag.originX + dx, y: drag.originY + dy },
+            viewportSize.width,
+            viewportSize.height,
+            scaleRef.current,
+            totalLevel
+          )
+        );
+        return;
+      }
+
+      if (drag.mode !== 'object') return;
+
       const dx = (e.clientX - drag.startX) / scaleRef.current;
       const dy = (e.clientY - drag.startY) / scaleRef.current;
+
       const startScreen = gridToScreen(drag.startCol, drag.startRow);
-      const { col, row } = screenToGrid(startScreen.x + dx, startScreen.y + dy, totalLevel);
+      const { col, row } = screenToGrid(
+        startScreen.x + dx,
+        startScreen.y + dy,
+        totalLevel
+      );
+
       let previewItem = null;
-      if (drag.objectType === 'decoration') previewItem = decorations.find((item) => item.id === drag.objectId) || null;
-      if (drag.objectType === 'character') previewItem = characters.find((item) => item.id === drag.objectId) || null;
-      if (previewItem) {
-        const previewValid = canPlaceObject({ movingType: drag.objectType, movingItem: previewItem, nextCol: col, nextRow: row, decorations, characters, buildings, totalLevel });
-        setPlacementPreview({ type: drag.objectType, col, row, item: previewItem, valid: previewValid });
-      }
+
       if (drag.objectType === 'decoration') {
-         setDecorations((prev) => prev.map((item) => {
-           if (item.id !== drag.objectId) return item;
-           const canPlace = canPlaceObject({ movingType: 'decoration', movingItem: item, nextCol: col, nextRow: row, decorations: prev, characters, buildings, totalLevel });
-          if (!canPlace) return item;
-          return { ...item, col, row };
-        }));
+        previewItem = decorations.find((item) => item.id === drag.objectId) || null;
       }
-      if (drag.objectType === 'building') {
-  previewItem = buildings.find((item) => item.id === drag.objectId) || null;
-}
+
       if (drag.objectType === 'character') {
-        setCharacters((prev) => prev.map((npc) => {
-          if (npc.id !== drag.objectId) return npc;
-
-          const dCol = col - npc.col;
-          const dRow = row - npc.row;
-
-          // 4방향(대각선)만 허용 - 대각선이 아니면 이동 거부
-          const isValidDiagonal = (dCol !== 0 && dRow !== 0) || (dCol === 0 && dRow === 0);
-          if (!isValidDiagonal) return npc;
-
-          const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol: col, nextRow: row, decorations, characters: prev, buildings, totalLevel });
-          if (!canPlace) return npc;
-
-          let nextDirection = npc.direction || 'se';
-          let nextFlipped = npc.flipped;
-
-          if (dCol !== 0 || dRow !== 0) {
-            // 4방향 계산
-            if (dCol > 0 && dRow < 0) { nextDirection = 'ne'; nextFlipped = false; } // ↗
-            else if (dCol < 0 && dRow > 0) { nextDirection = 'sw'; nextFlipped = true; } // ↙
-            else if (dCol > 0 && dRow > 0) { nextDirection = 'se'; nextFlipped = false; } // ↘
-            else if (dCol < 0 && dRow < 0) { nextDirection = 'nw'; nextFlipped = true; } // ↖
-          }
-
-          return { ...npc, col, row, flipped: nextFlipped, direction: nextDirection };
-        }));
+        previewItem = characters.find((item) => item.id === drag.objectId) || null;
       }
-      dragRef.current = { ...drag, startX: e.clientX, startY: e.clientY, startCol: col, startRow: row };
-    }
-  }, [viewportSize.width, viewportSize.height, decorations, characters, setDecorations, setCharacters, setPlacementPreview, totalLevel]);
+
+      if (drag.objectType === 'building') {
+        previewItem = buildings.find((item) => item.id === drag.objectId) || null;
+      }
+
+      if (previewItem) {
+        const previewValid = canPlaceObject({
+          movingType: drag.objectType,
+          movingItem: previewItem,
+          nextCol: col,
+          nextRow: row,
+          decorations,
+          characters,
+          buildings,
+          totalLevel,
+        });
+
+        setPlacementPreview({
+          type: drag.objectType,
+          col,
+          row,
+          item: previewItem,
+          valid: previewValid,
+        });
+      }
+
+      if (drag.objectType === 'decoration') {
+        setDecorations((prev) =>
+          prev.map((item) => {
+            if (item.id !== drag.objectId) return item;
+
+            const canPlace = canPlaceObject({
+              movingType: 'decoration',
+              movingItem: item,
+              nextCol: col,
+              nextRow: row,
+              decorations: prev,
+              characters,
+              buildings,
+              totalLevel,
+            });
+
+            if (!canPlace) return item;
+            return { ...item, col, row };
+          })
+        );
+      }
+
+      if (drag.objectType === 'building' && typeof setBuildings === 'function') {
+        setBuildings((prev) =>
+          prev.map((building) => {
+            if (building.id !== drag.objectId) return building;
+
+            const canPlace = canPlaceObject({
+              movingType: 'building',
+              movingItem: building,
+              nextCol: col,
+              nextRow: row,
+              decorations,
+              characters,
+              buildings: prev,
+              totalLevel,
+            });
+
+            if (!canPlace) return building;
+            return { ...building, col, row };
+          })
+        );
+      }
+
+      if (drag.objectType === 'character') {
+        setCharacters((prev) =>
+          prev.map((npc) => {
+            if (npc.id !== drag.objectId) return npc;
+
+            const dCol = col - npc.col;
+            const dRow = row - npc.row;
+
+            const isValidDiagonal =
+              Math.abs(dCol) === Math.abs(dRow) || (dCol === 0 && dRow === 0);
+
+            if (!isValidDiagonal) return npc;
+
+            const canPlace = canPlaceObject({
+              movingType: 'character',
+              movingItem: npc,
+              nextCol: col,
+              nextRow: row,
+              decorations,
+              characters: prev,
+              buildings,
+              totalLevel,
+            });
+
+            if (!canPlace) return npc;
+
+            let nextDirection = npc.direction || 'se';
+            let nextFlipped = npc.flipped;
+
+            if (dCol !== 0 || dRow !== 0) {
+              if (dCol > 0 && dRow < 0) {
+                nextDirection = 'ne';
+                nextFlipped = false;
+              } else if (dCol < 0 && dRow > 0) {
+                nextDirection = 'sw';
+                nextFlipped = true;
+              } else if (dCol > 0 && dRow > 0) {
+                nextDirection = 'se';
+                nextFlipped = false;
+              } else if (dCol < 0 && dRow < 0) {
+                nextDirection = 'nw';
+                nextFlipped = true;
+              }
+            }
+
+            return {
+              ...npc,
+              col,
+              row,
+              flipped: nextFlipped,
+              direction: nextDirection,
+            };
+          })
+        );
+      }
+
+      dragRef.current = {
+        ...drag,
+        startX: e.clientX,
+        startY: e.clientY,
+        startCol: col,
+        startRow: row,
+      };
+    },
+    [
+      viewportSize.width,
+      viewportSize.height,
+      decorations,
+      characters,
+      buildings,
+      setDecorations,
+      setCharacters,
+      setBuildings,
+      setPlacementPreview,
+      totalLevel,
+    ]
+  );
 
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
     setPlacementPreview(null);
   }, [setPlacementPreview]);
 
-  const handleTouchStart = useCallback((e) => {
-    if (!viewportRef.current) return;
-    if (e.touches.length >= 2) {
-      const center = getTouchCenter(e.touches);
-      touchGestureRef.current = { mode: 'pinch', startDistance: getTouchDistance(e.touches), startScale: scaleRef.current, centerX: center.x, centerY: center.y };
-      return;
-    }
-    if (e.touches.length === 1 && !isEditMode) {
-      touchGestureRef.current = { mode: 'pan', startX: e.touches[0].clientX, startY: e.touches[0].clientY, originX: offsetRef.current.x, originY: offsetRef.current.y };
-    }
-  }, [isEditMode]);
+  const handleTouchStart = useCallback(
+    (e) => {
+      if (!viewportRef.current) return;
 
-  const handleTouchMove = useCallback((e) => {
-    if (!touchGestureRef.current) return;
-    const gesture = touchGestureRef.current;
-    if (gesture.mode === 'pinch' && e.touches.length >= 2) {
-      e.preventDefault();
-      const distance = getTouchDistance(e.touches);
-      const center = getTouchCenter(e.touches);
-      if (!gesture.startDistance) return;
-      zoomTo(gesture.startScale * (distance / gesture.startDistance), center.x, center.y);
-      return;
-    }
-    if (gesture.mode === 'pan' && e.touches.length === 1 && !isEditMode) {
-      e.preventDefault();
-      const dx = e.touches[0].clientX - gesture.startX;
-      const dy = e.touches[0].clientY - gesture.startY;
-setOffset(
-  clampWorldOffset(
-    { x: gesture.originX + dx, y: gesture.originY + dy },
-    viewportSize.width,
-    viewportSize.height,
-    scaleRef.current,
-    totalLevel
-  )
-);
-    }
-  }, [viewportSize.width, viewportSize.height, zoomTo, isEditMode]);
+      if (e.touches.length >= 2) {
+        const center = getTouchCenter(e.touches);
+        touchGestureRef.current = {
+          mode: 'pinch',
+          startDistance: getTouchDistance(e.touches),
+          startScale: scaleRef.current,
+          centerX: center.x,
+          centerY: center.y,
+        };
+        return;
+      }
 
-  const handleTouchEnd = useCallback((e) => {
-    if (!touchGestureRef.current) return;
-    if (e.touches.length >= 2) {
-      const center = getTouchCenter(e.touches);
-      touchGestureRef.current = { mode: 'pinch', startDistance: getTouchDistance(e.touches), startScale: scaleRef.current, centerX: center.x, centerY: center.y };
-      return;
-    }
-    if (e.touches.length === 1 && !isEditMode) {
-      touchGestureRef.current = { mode: 'pan', startX: e.touches[0].clientX, startY: e.touches[0].clientY, originX: offsetRef.current.x, originY: offsetRef.current.y };
-      return;
-    }
-    touchGestureRef.current = null;
-  }, [isEditMode]);
+      if (e.touches.length === 1 && !isEditMode) {
+        touchGestureRef.current = {
+          mode: 'pan',
+          startX: e.touches[0].clientX,
+          startY: e.touches[0].clientY,
+          originX: offsetRef.current.x,
+          originY: offsetRef.current.y,
+        };
+      }
+    },
+    [isEditMode]
+  );
+
+  const handleTouchMove = useCallback(
+    (e) => {
+      if (!touchGestureRef.current) return;
+
+      const gesture = touchGestureRef.current;
+
+      if (gesture.mode === 'pinch' && e.touches.length >= 2) {
+        e.preventDefault();
+
+        const distance = getTouchDistance(e.touches);
+        const center = getTouchCenter(e.touches);
+
+        if (!gesture.startDistance) return;
+
+        zoomTo(gesture.startScale * (distance / gesture.startDistance), center.x, center.y);
+        return;
+      }
+
+      if (gesture.mode === 'pan' && e.touches.length === 1 && !isEditMode) {
+        e.preventDefault();
+
+        const dx = e.touches[0].clientX - gesture.startX;
+        const dy = e.touches[0].clientY - gesture.startY;
+
+        setOffset(
+          clampWorldOffset(
+            { x: gesture.originX + dx, y: gesture.originY + dy },
+            viewportSize.width,
+            viewportSize.height,
+            scaleRef.current,
+            totalLevel
+          )
+        );
+      }
+    },
+    [viewportSize.width, viewportSize.height, zoomTo, isEditMode, totalLevel]
+  );
+
+  const handleTouchEnd = useCallback(
+    (e) => {
+      if (!touchGestureRef.current) return;
+
+      if (e.touches.length >= 2) {
+        const center = getTouchCenter(e.touches);
+        touchGestureRef.current = {
+          mode: 'pinch',
+          startDistance: getTouchDistance(e.touches),
+          startScale: scaleRef.current,
+          centerX: center.x,
+          centerY: center.y,
+        };
+        return;
+      }
+
+      if (e.touches.length === 1 && !isEditMode) {
+        touchGestureRef.current = {
+          mode: 'pan',
+          startX: e.touches[0].clientX,
+          startY: e.touches[0].clientY,
+          originX: offsetRef.current.x,
+          originY: offsetRef.current.y,
+        };
+        return;
+      }
+
+      touchGestureRef.current = null;
+    },
+    [isEditMode]
+  );
 
   useEffect(() => {
     const updateViewportSize = () => {
       const rect = viewportRef.current?.getBoundingClientRect();
       if (!rect) return;
-      setViewportSize({ width: rect.width, height: rect.height || WORLD_VIEWPORT_HEIGHT });
+
+      setViewportSize({
+        width: rect.width,
+        height: rect.height || WORLD_VIEWPORT_HEIGHT,
+      });
     };
+
     updateViewportSize();
+
     window.addEventListener('resize', updateViewportSize);
     return () => window.removeEventListener('resize', updateViewportSize);
   }, []);
@@ -392,6 +652,7 @@ setOffset(
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup', handlePointerUp);
     window.addEventListener('pointercancel', handlePointerUp);
+
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
@@ -401,345 +662,501 @@ setOffset(
 
   useEffect(() => {
     if (!viewportSize.width) return;
-setOffset((prev) =>
-  clampWorldOffset(prev, viewportSize.width, viewportSize.height, scale, totalLevel)
-);
-  }, [viewportSize, scale]);
 
-  // 캐릭터별 남은 스텝 수와 현재 방향을 추적 (NPC가 같은 방향으로 N스텝 이동)
-  const npcMovePlanRef = React.useRef({});
+    setOffset((prev) =>
+      clampWorldOffset(prev, viewportSize.width, viewportSize.height, scale, totalLevel)
+    );
+  }, [viewportSize, scale, totalLevel]);
 
   useEffect(() => {
     if (isEditMode) return;
-    const MOVE_INTERVAL = 1800; // CSS transition(1600ms)보다 길게 설정
-    const STEPS_PER_DIRECTION = 3; // 한 방향으로 몇 스텝 이동할지
+
+    const MOVE_INTERVAL = 1800;
+    const STEPS_PER_DIRECTION = 3;
 
     const DIAGONAL_DIRS = [
       { col: 1, row: -1, direction: 'ne', flipped: false },
-      { col: 1, row: 1,  direction: 'se', flipped: false },
-      { col: -1, row: 1,  direction: 'sw', flipped: true  },
-      { col: -1, row: -1, direction: 'nw', flipped: true  },
+      { col: 1, row: 1, direction: 'se', flipped: false },
+      { col: -1, row: 1, direction: 'sw', flipped: true },
+      { col: -1, row: -1, direction: 'nw', flipped: true },
     ];
 
     const timer = setInterval(() => {
-      setCharacters((prev) => prev.map((npc) => {
-        const bounds = getExpandedGridBounds(totalLevel);
-        const plan = npcMovePlanRef.current[npc.id];
+      setCharacters((prev) =>
+        prev.map((npc) => {
+          const bounds = getExpandedGridBounds(totalLevel);
+          const plan = npcMovePlanRef.current[npc.id];
 
-        // 계획이 없거나 스텝이 소진됐으면 새 방향 선택
-        let currentPlan = plan;
-        if (!currentPlan || currentPlan.stepsLeft <= 0) {
-          const dir = DIAGONAL_DIRS[Math.floor(Math.random() * DIAGONAL_DIRS.length)];
-          currentPlan = { ...dir, stepsLeft: STEPS_PER_DIRECTION };
-        }
+          let currentPlan = plan;
 
-        const nextCol = clamp(npc.col + currentPlan.col, bounds.minCol, bounds.maxCol);
-        const nextRow = clamp(npc.row + currentPlan.row, bounds.minRow, bounds.maxRow);
-        const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol, nextRow, decorations, characters: prev, buildings, totalLevel });
+          if (!currentPlan || currentPlan.stepsLeft <= 0) {
+            const dir = DIAGONAL_DIRS[Math.floor(Math.random() * DIAGONAL_DIRS.length)];
+            currentPlan = { ...dir, stepsLeft: STEPS_PER_DIRECTION };
+          }
 
-        if (canPlace && (nextCol !== npc.col || nextRow !== npc.row)) {
-          // 이동 성공: 스텝 차감 후 저장
-          npcMovePlanRef.current[npc.id] = { ...currentPlan, stepsLeft: currentPlan.stepsLeft - 1 };
-          return {
-            ...npc,
-            col: nextCol,
-            row: nextRow,
-            direction: currentPlan.direction,
-            flipped: currentPlan.flipped,
-            isMoving: true,
+          const nextCol = clamp(npc.col + currentPlan.col, bounds.minCol, bounds.maxCol);
+          const nextRow = clamp(npc.row + currentPlan.row, bounds.minRow, bounds.maxRow);
+
+          const canPlace = canPlaceObject({
+            movingType: 'character',
+            movingItem: npc,
+            nextCol,
+            nextRow,
+            decorations,
+            characters: prev,
+            buildings,
+            totalLevel,
+          });
+
+          if (canPlace && (nextCol !== npc.col || nextRow !== npc.row)) {
+            npcMovePlanRef.current[npc.id] = {
+              ...currentPlan,
+              stepsLeft: currentPlan.stepsLeft - 1,
+            };
+
+            return {
+              ...npc,
+              col: nextCol,
+              row: nextRow,
+              direction: currentPlan.direction,
+              flipped: currentPlan.flipped,
+              isMoving: true,
+            };
+          }
+
+          npcMovePlanRef.current[npc.id] = {
+            ...currentPlan,
+            stepsLeft: 0,
           };
-        } else {
-          // 막혔으면 방향 초기화 (다음 틱에 새 방향 선택)
-          npcMovePlanRef.current[npc.id] = { ...currentPlan, stepsLeft: 0 };
+
           return { ...npc, isMoving: false };
-        }
-      }));
+        })
+      );
     }, MOVE_INTERVAL);
+
     return () => clearInterval(timer);
-  }, [isEditMode, setCharacters, decorations, totalLevel]);
+  }, [isEditMode, setCharacters, decorations, buildings, totalLevel]);
 
   return (
     <>
-    <style>{`
-      @keyframes tileReveal {
-        0% { opacity: 0; transform: translateY(10px) scale(0.88); }
-        60% { opacity: 1; transform: translateY(-2px) scale(1.04); }
-        100% { opacity: 1; transform: translateY(0px) scale(1); }
-      }
-    `}</style>
-    <div
-      className="sticky top-0 z-40 overflow-hidden"
-      style={{
-        background: 'radial-gradient(circle at 50% 35%, #2a315f 0%, #161a35 45%, #0a0d1f 75%, #05070f 100%)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-      }}
-    >
-      <div className="px-4 pt-3 pb-2">
-        <div
-          ref={viewportRef}
-          className="relative overflow-hidden rounded-[28px]"
-          style={{
-            height: WORLD_VIEWPORT_HEIGHT,
-            border: '1px solid rgba(160,120,64,0.18)',
-            boxShadow: '0 12px 24px rgba(80,50,10,0.08)',
-            background: 'radial-gradient(circle at 50% 20%, rgba(120,150,255,0.22) 0%, rgba(120,150,255,0.08) 16%, rgba(0,0,0,0) 34%), radial-gradient(circle at 18% 28%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 10%, rgba(0,0,0,0) 24%), radial-gradient(circle at 82% 18%, rgba(180,120,255,0.16) 0%, rgba(180,120,255,0.05) 12%, rgba(0,0,0,0) 24%), linear-gradient(180deg, #1d2550 0%, #131938 38%, #0a0f24 68%, #05070f 100%)',
-            touchAction: 'none',
-          }}
-        >
-          <VillageOverlayBar nickname={nickname} level={totalLevel} points={points} onOpenShop={onOpenShop} onOpenBag={onOpenBag} onToggleOverview={onToggleOverview} isOverview={isOverview} isEditMode={isEditMode} onToggleEditMode={onToggleEditMode} />
-          <EditToolbar isEditMode={isEditMode} selectedObject={selectedObject} onToggleEditMode={onToggleEditMode} onFlip={onFlipSelected} onDeleteSelected={onDeleteSelected} onClearAll={onClearAll} onSave={onSaveEdit} onCancel={onCancelEdit} onStoreSelected={onStoreSelected} canSave={!placementPreview || placementPreview.valid} />
+      <style>{`
+        @keyframes tileReveal {
+          0% { opacity: 0; transform: translateY(10px) scale(0.88); }
+          60% { opacity: 1; transform: translateY(-2px) scale(1.04); }
+          100% { opacity: 1; transform: translateY(0px) scale(1); }
+        }
+      `}</style>
 
-          <div className="absolute inset-0 touch-none overflow-visible" onPointerDown={handleWorldPointerDown} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}>
-           <div
-  className="absolute left-0 top-0"
-  style={{
-    width: WORLD_WIDTH,
-    height: WORLD_HEIGHT,
-    transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-    transformOrigin: 'top left',
-    transition: dragRef.current || touchGestureRef.current ? 'none' : 'transform 260ms ease',
-    willChange: 'transform',
-  }}
->
-<div
-  className="absolute"
-  style={{
-    left: -SPACE_BG_MARGIN_X,
-    top: -SPACE_BG_MARGIN_TOP,
-    width: WORLD_WIDTH + SPACE_BG_MARGIN_X * 2,
-    height: WORLD_HEIGHT + SPACE_BG_MARGIN_TOP + SPACE_BG_MARGIN_BOTTOM,
-    background:
-      'radial-gradient(circle at 50% 14%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 12%), radial-gradient(circle at 28% 24%, rgba(109,140,255,0.16) 0%, rgba(109,140,255,0.06) 14%, rgba(0,0,0,0) 28%), radial-gradient(circle at 74% 18%, rgba(199,132,255,0.14) 0%, rgba(199,132,255,0.05) 12%, rgba(0,0,0,0) 25%), radial-gradient(circle at 52% 52%, rgba(90,120,255,0.08) 0%, rgba(90,120,255,0.03) 18%, rgba(0,0,0,0) 42%), linear-gradient(180deg, #1a2148 0%, #111733 34%, #0a0f24 68%, #04060d 100%)',
-  }}
-/>
-
-              {stars.map((star) => (
-                <div key={star.id} className="pointer-events-none absolute rounded-full" style={{ left: star.x, top: star.y, width: star.size, height: star.size, background: star.size > 2 ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,1)', opacity: star.opacity, boxShadow: `0 0 ${star.blur}px rgba(255,255,255,0.9), 0 0 ${star.blur * 2}px rgba(255,255,255,0.6)` }} />
-              ))}
-
-              <div className="pointer-events-none absolute" style={{ left: GRID_COLS * (TILE_W / 2), top: GRID_ROWS * (TILE_H / 2) + 260, width: 980, height: 300, transform: 'translate(-50%, -50%)', background: 'radial-gradient(ellipse, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.18) 38%, rgba(0,0,0,0) 72%)', filter: 'blur(18px)' }} />
-
-              {tileMap.map((tile) => {
-                const pos = gridToScreen(tile.col, tile.row);
-                const tileImg = getTileImageByKind(tile.kind, tileTheme);
-                const revealed = revealedTiles.find((item) => item.col === tile.col && item.row === tile.row);
-                const scale = (tileTheme === 'dino' || tileTheme === 'egypt') ? 1.4641 : (tileTheme === 'japan_garden' ? 2.2 : (tileTheme === 'steampunk' ? 1.327 : (tileTheme === 'joseon' ? 1.3 : (tileTheme === 'atlantis' ? 2.0292 : 2.2))));
-                const scaledW = TILE_W * scale;
-                const scaledH = TILE_H * scale;
-                return (
-                  <img key={tile.id} src={tileImg} alt="" draggable={false} className="pointer-events-none absolute select-none"
-                    style={{
-                      left: pos.x - scaledW / 2, top: pos.y - scaledH / 2, width: scaledW, height: scaledH, objectFit: 'contain', userSelect: 'none', WebkitUserDrag: 'none',
-                      opacity: revealed ? 0 : 1,
-                      transform: revealed ? 'translateY(10px) scale(0.88)' : 'translateY(0px) scale(1)',
-                      filter: revealed ? 'brightness(1.5) drop-shadow(0 0 10px rgba(255,255,180,0.7))' : 'none',
-                      animation: revealed ? `tileReveal 600ms ease-out ${revealed.delay}ms forwards` : 'none',
-                    }}
-                  />
-                );
-              })}
-
-              {/* 격자선 표시 */}
-              {isEditMode && showGridGuide && tileMap.map((tile) => {
-                const pos = gridToScreen(tile.col, tile.row);
-                return (
-                  <div
-                    key={`grid-${tile.col}-${tile.row}`}
-                    className="absolute pointer-events-none"
-                    style={{
-                      left: pos.x - TILE_W / 2,
-                      top: pos.y - TILE_H / 2,
-                      width: TILE_W,
-                      height: TILE_H,
-                      clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-                      border: '1px solid rgba(255, 150, 100, 0.3)',
-                      boxSizing: 'border-box',
-                      zIndex: 9999998,
-                    }}
-                  />
-                );
-              })}
-
-              {/* 대칭 가이드 (중심선) */}
-              {isEditMode && showSymmetryGuide && (
-                <>
-                  {/* 수직 중심선 */}
-                  <div
-                    className="absolute pointer-events-none"
-                    style={{
-                      left: GRID_ORIGIN_X,
-                      top: 0,
-                      width: 2,
-                      height: WORLD_HEIGHT,
-                      backgroundColor: 'rgba(100, 150, 255, 0.4)',
-                      zIndex: 9999997,
-                      transform: 'translateX(-50%)',
-                    }}
-                  />
-                  {/* 수평 중심선 */}
-                  <div
-                    className="absolute pointer-events-none"
-                    style={{
-                      left: 0,
-                      top: GRID_ORIGIN_Y,
-                      width: WORLD_WIDTH,
-                      height: 2,
-                      backgroundColor: 'rgba(100, 150, 255, 0.4)',
-                      zIndex: 9999997,
-                      transform: 'translateY(-50%)',
-                    }}
-                  />
-                </>
-              )}
-
-              {isEditMode && placementPreview
-                ? getPreviewTiles(placementPreview.item, placementPreview.type, placementPreview.col, placementPreview.row).map((tile) => {
-                    const pos = gridToScreen(tile.col, tile.row);
-                    const color = getPreviewColor(placementPreview.valid);
-                    return (
-                      <div key={`preview-${tile.col}-${tile.row}`} className="absolute pointer-events-none"
-                        style={{ left: pos.x - TILE_W / 2, top: pos.y - TILE_H / 2, width: TILE_W, height: TILE_H, clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)', border: color.border, background: color.background, boxSizing: 'border-box', zIndex: 9999999, boxShadow: `0 0 16px 4px ${placementPreview.valid ? '#00ff88' : '#ff4444'}` }}
-                      />
-                    );
-                  })
-                : null}
-
-            {decorations.map((item) => {
-  const isSelected =
-    selectedObject?.type === 'decoration' && selectedObject?.id === item.id;
-  const isNewlyPlaced = newlyPlacedItemId === item.id;
-  const pos = getObjectScreenPosition(item, 'decoration');
-  const tilePos = gridToScreen(item.col, item.row);
-  const zBase = BASE_Z_INDEX + (item.row + item.col) * 1000;
-
-  return (
-    <div key={item.id}>
-      {/* 바닥 타일 표시 */}
       <div
-        className="absolute pointer-events-none"
+        className="sticky top-0 z-40 overflow-hidden"
         style={{
-          left: tilePos.x - TILE_W / 2,
-          top: tilePos.y - TILE_H / 2,
-          width: TILE_W,
-          height: TILE_H,
-          clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-          background: isNewlyPlaced ? 'rgba(255,215,0,0.4)' : 'rgba(80,40,0,0.18)',
-          zIndex: zBase - 1,
-          transition: 'background 1s ease-out',
-        }}
-      />
-      <div
-        className="absolute"
-        onPointerDown={(e) => startObjectDrag(e, 'decoration', item.id)}
-        style={{
-          left: pos.x,
-          top: pos.y,
-          transform: `translate(-50%, -100%) scaleX(${item.flipped ? -1 : 1})`,
-          outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : isNewlyPlaced ? '3px solid rgba(255,215,0,0.8)' : 'none',
-          outlineOffset: '3px',
-          borderRadius: '999px',
-          cursor: isEditMode ? 'grab' : 'default',
-          zIndex: zBase,
-          transition: 'outline 1s ease-out',
+          background:
+            'radial-gradient(circle at 50% 35%, #2a315f 0%, #161a35 45%, #0a0d1f 75%, #05070f 100%)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
         }}
       >
-        <DecorationSprite item={item} />
-      </div>
-    </div>
-  );
-})}
+        <div className="px-4 pt-3 pb-2">
+          <div
+            ref={viewportRef}
+            className="relative overflow-hidden rounded-[28px]"
+            style={{
+              height: WORLD_VIEWPORT_HEIGHT,
+              border: '1px solid rgba(160,120,64,0.18)',
+              boxShadow: '0 12px 24px rgba(80,50,10,0.08)',
+              background:
+                'radial-gradient(circle at 50% 20%, rgba(120,150,255,0.22) 0%, rgba(120,150,255,0.08) 16%, rgba(0,0,0,0) 34%), radial-gradient(circle at 18% 28%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 10%, rgba(0,0,0,0) 24%), radial-gradient(circle at 82% 18%, rgba(180,120,255,0.16) 0%, rgba(180,120,255,0.05) 12%, rgba(0,0,0,0) 24%), linear-gradient(180deg, #1d2550 0%, #131938 38%, #0a0f24 68%, #05070f 100%)',
+              touchAction: 'none',
+            }}
+          >
+            <VillageOverlayBar
+              nickname={nickname}
+              level={totalLevel}
+              points={points}
+              onOpenShop={onOpenShop}
+              onOpenBag={onOpenBag}
+              onToggleOverview={onToggleOverview}
+              isOverview={isOverview}
+              isEditMode={isEditMode}
+              onToggleEditMode={onToggleEditMode}
+            />
 
+            <EditToolbar
+              isEditMode={isEditMode}
+              selectedObject={selectedObject}
+              onToggleEditMode={onToggleEditMode}
+              onFlip={onFlipSelected}
+              onDeleteSelected={onDeleteSelected}
+              onClearAll={onClearAll}
+              onSave={onSaveEdit}
+              onCancel={onCancelEdit}
+              onStoreSelected={onStoreSelected}
+              canSave={!placementPreview || placementPreview.valid}
+            />
 
-              {characters.map((npc) => {
-              const isSelected =
-              selectedObject?.type === 'character' && selectedObject?.id === npc.id;
-              const pos = getObjectScreenPosition(npc, 'character');
-
-              return (
+            <div
+              className="absolute inset-0 touch-none overflow-visible"
+              onPointerDown={handleWorldPointerDown}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onTouchCancel={handleTouchEnd}
+            >
               <div
-              key={npc.id}
-              className="absolute"
-              onPointerDown={(e) => startObjectDrag(e, 'character', npc.id)}
-              style={{
-              left: pos.x,
-              top: pos.y,
-              width: npc.size,
-              height: npc.size,
-              transform: 'translate(-50%, -100%)',
-              transition: isEditMode
-              ? 'none'
-              : 'left 1600ms cubic-bezier(0.45, 0, 0.55, 1), top 1600ms cubic-bezier(0.45, 0, 0.55, 1)',
-              outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
-              outlineOffset: '3px',
-              borderRadius: '999px',
-              cursor: isEditMode ? 'grab' : 'default',
-              zIndex: BASE_Z_INDEX + (npc.row + npc.col) * 1000 + 500,
-              }}
+                className="absolute left-0 top-0"
+                style={{
+                  width: WORLD_WIDTH,
+                  height: WORLD_HEIGHT,
+                  transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+                  transformOrigin: 'top left',
+                  transition:
+                    dragRef.current || touchGestureRef.current
+                      ? 'none'
+                      : 'transform 260ms ease',
+                  willChange: 'transform',
+                }}
               >
-              <CharacterSprite npc={npc} />
-              </div>
-              );
-              })}
+                <div
+                  className="absolute"
+                  style={{
+                    left: -SPACE_BG_MARGIN_X,
+                    top: -SPACE_BG_MARGIN_TOP,
+                    width: WORLD_WIDTH + SPACE_BG_MARGIN_X * 2,
+                    height: WORLD_HEIGHT + SPACE_BG_MARGIN_TOP + SPACE_BG_MARGIN_BOTTOM,
+                    background:
+                      'radial-gradient(circle at 50% 14%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 12%), radial-gradient(circle at 28% 24%, rgba(109,140,255,0.16) 0%, rgba(109,140,255,0.06) 14%, rgba(0,0,0,0) 28%), radial-gradient(circle at 74% 18%, rgba(199,132,255,0.14) 0%, rgba(199,132,255,0.05) 12%, rgba(0,0,0,0) 25%), radial-gradient(circle at 52% 52%, rgba(90,120,255,0.08) 0%, rgba(90,120,255,0.03) 18%, rgba(0,0,0,0) 42%), linear-gradient(180deg, #1a2148 0%, #111733 34%, #0a0f24 68%, #04060d 100%)',
+                  }}
+                />
 
-              {buildings.map((building) => {
-              const isSelected = selectedObject?.type === 'building' && selectedObject?.id === building.id;
-              const pos = getObjectScreenPosition(building, 'building');
-              const hitW = building.w * 0.5;
-              const hitH = building.h * 0.6;
+                {stars.map((star) => (
+                  <div
+                    key={star.id}
+                    className="pointer-events-none absolute rounded-full"
+                    style={{
+                      left: star.x,
+                      top: star.y,
+                      width: star.size,
+                      height: star.size,
+                      background:
+                        star.size > 2
+                          ? 'rgba(255,255,255,0.98)'
+                          : 'rgba(255,255,255,1)',
+                      opacity: star.opacity,
+                      boxShadow: `0 0 ${star.blur}px rgba(255,255,255,0.9), 0 0 ${
+                        star.blur * 2
+                      }px rgba(255,255,255,0.6)`,
+                    }}
+                  />
+                ))}
 
-              return (
-              <div
-              key={building.id}
-              className="absolute pointer-events-none"
-              style={{
-              left: pos.x,
-              top: pos.y,
-              width: building.w,
-              height: building.h,
-              transform: 'translate(-50%, -100%)',
-              outline: 'none',
-              borderRadius: '8px',
-              zIndex: BASE_Z_INDEX + (building.row + building.col) * 1000,
-              }}
-              >
-              <img
-              src={building.image}
-              alt={building.label}
-              draggable={false}
-              style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              display: 'block',
-              userSelect: 'none',
-              WebkitUserDrag: 'none',
-              transform: `scaleX(${building.flipped ? -1 : 1})`,
-              pointerEvents: 'none',
-              }}
-              />
-              {/* 실제 클릭 가능한 히트 영역 - 건물 중앙 하단에만 */}
-              <div
-              onPointerDown={(e) => startObjectDrag(e, 'building', building.id)}
-              style={{
-              position: 'absolute',
-              left: '50%',
-              bottom: 0,
-              width: hitW,
-              height: hitH,
-              transform: 'translateX(-50%)',
-              cursor: isEditMode ? 'grab' : 'default',
-              pointerEvents: isEditMode ? 'auto' : 'none',
-              }}
-              />
+                <div
+                  className="pointer-events-none absolute"
+                  style={{
+                    left: GRID_COLS * (TILE_W / 2),
+                    top: GRID_ROWS * (TILE_H / 2) + 260,
+                    width: 980,
+                    height: 300,
+                    transform: 'translate(-50%, -50%)',
+                    background:
+                      'radial-gradient(ellipse, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.18) 38%, rgba(0,0,0,0) 72%)',
+                    filter: 'blur(18px)',
+                  }}
+                />
+
+                {tileMap.map((tile) => {
+                  const pos = gridToScreen(tile.col, tile.row);
+                  const tileImg = getTileImageByKind(tile.kind, tileTheme);
+                  const revealed = revealedSet.has(`${tile.col},${tile.row}`);
+
+                  const tileScale =
+                    tileTheme === 'dino' || tileTheme === 'egypt'
+                      ? 1.4641
+                      : tileTheme === 'japan_garden'
+                        ? 2.2
+                        : tileTheme === 'steampunk'
+                          ? 1.327
+                          : tileTheme === 'joseon'
+                            ? 1.3
+                            : tileTheme === 'atlantis'
+                              ? 2.0292
+                              : 2.2;
+
+                  const scaledW = TILE_W * tileScale;
+                  const scaledH = TILE_H * tileScale;
+
+                  return (
+                    <img
+                      key={tile.id}
+                      src={tileImg}
+                      alt=""
+                      draggable={false}
+                      className="pointer-events-none absolute select-none"
+                      style={{
+                        left: pos.x - scaledW / 2,
+                        top: pos.y - scaledH / 2,
+                        width: scaledW,
+                        height: scaledH,
+                        objectFit: 'contain',
+                        userSelect: 'none',
+                        WebkitUserDrag: 'none',
+                        opacity: revealed ? 0 : 1,
+                        transform: revealed
+                          ? 'translateY(10px) scale(0.88)'
+                          : 'translateY(0px) scale(1)',
+                        filter: revealed
+                          ? 'brightness(1.5) drop-shadow(0 0 10px rgba(255,255,180,0.7))'
+                          : 'none',
+                        animation: revealed
+                          ? `tileReveal 600ms ease-out ${tile.delay || 0}ms forwards`
+                          : 'none',
+                      }}
+                    />
+                  );
+                })}
+
+                {isEditMode &&
+                  showGridGuide &&
+                  tileMap.map((tile) => {
+                    const pos = gridToScreen(tile.col, tile.row);
+
+                    return (
+                      <div
+                        key={`grid-${tile.col}-${tile.row}`}
+                        className="absolute pointer-events-none"
+                        style={{
+                          left: pos.x - TILE_W / 2,
+                          top: pos.y - TILE_H / 2,
+                          width: TILE_W,
+                          height: TILE_H,
+                          clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+                          border: '1px solid rgba(255, 150, 100, 0.3)',
+                          boxSizing: 'border-box',
+                          zIndex: 9999998,
+                        }}
+                      />
+                    );
+                  })}
+
+                {isEditMode && showSymmetryGuide && (
+                  <>
+                    <div
+                      className="absolute pointer-events-none"
+                      style={{
+                        left: GRID_ORIGIN_X,
+                        top: 0,
+                        width: 2,
+                        height: WORLD_HEIGHT,
+                        backgroundColor: 'rgba(100, 150, 255, 0.4)',
+                        zIndex: 9999997,
+                        transform: 'translateX(-50%)',
+                      }}
+                    />
+
+                    <div
+                      className="absolute pointer-events-none"
+                      style={{
+                        left: 0,
+                        top: GRID_ORIGIN_Y,
+                        width: WORLD_WIDTH,
+                        height: 2,
+                        backgroundColor: 'rgba(100, 150, 255, 0.4)',
+                        zIndex: 9999997,
+                        transform: 'translateY(-50%)',
+                      }}
+                    />
+                  </>
+                )}
+
+                {isEditMode && placementPreview
+                  ? getPreviewTiles(
+                      placementPreview.item,
+                      placementPreview.type,
+                      placementPreview.col,
+                      placementPreview.row
+                    ).map((tile) => {
+                      const pos = gridToScreen(tile.col, tile.row);
+                      const color = getPreviewColor(placementPreview.valid);
+
+                      return (
+                        <div
+                          key={`preview-${tile.col}-${tile.row}`}
+                          className="absolute pointer-events-none"
+                          style={{
+                            left: pos.x - TILE_W / 2,
+                            top: pos.y - TILE_H / 2,
+                            width: TILE_W,
+                            height: TILE_H,
+                            clipPath:
+                              'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+                            border: color.border,
+                            background: color.background,
+                            boxSizing: 'border-box',
+                            zIndex: 9999999,
+                            boxShadow: `0 0 16px 4px ${
+                              placementPreview.valid ? '#00ff88' : '#ff4444'
+                            }`,
+                          }}
+                        />
+                      );
+                    })
+                  : null}
+
+                {decorations.map((item) => {
+                  const isSelected =
+                    selectedObject?.type === 'decoration' &&
+                    selectedObject?.id === item.id;
+
+                  const isNewlyPlaced = newlyPlacedItemId === item.id;
+                  const pos = getObjectScreenPosition(item, 'decoration');
+                  const tilePos = gridToScreen(item.col, item.row);
+                  const zBase = BASE_Z_INDEX + (item.row + item.col) * 1000;
+
+                  return (
+                    <div key={item.id}>
+                      <div
+                        className="absolute pointer-events-none"
+                        style={{
+                          left: tilePos.x - TILE_W / 2,
+                          top: tilePos.y - TILE_H / 2,
+                          width: TILE_W,
+                          height: TILE_H,
+                          clipPath:
+                            'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+                          background: isNewlyPlaced
+                            ? 'rgba(255,215,0,0.4)'
+                            : 'rgba(80,40,0,0.18)',
+                          zIndex: zBase - 1,
+                          transition: 'background 1s ease-out',
+                        }}
+                      />
+
+                      <div
+                        className="absolute"
+                        onPointerDown={(e) => startObjectDrag(e, 'decoration', item.id)}
+                        style={{
+                          left: pos.x,
+                          top: pos.y,
+                          transform: `translate(-50%, -100%) scaleX(${
+                            item.flipped ? -1 : 1
+                          })`,
+                          outline: isSelected
+                            ? '3px solid rgba(196,154,74,0.9)'
+                            : isNewlyPlaced
+                              ? '3px solid rgba(255,215,0,0.8)'
+                              : 'none',
+                          outlineOffset: '3px',
+                          borderRadius: '999px',
+                          cursor: isEditMode ? 'grab' : 'default',
+                          zIndex: zBase,
+                          transition: 'outline 1s ease-out',
+                        }}
+                      >
+                        <DecorationSprite item={item} />
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {characters.map((npc) => {
+                  const isSelected =
+                    selectedObject?.type === 'character' &&
+                    selectedObject?.id === npc.id;
+
+                  const pos = getObjectScreenPosition(npc, 'character');
+
+                  return (
+                    <div
+                      key={npc.id}
+                      className="absolute"
+                      onPointerDown={(e) => startObjectDrag(e, 'character', npc.id)}
+                      style={{
+                        left: pos.x,
+                        top: pos.y,
+                        width: npc.size,
+                        height: npc.size,
+                        transform: 'translate(-50%, -100%)',
+                        transition: isEditMode
+                          ? 'none'
+                          : 'left 1600ms cubic-bezier(0.45, 0, 0.55, 1), top 1600ms cubic-bezier(0.45, 0, 0.55, 1)',
+                        outline: isSelected
+                          ? '3px solid rgba(196,154,74,0.9)'
+                          : 'none',
+                        outlineOffset: '3px',
+                        borderRadius: '999px',
+                        cursor: isEditMode ? 'grab' : 'default',
+                        zIndex: BASE_Z_INDEX + (npc.row + npc.col) * 1000 + 500,
+                      }}
+                    >
+                      <CharacterSprite npc={npc} />
+                    </div>
+                  );
+                })}
+
+                {buildings.map((building) => {
+                  const isSelected =
+                    selectedObject?.type === 'building' &&
+                    selectedObject?.id === building.id;
+
+                  const pos = getObjectScreenPosition(building, 'building');
+                  const hitW = building.w * 0.5;
+                  const hitH = building.h * 0.6;
+
+                  return (
+                    <div
+                      key={building.id}
+                      className="absolute"
+                      style={{
+                        left: pos.x,
+                        top: pos.y,
+                        width: building.w,
+                        height: building.h,
+                        transform: 'translate(-50%, -100%)',
+                        outline: isSelected
+                          ? '3px solid rgba(196,154,74,0.9)'
+                          : 'none',
+                        outlineOffset: '3px',
+                        borderRadius: '8px',
+                        zIndex: BASE_Z_INDEX + (building.row + building.col) * 1000,
+                        pointerEvents: isEditMode ? 'auto' : 'none',
+                      }}
+                    >
+                      <img
+                        src={building.image}
+                        alt={building.label}
+                        draggable={false}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          display: 'block',
+                          userSelect: 'none',
+                          WebkitUserDrag: 'none',
+                          transform: `scaleX(${building.flipped ? -1 : 1})`,
+                          pointerEvents: 'none',
+                        }}
+                      />
+
+                      <div
+                        onPointerDown={(e) => startObjectDrag(e, 'building', building.id)}
+                        style={{
+                          position: 'absolute',
+                          left: '50%',
+                          bottom: 0,
+                          width: hitW,
+                          height: hitH,
+                          transform: 'translateX(-50%)',
+                          cursor: isEditMode ? 'grab' : 'default',
+                          pointerEvents: isEditMode ? 'auto' : 'none',
+                        }}
+                      />
+                    </div>
+                  );
+                })}
               </div>
-              );
-              })}
-              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </>
   );
 }
