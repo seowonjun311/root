@@ -40,8 +40,7 @@ function CharacterSprite({ npc }) {
   const [frame, setFrame] = React.useState(0);
 
   React.useEffect(() => {
-    setFrame(0);
-    const speed = npc.isMoving ? 220 : 800;
+    const speed = npc.isMoving ? 220 : 900;
     const maxFrame = npc.isMoving ? 3 : 6;
     const timer = setInterval(() => {
       setFrame((f) => (f + 1) % maxFrame);
@@ -404,42 +403,55 @@ setOffset((prev) =>
 );
   }, [viewportSize, scale]);
 
+  // 캐릭터별 남은 스텝 수와 현재 방향을 추적 (NPC가 같은 방향으로 N스텝 이동)
+  const npcMovePlanRef = React.useRef({});
+
   useEffect(() => {
     if (isEditMode) return;
+    const MOVE_INTERVAL = 1800; // CSS transition(1600ms)보다 길게 설정
+    const STEPS_PER_DIRECTION = 3; // 한 방향으로 몇 스텝 이동할지
+
+    const DIAGONAL_DIRS = [
+      { col: 1, row: -1, direction: 'ne', flipped: false },
+      { col: 1, row: 1,  direction: 'se', flipped: false },
+      { col: -1, row: 1,  direction: 'sw', flipped: true  },
+      { col: -1, row: -1, direction: 'nw', flipped: true  },
+    ];
+
     const timer = setInterval(() => {
       setCharacters((prev) => prev.map((npc) => {
-        // 4방향(대각선)만 허용: NE, SE, SW, NW
-        const directions = [
-          { col: 1, row: -1 },   // NE ↗
-          { col: 1, row: 1 },    // SE ↘
-          { col: -1, row: 1 },   // SW ↙
-          { col: -1, row: -1 },  // NW ↖
-        ];
-        const dir = directions[Math.floor(Math.random() * directions.length)];
-        const moveCol = dir.col;
-        const moveRow = dir.row;
         const bounds = getExpandedGridBounds(totalLevel);
+        const plan = npcMovePlanRef.current[npc.id];
 
-const nextCol = clamp(npc.col + moveCol, bounds.minCol, bounds.maxCol);
-const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
-        const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol, nextRow, decorations, characters: prev, buildings, totalLevel });
-        const finalCol = canPlace ? nextCol : npc.col;
-        const finalRow = canPlace ? nextRow : npc.row;
-        const isActuallyMoving = canPlace && (finalCol !== npc.col || finalRow !== npc.row);
-        let nextDirection = npc.direction || 'se';
-        let nextFlipped = npc.flipped;
-        if (isActuallyMoving) {
-          const dCol = finalCol - npc.col;
-          const dRow = finalRow - npc.row;
-          // 4방향 계산
-          if (dCol > 0 && dRow < 0) { nextDirection = 'ne'; nextFlipped = false; } // ↗
-          else if (dCol < 0 && dRow > 0) { nextDirection = 'sw'; nextFlipped = true; } // ↙
-          else if (dCol > 0 && dRow > 0) { nextDirection = 'se'; nextFlipped = false; } // ↘
-          else if (dCol < 0 && dRow < 0) { nextDirection = 'nw'; nextFlipped = true; } // ↖
+        // 계획이 없거나 스텝이 소진됐으면 새 방향 선택
+        let currentPlan = plan;
+        if (!currentPlan || currentPlan.stepsLeft <= 0) {
+          const dir = DIAGONAL_DIRS[Math.floor(Math.random() * DIAGONAL_DIRS.length)];
+          currentPlan = { ...dir, stepsLeft: STEPS_PER_DIRECTION };
         }
-        return { ...npc, col: finalCol, row: finalRow, flipped: nextFlipped, isMoving: isActuallyMoving, direction: nextDirection };
+
+        const nextCol = clamp(npc.col + currentPlan.col, bounds.minCol, bounds.maxCol);
+        const nextRow = clamp(npc.row + currentPlan.row, bounds.minRow, bounds.maxRow);
+        const canPlace = canPlaceObject({ movingType: 'character', movingItem: npc, nextCol, nextRow, decorations, characters: prev, buildings, totalLevel });
+
+        if (canPlace && (nextCol !== npc.col || nextRow !== npc.row)) {
+          // 이동 성공: 스텝 차감 후 저장
+          npcMovePlanRef.current[npc.id] = { ...currentPlan, stepsLeft: currentPlan.stepsLeft - 1 };
+          return {
+            ...npc,
+            col: nextCol,
+            row: nextRow,
+            direction: currentPlan.direction,
+            flipped: currentPlan.flipped,
+            isMoving: true,
+          };
+        } else {
+          // 막혔으면 방향 초기화 (다음 틱에 새 방향 선택)
+          npcMovePlanRef.current[npc.id] = { ...currentPlan, stepsLeft: 0 };
+          return { ...npc, isMoving: false };
+        }
       }));
-    }, 240);
+    }, MOVE_INTERVAL);
     return () => clearInterval(timer);
   }, [isEditMode, setCharacters, decorations, totalLevel]);
 
@@ -654,7 +666,7 @@ const nextRow = clamp(npc.row + moveRow, bounds.minRow, bounds.maxRow);
               transform: 'translate(-50%, -100%)',
               transition: isEditMode
               ? 'none'
-              : 'left 2200ms ease-in-out, top 2200ms ease-in-out',
+              : 'left 1600ms cubic-bezier(0.45, 0, 0.55, 1), top 1600ms cubic-bezier(0.45, 0, 0.55, 1)',
               outline: isSelected ? '3px solid rgba(196,154,74,0.9)' : 'none',
               outlineOffset: '3px',
               borderRadius: '999px',
