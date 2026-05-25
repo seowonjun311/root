@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Droplets, Trash2 } from 'lucide-react';
+import { Plus, Droplets, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 import WaterFlowerViz from './WaterFlowerViz';
 
@@ -13,6 +13,7 @@ export default function WaterTracker({ userEmail }) {
   const qc = useQueryClient();
   const [customAmount, setCustomAmount] = useState('');
   const [showCustom, setShowCustom] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
 
   const { data: logs = [] } = useQuery({
     queryKey: ['waterLogs', TODAY],
@@ -94,20 +95,31 @@ export default function WaterTracker({ userEmail }) {
 
       {/* 오늘 기록 리스트 */}
       {logs.length > 0 && (
-        <div className="space-y-1 px-2">
-          {logs.map(log => (
-            <div key={log.id} className="flex items-center justify-between py-1">
-              <span className="text-xs text-muted-foreground">
-                💧 {log.amount_ml}ml
-              </span>
-              <button
-                onClick={() => deleteMutation.mutate(log.id)}
-                className="p-1 text-muted-foreground hover:text-destructive transition-colors"
-              >
-                <Trash2 className="w-3 h-3" />
-              </button>
+        <div className="px-2">
+          <button
+            onClick={() => setShowLogs(v => !v)}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors mb-1"
+          >
+            {showLogs ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            오늘 기록 {logs.length}건
+          </button>
+          {showLogs && (
+            <div className="space-y-1">
+              {logs.map(log => (
+                <div key={log.id} className="flex items-center justify-between py-1">
+                  <span className="text-xs text-muted-foreground">
+                    💧 {log.amount_ml}ml
+                  </span>
+                  <button
+                    onClick={() => deleteMutation.mutate(log.id)}
+                    className="p-1 text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>
