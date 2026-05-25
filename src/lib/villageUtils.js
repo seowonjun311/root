@@ -613,8 +613,8 @@ export function validateGoalActionLogChain(goals = [], actionGoals = [], logs = 
 }
 
 // --- 캐릭터/장식 ---
-// 4방향 캐릭터 이미지 
-const CHARACTER_DIRECTION_IMAGES = {
+// 4방향 캐릭터 정지 이미지 (방향별)
+const FOX_DIRECTION_IMAGES = {
   nw: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/ae4da3461_ChatGPTImage202652205_51_57-Photoroom.png', // ↖
   ne: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/c728362d4_ChatGPTImage202652205_52_03-Photoroom.png', // ↗
   se: 'https://media.base44.com/images/public/69b63292a629cfa39a4ab7d3/7ac8f03c6_-Photoroom.png', // ↘ (기본 이미지)
@@ -628,14 +628,9 @@ export function getCharacterImage(type, isMoving = false, frameIndex = 0, direct
   if (type === 'platypus') return platypusImg;
 
   if (type === 'fox') {
-    // 4방향 커스텀 이미지
-    if (CHARACTER_DIRECTION_IMAGES[direction]) {
-      return CHARACTER_DIRECTION_IMAGES[direction];
-    }
-    if (isMoving) {
-      return foxWalkFrames[frameIndex % foxWalkFrames.length];
-    }
-    return foxThinkFrames[frameIndex % foxThinkFrames.length];
+    // 이동 중이면 방향 이미지 사용 (방향이 있을 때)
+    // 정지 중이면 현재 방향의 정지 이미지 사용
+    return FOX_DIRECTION_IMAGES[direction] || FOX_DIRECTION_IMAGES.se;
   }
 
   return foxThinkFrames[frameIndex % foxThinkFrames.length];
