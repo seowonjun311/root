@@ -182,10 +182,10 @@ export default function DailyMeal({ dateKey }) {
 
       {/* 추가 방법 선택 모달 */}
       {showForm && !previewImg && (
-        <div className="fixed inset-0 bg-black/50 z-50" onClick={closeForm}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" onClick={closeForm}>
           <div
-            className="bg-background rounded-2xl p-4 pb-6 absolute left-4 right-4"
-            style={{ bottom: keyboardHeight + 16 }}
+            className="bg-background rounded-t-2xl p-4 pb-8 w-full"
+            style={{ marginBottom: keyboardHeight }}
             onClick={e => e.stopPropagation()}
           >
             <p className="text-sm font-bold text-foreground mb-4">
@@ -221,14 +221,14 @@ export default function DailyMeal({ dateKey }) {
             <input
               type="text"
               value={inputText}
-              onFocus={() => {
+              onFocus={(e) => {
+                e.stopPropagation();
                 if (window.visualViewport) {
                   const h = window.innerHeight - window.visualViewport.height;
-                  setKeyboardHeight(Math.max(280, h));
-                } else {
-                  setKeyboardHeight(300);
+                  setKeyboardHeight(Math.max(0, h));
                 }
               }}
+              onClick={e => e.stopPropagation()}
               onChange={e => setInputText(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') addTextItem(); }}
               placeholder="예: 현미밥, 된장찌개, 샐러드"
