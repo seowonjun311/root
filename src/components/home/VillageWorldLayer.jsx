@@ -448,7 +448,8 @@ export default function VillageWorldLayer({
             const dRow = row - npc.row;
 
             const isValidDiagonal =
-              Math.abs(dCol) === Math.abs(dRow) || (dCol === 0 && dRow === 0);
+  (Math.abs(dCol) === 1 && Math.abs(dRow) === 1) ||
+  (dCol === 0 && dRow === 0);
 
             if (!isValidDiagonal) return npc;
 
