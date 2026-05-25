@@ -524,7 +524,10 @@ if (drag.objectType === 'character') {
     })
   );
 }
-      
+    },
+    [viewportSize.width, viewportSize.height, decorations, characters, buildings, totalLevel, setDecorations, setCharacters, setBuildings, setPlacementPreview]
+  );
+
   const handlePointerUp = useCallback(() => {
     dragRef.current = null;
     setPlacementPreview(null);
