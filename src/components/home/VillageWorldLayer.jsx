@@ -428,26 +428,16 @@ export default function VillageWorldLayer({
       }
 
       if (drag.objectType === 'building' && typeof setBuildings === 'function') {
-        setBuildings((prev) =>
-          prev.map((building) => {
-            if (building.id !== drag.objectId) return building;
+  setBuildings((prev) =>
+    prev.map((building) => {
+      if (building.id !== drag.objectId) return building;
 
-            const canPlace = canPlaceObject({
-              movingType: 'building',
-              movingItem: building,
-              nextCol: col,
-              nextRow: row,
-              decorations,
-              characters,
-              buildings: prev,
-              totalLevel,
-            });
-
-            if (!canPlace) return building;
-            return { ...building, col, row };
-          })
-        );
-      }
+      // 드래그 중에는 건물이 항상 마우스를 따라오게 한다.
+      // 저장 가능 여부는 placementPreview.valid로 판단한다.
+      return { ...building, col, row };
+    })
+  );
+}
 
       if (drag.objectType === 'character') {
         setCharacters((prev) =>
