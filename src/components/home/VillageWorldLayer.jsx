@@ -284,6 +284,9 @@ zoomTo(nextScale, centerX, centerY);
           return { ...item, col, row };
         }));
       }
+      if (drag.objectType === 'building') {
+  previewItem = buildings.find((item) => item.id === drag.objectId) || null;
+}
       if (drag.objectType === 'character') {
         setCharacters((prev) => prev.map((npc) => {
           if (npc.id !== drag.objectId) return npc;
