@@ -1,0 +1,24 @@
+{
+  "name": "HealthWaterLog",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "amount_ml": {
+      "type": "number",
+      "description": "Amount of water in ml"
+    },
+    "log_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "goal_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "amount_ml",
+    "log_date"
+  ]
+}

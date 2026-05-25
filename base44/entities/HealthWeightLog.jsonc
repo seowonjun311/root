@@ -1,0 +1,24 @@
+{
+  "name": "HealthWeightLog",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "weight": {
+      "type": "number",
+      "description": "Weight in kg"
+    },
+    "memo": {
+      "type": "string"
+    },
+    "log_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "weight",
+    "log_date"
+  ]
+}

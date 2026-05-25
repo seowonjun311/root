@@ -43,6 +43,7 @@ import PointPopup from '@/components/home/PointPopup';
 import TitleUnlockModal from '@/components/home/TitleUnlockModal';
 import Section from '@/components/home/Section';
 import AddActionGoalButton from '@/components/home/AddActionGoalButton';
+import HealthAdvancedPanel from '@/components/health/HealthAdvancedPanel';
 import VillageWorldLayer from '@/components/home/VillageWorldLayer';
 import GridGuideToggle from '@/components/home/GridGuideToggle';
 
@@ -958,6 +959,11 @@ export default function Home() {
           </div>
         ) : null}
       </div>
+
+      {/* 건강 고급 기능 패널 - 운동 탭에서만 표시 */}
+      {activeCategory === 'exercise' && (
+        <HealthAdvancedPanel userEmail={user?.email || ''} />
+      )}
     </div>
   );
 }

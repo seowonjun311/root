@@ -1,0 +1,21 @@
+{
+  "name": "HealthStepsLog",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "steps": {
+      "type": "number",
+      "description": "Step count"
+    },
+    "log_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "steps",
+    "log_date"
+  ]
+}
