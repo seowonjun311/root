@@ -215,17 +215,20 @@ export default function DailyLedger({ dateKey }) {
         <div className="space-y-2">
           {entries.map((entry) => (
             <div key={entry.id} className="flex items-center gap-3 bg-secondary/30 rounded-xl px-3 py-2.5">
-              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CAT_COLORS[entry.category] || '#6b7280' }} />
-              <div className="flex-1 min-w-0">
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CAT_COLORS[entry.category] || '#6b7280' }} />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1">
                 <p className="text-xs font-semibold text-foreground truncate">{entry.memo || entry.category}</p>
-                <p className="text-[10px] text-muted-foreground">{entry.category}</p>
+                {entry.meal_item_id && <span className="text-[10px] text-amber-500 shrink-0">🍽️</span>}
               </div>
-              <span className={`text-sm font-bold shrink-0 ${entry.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
-                {entry.type === 'expense' ? '-' : '+'}{formatKRW(entry.amount)}원
-              </span>
-              <button onClick={() => deleteEntry(entry.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              <p className="text-[10px] text-muted-foreground">{entry.category}</p>
+            </div>
+            <span className={`text-sm font-bold shrink-0 ${entry.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
+              {entry.type === 'expense' ? '-' : '+'}{formatKRW(entry.amount)}원
+            </span>
+            <button onClick={() => deleteEntry(entry.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
             </div>
           ))}
         </div>
@@ -386,7 +389,10 @@ export default function DailyLedger({ dateKey }) {
                         )}
                         <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CAT_COLORS[entry.category] || '#6b7280' }} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-foreground truncate">{entry.memo || entry.category}</p>
+                          <div className="flex items-center gap-1">
+                            <p className="text-xs font-semibold text-foreground truncate">{entry.memo || entry.category}</p>
+                            {entry.meal_item_id && <span className="text-[10px] text-amber-500 shrink-0">🍽️</span>}
+                          </div>
                           <p className="text-[10px] text-muted-foreground">{entry.category}</p>
                         </div>
                         <span className={`text-sm font-bold shrink-0 ${entry.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
