@@ -419,7 +419,7 @@ export default function Daily() {
               return (
                 <button
                   onClick={() => clearCell(hour, slot, half)}
-                  className="w-full h-full rounded font-semibold text-[10px] leading-tight hover:opacity-90 transition-opacity px-0.5 break-words"
+                  className="no-tap-expand w-full h-full rounded font-semibold text-[10px] leading-tight hover:opacity-90 transition-opacity px-0.5 break-words"
                   style={{ backgroundColor: color.bg, color: color.text }}
                 >
                   {data.text}
@@ -429,7 +429,7 @@ export default function Daily() {
             return (
               <button
                 onClick={() => setPendingCell({ hour, slot, half })}
-                className="w-full h-full rounded text-muted-foreground text-xs hover:bg-secondary/30 transition-colors"
+                className="no-tap-expand w-full h-full rounded text-muted-foreground text-xs hover:bg-secondary/30 transition-colors"
               >
                 +
               </button>
@@ -437,7 +437,7 @@ export default function Daily() {
           };
 
           return (
-            <div key={hour} className="flex border-x border-b border-border" style={{ minHeight: '22px' }}>
+            <div key={hour} className="flex border-x border-b border-border" style={{ height: '28px' }}>
               {/* 시간 숫자 */}
               <div className="w-14 shrink-0 border-r border-border bg-secondary/20 flex items-center justify-center text-xs font-bold text-foreground">
                 {formatHour(hour)}
