@@ -56,7 +56,7 @@ export default function DailyDiary({ dateKey }) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-bold text-foreground">오늘의 일기</span>
+          <span className="text-sm font-bold text-foreground">오늘의 이야기</span>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -87,7 +87,7 @@ export default function DailyDiary({ dateKey }) {
           onClick={openEdit}
           className="text-center py-6 text-muted-foreground text-sm border border-dashed border-border rounded-xl cursor-pointer hover:bg-secondary/20 transition-colors"
         >
-          오늘의 일기를 작성해보세요
+          오늘의 이야기를 작성해보세요
         </div>
       )}
 
@@ -99,7 +99,7 @@ export default function DailyDiary({ dateKey }) {
             style={{ bottom: keyboardHeight > 0 ? keyboardHeight : 80 }}
             onClick={e => e.stopPropagation()}
           >
-            <p className="text-sm font-bold text-foreground mb-3">📖 오늘의 일기</p>
+            <p className="text-sm font-bold text-foreground mb-3">📖 오늘의 이야기</p>
             <textarea
               autoFocus
               value={draft}
@@ -109,7 +109,7 @@ export default function DailyDiary({ dateKey }) {
               }}
               onChange={e => setDraft(e.target.value)}
               rows={6}
-              placeholder="오늘 하루를 기록해보세요..."
+              placeholder="오늘의 이야기를 기록해보세요..."
               className="w-full p-3 rounded-lg border border-border bg-background text-foreground text-sm mb-3 outline-none focus:ring-2 focus:ring-ring resize-none"
             />
             <div className="flex gap-2">
@@ -169,7 +169,7 @@ export default function DailyDiary({ dateKey }) {
                 <>
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-bold text-foreground">
-                      {format(new Date(selectedCalDay + 'T00:00:00'), 'M월 d일')} 일기
+                      {format(new Date(selectedCalDay + 'T00:00:00'), 'M월 d일')} 이야기
                     </p>
                     <button onClick={() => setSelectedCalDay(null)} className="text-[11px] text-primary font-semibold">전체 보기</button>
                   </div>
@@ -179,7 +179,7 @@ export default function DailyDiary({ dateKey }) {
                     </div>
                   ) : (
                     <div className="text-center py-6 text-muted-foreground text-sm border border-dashed border-border rounded-xl">
-                      이 날의 일기가 없습니다
+                      이 날의 이야기가 없습니다
                     </div>
                   )}
                 </>

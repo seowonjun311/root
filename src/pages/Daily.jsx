@@ -460,7 +460,7 @@ export default function Daily() {
         <DailyMemo dateKey={dateKey} />
       </div>
 
-      {/* 일기 섹션 */}
+      {/* 이야기 섹션 */}
       <div className="mt-2 border-t border-border/50 pt-4">
         <DailyDiary dateKey={dateKey} />
       </div>
