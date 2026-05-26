@@ -55,7 +55,7 @@ export default function WeightTracker({ userEmail }) {
       {latest && (
         <div className="flex items-center justify-between px-2">
           <div>
-            <div className="text-xs text-muted-foreground mb-0.5">{latestDateStr}</div>
+            <div className="text-xs text-muted-foreground mb-0.5">현재 체중 · {latestDateStr}</div>
             <div className="flex items-baseline gap-1">
               <span className="text-2xl font-bold text-foreground">{latest.weight}</span>
               <span className="text-sm text-muted-foreground">kg</span>
