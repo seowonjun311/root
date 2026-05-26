@@ -93,21 +93,21 @@ export default function WeightTracker({ userEmail }) {
 
       {/* 입력 폼 */}
       <div className="flex flex-col gap-2 px-2">
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
           <input
             type="number"
             inputMode="decimal"
             value={weight}
             onChange={e => setWeight(e.target.value)}
             placeholder="체중 (kg)"
-            className="w-28 p-2.5 rounded-xl border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="w-full p-2.5 rounded-xl border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-ring"
           />
           <input
             type="text"
             value={memo}
             onChange={e => setMemo(e.target.value)}
             placeholder="메모 (선택)"
-            className="flex-1 p-2.5 rounded-xl border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="w-full p-2.5 rounded-xl border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
         <button
