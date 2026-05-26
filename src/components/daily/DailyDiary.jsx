@@ -217,7 +217,7 @@ export default function DailyDiary({ dateKey }) {
             </div>
 
             {/* 버튼 — 항상 하단 고정 */}
-            <div className="px-4 py-3 shrink-0 flex gap-2" style={{ borderTop: '1px solid #c4a55a', paddingBottom: 'calc(0.75rem + 30px)' }}>
+            <div className="px-4 py-3 shrink-0 flex gap-2" style={{ borderTop: '1px solid #c4a55a', paddingBottom: 'calc(0.75rem + 45px)' }}>
               <button
                 onClick={save}
                 className="flex-1 p-3 rounded-lg font-bold text-sm"
