@@ -136,9 +136,9 @@ export default function DailyDiary({ dateKey }) {
       {editing && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-end" onClick={() => { setEditing(false); setKeyboardHeight(0); }}>
           <div
-            className="w-full rounded-t-2xl overflow-y-auto"
+            className="w-full rounded-t-2xl flex flex-col"
             style={{
-              maxHeight: `calc(100dvh - ${keyboardHeight}px - 60px)`,
+              height: `calc(100dvh - ${keyboardHeight}px - 8px)`,
               background: 'linear-gradient(160deg, #f5e6c8 0%, #eedcb0 35%, #e8d0a0 70%, #f0e0bc 100%)',
               border: '2px solid #a07840',
               borderBottom: 'none',
@@ -147,12 +147,13 @@ export default function DailyDiary({ dateKey }) {
             onClick={e => e.stopPropagation()}
           >
             {/* 양피지 상단 장식 */}
-            <div className="px-4 pt-4 pb-2 border-b" style={{ borderColor: '#c4a55a' }}>
+            <div className="px-4 pt-4 pb-2 border-b shrink-0" style={{ borderColor: '#c4a55a' }}>
               <p className="text-xs font-bold mb-0.5" style={{ color: '#7a4e1a' }}>{dateLabel}</p>
               <p className="text-base font-bold" style={{ color: '#4a2c08' }}>📖 오늘의 이야기</p>
             </div>
 
-            <div className="px-4 py-3">
+            {/* 스크롤 영역 */}
+            <div className="flex-1 overflow-y-auto px-4 py-3">
               {/* 날씨 선택 */}
               <div className="mb-3">
                 <p className="text-[11px] font-bold mb-1.5" style={{ color: '#7a4e1a' }}>오늘 날씨</p>
@@ -202,9 +203,9 @@ export default function DailyDiary({ dateKey }) {
                   else setKeyboardHeight(300);
                 }}
                 onChange={e => setDraft(e.target.value)}
-                rows={5}
+                rows={8}
                 placeholder="오늘 하루를 자유롭게 기록해보세요..."
-                className="w-full p-3 rounded-lg text-sm outline-none resize-none mb-3"
+                className="w-full p-3 rounded-lg text-sm outline-none resize-none"
                 style={{
                   background: 'rgba(255,255,255,0.45)',
                   border: '1px solid #c4a55a',
@@ -213,23 +214,24 @@ export default function DailyDiary({ dateKey }) {
                   backgroundImage: 'repeating-linear-gradient(transparent, transparent calc(1.8em - 1px), rgba(160,120,60,0.2) calc(1.8em - 1px), rgba(160,120,60,0.2) 1.8em)',
                 }}
               />
+            </div>
 
-              <div className="flex gap-2">
-                <button
-                  onClick={save}
-                  className="flex-1 p-3 rounded-lg font-bold text-sm"
-                  style={{ background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)', color: '#fff8e8', border: '1.5px solid #6b4e15' }}
-                >
-                  저장
-                </button>
-                <button
-                  onClick={() => { setEditing(false); setKeyboardHeight(0); }}
-                  className="flex-1 p-3 rounded-lg font-semibold text-sm"
-                  style={{ background: 'rgba(255,255,255,0.5)', color: '#4a2c08', border: '1.5px solid #c4a55a' }}
-                >
-                  취소
-                </button>
-              </div>
+            {/* 버튼 — 항상 하단 고정 */}
+            <div className="px-4 py-3 shrink-0 flex gap-2" style={{ borderTop: '1px solid #c4a55a' }}>
+              <button
+                onClick={save}
+                className="flex-1 p-3 rounded-lg font-bold text-sm"
+                style={{ background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)', color: '#fff8e8', border: '1.5px solid #6b4e15' }}
+              >
+                저장
+              </button>
+              <button
+                onClick={() => { setEditing(false); setKeyboardHeight(0); }}
+                className="flex-1 p-3 rounded-lg font-semibold text-sm"
+                style={{ background: 'rgba(255,255,255,0.5)', color: '#4a2c08', border: '1.5px solid #c4a55a' }}
+              >
+                취소
+              </button>
             </div>
           </div>
         </div>
