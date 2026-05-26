@@ -64,19 +64,30 @@ export default function WeightTracker({ userEmail }) {
       )}
 
       {/* 그래프 */}
-      {chartData.length >= 2 && (
-        <div className="h-24 px-1">
+      {chartData.length >= 2 ? (
+        <div className="h-36 px-1">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <XAxis dataKey="date" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} />
-              <YAxis domain={['auto', 'auto']} hide />
+            <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <XAxis dataKey="date" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+              <YAxis domain={['auto', 'auto']} tick={{ fontSize: 9 }} tickLine={false} axisLine={false} width={32} tickFormatter={v => `${v}kg`} />
               <Tooltip
                 contentStyle={{ fontSize: 11, borderRadius: 8, border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
                 formatter={(v) => [`${v}kg`, '체중']}
               />
-              <Line type="monotone" dataKey="weight" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+              <Line
+                type="monotone"
+                dataKey="weight"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2.5}
+                dot={{ r: 4, fill: 'hsl(var(--primary))', strokeWidth: 0 }}
+                activeDot={{ r: 5 }}
+              />
             </LineChart>
           </ResponsiveContainer>
+        </div>
+      ) : (
+        <div className="h-20 flex items-center justify-center text-xs text-muted-foreground border border-dashed border-border rounded-xl">
+          체중을 2회 이상 기록하면 그래프가 표시됩니다
         </div>
       )}
 
