@@ -245,7 +245,7 @@ export default function DailyMeal({ dateKey }) {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" onClick={closeForm}>
           <div
             className="bg-background rounded-t-2xl p-4 w-full"
-            style={{ paddingBottom: Math.max(keyboardHeight, 0) + 24 }}
+            style={{ paddingBottom: 24, marginBottom: keyboardHeight > 0 ? keyboardHeight : 0 }}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
