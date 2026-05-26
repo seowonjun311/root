@@ -134,14 +134,15 @@ export default function DailyDiary({ dateKey }) {
 
       {/* 작성/수정 모달 — 양피지 스타일 */}
       {editing && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-3" onClick={() => { setEditing(false); setKeyboardHeight(0); }}>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end" onClick={() => { setEditing(false); setKeyboardHeight(0); }}>
           <div
-            className="w-full rounded-2xl overflow-hidden max-h-[80dvh] overflow-y-auto"
+            className="w-full rounded-t-2xl overflow-y-auto"
             style={{
-              marginBottom: keyboardHeight > 0 ? keyboardHeight : 0,
+              maxHeight: `calc(100dvh - ${keyboardHeight}px - 16px)`,
               background: 'linear-gradient(160deg, #f5e6c8 0%, #eedcb0 35%, #e8d0a0 70%, #f0e0bc 100%)',
               border: '2px solid #a07840',
-              boxShadow: 'inset 0 1px 4px rgba(255,240,180,0.7), inset 0 -1px 3px rgba(120,80,20,0.2), 0 6px 20px rgba(60,30,5,0.35)',
+              borderBottom: 'none',
+              boxShadow: 'inset 0 1px 4px rgba(255,240,180,0.7), 0 -4px 20px rgba(60,30,5,0.3)',
             }}
             onClick={e => e.stopPropagation()}
           >
