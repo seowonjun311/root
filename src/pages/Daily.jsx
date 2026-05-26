@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, CalendarDays, X } from 'lucide-react';
 import DailyLedger from '@/components/daily/DailyLedger';
 import DailyMemo from '@/components/daily/DailyMemo';
 import DailyMeal from '@/components/daily/DailyMeal';
+import DailyDiary from '@/components/daily/DailyDiary';
 
 const DAILY_SECTION_SETTINGS_KEY = 'daily_section_settings_v1';
 function loadSectionSettings() {
@@ -457,6 +458,11 @@ export default function Daily() {
       {/* 메모 섹션 */}
       <div className="mt-2 border-t border-border/50 pt-4">
         <DailyMemo dateKey={dateKey} />
+      </div>
+
+      {/* 일기 섹션 */}
+      <div className="mt-2 border-t border-border/50 pt-4">
+        <DailyDiary dateKey={dateKey} />
       </div>
 
       {/* 가계부 섹션 */}

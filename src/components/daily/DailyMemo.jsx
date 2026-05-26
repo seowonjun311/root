@@ -145,7 +145,7 @@ export default function DailyMemo({ dateKey }) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <NotebookPen className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-bold text-foreground">오늘의 메모</span>
+          <span className="text-sm font-bold text-foreground">오늘의 할일</span>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -168,7 +168,7 @@ export default function DailyMemo({ dateKey }) {
       {/* 메모 리스트 */}
       {todayMemos.length === 0 ? (
         <div className="text-center py-6 text-muted-foreground text-sm border border-dashed border-border rounded-xl">
-          오늘의 메모가 없습니다
+          오늘의 할일이 없습니다
         </div>
       ) : (
         <div className="space-y-2">
