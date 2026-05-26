@@ -35,11 +35,19 @@ export default function WeightTracker({ userEmail }) {
   const chartData = [...logs]
     .sort((a, b) => a.log_date?.localeCompare(b.log_date))
     .slice(-14)
-    .map(l => ({ date: l.log_date?.slice(5), weight: l.weight }));
+    .map(l => ({
+      date: l.log_date ? `${parseInt(l.log_date.slice(5,7))}/${parseInt(l.log_date.slice(8,10))}` : '',
+      weight: l.weight,
+      fullDate: l.log_date,
+    }));
 
   const latest = logs[0];
   const prev = logs[1];
   const diff = latest && prev ? (latest.weight - prev.weight).toFixed(1) : null;
+
+  const latestDateStr = latest?.log_date
+    ? `${parseInt(latest.log_date.slice(5,7))}월 ${parseInt(latest.log_date.slice(8,10))}일`
+    : '';
 
   return (
     <div className="space-y-3">
@@ -47,8 +55,11 @@ export default function WeightTracker({ userEmail }) {
       {latest && (
         <div className="flex items-center justify-between px-2">
           <div>
-            <span className="text-2xl font-bold text-foreground">{latest.weight}</span>
-            <span className="text-sm text-muted-foreground ml-1">kg</span>
+            <div className="text-xs text-muted-foreground mb-0.5">{latestDateStr}</div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-foreground">{latest.weight}</span>
+              <span className="text-sm text-muted-foreground">kg</span>
+            </div>
           </div>
           {diff !== null && (
             <div className={`flex items-center gap-1 text-xs font-bold ${
@@ -63,8 +74,8 @@ export default function WeightTracker({ userEmail }) {
         </div>
       )}
 
-      {/* 그래프 */}
-      {chartData.length >= 2 ? (
+      {/* 그래프 — 1개 이상이면 표시 */}
+      {chartData.length >= 1 ? (
         <div className="h-36 px-1">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -73,21 +84,22 @@ export default function WeightTracker({ userEmail }) {
               <Tooltip
                 contentStyle={{ fontSize: 11, borderRadius: 8, border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
                 formatter={(v) => [`${v}kg`, '체중']}
+                labelFormatter={(label) => `${label}`}
               />
               <Line
                 type="monotone"
                 dataKey="weight"
                 stroke="hsl(var(--primary))"
-                strokeWidth={2.5}
-                dot={{ r: 4, fill: 'hsl(var(--primary))', strokeWidth: 0 }}
-                activeDot={{ r: 5 }}
+                strokeWidth={chartData.length === 1 ? 0 : 2.5}
+                dot={{ r: 5, fill: 'hsl(var(--primary))', strokeWidth: 0 }}
+                activeDot={{ r: 6 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
       ) : (
         <div className="h-20 flex items-center justify-center text-xs text-muted-foreground border border-dashed border-border rounded-xl">
-          체중을 2회 이상 기록하면 그래프가 표시됩니다
+          체중을 기록하면 그래프가 표시됩니다
         </div>
       )}
 
