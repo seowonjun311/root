@@ -138,7 +138,7 @@ export default function DailyDiary({ dateKey }) {
           <div
             className="w-full rounded-t-2xl flex flex-col"
             style={{
-              height: `calc(100dvh - ${keyboardHeight}px - 8px)`,
+              height: `calc(100dvh - ${keyboardHeight}px - 0px)`,
               background: 'linear-gradient(160deg, #f5e6c8 0%, #eedcb0 35%, #e8d0a0 70%, #f0e0bc 100%)',
               border: '2px solid #a07840',
               borderBottom: 'none',
