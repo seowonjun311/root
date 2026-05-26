@@ -92,26 +92,28 @@ export default function WeightTracker({ userEmail }) {
       )}
 
       {/* 입력 폼 */}
-      <div className="flex gap-2 px-2">
-        <input
-          type="number"
-          inputMode="decimal"
-          value={weight}
-          onChange={e => setWeight(e.target.value)}
-          placeholder="체중 (kg)"
-          className="w-28 p-2.5 rounded-xl border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-ring"
-        />
-        <input
-          type="text"
-          value={memo}
-          onChange={e => setMemo(e.target.value)}
-          placeholder="메모 (선택)"
-          className="flex-1 p-2.5 rounded-xl border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-ring"
-        />
+      <div className="flex flex-col gap-2 px-2">
+        <div className="flex gap-2">
+          <input
+            type="number"
+            inputMode="decimal"
+            value={weight}
+            onChange={e => setWeight(e.target.value)}
+            placeholder="체중 (kg)"
+            className="w-28 p-2.5 rounded-xl border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+          <input
+            type="text"
+            value={memo}
+            onChange={e => setMemo(e.target.value)}
+            placeholder="메모 (선택)"
+            className="flex-1 p-2.5 rounded-xl border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
         <button
           onClick={() => addMutation.mutate()}
           disabled={!weight || addMutation.isPending}
-          className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold disabled:opacity-40"
+          className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold disabled:opacity-40"
         >
           기록
         </button>
