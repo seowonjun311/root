@@ -6,6 +6,17 @@ import { ChevronLeft, ChevronRight, CalendarDays, X } from 'lucide-react';
 import DailyLedger from '@/components/daily/DailyLedger';
 import DailyMemo from '@/components/daily/DailyMemo';
 import DailyMeal from '@/components/daily/DailyMeal';
+
+const DAILY_SECTION_SETTINGS_KEY = 'daily_section_settings_v1';
+function loadSectionSettings() {
+  try {
+    const s = localStorage.getItem(DAILY_SECTION_SETTINGS_KEY);
+    return s ? JSON.parse(s) : { showLedger: true, showMeal: true };
+  } catch { return { showLedger: true, showMeal: true }; }
+}
+function saveSectionSettings(settings) {
+  localStorage.setItem(DAILY_SECTION_SETTINGS_KEY, JSON.stringify(settings));
+}
 import { format, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isToday as dateFnsIsToday } from 'date-fns';
 import html2canvas from 'html2canvas';
 import { Share2 } from 'lucide-react';
@@ -56,6 +67,15 @@ function getTextColor(text, allTexts) {
 
 export default function Daily() {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [sectionSettings, setSectionSettings] = useState(loadSectionSettings);
+
+  const toggleSection = (key) => {
+    setSectionSettings(prev => {
+      const next = { ...prev, [key]: !prev[key] };
+      saveSectionSettings(next);
+      return next;
+    });
+  };
   const [guestVersion] = useState(0);
   // timeBlocks: { [dateKey]: { [hour_slot_half]: text } }
   // cell key = `${hour}_${slot}_${half}` where slot='am'|'pm', half='first'|'second'
@@ -440,13 +460,39 @@ export default function Daily() {
       </div>
 
       {/* 가계부 섹션 */}
-      <div className="mt-2 border-t border-border/50 pt-4">
-        <DailyLedger dateKey={dateKey} />
+      <div className="mt-2 border-t border-border/50">
+        <button
+          onClick={() => toggleSection('showLedger')}
+          className="w-full flex items-center justify-between px-4 py-3"
+        >
+          <span className="text-sm font-bold text-foreground">💰 오늘의 가계부</span>
+          <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${sectionSettings.showLedger ? 'bg-primary' : 'bg-border'}`}>
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${sectionSettings.showLedger ? 'translate-x-5' : 'translate-x-0'}`} />
+          </div>
+        </button>
+        {sectionSettings.showLedger && (
+          <div className="pt-0 pb-4 px-0">
+            <DailyLedger dateKey={dateKey} />
+          </div>
+        )}
       </div>
 
       {/* 식단 섹션 */}
-      <div className="mt-2 border-t border-border/50 pt-4">
-        <DailyMeal dateKey={dateKey} />
+      <div className="mt-2 border-t border-border/50">
+        <button
+          onClick={() => toggleSection('showMeal')}
+          className="w-full flex items-center justify-between px-4 py-3"
+        >
+          <span className="text-sm font-bold text-foreground">🍽️ 오늘의 식단</span>
+          <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${sectionSettings.showMeal ? 'bg-primary' : 'bg-border'}`}>
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${sectionSettings.showMeal ? 'translate-x-5' : 'translate-x-0'}`} />
+          </div>
+        </button>
+        {sectionSettings.showMeal && (
+          <div className="pt-0 pb-4 px-0">
+            <DailyMeal dateKey={dateKey} />
+          </div>
+        )}
       </div>
     </div>
   );
