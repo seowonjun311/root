@@ -4,6 +4,9 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInte
 
 const STORAGE_KEY = 'daily_diary_v1';
 
+const WEATHER_OPTIONS = ['☀️', '⛅', '🌥️', '🌧️', '⛈️', '❄️', '🌫️', '🌈'];
+const MOOD_OPTIONS = ['😄', '😊', '😐', '😔', '😢', '😤', '😰', '🥰'];
+
 function loadDiaries() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -19,21 +22,28 @@ export default function DailyDiary({ dateKey }) {
   const [diaries, setDiaries] = useState(() => loadDiaries());
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
+  const [draftWeather, setDraftWeather] = useState('');
+  const [draftMood, setDraftMood] = useState('');
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const [showCalModal, setShowCalModal] = useState(false);
   const [calMonth, setCalMonth] = useState(() => new Date(dateKey + 'T00:00:00'));
   const [selectedCalDay, setSelectedCalDay] = useState(null);
 
-  const todayEntry = diaries[dateKey] || '';
+  const todayEntry = diaries[dateKey] || {};
+  const todayText = typeof todayEntry === 'string' ? todayEntry : (todayEntry.text || '');
+  const todayWeather = typeof todayEntry === 'string' ? '' : (todayEntry.weather || '');
+  const todayMood = typeof todayEntry === 'string' ? '' : (todayEntry.mood || '');
 
   const openEdit = () => {
-    setDraft(todayEntry);
+    setDraft(todayText);
+    setDraftWeather(todayWeather);
+    setDraftMood(todayMood);
     setEditing(true);
   };
 
   const save = () => {
-    const next = { ...diaries, [dateKey]: draft };
+    const next = { ...diaries, [dateKey]: { text: draft, weather: draftWeather, mood: draftMood } };
     setDiaries(next);
     saveDiaries(next);
     setEditing(false);
@@ -46,9 +56,29 @@ export default function DailyDiary({ dateKey }) {
     return eachDayOfInterval({ start, end });
   })();
 
-  const datesWithDiary = new Set(Object.keys(diaries).filter(k => diaries[k]?.trim()));
+  const datesWithDiary = new Set(
+    Object.keys(diaries).filter(k => {
+      const e = diaries[k];
+      return typeof e === 'string' ? e.trim() : e?.text?.trim();
+    })
+  );
 
-  const selectedEntry = selectedCalDay ? (diaries[selectedCalDay] || '') : '';
+  const getEntry = (dk) => {
+    const e = diaries[dk];
+    if (!e) return { text: '', weather: '', mood: '' };
+    if (typeof e === 'string') return { text: e, weather: '', mood: '' };
+    return e;
+  };
+
+  const selectedEntry = selectedCalDay ? getEntry(selectedCalDay) : null;
+
+  const dateLabel = (() => {
+    try {
+      const d = new Date(dateKey + 'T00:00:00');
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      return `${format(d, 'yyyy년 M월 d일')} (${dayNames[d.getDay()]})`;
+    } catch { return dateKey; }
+  })();
 
   return (
     <div className="px-4 pb-6">
@@ -69,18 +99,29 @@ export default function DailyDiary({ dateKey }) {
             onClick={openEdit}
             className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-semibold"
           >
-            {todayEntry ? '수정' : '작성'}
+            {todayText ? '수정' : '작성'}
           </button>
         </div>
       </div>
 
       {/* 일기 내용 */}
-      {todayEntry ? (
+      {todayText ? (
         <div
           onClick={openEdit}
-          className="bg-secondary/30 rounded-xl px-4 py-3 text-sm text-foreground whitespace-pre-wrap leading-relaxed cursor-pointer"
+          className="rounded-xl px-4 py-3 cursor-pointer"
+          style={{
+            background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 40%, #e8d4a0 70%, #f0e0bc 100%)',
+            border: '1.5px solid #c4a55a',
+            boxShadow: 'inset 0 1px 3px rgba(255,240,180,0.6), 0 2px 6px rgba(80,50,10,0.15)',
+          }}
         >
-          {todayEntry}
+          {(todayWeather || todayMood) && (
+            <div className="flex items-center gap-2 mb-2">
+              {todayWeather && <span className="text-lg">{todayWeather}</span>}
+              {todayMood && <span className="text-lg">{todayMood}</span>}
+            </div>
+          )}
+          <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#4a2c08' }}>{todayText}</p>
         </div>
       ) : (
         <div
@@ -91,30 +132,103 @@ export default function DailyDiary({ dateKey }) {
         </div>
       )}
 
-      {/* 작성/수정 모달 */}
+      {/* 작성/수정 모달 — 양피지 스타일 */}
       {editing && (
-        <div className="fixed inset-0 bg-black/50 z-50" onClick={() => { setEditing(false); setKeyboardHeight(0); }}>
+        <div className="fixed inset-0 bg-black/60 z-50" onClick={() => { setEditing(false); setKeyboardHeight(0); }}>
           <div
-            className="bg-background rounded-2xl p-4 pb-6 absolute left-4 right-4"
-            style={{ bottom: keyboardHeight > 0 ? keyboardHeight : 80 }}
+            className="absolute left-3 right-3 rounded-2xl overflow-hidden"
+            style={{
+              bottom: keyboardHeight > 0 ? keyboardHeight + 8 : 80,
+              background: 'linear-gradient(160deg, #f5e6c8 0%, #eedcb0 35%, #e8d0a0 70%, #f0e0bc 100%)',
+              border: '2px solid #a07840',
+              boxShadow: 'inset 0 1px 4px rgba(255,240,180,0.7), inset 0 -1px 3px rgba(120,80,20,0.2), 0 6px 20px rgba(60,30,5,0.35)',
+            }}
             onClick={e => e.stopPropagation()}
           >
-            <p className="text-sm font-bold text-foreground mb-3">📖 오늘의 이야기</p>
-            <textarea
-              autoFocus
-              value={draft}
-              onFocus={() => {
-                if (window.visualViewport) setKeyboardHeight(Math.max(280, window.innerHeight - window.visualViewport.height));
-                else setKeyboardHeight(300);
-              }}
-              onChange={e => setDraft(e.target.value)}
-              rows={6}
-              placeholder="오늘의 이야기를 기록해보세요..."
-              className="w-full p-3 rounded-lg border border-border bg-background text-foreground text-sm mb-3 outline-none focus:ring-2 focus:ring-ring resize-none"
-            />
-            <div className="flex gap-2">
-              <button onClick={save} className="flex-1 p-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm">저장</button>
-              <button onClick={() => { setEditing(false); setKeyboardHeight(0); }} className="flex-1 p-3 rounded-lg bg-secondary text-foreground font-semibold text-sm">취소</button>
+            {/* 양피지 상단 장식 */}
+            <div className="px-4 pt-4 pb-2 border-b" style={{ borderColor: '#c4a55a' }}>
+              <p className="text-xs font-bold mb-0.5" style={{ color: '#7a4e1a' }}>{dateLabel}</p>
+              <p className="text-base font-bold" style={{ color: '#4a2c08' }}>📖 오늘의 이야기</p>
+            </div>
+
+            <div className="px-4 py-3">
+              {/* 날씨 선택 */}
+              <div className="mb-3">
+                <p className="text-[11px] font-bold mb-1.5" style={{ color: '#7a4e1a' }}>오늘 날씨</p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {WEATHER_OPTIONS.map(w => (
+                    <button
+                      key={w}
+                      onClick={() => setDraftWeather(draftWeather === w ? '' : w)}
+                      className="text-xl rounded-lg p-1.5 transition-all"
+                      style={{
+                        background: draftWeather === w ? 'rgba(160,100,40,0.25)' : 'rgba(255,255,255,0.4)',
+                        border: draftWeather === w ? '1.5px solid #a07840' : '1.5px solid transparent',
+                      }}
+                    >
+                      {w}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 감정 선택 */}
+              <div className="mb-3">
+                <p className="text-[11px] font-bold mb-1.5" style={{ color: '#7a4e1a' }}>오늘 기분</p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {MOOD_OPTIONS.map(m => (
+                    <button
+                      key={m}
+                      onClick={() => setDraftMood(draftMood === m ? '' : m)}
+                      className="text-xl rounded-lg p-1.5 transition-all"
+                      style={{
+                        background: draftMood === m ? 'rgba(160,100,40,0.25)' : 'rgba(255,255,255,0.4)',
+                        border: draftMood === m ? '1.5px solid #a07840' : '1.5px solid transparent',
+                      }}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 텍스트 입력 — 줄 배경으로 노트 느낌 */}
+              <textarea
+                autoFocus
+                value={draft}
+                onFocus={() => {
+                  if (window.visualViewport) setKeyboardHeight(Math.max(280, window.innerHeight - window.visualViewport.height));
+                  else setKeyboardHeight(300);
+                }}
+                onChange={e => setDraft(e.target.value)}
+                rows={5}
+                placeholder="오늘 하루를 자유롭게 기록해보세요..."
+                className="w-full p-3 rounded-lg text-sm outline-none resize-none mb-3"
+                style={{
+                  background: 'rgba(255,255,255,0.45)',
+                  border: '1px solid #c4a55a',
+                  color: '#3a2008',
+                  lineHeight: '1.8',
+                  backgroundImage: 'repeating-linear-gradient(transparent, transparent calc(1.8em - 1px), rgba(160,120,60,0.2) calc(1.8em - 1px), rgba(160,120,60,0.2) 1.8em)',
+                }}
+              />
+
+              <div className="flex gap-2">
+                <button
+                  onClick={save}
+                  className="flex-1 p-3 rounded-lg font-bold text-sm"
+                  style={{ background: 'linear-gradient(180deg, #c49a4a 0%, #a07830 100%)', color: '#fff8e8', border: '1.5px solid #6b4e15' }}
+                >
+                  저장
+                </button>
+                <button
+                  onClick={() => { setEditing(false); setKeyboardHeight(0); }}
+                  className="flex-1 p-3 rounded-lg font-semibold text-sm"
+                  style={{ background: 'rgba(255,255,255,0.5)', color: '#4a2c08', border: '1.5px solid #c4a55a' }}
+                >
+                  취소
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -149,14 +263,17 @@ export default function DailyDiary({ dateKey }) {
                 const isSelected = selectedCalDay === dk;
                 const isToday = dk === format(new Date(), 'yyyy-MM-dd');
                 const hasDiary = datesWithDiary.has(dk);
+                const entry = getEntry(dk);
                 return (
                   <button key={dk} onClick={() => setSelectedCalDay(isSelected ? null : dk)}
                     className={`flex flex-col items-center justify-center rounded-lg py-1.5 transition-colors
                       ${isSelected ? 'bg-primary text-primary-foreground' : isToday ? 'bg-amber-100 text-amber-800' : inMonth ? 'hover:bg-secondary text-foreground' : 'text-muted-foreground/30'}`}>
                     <span className="text-xs font-semibold leading-none">{format(day, 'd')}</span>
-                    {hasDiary && (
+                    {hasDiary && entry.mood ? (
+                      <span className="text-[10px] leading-none mt-0.5">{entry.mood}</span>
+                    ) : hasDiary ? (
                       <span className={`mt-0.5 w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-primary-foreground' : 'bg-primary'}`} />
-                    )}
+                    ) : null}
                   </button>
                 );
               })}
@@ -173,9 +290,21 @@ export default function DailyDiary({ dateKey }) {
                     </p>
                     <button onClick={() => setSelectedCalDay(null)} className="text-[11px] text-primary font-semibold">전체 보기</button>
                   </div>
-                  {selectedEntry ? (
-                    <div className="bg-secondary/30 rounded-xl px-4 py-3 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                      {selectedEntry}
+                  {selectedEntry?.text ? (
+                    <div
+                      className="rounded-xl px-4 py-3"
+                      style={{
+                        background: 'linear-gradient(135deg, #f5e6c8 0%, #eedcb0 60%, #f0e0bc 100%)',
+                        border: '1.5px solid #c4a55a',
+                      }}
+                    >
+                      {(selectedEntry.weather || selectedEntry.mood) && (
+                        <div className="flex items-center gap-2 mb-2">
+                          {selectedEntry.weather && <span className="text-lg">{selectedEntry.weather}</span>}
+                          {selectedEntry.mood && <span className="text-lg">{selectedEntry.mood}</span>}
+                        </div>
+                      )}
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: '#4a2c08' }}>{selectedEntry.text}</p>
                     </div>
                   ) : (
                     <div className="text-center py-6 text-muted-foreground text-sm border border-dashed border-border rounded-xl">
@@ -184,7 +313,7 @@ export default function DailyDiary({ dateKey }) {
                   )}
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">달력에서 날짜를 탭하면 해당 날의 일기를 볼 수 있습니다</p>
+                <p className="text-sm text-muted-foreground text-center py-4">달력에서 날짜를 탭하면 해당 날의 이야기를 볼 수 있습니다</p>
               )}
             </div>
           </div>
