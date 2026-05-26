@@ -93,7 +93,7 @@ export default function HealthAdvancedPanel({ userEmail }) {
         const isExpanded = expanded[key] !== false; // 기본값 펼침
         return (
           <div key={key} className="mt-2 rounded-2xl border border-border overflow-hidden">
-            <div className={`flex items-center gap-3 px-4 py-1.5 ${bg}`}>
+            <div className={`flex items-center gap-3 px-4 py-1.5 ${bg}`} style={{ minHeight: 0 }}>
               <span className="text-lg">{emoji}</span>
               <p className="flex-1 text-sm font-bold text-foreground">{label}</p>
               <div className="flex items-center gap-2">
