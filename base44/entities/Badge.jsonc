@@ -1,0 +1,46 @@
+{
+  "name": "Badge",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Badge title"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "exercise",
+        "study",
+        "mental",
+        "daily",
+        "special"
+      ]
+    },
+    "badge_type": {
+      "type": "string",
+      "enum": [
+        "result",
+        "cumulative",
+        "event",
+        "special"
+      ]
+    },
+    "earned_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "goal_id": {
+      "type": "string"
+    },
+    "streak": {
+      "type": "number",
+      "description": "Streak count for cumulative badges"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

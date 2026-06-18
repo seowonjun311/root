@@ -1,0 +1,83 @@
+{
+  "name": "ActionGoal",
+  "type": "object",
+  "properties": {
+    "goal_id": {
+      "type": "string",
+      "description": "Parent goal ID"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "exercise",
+        "study",
+        "mental",
+        "daily"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "description": "Action title (e.g. \ub7ec\ub2dd, \ud5ec\uc2a4\ud558\uae30)"
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "timer",
+        "confirm",
+        "abstain",
+        "one_time"
+      ],
+      "description": "timer=\uc2dc\uac04\ub204\uc801\ud615, confirm=\ud655\uc778\ud615, abstain=\uc548\ud558\uae30, one_time=1\ud68c\uc131"
+    },
+    "weekly_frequency": {
+      "type": "number",
+      "description": "Times per week (1-7)"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "description": "Minutes per session for timer type"
+    },
+    "duration_days": {
+      "type": "number",
+      "description": "Total duration in days"
+    },
+    "frequency_mode": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "weekly",
+        "monthly",
+        "one_time"
+      ],
+      "description": "How the action repeats"
+    },
+    "scheduled_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Scheduled date for one_time actions"
+    },
+    "completed": {
+      "type": "boolean",
+      "description": "Whether one_time action is completed"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when one_time action was completed"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "paused"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "title",
+    "action_type",
+    "category"
+  ]
+}

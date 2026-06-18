@@ -1,0 +1,58 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "nickname": {
+      "type": "string"
+    },
+    "onboarding_complete": {
+      "type": "boolean",
+      "default": false
+    },
+    "active_category": {
+      "type": "string",
+      "enum": [
+        "exercise",
+        "study",
+        "mental",
+        "daily"
+      ],
+      "default": "exercise"
+    },
+    "exercise_level": {
+      "type": "number",
+      "default": 1
+    },
+    "exercise_xp": {
+      "type": "number",
+      "default": 0
+    },
+    "study_level": {
+      "type": "number",
+      "default": 1
+    },
+    "study_xp": {
+      "type": "number",
+      "default": 0
+    },
+    "mental_level": {
+      "type": "number",
+      "default": 1
+    },
+    "mental_xp": {
+      "type": "number",
+      "default": 0
+    },
+    "daily_level": {
+      "type": "number",
+      "default": 1
+    },
+    "daily_xp": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "nickname"
+  ]
+}

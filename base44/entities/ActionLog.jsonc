@@ -1,0 +1,55 @@
+{
+  "name": "ActionLog",
+  "type": "object",
+  "properties": {
+    "action_goal_id": {
+      "type": "string"
+    },
+    "goal_id": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "exercise",
+        "study",
+        "mental",
+        "daily"
+      ]
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "description": "Actual duration in minutes"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": true
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "memo": {
+      "type": "string"
+    },
+    "gps_enabled": {
+      "type": "boolean",
+      "description": "Whether GPS tracking was enabled"
+    },
+    "distance_km": {
+      "type": "number",
+      "description": "Distance traveled in kilometers"
+    },
+    "route_coordinates": {
+      "type": "string",
+      "description": "JSON string of coordinate array [[lat,lng], [lat,lng], ...]"
+    }
+  },
+  "required": [
+    "action_goal_id",
+    "date"
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "name": "Goal",
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "enum": [
+        "exercise",
+        "study",
+        "mental",
+        "daily"
+      ],
+      "description": "Goal category"
+    },
+    "goal_type": {
+      "type": "string",
+      "enum": [
+        "result",
+        "habit"
+      ],
+      "description": "Result goal or habit goal"
+    },
+    "title": {
+      "type": "string",
+      "description": "Goal title (e.g. 10kg \uac10\ub7c9)"
+    },
+    "target_value": {
+      "type": "number",
+      "description": "Target numeric value if applicable"
+    },
+    "target_unit": {
+      "type": "string",
+      "description": "Unit (kg, \uc810, \ud68c, etc)"
+    },
+    "current_value": {
+      "type": "number",
+      "description": "Current value for ability goals"
+    },
+    "duration_days": {
+      "type": "number",
+      "description": "Duration in days"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "d_day": {
+      "type": "string",
+      "format": "date",
+      "description": "D-day for exam goals"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "failed",
+        "paused"
+      ],
+      "default": "active"
+    },
+    "has_d_day": {
+      "type": "boolean",
+      "default": false
+    },
+    "achievement_confirmed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether user confirmed achievement"
+    },
+    "achievement_success": {
+      "type": "boolean",
+      "description": "true=\ub2ec\uc131, false=\ubbf8\ub2ec\uc131"
+    },
+    "result_note": {
+      "type": "string",
+      "description": "User's result note (e.g. \uc810\uc218, \ud55c \uc904 \uc18c\uac10)"
+    }
+  },
+  "required": [
+    "category",
+    "title"
+  ]
+}
