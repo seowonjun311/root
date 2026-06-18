@@ -126,6 +126,45 @@ export default function Daily() {
   const logsForDate = logs.filter((log) => log.date === dateKey);
   const todayBlocks = timeBlocks[dateKey] || {};
 
+  // 타이머형 액션 로그 → 타임블록 자동 생성
+  const autoBlocks = useMemo(() => {
+    const blocks = {};
+    const timerLogs = logsForDate.filter((log) => {
+      const goal = actionGoals.find((g) => g.id === log.action_goal_id);
+      return goal && goal.action_type === 'timer';
+    });
+    if (timerLogs.length === 0) return blocks;
+
+    // 모든 가능한 슬롯 목록 (순서대로)
+    const allSlots = [];
+    for (const hour of ALL_HOURS) {
+      const slot = hour >= 12 && hour <= 17 ? 'am' : 'pm';
+      allSlots.push({ hour, slot, half: 'first' });
+      allSlots.push({ hour, slot, half: 'second' });
+    }
+
+    let slotIndex = 0;
+    for (const log of timerLogs) {
+      const goal = actionGoals.find((g) => g.id === log.action_goal_id);
+      if (!goal) continue;
+      const title = goal.title || '타이머';
+      const slotsNeeded = Math.max(1, Math.ceil((log.duration_minutes || 30) / 30));
+
+      // 빈 슬롯 찾아서 채우기 (수동 입력이 없는 슬롯만)
+      let filled = 0;
+      while (slotIndex < allSlots.length && filled < slotsNeeded) {
+        const s = allSlots[slotIndex];
+        const key = `${s.hour}_${s.slot}_${s.half}`;
+        if (!todayBlocks[key]) {
+          blocks[key] = title;
+          filled++;
+        }
+        slotIndex++;
+      }
+    }
+    return blocks;
+  }, [logsForDate, actionGoals, todayBlocks]);
+
   const [inputText, setInputText] = useState('');
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
@@ -172,6 +211,8 @@ export default function Daily() {
     const key = `${hour}_${slot}_${half}`;
     const manual = todayBlocks[key];
     if (manual) return { text: manual, isManual: true };
+    const auto = autoBlocks[key];
+    if (auto) return { text: auto, isManual: false };
     return null;
   };
 
@@ -415,10 +456,10 @@ export default function Daily() {
           const renderCell = (slot, half) => {
             const data = getCellData(hour, slot, half);
             if (data) {
-              const color = getTextColor(data.text, allBlockTexts);
+              const color = data.isManual ? getTextColor(data.text, allBlockTexts) : { bg: 'rgba(245,158,11,0.12)', text: '#92400e' };
               return (
                 <button
-                  onClick={() => clearCell(hour, slot, half)}
+                  onClick={() => { if (data.isManual) clearCell(hour, slot, half); }}
                   className="no-tap-expand w-full h-full rounded font-semibold text-[10px] leading-tight hover:opacity-90 transition-opacity px-0.5 break-words"
                   style={{ backgroundColor: color.bg, color: color.text }}
                 >
